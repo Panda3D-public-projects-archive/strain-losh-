@@ -29,7 +29,7 @@ class Level:
             for y in xrange(0, self.y): 
                 tag = int(self.row_data[y][x])
                 c = loader.loadModel("cube")
-                c.setPos(x, y, 0)
+                c.setPos(x, self.y - y - 1, 0)
                 if tag == 0:
                     ltag = 0.01
                 else:
