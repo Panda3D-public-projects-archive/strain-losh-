@@ -1,220 +1,166 @@
 from direct.showbase import DirectObject
-from panda3d.core import Plane, Vec3, Point3, Point2
+from panda3d.core import Plane, Vec3, Vec2, Point3, Point2
 from pandac.PandaModules import CollisionTraverser, CollisionHandlerQueue, CollisionNode, CollisionRay
 from pandac.PandaModules import GeomNode, CardMaker
-from math import floor, sin, cos, tan, radians
+import math
 
-class clCameraHandler(DirectObject.DirectObject): 
-    def __init__(self, tupCameraPos=(0, 0, 45), tupCameraDir=(0, -90, 0),  tupThetaLimit=(5, 90), booDebug=False): 
 
-        base.disableMouse()
-
-        # Gives the camera an initial position and rotation. 
-        self.booDebug = booDebug 
-        self.booOrbiting = False 
-        self.booDragPanning = False 
-        self.fEdgeBound = 0.95 
-        self.fLastMouseX, self.fLastMouseY = 0, 0 
-        self.fDragPanRate = 30 
-        self.fPanRate = 0.08
-        self.fPhiRate = 100 
-        self.fThetaRate = 35 
-        self.fZoomRate = 1.3 
+class Interface(DirectObject.DirectObject):
+    def __init__(self):
         
-        self.tupCurrentCameraPos = tupCameraPos 
-        self.tupCurrentCameraDir = tupCameraDir 
-        self.tupInitCameraDir = tupCameraDir 
-        self.tupInitCameraPos = tupCameraPos 
-        self.tupThetaLimit = tupThetaLimit 
+        base.disableMouse()
+        self.mx = 0
+        self.my = 0
+        self.is_orbiting = False
+        self.target = Vec3(0, 0, 0)
+        self.cam_dist = 40
+        self.pan_rate_div = 20
+        self.pan_limits_x = Vec2(-30, 30) 
+        self.pan_limits_y = Vec2(-30, 30)
+        self.plane = Plane(Vec3(0, 0, 1), Point3(0, 0, 0))
+        base.camera.setPos(10, 10, 20)
+        base.camera.lookAt(10, 10, 0)
+        self.orbit(0, 0)
 
-        if not self.booDebug: 
-            self.accept("mouse3", self.StartCameraOrbit) 
-            self.accept("mouse3-up", self.StopCameraOrbit) 
-            self.accept("wheel_down", self.ZoomCameraOut) 
-            self.accept("wheel_up", self.ZoomCameraIn) 
-            self.accept("shift-mouse1", self.StartDragPan) 
-            self.accept("mouse1-up", self.StopDragPan) 
-            taskMgr.add(self.CamTask,'CamTask') 
-            self.GoHome() 
-
-    def CamTask(self, task): 
+        self.accept('w', self.event, ['up', 1])
+        self.accept('w-up', self.event, ['up', 0])
+        self.accept('s', self.event, ['down', 1])
+        self.accept('s-up', self.event, ['down', 0])                   
+        self.accept('a', self.event, ['left', 1])
+        self.accept('a-up', self.event, ['left', 0])
+        self.accept('d', self.event, ['right', 1])
+        self.accept('d-up', self.event, ['right', 0])  
+        self.accept("mouse3", self.start_orbit)
+        self.accept("mouse3-up", self.stop_orbit)
+        self.accept("wheel_up", lambda : self.adjust_cam_dist(0.9))
+        self.accept("wheel_down", lambda : self.adjust_cam_dist(1.1))
+        
+        self.keys = {}
+        self.keys['up'] = 0
+        self.keys['down'] = 0        
+        self.keys['left'] = 0
+        self.keys['right'] = 0
+        self.keys['middle'] = 0
+        self.keys['wheel_up'] = 0
+        self.keys['wheel_down'] = 0
+    
+        taskMgr.add(self.update_camera, 'update_camera_task')
+        taskMgr.add(self.debug, 'interface_debug_task')
+        
+    def get_mouse_pos(self):
         if base.mouseWatcherNode.hasMouse(): 
-            mpos = base.mouseWatcherNode.getMouse() 
-            t_mpos_x = mpos.getX() 
-            t_mpos_y = mpos.getY() 
+            return base.mouseWatcherNode.getMouse() 
+        return None
+    
+    def get_mouse_grid_coordinates(self):
+        mpos = self.get_mouse_pos()
+        pos3d = Point3()
+        nearPoint = Point3()
+        farPoint = Point3()
+        base.camLens.extrude(mpos, nearPoint, farPoint)
+        if self.plane.intersectsLine(pos3d,
+                render.getRelativePoint(camera, nearPoint),
+                render.getRelativePoint(camera, farPoint)):
+            x = pos3d.getX()
+            y = pos3d.getY()
+            if x >= 0 and y >= 0:
+                return int(x), int(y)
+            else:
+                return None
+        return None
+    
+    def set_target(self, x, y, z):
+        x = self.clamp(x, self.pan_limits_x.getX(), self.pan_limits_x.getY())
+        self.target.setX(x)
+        y = self.clamp(y, self.pan_limits_y.getX(), self.pan_limits_y.getY())
+        self.target.setY(y)
+        self.target.setZ(z)
+        
+    def clamp(self, val, min_val, max_val): 
+        return min(max(val, min_val), max_val)
+
+    def adjust_cam_dist(self, factor):
+        self.cam_dist = self.cam_dist * factor
+        self.orbit(0, 0)
+    
+    def start_orbit(self): 
+        self.is_orbiting = True
+        
+    def stop_orbit(self):
+        self.is_orbiting = False 
+    
+    def orbit(self, delta_x, delta_y):
+        new_cam_hpr = Vec3() 
+        new_cam_pos = Vec3()
+        cam_hpr = base.camera.getHpr()  
           
-            if (self.booOrbiting): 
-                self.DoOrbit(t_mpos_x, t_mpos_y) 
-                return task.cont 
-             
-            if (self.booDragPanning): 
-                self.DoDragPan(t_mpos_x, t_mpos_y) 
-                return task.cont 
-
-            if (t_mpos_x < -0.9) | (t_mpos_x > 0.9) | (t_mpos_y < -0.9) | (t_mpos_y > 0.9): 
-                #If i'm making a selection, don't pan the camera. It's very annoying. 
-                try: 
-                    if objSelectionTool.booSelecting: 
-                        return task.cont 
-                except:
-                    pass 
-                self.DoEdgePan(t_mpos_x, t_mpos_y) 
-                return task.cont 
-        return task.cont 
-
-    def DoEdgePan(self, fMX, fMY):   #MX, MY: mouse x, mouse y 
-        dx, dy = 0, 0 
-        old_Phi = 180 + self.tupCurrentCameraDir[0] 
-        if fMX > self.fEdgeBound: 
-            dx = cos(radians(old_Phi+180))*(fMX-self.fEdgeBound)/(1-self.fEdgeBound)*self.fPanRate/self.fZoomRate 
-            dy = sin(radians(old_Phi+180))*(fMX-self.fEdgeBound)/(1-self.fEdgeBound)*self.fPanRate/self.fZoomRate 
-            #print fMX, fMY, dx, dy 
+        new_cam_hpr.setX(cam_hpr.getX() + delta_x) 
+        new_cam_hpr.setY(self.clamp(cam_hpr.getY() - delta_y, -85, -10)) 
+        new_cam_hpr.setZ(cam_hpr.getZ())
           
-        if fMX < -1*self.fEdgeBound: 
-            dx = cos(radians(old_Phi+180))*(fMX+self.fEdgeBound)/(1-self.fEdgeBound)*self.fPanRate/self.fZoomRate 
-            dy = sin(radians(old_Phi+180))*(fMX+self.fEdgeBound)/(1-self.fEdgeBound)*self.fPanRate/self.fZoomRate 
-            #print fMX, fMY, dx ,dy 
+        base.camera.setHpr(new_cam_hpr)  
           
-        if fMY > self.fEdgeBound: 
-            dx = -1*cos(radians(old_Phi+90))*(fMY-self.fEdgeBound)/(1-self.fEdgeBound)*self.fPanRate/self.fZoomRate 
-            dy = -1*sin(radians(old_Phi+90))*(fMY-self.fEdgeBound)/(1-self.fEdgeBound)*self.fPanRate/self.fZoomRate 
-            #print fMX, fMY, dx ,dy 
-            
-        if fMY < -1*self.fEdgeBound:        
-            dx = -1*cos(radians(old_Phi+90))*(fMY+self.fEdgeBound)/(1-self.fEdgeBound)*self.fPanRate/self.fZoomRate 
-            dy = -1*sin(radians(old_Phi+90))*(fMY+self.fEdgeBound)/(1-self.fEdgeBound)*self.fPanRate/self.fZoomRate 
-            #print fMX, fMY, dx ,dy 
+        radian_x = new_cam_hpr.getX() * (math.pi / 180.0) 
+        radian_y = new_cam_hpr.getY() * (math.pi / 180.0)  
           
-        if not self.booDebug: 
-            self.tupCurrentCameraPos = (self.tupCurrentCameraPos[0] + dx, self.tupCurrentCameraPos[1] + dy, self.tupCurrentCameraPos[2]) 
-            base.camera.setPos(self.tupCurrentCameraPos[0], self.tupCurrentCameraPos[1], self.tupCurrentCameraPos[2]) 
-          
-    def DoDragPan(self, fMX, fMY): 
-        dx, dy = 0, 0 
-        old_Phi = 180 + self.tupCurrentCameraDir[0] 
-        dMX = fMX - self.fLastMouseX 
-        dMY = fMY - self.fLastMouseY 
-        x_p = dMX*self.fDragPanRate/self.fZoomRate 
-        y_p = dMY*self.fDragPanRate/self.fZoomRate 
-        c_ = cos(radians(old_Phi+180)) 
-        s_ = sin(radians(old_Phi+180)) 
-        dx = -1*(c_*x_p - s_*y_p) 
-        dy = -1*(s_*x_p + c_*y_p) 
-        if self.booDebug: 
-            print dx, dy 
-        if not self.booDebug: 
-            self.tupCurrentCameraPos = (self.tupCurrentCameraPos[0] + dx, self.tupCurrentCameraPos[1] + dy, self.tupCurrentCameraPos[2]) 
-            base.camera.setPos(self.tupCurrentCameraPos[0], self.tupCurrentCameraPos[1], self.tupCurrentCameraPos[2]) 
-            self.fLastMouseX = fMX 
-            self.fLastMouseY = fMY 
-       
-    def DoOrbit(self, fMX, fMY): 
-        if not self.booDebug: 
-            dMX = fMX - self.fLastMouseX 
-            dMY = fMY - self.fLastMouseY 
-        else: 
-            dMX = fMX 
-            dMY = fMY 
-        dTheta = -1*dMY * self.fThetaRate 
-        dPhi = -1*dMX * self.fPhiRate 
-       
-        old_Theta = -1*self.tupCurrentCameraDir[1] 
-        old_Phi = 180 + self.tupCurrentCameraDir[0] 
-        old_xyz_r = self.tupCurrentCameraPos[2]/sin(abs(radians(self.tupCurrentCameraDir[1]))) 
-        old_xy_r = self.tupCurrentCameraPos[2]/tan(abs(radians(self.tupCurrentCameraDir[1]))) 
-        old_x = -1*old_xy_r*cos(radians(self.tupCurrentCameraDir[0]+90)) 
-        old_y = -1*old_xy_r*sin(radians(self.tupCurrentCameraDir[0]+90)) 
+        new_cam_pos.setX(self.cam_dist * math.sin(radian_x) * math.cos(radian_y) + self.target.getX())
+        new_cam_pos.setY(-self.cam_dist * math.cos(radian_x) * math.cos(radian_y) + self.target.getY()) 
+        new_cam_pos.setZ(-self.cam_dist * math.sin(radian_y) + self.target.getZ()) 
+        base.camera.setPos(new_cam_pos.getX(), new_cam_pos.getY(), new_cam_pos.getZ())                     
+        base.camera.lookAt(self.target.getX(), self.target.getY(), self.target.getZ()) 
+    
+    def event(self, button, value):
+        self.keys[button] = value
+    
+    def update_camera(self, task): 
+        mpos = self.get_mouse_pos()
+        if mpos != None:
+            if self.is_orbiting:
+                self.orbit((self.mx - mpos.getX()) * 100, (self.my - mpos.getY()) * 100)
+            else: 
+                move_x = False
+                move_y = False
+                if self.keys['down']: 
+                    rad_x1 = base.camera.getH() * (math.pi / 180.0) 
+                    pan_rate1 = 0.2 * self.cam_dist / self.pan_rate_div 
+                    move_y = True 
+                if self.keys['up']: 
+                    rad_x1 = base.camera.getH() * (math.pi / 180.0) + math.pi 
+                    pan_rate1 = 0.2 * self.cam_dist / self.pan_rate_div 
+                    move_y = True 
+                if self.keys['left']: 
+                    rad_x2 = base.camera.getH() * (math.pi / 180.0) + math.pi * 0.5 
+                    pan_rate2 = 0.2 * self.cam_dist / self.pan_rate_div 
+                    move_x = True
+                if self.keys['right']: 
+                    rad_x2 = base.camera.getH() * (math.pi / 180.0) - math.pi*0.5 
+                    pan_rate2 = 0.2 * self.cam_dist / self.pan_rate_div 
+                    move_x = True 
+                
+                if move_y: 
+                    temp_x = self.target.getX() + math.sin(rad_x1) * pan_rate1 
+                    temp_x = self.clamp(temp_x, self.pan_limits_x.getX(), self.pan_limits_x.getY()) 
+                    self.target.setX(temp_x) 
+                    temp_y = self.target.getY() - math.cos(rad_x1) * pan_rate1 
+                    temp_y = self.clamp(temp_y, self.pan_limits_y.getX(), self.pan_limits_y.getY()) 
+                    self.target.setY(temp_y) 
+                    self.orbit(0, 0) 
+                if move_x: 
+                    temp_x = self.target.getX() - math.sin(rad_x2) * pan_rate2 
+                    temp_x = self.clamp(temp_x, self.pan_limits_x.getX(), self.pan_limits_x.getY()) 
+                    self.target.setX(temp_x) 
+                    temp_y = self.target.getY() + math.cos(rad_x2) * pan_rate2 
+                    temp_y = self.clamp(temp_y, self.pan_limits_y.getX(), self.pan_limits_y.getY()) 
+                    self.target.setY(temp_y) 
+                    self.orbit(0, 0)
+            #print(self.target) 
+            self.mx = mpos.getX()
+            self.my = mpos.getY()
+        return task.cont
 
-        if self.booDebug: 
-            print "Old target 2 cam theta", old_Theta 
-            print "Old Camera pos", self.tupCurrentCameraPos 
-            print "Old Camera dir", self.tupCurrentCameraDir 
-       
-        new_Theta = old_Theta + dTheta 
-        if new_Theta < self.tupThetaLimit[0]: 
-            new_Theta = 5 
-        if new_Theta > self.tupThetaLimit[1]: 
-            new_Theta = 90 
-        new_Phi = old_Phi + dPhi 
-
-        nz = 1.*old_xyz_r*sin(radians(new_Theta)) 
-        new_xy_r = 1.*old_xyz_r*cos(radians(new_Theta)) 
-        new_x = new_xy_r*cos(radians(new_Phi+90)) 
-        new_y = new_xy_r*sin(radians(new_Phi+90)) 
-       
-        self.tupCurrentCameraPos = (self.tupCurrentCameraPos[0] + new_x - old_x, self.tupCurrentCameraPos[1] + new_y - old_y, nz) 
-        self.tupCurrentCameraDir = (new_Phi - 180, -1*new_Theta, 0) 
-
-        if self.booDebug: 
-            print "New target 2 cam theta", new_Theta 
-            print "New Camera Pos", self.tupCurrentCameraPos 
-            print "New Camera dir", self.tupCurrentCameraDir 
-          
-        if not self.booDebug: 
-            base.camera.setPos(self.tupCurrentCameraPos[0], self.tupCurrentCameraPos[1], self.tupCurrentCameraPos[2]) 
-            base.camera.setHpr(self.tupCurrentCameraDir[0], self.tupCurrentCameraDir[1], self.tupCurrentCameraDir[2]) 
-            self.fLastMouseX = fMX 
-            self.fLastMouseY = fMY 
-       
-    def GoHome(self): 
-        base.camera.setPos(self.tupInitCameraPos[0], self.tupInitCameraPos[1], self.tupInitCameraPos[2]) 
-        base.camera.setHpr(self.tupInitCameraDir[0], self.tupInitCameraDir[1], self.tupInitCameraDir[2]) 
-        self.tupCurrentCameraPos = self.tupInitCameraPos 
-        self.tupCurrentCameraDir = self.tupInitCameraDir 
-
-    def StartDragPan(self): 
-        self.booDragPanning = True 
-        if base.mouseWatcherNode.hasMouse(): 
-            mpos = base.mouseWatcherNode.getMouse() 
-            self.fLastMouseX = mpos.getX() 
-            self.fLastMouseY = mpos.getY() 
-
-    def StopDragPan(self): 
-        self.booDragPanning = False 
-       
-    def StartCameraOrbit(self): 
-        self.booOrbiting = True 
-        if base.mouseWatcherNode.hasMouse(): 
-            mpos = base.mouseWatcherNode.getMouse() 
-            self.fLastMouseX = mpos.getX() 
-            self.fLastMouseY = mpos.getY() 
-
-    def StopCameraOrbit(self): 
-        self.booOrbiting = False 
-
-    def ZoomCameraOut(self): 
-        old_Theta = -1*self.tupCurrentCameraDir[1] 
-        old_Phi = 180 + self.tupCurrentCameraDir[0] 
-        old_xyz_r = self.tupCurrentCameraPos[2]/sin(abs(radians(self.tupCurrentCameraDir[1]))) 
-        old_xy_r = self.tupCurrentCameraPos[2]/tan(abs(radians(self.tupCurrentCameraDir[1]))) 
-        old_x = -1*old_xy_r*cos(radians(self.tupCurrentCameraDir[0]+90)) 
-        old_y = -1*old_xy_r*sin(radians(self.tupCurrentCameraDir[0]+90)) 
-
-        new_xyz_r = old_xyz_r*self.fZoomRate 
-        nz = 1.*new_xyz_r*sin(radians(old_Theta)) 
-        new_xy_r = 1.*new_xyz_r*cos(radians(old_Theta)) 
-        new_x = new_xy_r*cos(radians(old_Phi+90)) 
-        new_y = new_xy_r*sin(radians(old_Phi+90)) 
-       
-        self.tupCurrentCameraPos = (self.tupCurrentCameraPos[0] + new_x - old_x, self.tupCurrentCameraPos[1] + new_y - old_y, nz) 
-        base.camera.setPos(self.tupCurrentCameraPos[0], self.tupCurrentCameraPos[1], self.tupCurrentCameraPos[2]) 
-
-    def ZoomCameraIn(self): 
-        old_Theta = -1*self.tupCurrentCameraDir[1] 
-        old_Phi = 180 + self.tupCurrentCameraDir[0] 
-        old_xyz_r = self.tupCurrentCameraPos[2]/sin(abs(radians(self.tupCurrentCameraDir[1]))) 
-        old_xy_r = self.tupCurrentCameraPos[2]/tan(abs(radians(self.tupCurrentCameraDir[1]))) 
-        old_x = -1*old_xy_r*cos(radians(self.tupCurrentCameraDir[0]+90)) 
-        old_y = -1*old_xy_r*sin(radians(self.tupCurrentCameraDir[0]+90)) 
-
-        new_xyz_r = old_xyz_r/self.fZoomRate 
-        nz = 1.*new_xyz_r*sin(radians(old_Theta)) 
-        new_xy_r = 1.*new_xyz_r*cos(radians(old_Theta)) 
-        new_x = new_xy_r*cos(radians(old_Phi+90)) 
-        new_y = new_xy_r*sin(radians(old_Phi+90)) 
-         
-        self.tupCurrentCameraPos = (self.tupCurrentCameraPos[0] + new_x - old_x, self.tupCurrentCameraPos[1] + new_y - old_y, nz) 
-        base.camera.setPos(self.tupCurrentCameraPos[0], self.tupCurrentCameraPos[1], self.tupCurrentCameraPos[2]) 
+    def debug(self, task):
+        None
+        return task.cont
 
 
 class clPickerTool(DirectObject.DirectObject):
@@ -323,3 +269,4 @@ class clPickerTool(DirectObject.DirectObject):
                 dest = Point2(self.mouse_tile.x, self.mouse_tile.y)
                 base.picked_unit.move(dest)
                 base.toggle_state('movement')
+                
