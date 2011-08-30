@@ -1,6 +1,6 @@
 from direct.showbase.ShowBase import ShowBase
 from panda3d.core import *
-from Interface import clCameraHandler, clPickerTool
+from Interface import clPickerTool, Interface
 from Unit import Unit
 from Level import Level
 from Grid import Grid
@@ -54,13 +54,13 @@ class App(ShowBase):
         self.game_state = {}
         self.game_state['movement'] = 0        
 
-        self.a = clCameraHandler()
+        self.a = Interface()
         self.c = clPickerTool()
         
         self.accept('m', self.toggle_state, ['movement'])
         self.accept('g', self.switch_grid)
         self.accept('i', self.info)
-        self.accept('w', self.change)
+        #self.accept('w', self.change)
         self.accept('escape', self.end)
     
     def end(self):
