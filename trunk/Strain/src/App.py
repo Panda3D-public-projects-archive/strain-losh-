@@ -112,8 +112,10 @@ class App(ShowBase):
     def init_units(self):
         self.units = {}
         u = Unit('Unit01', 'terminator', 'Team01', 3, 4, self.node)
+        u.model.setLightOff()
         self.units['Unit01'] = u
         u = Unit('Unit02', 'marine_b', 'Team02', 8, 9, self.node)
+        u.model.setLightOff()
         self.units['Unit02'] = u           
         
     def switch_grid(self):
