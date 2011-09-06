@@ -1,7 +1,10 @@
 from direct.showbase import DirectObject
-from panda3d.core import Plane, Vec3, Vec2, Point3, Point2
+from direct.actor.Actor import Actor
+from panda3d.core import Plane, Vec4, Vec3, Vec2, Point3, Point2
 from pandac.PandaModules import CollisionTraverser, CollisionHandlerQueue, CollisionNode, CollisionRay
-from pandac.PandaModules import GeomNode, CardMaker
+from pandac.PandaModules import GeomNode, CardMaker 
+from pandac.PandaModules import Texture, TextureStage, RenderAttrib, DepthOffsetAttrib, TransparencyAttrib
+from Unit import UnitLoader
 import math
 
 
@@ -15,12 +18,22 @@ class Interface(DirectObject.DirectObject):
         self.target = Vec3(0, 0, 0)
         self.cam_dist = 40
         self.pan_rate_div = 20
-        self.pan_limits_x = Vec2(-30, 30) 
-        self.pan_limits_y = Vec2(-30, 30)
+        self.pan_limits_x = Vec2(-5, 15) 
+        self.pan_limits_y = Vec2(-5, 15)
         self.plane = Plane(Vec3(0, 0, 1), Point3(0, 0, 0))
         base.camera.setPos(10, 10, 20)
         base.camera.lookAt(10, 10, 0)
         self.orbit(0, 0)
+        
+        self.hovered_tile = None
+        self.selected_unit = None
+        self.selected_unit_tex = loader.loadTexture('sel.png')
+        self.selected_unit_tile = None
+        self.selected_unit_model = None
+        self.ts = TextureStage('ts')
+        self.ts.setMode(TextureStage.MBlend)
+
+        self.init_collision()
 
         self.accept('w', self.event, ['up', 1])
         self.accept('w-up', self.event, ['up', 0])
@@ -29,7 +42,8 @@ class Interface(DirectObject.DirectObject):
         self.accept('a', self.event, ['left', 1])
         self.accept('a-up', self.event, ['left', 0])
         self.accept('d', self.event, ['right', 1])
-        self.accept('d-up', self.event, ['right', 0])  
+        self.accept('d-up', self.event, ['right', 0])
+        self.accept("mouse1-up", self.select)
         self.accept("mouse3", self.start_orbit)
         self.accept("mouse3-up", self.stop_orbit)
         self.accept("wheel_up", lambda : self.adjust_cam_dist(0.9))
@@ -43,10 +57,35 @@ class Interface(DirectObject.DirectObject):
         self.keys['middle'] = 0
         self.keys['wheel_up'] = 0
         self.keys['wheel_down'] = 0
+        
+        self.unit_loader = UnitLoader()
     
         taskMgr.add(self.update_camera, 'update_camera_task')
+        taskMgr.add(self.hover, 'hover_task')
         taskMgr.add(self.debug, 'interface_debug_task')
-        
+
+    def init_collision(self):
+        self.plane = Plane(Vec3(0, 0, 1), Point3(0, 0, 0))
+        self.coll_trav = CollisionTraverser()
+        self.coll_queue = CollisionHandlerQueue()
+        self.coll_node = CollisionNode('mouse_ray')
+        self.coll_nodepath = base.camera.attachNewNode(self.coll_node)
+        self.coll_node.setFromCollideMask(GeomNode.getDefaultCollideMask())
+        self.coll_ray = CollisionRay()
+        self.coll_node.addSolid(self.coll_ray)
+        self.coll_trav.addCollider(self.coll_nodepath, self.coll_queue)
+    
+    def find_object(self):
+        pos = self.get_mouse_pos()
+        if pos:
+            self.coll_ray.setFromLens(base.camNode, pos.getX(), pos.getY())
+            self.coll_trav.traverse(render)
+            if self.coll_queue.getNumEntries() > 0:
+                self.coll_queue.sortEntries()
+                np = self.coll_queue.getEntry(0).getIntoNodePath()
+                return np
+        return None
+     
     def get_mouse_pos(self):
         if base.mouseWatcherNode.hasMouse(): 
             return base.mouseWatcherNode.getMouse() 
@@ -153,120 +192,64 @@ class Interface(DirectObject.DirectObject):
                     temp_y = self.clamp(temp_y, self.pan_limits_y.getX(), self.pan_limits_y.getY()) 
                     self.target.setY(temp_y) 
                     self.orbit(0, 0)
-            #print(self.target) 
             self.mx = mpos.getX()
             self.my = mpos.getY()
         return task.cont
 
+    def mark_hovered_tile(self, nodepath, flag):
+        if flag:
+            nodepath.setColorScale(2, 2, 2, 1)
+        else:
+            nodepath.setColorScale(1, 1, 1, 1)
+
+    def mark_selected_tile(self, nodepath, tex, color):
+        self.ts.setColor(color)
+        nodepath.setTexture(self.ts, tex)
+        self.selected_unit_tile = nodepath
+        
+    def clear_selected_tile(self, nodepath):
+        if nodepath:
+            nodepath.setTextureOff(self.ts)
+ 
+    def hover(self, task):
+        np = self.find_object()
+        if np:
+            if self.hovered_tile != np:
+                if self.hovered_tile:
+                    self.mark_hovered_tile(self.hovered_tile, 0)
+                self.mark_hovered_tile(np, 1)
+                self.hovered_tile = np
+        return task.cont 
+
+    def deselect(self):
+        if self.selected_unit:
+            self.clear_selected_tile(self.selected_unit_tile)
+            if self.selected_unit_model:
+                self.selected_unit_model.cleanup()
+                self.selected_unit_model.remove()
+            self.selected_unit = None
+    
+    def select(self):
+        selected = self.find_object()
+        if selected:
+            if selected.findNetTag('Unit').getTag('Unit') == 'true':
+                sel = base.units[selected.findNetTag('Name').getTag('Name')] 
+                if self.selected_unit != sel:
+                    self.deselect()
+                    self.selected_unit = sel
+                    pos = self.selected_unit.model.getPos()
+                    if self.selected_unit.team == 'Team01':
+                        col = Vec4(1, 0, 0, 1)
+                    else:
+                        col = Vec4(0, 0, 1, 1)
+                    self.mark_selected_tile(base.level.node_data[int(pos.getX())][int(pos.getY())], self.selected_unit_tex, col)
+                    self.selected_unit_model = self.unit_loader.load(self.selected_unit.type)
+                    self.selected_unit_model.reparentTo(base.alt_render)
+                    self.selected_unit_model.setPos(0,-8,-1.7)
+            else:
+                print selected.findNetTag('pos').getTag('pos')
+    
     def debug(self, task):
         None
         return task.cont
 
-
-class clPickerTool(DirectObject.DirectObject):
-    def __init__(self): 
-        self.plane = Plane(Vec3(0, 0, 1), Point3(0, 0, 0))
-        traverser = CollisionTraverser()
-        self.tr = traverser
-        collisionhandler = CollisionHandlerQueue()
-        self.cHandQ = collisionhandler
-        pickerNode = CollisionNode('mouseRay')
-        pickerNP = base.camera.attachNewNode(pickerNode)
-        pickerNode.setFromCollideMask(GeomNode.getDefaultCollideMask())
-        pickerRay = CollisionRay()
-        self.pr = pickerRay
-        pickerNode.addSolid(pickerRay)
-        self.tr.addCollider(pickerNP, self.cHandQ)
-      
-        cm = CardMaker('tile') 
-        cm.setFrame(0, base.tile_size, 0, base.tile_size) 
-        self.select_tile = render.attachNewNode(cm.generate())
-        self.select_tile.setPos(0, 0, 0)
-        self.select_tile.setColor(1, 0, 0)
-        self.select_tile.lookAt(0, 0, -1)
-        
-        cmMT = CardMaker('movetile')
-        cmMT.setFrame(0, base.tile_size, 0, base.tile_size) 
-        self.move_tile = render.attachNewNode(cmMT.generate())
-        self.move_tile.setPos(0, 0, 0)
-        self.move_tile.lookAt(0, 0, -1)        
-        self.move_tile.hide()
-        
-        self.mouse_tile = Point3()
-        self.last_mouse_tile = None
-      
-        self.accept('mouse1', self.PickObject)
-        taskMgr.add(self.GetMousePos,'GetMousePosTask')    
-    
-    def hide_move_tile(self):
-        self.move_tile.setPos(0, 0, -50)
-        self.move_tile.hide()
-    
-    def GetMousePos(self, task): 
-        if base.mouseWatcherNode.hasMouse(): 
-            mpos = base.mouseWatcherNode.getMouse() 
-            pos3d = Point3() 
-            nearPoint = Point3() 
-            farPoint = Point3() 
-            base.camLens.extrude(mpos, nearPoint, farPoint) 
-            if self.plane.intersectsLine(pos3d, render.getRelativePoint(camera, nearPoint), render.getRelativePoint(camera, farPoint)): 
-                x = pos3d.getX()
-                y = pos3d.getY()
-                if x >= 0 and x < base.level.x and y >= 0 and y < base.level.y:
-                    self.mouse_tile = Point3(int(x), int(y), 0)
-                else:
-                    self.mouse_tile = None
-            if base.game_state['movement'] == 1 and base.picked_unit != None and self.mouse_tile != None:
-                if self.mouse_tile != self.last_mouse_tile:
-                    self.last_mouse_tile = self.mouse_tile
-                    for i in base.picked_unit.closed_tile_list:
-                        if self.mouse_tile.x == i[0].x and self.mouse_tile.y == i[0].y:
-                            if base.picked_unit.current_AP - i[2] >= 2:
-                                self.move_tile.setColor(0, 1, 0)
-                            else:
-                                self.move_tile.setColor(0, 0, 1)
-                            self.move_tile.setPos(self.mouse_tile)
-                            self.move_tile.show()
-                            break
-                        else:
-                            self.move_tile.hide()
-            #print base.gameState['movement'], base.pickedUnit
-        return task.again 
-      
-    def PickObject(self):
-        if base.mouseWatcherNode.hasMouse():
-            if base.game_state['movement'] == 0:
-                old_picked_unit = base.picked_unit
-                pickedObj = None
-                base.picked_unit = None
-                mpos = base.mouseWatcherNode.getMouse()
-                self.pr.setFromLens(base.camNode, mpos.getX(), mpos.getY())
-                self.tr.traverse(render)
-                if self.cHandQ.getNumEntries() > 0:
-                    # This is so we get the closest object.
-                    self.cHandQ.sortEntries()
-                    pickedObj = self.cHandQ.getEntry(0).getIntoNodePath()
-                    if pickedObj.findNetTag('Unit').getTag('Unit') == 'true' and base.game_state['movement'] == 0:
-                        base.picked_unit = base.units[pickedObj.findNetTag('Name').getTag('Name')]
-                        pos = base.calc_world_pos(base.picked_unit.model.getPos())
-                        self.select_tile.setPos(pos)
-                
-                if pickedObj == None and self.mouse_tile != None:
-                    x = floor(self.mouse_tile.x)
-                    y = floor(self.mouse_tile.y)
-                    if x >= base.level.x * -base.tile_size and x < base.level.x * base.tile_size and y >= base.level.y * -base.tile_size and y < base.level.y * base.tile_size:
-                        self.select_tile.setPos(floor(self.mouse_tile.x), floor(self.mouse_tile.y), 0)
-                        for u in base.units.itervalues():
-                            base.picked_unit = None
-                            if base.calc_world_pos(u.model.getPos()) == self.select_tile.getPos():
-                                base.picked_unit = u
-                                break 
-                
-                if base.picked_unit != None and base.picked_unit != old_picked_unit:
-                    base.picked_unit.model.play('selected')
-                    base.picked_unit.talk('select')
-            else:
-                dest = Point2(self.mouse_tile.x, self.mouse_tile.y)
-                base.picked_unit.move(dest)
-                base.toggle_state('movement')
-                
