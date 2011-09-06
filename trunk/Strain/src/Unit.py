@@ -2,11 +2,25 @@ from pandac.PandaModules import Point2, Point3, NodePath, Vec3
 from direct.actor.Actor import Actor
 from direct.interval.IntervalGlobal import Sequence, ActorInterval, Parallel, SoundInterval
 from random import randint
-#test
+
+class UnitLoader():
+    def __init__(self):
+        None
+    
+    def load(self, type):
+        if type == 'terminator':
+            model = Actor('terminator', {'run': 'terminator-run', 'selected': 'terminator-run'})
+        elif type == 'marine_b':
+            model = Actor('marine_b', {'run': 'marine-run', 'selected': 'marine-fire'})
+        
+        return model
+
+
 class Unit():
     def __init__(self, name, type, team, x, y, parent_node):
+        u = UnitLoader()
         if type == 'terminator':
-            self.model = Actor('terminator', {'run': 'terminator-run', 'selected': 'terminator-run'})
+            self.model = u.load(type)
             self.model.setScale(0.25)
             # bake in rotation transform because model is created facing towards screen
             self.model.setH(180) 
@@ -14,25 +28,7 @@ class Unit():
             self.default_AP = 15
             self.soundtype = '02'
         elif type == 'marine_b':
-            self.model = Actor('marine_b', {'run': 'marine-run', 'selected': 'marine-fire'})
-            #self.model.setPlayRate(1, 'run')
-            self.model.setScale(0.25)
-            # bake in rotation transform because model is created facing towards screen
-            self.model.setH(180) 
-            self.model.flattenLight()
-            self.default_AP = 5
-            self.soundtype = '01'      
-        elif type == 'marine_hb':
-            self.model = Actor('marine_hb', {'run': 'marine-run', 'selected': 'marine-fire'})
-            #self.model.setPlayRate(1, 'run')
-            self.model.setScale(0.25)
-            # bake in rotation transform because model is created facing towards screen
-            self.model.setH(180) 
-            self.model.flattenLight()
-            self.default_AP = 5
-            self.soundtype = '01' 
-        elif type == 'scout':
-            self.model = Actor('scout', {'run': 'scout-walk', 'selected': 'scout-walk'})
+            self.model = u.load(type)
             #self.model.setPlayRate(1, 'run')
             self.model.setScale(0.25)
             # bake in rotation transform because model is created facing towards screen
@@ -40,20 +36,13 @@ class Unit():
             self.model.flattenLight()
             self.default_AP = 5
             self.soundtype = '01'
-        elif type == 'khorne':
-            self.model = Actor('khorne', {'run': 'khorne-run', 'selected': 'khorne-run'})
-            #self.model.setPlayRate(1, 'run')
-            self.model.setScale(0.25)
-            # bake in rotation transform because model is created facing towards screen
-            self.model.setH(180) 
-            self.model.flattenLight()
-            self.defAP = 5
-            self.soundtype = '01'	
 
         self.pos = Point2(x, y)
+        self.type = type
         self.team = team
         self.h = self.model.getH()
         self.current_AP = self.default_AP
+        self.health = 10
         self.move_tiles = []
         self.open_tile_list = []
         self.closed_tile_list = []

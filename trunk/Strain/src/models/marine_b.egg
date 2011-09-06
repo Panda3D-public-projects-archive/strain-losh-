@@ -1,7 +1,7 @@
 <CoordinateSystem> { Z-Up }
 
 <Texture> Tex1 {
-  "marine.tga"
+  "space_marine_unit.tga"
   <Scalar> format { rgba }
   <Scalar> wrapu { repeat }
   <Scalar> wrapv { repeat }

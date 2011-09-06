@@ -1,6 +1,6 @@
 from direct.showbase.ShowBase import ShowBase
 from panda3d.core import *
-from Interface import clPickerTool, Interface
+from Interface import Interface
 from Unit import Unit
 from Level import Level
 from Grid import Grid
@@ -50,22 +50,28 @@ class App(ShowBase):
         self.level_name = 'level3.txt'
         self.init_world()
 
-        self.picked_unit = None
-        self.game_state = {}
-        self.game_state['movement'] = 0        
+        #self.setBackgroundColor(Vec4(0.0,0.0,0.0,1.0))    
 
-        self.a = Interface()
-        self.c = clPickerTool()
+        self.interface = Interface()
+        #self.c = clPickerTool()
         
-        self.accept('m', self.toggle_state, ['movement'])
+        wp = self.win.getProperties() 
+        aspect = float(wp.getXSize()) / wp.getYSize()        
+        cm = CardMaker('unit')
+        cm.setFrame(0, 0.3, 0, 0.3)
+        self.unit_cm = aspect2d.attachNewNode(cm.generate())
+        self.unit_cm.setPos(-aspect, 0, 0.7)
+        self.init_alt_render()
+
         self.accept('g', self.switch_grid)
         self.accept('i', self.info)
-        #self.accept('w', self.change)
-        self.accept('escape', self.end)
+        self.accept('escape', self.escape)
     
-    def end(self):
-        """Exits the application by stopping the ShowBase task manager."""
-        taskMgr.stop()
+    def escape(self):
+        if self.interface.selected_unit:
+            self.interface.deselect()
+        else:
+            taskMgr.stop()
     
     def init_world(self):
         """Initializes all objects needed to start a new level."""
@@ -74,12 +80,13 @@ class App(ShowBase):
         self.level.load(self.level_name)
         self.tile_size = 1
         #self.level.create()
-        self.level.create2()
+        self.level.create()
         self.level.show(self.node)
-        self.grid = Grid(self.level.x, self.level.y)
-        self.grid.show(self.node)
+        #self.grid = Grid(self.level.x, self.level.y)
+        #self.grid.show(self.node)
         self.init_lights()
         self.init_units()
+        #render.setTransparency(TransparencyAttrib.MAlpha)
     
     def clear_world(self):
         """Clears all objects in a current app context."""
@@ -88,22 +95,13 @@ class App(ShowBase):
             self.node.removeNode()
             
     def init_lights(self):
-        # Set flat shading
-        flatShade = ShadeModelAttrib.make(ShadeModelAttrib.MSmooth)
-        render.setAttrib(flatShade)
-        # Create directional light
+        shade = ShadeModelAttrib.make(ShadeModelAttrib.MSmooth)
+        render.setAttrib(shade)
         dlight1 = DirectionalLight('dlight1')
         dlight1.setColor(VBase4(1.0, 1.0, 1.0, 1.0))
         dlnp1 = render.attachNewNode(dlight1)
         dlnp1.setHpr(-10, -30, 0)
         render.setLight(dlnp1)
-        # Create second directional light
-        dlight2 = DirectionalLight('dlight2')
-        dlight2.setColor(VBase4(0.0, 0.1, 0.2, 1.0))
-        dlnp2 = render.attachNewNode(dlight2)
-        dlnp2.setHpr(170, 0, 0)
-        render.setLight(dlnp2)
-        # Create ambient light
         alight = AmbientLight('alight')
         alight.setColor(VBase4(0.3, 0.3, 0.3, 1.0))
         alnp = render.attachNewNode(alight)
@@ -117,6 +115,17 @@ class App(ShowBase):
         u = Unit('Unit02', 'marine_b', 'Team02', 8, 9, self.node)
         u.model.setLightOff()
         self.units['Unit02'] = u           
+
+    def init_alt_render(self):  
+        alt_buffer = self.win.makeTextureBuffer("texbuf", 256, 256)
+        self.alt_render = NodePath("off render")
+        self.alt_cam = base.makeCamera(alt_buffer)
+        self.alt_cam.reparentTo(self.alt_render)        
+        self.alt_cam.setPos(0,-10,0)
+        self.alt_render.setLightOff()
+        self.alt_render.setFogOff()     
+        self.unit_cm.setTexture(alt_buffer.getTexture())
+        #self.alt_cam.node().getDisplayRegion(0).setClearColor(Vec4(0,0,0,1))
         
     def switch_grid(self):
         """Toggles display of the grid."""
@@ -124,14 +133,6 @@ class App(ShowBase):
             self.grid.show(self.node)
         elif self.grid.visible == True:
             self.grid.hide()
-    
-    def toggle_state(self, state):
-        if self.game_state[state] == 0:
-            self.game_state[state] = 1
-            self.picked_unit.find_path()
-        else:
-            self.game_state[state] = 0
-            self.c.hide_move_tile()
     
     def calc_world_pos(self, mappos):
         x = int(mappos.x)
@@ -141,26 +142,17 @@ class App(ShowBase):
     def calc_unit_pos(self, mappos):
         x = int(mappos.x)
         y = int(mappos.y)
-        return Point3(x + (base.tile_size/2.0), y + (base.tile_size/2.0), 0)
+        return Point3(x + (base.tile_size/2.0), y + (base.tile_size/2.0), 0.3)
     
     """ 
     -----------------------------------
     debugging procedures and tasks
     -----------------------------------
     """ 
-    def change(self):
-        print "a"
-        self.clear_world()
-        if self.level_name == 'level2.txt':
-            self.level_name = 'level.txt'
-        else:
-            self.level_name = 'level2.txt'
-        self.init_world()
         
     def info(self):
-        #print render.ls()
+        print render.ls()
         #print render.analyze()
-        print self.units[0].model.ls()
         
     def printer(self, task):
         return task.cont    
