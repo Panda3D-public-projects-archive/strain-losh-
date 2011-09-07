@@ -59,6 +59,8 @@ class Interface(DirectObject.DirectObject):
         self.keys['wheel_down'] = 0
         
         self.unit_loader = UnitLoader()
+        
+        self.plane = Plane(Vec3(0, 0, 1), Point3(0, 0, 0))
     
         taskMgr.add(self.update_camera, 'update_camera_task')
         taskMgr.add(self.hover, 'hover_task')
@@ -124,7 +126,7 @@ class Interface(DirectObject.DirectObject):
     
     def start_orbit(self): 
         self.is_orbiting = True
-        
+            
     def stop_orbit(self):
         self.is_orbiting = False 
     
@@ -246,7 +248,24 @@ class Interface(DirectObject.DirectObject):
                     self.selected_unit_model = self.unit_loader.load(self.selected_unit.type)
                     self.selected_unit_model.reparentTo(base.alt_render)
                     self.selected_unit_model.setPos(0,-8,-1.7)
+                    self.selected_unit.find_path()
             else:
+                p = selected.getParent().getPos()
+                u = base.level.game_data[int(p.x)][int(p.y)]
+                if u:
+                    if self.selected_unit != u:
+                        self.deselect()
+                        self.selected_unit = u
+                        pos = self.selected_unit.model.getPos()
+                        if self.selected_unit.team == 'Team01':
+                            col = Vec4(1, 0, 0, 1)
+                        else:
+                            col = Vec4(0, 0, 1, 1)
+                        self.mark_selected_tile(base.level.node_data[int(pos.getX())][int(pos.getY())], self.selected_unit_tex, col)
+                        self.selected_unit_model = self.unit_loader.load(self.selected_unit.type)
+                        self.selected_unit_model.reparentTo(base.alt_render)
+                        self.selected_unit_model.setPos(0,-8,-1.7)
+                        self.selected_unit.find_path()                    
                 print selected.findNetTag('pos').getTag('pos')
     
     def debug(self, task):

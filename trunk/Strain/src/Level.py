@@ -10,6 +10,7 @@ class Level:
         self.tex_count = 3
         self.row_data = []
         self.node_data = []
+        self.game_data = []
 
     def load(self, name):
         line_count = 0
@@ -25,6 +26,7 @@ class Level:
                 self.row_data.append(s)
         file.close()
         self.row_data.reverse()
+        self.game_data = [[None] * self.x for i in xrange(self.y)]
 
     def create(self):
         for x in xrange(0, self.x): 
