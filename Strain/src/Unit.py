@@ -25,7 +25,7 @@ class Unit():
             # bake in rotation transform because model is created facing towards screen
             self.model.setH(180) 
             self.model.flattenLight()
-            self.default_AP = 15
+            self.default_AP = 8
             self.soundtype = '02'
         elif type == 'marine_b':
             self.model = u.load(type)
@@ -57,6 +57,7 @@ class Unit():
         self.model.setPos(base.calc_unit_pos(self.pos))
         self.model.setTag('Unit', 'true')
         self.model.setTag('Name', name)
+        base.level.game_data[int(self.pos.x)][int(self.pos.y)] = self
         
     def show(self):
         self.model.reparentTo(parent_node)
