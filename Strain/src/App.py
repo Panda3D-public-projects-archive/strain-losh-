@@ -82,7 +82,7 @@ class App(ShowBase):
         #self.level.create()
         self.level.create()
         self.level.show(self.node)
-        #self.grid = Grid(self.level.x, self.level.y)
+        #self.grid = Grid(self.level.maxX, self.level.maxY)
         #self.grid.show(self.node)
         self.init_lights()
         self.init_units()

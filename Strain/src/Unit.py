@@ -137,6 +137,7 @@ class Unit():
         self.calc_move_nodes()
         
     def calc_move_nodes(self):
+        self.calc_los()
         while self.open_tile_list:
             n = self.open_tile_list[0]
             ignore = False
@@ -157,7 +158,7 @@ class Unit():
                     #add adjacent nodes to the open list
                     x = n[0].x - base.tile_size
                     y = n[0].y
-                    if x >= 0 and x < base.level.x and y >= 0 and y < base.level.y:
+                    if x >= 0 and x < base.level.maxX and y >= 0 and y < base.level.maxY:
                         posleft = Point2(x, y)
                         new = (posleft, n, n[2]+1)
                         ignore = False
@@ -171,7 +172,7 @@ class Unit():
                             self.open_tile_list.append(new)
                     x = n[0].x + 1
                     y = n[0].y
-                    if x >= 0 and x < base.level.x and y >= 0 and y < base.level.y:
+                    if x >= 0 and x < base.level.maxX and y >= 0 and y < base.level.maxY:
                         posright = Point2(x, y)
                         new = (posright, n, n[2]+1)
                         ignore = False
@@ -185,7 +186,7 @@ class Unit():
                             self.open_tile_list.append(new)
                     x = n[0].x
                     y = n[0].y + 1
-                    if x >= 0 and x < base.level.x and y >= 0 and y < base.level.y:
+                    if x >= 0 and x < base.level.maxX and y >= 0 and y < base.level.maxY:
                         posup = Point2(x, y)
                         new = (posup, n, n[2]+1)
                         ignore = False
@@ -199,7 +200,7 @@ class Unit():
                             self.open_tile_list.append(new)
                     x = n[0].x
                     y = n[0].y - 1
-                    if x >= 0 and x < base.level.x and y >= 0 and y < base.level.y:
+                    if x >= 0 and x < base.level.maxX and y >= 0 and y < base.level.maxY:
                         posdown = Point2(x, y)
                         new = (posdown, n, n[2]+1)
                         ignore = False
@@ -213,5 +214,58 @@ class Unit():
                             self.open_tile_list.append(new)
 
          
+
+    def calc_los(self):
+        #look at tiles adjacent to the unit, if there is a partial cover among them, treat it as a normal visible tile
+        myX = int( self.pos.x )
+        myY = int( self.pos.y )
         
+        #list_passed_tiles = zeros( base.level.maxX, base.level.maxY )
+        list_passed_tiles = []         
+        list_visible_tiles = []
+        
+        #fill list_passed_tiles with zeros
+        for i in range(0, base.level.maxX ):
+            a = []
+            for j in range(0, base.level.maxY ):
+                a.append(0)
+            list_passed_tiles.append(a) 
+        
+        
+        
+        
+        for i in range( -1, 2 ):
+            for j in range( -1, 2 ):
+                curX = myX + i
+                curY = myY + j
+                
+                #ignore my own tile
+                if( i == 0 and j == 0 ):
+                    continue
+                                
+                #level bounds
+                if (curX < 0) or (curY < 0) or curX > base.level.maxX-1 or curY > base.level.maxY-1:
+                    continue
+                
+                if( list_passed_tiles[curX][curY] == 1 ):
+                    continue                    
+                
+                curValue = base.level._level_data[curX][curY]
+                
+                #it is too tall for us to see over
+                if( curValue > 1 ):
+                    continue
+                
+                #else add it into a visible list
+                list_visible_tiles.append( (curX, curY))
+                list_passed_tiles[curX][curY] = 1
+                
+                #print i,j
+        
+
+        print list_passed_tiles
+        print list_visible_tiles
+        pass
+        
+       
         

@@ -4,11 +4,11 @@ from pandac.PandaModules import Geom, GeomNode, GeomVertexData, GeomTriangles, G
 
 class Level:
     def __init__(self):
-        self.x = self.y = 0
+        self.maxX = self.maxY = 0
         self.node = NodePath('levelnode')
         self.wall_width = 1
         self.tex_count = 3
-        self.row_data = []
+        self._level_data = []
         self.node_data = []
         self.game_data = []
 
@@ -19,23 +19,35 @@ class Level:
             line_count = line_count + 1
             if line_count == 1:
                 s = line.split()
-                self.x = int(s[0]); self.y = int(s[1])
+                self.maxX = int(s[0]); self.maxY = int(s[1])
             else:
                 s = line.split(";")
-                s = s[0:int(self.x)]
-                self.row_data.append(s)
+                s = s[0:self.maxX]
+                self._level_data.append(s)
+                
+                
         file.close()
-        self.row_data.reverse()
-        self.game_data = [[None] * self.x for i in xrange(self.y)]
+        self._level_data.reverse()
+        
+        #convert entries in _level_data from string to integer AND change x-y order
+        tmp = [[None] * self.maxX for i in xrange(self.maxY)]
+        for i in range( 0, self.maxX ):
+            for j in range( 0, self.maxY ):
+                self._level_data[j][i] = int( self._level_data[j][i] )
+                tmp[i][j] = self._level_data[j][i]
+        self._level_data = tmp 
+        
+        
+        self.game_data = [[None] * self.maxX for i in xrange(self.maxY)]
 
     def create(self):
-        for x in xrange(0, self.x): 
+        for x in xrange(0, self.maxX): 
             list = []
-            for y in xrange(0, self.y): 
-                tag = int(self.row_data[y][x])
+            for y in xrange(0, self.maxY): 
+                tag = self._level_data[x][y]
                 c = loader.loadModel("tile")
                 c.setPos(x, y, 0)
-                c.setTag("pos", "%(x)s-%(y)s" % {"x":x, "y":y})
+                c.setTag("pos", "%(maxX)s-%(maxY)s" % {"maxX":x, "maxY":y})
                 list.append(c) 
                 if tag != 0:
                     c.setScale(1, 1, tag)
