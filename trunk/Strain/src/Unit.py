@@ -9,10 +9,16 @@ class UnitLoader():
     
     def load(self, type):
         if type == 'terminator':
-            model = Actor('terminator', {'run': 'terminator-run', 'selected': 'terminator-run'})
+            model = Actor('terminator', {'run': 'terminator-run', 'idle02': 'terminator-run'})
         elif type == 'marine_b':
-            model = Actor('marine_b', {'run': 'marine-run', 'selected': 'marine-fire'})
-        
+            model = Actor('marine_b', {'run': 'marine-run', 'idle02': 'marine-fire'})
+        elif type == 'commissar':
+            model = Actor('commissar', {'run': 'commissar-run'
+                                       ,'idle01': 'commissar-idle1'
+                                       ,'idle02': 'commissar-idle2'
+                                       ,'idle03': 'commissar-idle3'
+                                       ,'fire': 'commissar-fire'
+                                       })
         return model
 
 
@@ -49,6 +55,15 @@ class Unit():
             self.model.flattenLight()
             self.default_AP = 5
             self.soundtype = '01'
+        elif self.type == 'commissar':
+            self.model = u.load(self.type)
+            #self.model.setPlayRate(1, 'run')
+            self.model.setScale(0.25)
+            # bake in rotation transform because model is created facing towards screen
+            self.model.setH(180) 
+            self.model.flattenLight()
+            self.default_AP = 5
+            self.soundtype = '01'            
 
         self.pos = Point2( self.x, self.y )
         self.h = self.model.getH()
@@ -155,12 +170,10 @@ class Unit():
                 if n == c:
                     ignore = True
                     break
-            for u in base.engine.units.itervalues():
-                if u.model.getTag('Name') != self.name:
-                    if u.pos == n[0]:
-                        self.open_tile_list.remove(n)
-                        ignore = True
-                        break
+            if base.level.game_data[int(n[0].x)][int(n[0].y)]:
+                self.open_tile_list.remove(n)
+                ignore = True
+                break
             if ignore != True:
                 self.closed_tile_list.append(n)
                 self.open_tile_list.remove(n)

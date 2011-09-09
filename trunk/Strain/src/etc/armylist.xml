@@ -3,7 +3,7 @@
 <armylist>
 
 	<player id="1" name="ultramarinac">
-		<unit id="1" x="0" y="2" type="marine_b" name="Unit01"/>
+		<unit id="1" x="3" y="2" type="commissar" name="Unit01"/>
 		<unit id="1" x="1" y="2" type="marine_b" name="Unit05"/>		
 		<unit id="2" x="2" y="2" type="terminator" name="Unit02"/>
 	</player>
