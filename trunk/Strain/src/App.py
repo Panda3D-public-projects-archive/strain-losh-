@@ -5,6 +5,7 @@ from Unit import Unit
 from Level import Level
 from Grid import Grid
 from SoundManager import SoundManager
+from Engine import Engine
         
 loadPrcFileData("", "model-path "+"$MAIN_DIR/models")
 loadPrcFileData("", "model-path "+"$MAIN_DIR/sounds")
@@ -39,13 +40,15 @@ class App(ShowBase):
         ShowBase.__init__(self)
         #PStatClient.connect()
         
+        self.engine = None
         self.node = None
         self.level = None
         self.level_name = None
         self.tile_size = None
-        self.units = {} 
         
         self.sound_manager = SoundManager()
+        
+        self.engine = Engine() 
         
         self.level_name = 'level3.txt'
         self.init_world()
@@ -108,13 +111,15 @@ class App(ShowBase):
         render.setLight(alnp) 
 
     def init_units(self):
-        self.units = {}
-        u = Unit('Unit01', 'terminator', 'Team01', 3, 4, self.node)
-        u.model.setLightOff()
-        self.units['Unit01'] = u
-        u = Unit('Unit02', 'marine_b', 'Team02', 8, 9, self.node)
-        u.model.setLightOff()
-        self.units['Unit02'] = u           
+        self.engine.units = {}
+        
+        for player in self.engine.players:
+            for u in player.unitlist:
+                u.init( self.node )
+                u.model.setLightOff()
+                
+            self.engine.units[u.name] = u
+        
 
     def init_alt_render(self):  
         alt_buffer = self.win.makeTextureBuffer("texbuf", 256, 256)
