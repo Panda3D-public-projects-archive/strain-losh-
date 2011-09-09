@@ -147,7 +147,7 @@ class Unit():
         self.calc_move_nodes()
         
     def calc_move_nodes(self):
-        self.calc_los()
+        #self.calc_los()
         while self.open_tile_list:
             n = self.open_tile_list[0]
             ignore = False
