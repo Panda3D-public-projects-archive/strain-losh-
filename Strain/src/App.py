@@ -72,7 +72,7 @@ class App(ShowBase):
     
     def escape(self):
         if self.interface.selected_unit:
-            self.interface.deselect()
+            self.interface.deselect_unit()
         else:
             taskMgr.stop()
     

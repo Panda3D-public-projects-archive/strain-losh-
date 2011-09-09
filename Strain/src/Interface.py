@@ -43,7 +43,7 @@ class Interface(DirectObject.DirectObject):
         self.accept('a-up', self.event, ['left', 0])
         self.accept('d', self.event, ['right', 1])
         self.accept('d-up', self.event, ['right', 0])
-        self.accept("mouse1-up", self.select)
+        self.accept("mouse1-up", self.mouse_left_click)
         self.accept("mouse3", self.start_orbit)
         self.accept("mouse3-up", self.stop_orbit)
         self.accept("wheel_up", lambda : self.adjust_cam_dist(0.9))
@@ -64,7 +64,6 @@ class Interface(DirectObject.DirectObject):
     
         taskMgr.add(self.update_camera, 'update_camera_task')
         taskMgr.add(self.hover, 'hover_task')
-        taskMgr.add(self.debug, 'interface_debug_task')
 
     def init_collision(self):
         self.plane = Plane(Vec3(0, 0, 1), Point3(0, 0, 0))
@@ -198,6 +197,9 @@ class Interface(DirectObject.DirectObject):
             self.my = mpos.getY()
         return task.cont
 
+    def mark_available_move_tile(self, nodepath):
+        nodepath.setColorScale(2, 2, 2, 1)
+
     def mark_hovered_tile(self, nodepath, flag):
         if flag:
             nodepath.setColorScale(2, 2, 2, 1)
@@ -223,7 +225,22 @@ class Interface(DirectObject.DirectObject):
                 self.hovered_tile = np
         return task.cont 
 
-    def deselect(self):
+    def select_unit(self, unit):
+        self.deselect_unit()
+        self.selected_unit = unit
+        pos = self.selected_unit.model.getPos()
+        if self.selected_unit.owner.name == 'ultramarinac':
+            col = Vec4(1, 0, 0, 1)
+        else:
+            col = Vec4(0, 0, 1, 1)
+        self.mark_selected_tile(base.level.node_data[int(pos.getX())][int(pos.getY())], self.selected_unit_tex, col)
+        self.selected_unit_model = self.unit_loader.load(self.selected_unit.type)
+        self.selected_unit_model.reparentTo(base.alt_render)
+        self.selected_unit_model.setPos(0,-8,-1.7)
+        self.selected_unit_model.play('idle02')
+        self.selected_unit.find_path()
+
+    def deselect_unit(self):
         if self.selected_unit:
             self.clear_selected_tile(self.selected_unit_tile)
             if self.selected_unit_model:
@@ -231,44 +248,18 @@ class Interface(DirectObject.DirectObject):
                 self.selected_unit_model.remove()
             self.selected_unit = None
     
-    def select(self):
+    def mouse_left_click(self):
         selected = self.find_object()
         if selected:
             if selected.findNetTag('Unit').getTag('Unit') == 'true':
                 sel = base.engine.units[selected.findNetTag('Name').getTag('Name')] 
                 if self.selected_unit != sel:
-                    self.deselect()
-                    self.selected_unit = sel
-                    pos = self.selected_unit.model.getPos()
-                    if self.selected_unit.owner.name == 'ultramarinac':
-                        col = Vec4(1, 0, 0, 1)
-                    else:
-                        col = Vec4(0, 0, 1, 1)
-                    self.mark_selected_tile(base.level.node_data[int(pos.getX())][int(pos.getY())], self.selected_unit_tex, col)
-                    self.selected_unit_model = self.unit_loader.load(self.selected_unit.type)
-                    self.selected_unit_model.reparentTo(base.alt_render)
-                    self.selected_unit_model.setPos(0,-8,-1.7)
-                    self.selected_unit.find_path()
+                    self.select_unit(sel)
             else:
                 p = selected.getParent().getPos()
                 u = base.level.game_data[int(p.x)][int(p.y)]
                 if u:
                     if self.selected_unit != u:
-                        self.deselect()
-                        self.selected_unit = u
-                        pos = self.selected_unit.model.getPos()
-                        if self.selected_unit.owner.name == 'ultramarinac':
-                            col = Vec4(1, 0, 0, 1)
-                        else:
-                            col = Vec4(0, 0, 1, 1)
-                        self.mark_selected_tile(base.level.node_data[int(pos.getX())][int(pos.getY())], self.selected_unit_tex, col)
-                        self.selected_unit_model = self.unit_loader.load(self.selected_unit.type)
-                        self.selected_unit_model.reparentTo(base.alt_render)
-                        self.selected_unit_model.setPos(0,-8,-1.7)
-                        self.selected_unit.find_path()                    
-                print selected.findNetTag('pos').getTag('pos')
-    
-    def debug(self, task):
-        None
-        return task.cont
+                        self.select_unit(u)
+
 
