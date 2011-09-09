@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+
+<armylist>
+
+	<player id="1" name="ultramarinac">
+		<unit id="1" x="0" y="2" type="marine_b" name="Unit01"/>
+		<unit id="1" x="1" y="2" type="marine_b" name="Unit05"/>		
+		<unit id="2" x="2" y="2" type="terminator" name="Unit02"/>
+	</player>
+
+	<player id="2" name="ejndzel">
+		<unit id="2" x="6" y="7" type="terminator" name="Unit03"/>
+		<unit id="2" x="7" y="7" type="terminator" name="Unit04"/>
+	</player>
+
+
+</armylist>
