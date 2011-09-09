@@ -25,7 +25,8 @@ class UnitLoader():
 class Unit():
     
     #def __init__(self, name, type, x, y, parent_node):
-    def __init__(self, owner, name, type, x, y ):
+    def __init__(self, id, owner, name, type, x, y ):
+        self.id = id
         self.owner = owner
         self.name = name
         self.type = type
