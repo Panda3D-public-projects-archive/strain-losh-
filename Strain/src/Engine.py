@@ -5,7 +5,7 @@ class Engine:
 
     players = []
     units = {}
-
+        
     def __init__(self):
         
         self.loadArmyList()
@@ -14,6 +14,9 @@ class Engine:
     def loadArmyList(self):
         xmldoc = minidom.parse('etc/armylist.xml')
         #print xmldoc.firstChild.toxml()
+        
+        players = []
+        units = {}
         
         player_nodes = xmldoc.getElementsByTagName( 'player' )
         
@@ -28,7 +31,8 @@ class Engine:
                           units.attributes['y'].value )
                 
                 player.unitlist.append( u )
-    
+                self.units[u.name] = u
+                
             self.players.append( player )
     
         xmldoc.unlink()   

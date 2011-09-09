@@ -111,14 +111,10 @@ class App(ShowBase):
         render.setLight(alnp) 
 
     def init_units(self):
-        self.engine.units = {}
-        
         for player in self.engine.players:
             for u in player.unitlist:
                 u.init( self.node )
                 u.model.setLightOff()
-                
-            self.engine.units[u.name] = u
         
 
     def init_alt_render(self):  
