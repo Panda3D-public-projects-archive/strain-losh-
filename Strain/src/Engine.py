@@ -18,20 +18,19 @@ class Engine:
         players = []
         units = {}
         
-        player_nodes = xmldoc.getElementsByTagName( 'player' )
         
-        for p in player_nodes:
+        for p in xmldoc.getElementsByTagName( 'player' ):
             player = Player( p.attributes['name'].value )                        
             
-            for units in p.getElementsByTagName( 'unit' ):
-                u = Unit( player, 
-                          units.attributes['name'].value, 
-                          units.attributes['type'].value, 
-                          units.attributes['x'].value,
-                          units.attributes['y'].value )
+            for u in p.getElementsByTagName( 'unit' ):
+                tmpUnit = Unit( player, 
+                          u.attributes['name'].value, 
+                          u.attributes['type'].value, 
+                          u.attributes['x'].value,
+                          u.attributes['y'].value )
                 
-                player.unitlist.append( u )
-                self.units[u.name] = u
+                player.unitlist.append( tmpUnit )
+                self.units[tmpUnit.name] = tmpUnit
                 
             self.players.append( player )
     
