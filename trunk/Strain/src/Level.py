@@ -30,7 +30,7 @@ class Level:
         self._level_data.reverse()
         
         #convert entries in _level_data from string to integer AND change x-y order
-        tmp = [[None] * self.maxX for i in xrange(self.maxY)]
+        tmp = [[None] * self.maxY for i in xrange(self.maxX)]
         for i in range( 0, self.maxX ):
             for j in range( 0, self.maxY ):
                 self._level_data[j][i] = int( self._level_data[j][i] )
