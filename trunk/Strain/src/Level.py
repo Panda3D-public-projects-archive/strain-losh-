@@ -50,7 +50,7 @@ class Level:
                 c.setTag("pos", "%(maxX)s-%(maxY)s" % {"maxX":x, "maxY":y})
                 list.append(c) 
                 if tag != 0:
-                    c.setScale(1, 1, tag)
+                    c.setScale(1, 1, tag + 1)
                     coef = 1 + 0.05*tag
                     c.setColorScale(coef, coef, coef, 1)
                 c.reparentTo(render)
