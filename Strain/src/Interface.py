@@ -240,7 +240,7 @@ class Interface(DirectObject.DirectObject):
                     self.deselect()
                     self.selected_unit = sel
                     pos = self.selected_unit.model.getPos()
-                    if self.selected_unit.owner == 'ultramarinac':
+                    if self.selected_unit.owner.name == 'ultramarinac':
                         col = Vec4(1, 0, 0, 1)
                     else:
                         col = Vec4(0, 0, 1, 1)
@@ -257,7 +257,7 @@ class Interface(DirectObject.DirectObject):
                         self.deselect()
                         self.selected_unit = u
                         pos = self.selected_unit.model.getPos()
-                        if self.selected_unit.owner == 'ultramarinac':
+                        if self.selected_unit.owner.name == 'ultramarinac':
                             col = Vec4(1, 0, 0, 1)
                         else:
                             col = Vec4(0, 0, 1, 1)
