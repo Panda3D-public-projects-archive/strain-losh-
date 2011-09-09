@@ -17,18 +17,31 @@ class UnitLoader():
 
 
 class Unit():
-    def __init__(self, name, type, team, x, y, parent_node):
+    
+    #def __init__(self, name, type, x, y, parent_node):
+    def __init__(self, owner, name, type, x, y ):
+        self.owner = owner
+        self.name = name
+        self.type = type
+        self.x = int(x)
+        self.y = int(y)
+        self.parent_node = None
+        
+        self.model = None
+
+        
+    def init(self, parent_node):    
         u = UnitLoader()
-        if type == 'terminator':
-            self.model = u.load(type)
+        if self.type == 'terminator':
+            self.model = u.load(self.type)
             self.model.setScale(0.25)
             # bake in rotation transform because model is created facing towards screen
             self.model.setH(180) 
             self.model.flattenLight()
             self.default_AP = 8
             self.soundtype = '02'
-        elif type == 'marine_b':
-            self.model = u.load(type)
+        elif self.type == 'marine_b':
+            self.model = u.load(self.type)
             #self.model.setPlayRate(1, 'run')
             self.model.setScale(0.25)
             # bake in rotation transform because model is created facing towards screen
@@ -37,9 +50,7 @@ class Unit():
             self.default_AP = 5
             self.soundtype = '01'
 
-        self.pos = Point2(x, y)
-        self.type = type
-        self.team = team
+        self.pos = Point2( self.x, self.y )
         self.h = self.model.getH()
         self.current_AP = self.default_AP
         self.health = 10
@@ -53,10 +64,9 @@ class Unit():
         self.dummy_node.reparentTo(parent_node)
         self.dest_node = NodePath('dest')
         self.dest_node.reparentTo(parent_node)
-        self.name = name
         self.model.setPos(base.calc_unit_pos(self.pos))
         self.model.setTag('Unit', 'true')
-        self.model.setTag('Name', name)
+        self.model.setTag('Name', self.name)
         base.level.game_data[int(self.pos.x)][int(self.pos.y)] = self
         
     def show(self):
@@ -145,7 +155,7 @@ class Unit():
                 if n == c:
                     ignore = True
                     break
-            for u in base.units.itervalues():
+            for u in base.engine.units.itervalues():
                 if u.model.getTag('Name') != self.name:
                     if u.pos == n[0]:
                         self.open_tile_list.remove(n)
