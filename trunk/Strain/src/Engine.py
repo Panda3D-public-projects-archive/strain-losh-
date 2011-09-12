@@ -1,5 +1,6 @@
 from xml.dom import minidom
 from Unit import Unit
+from Level import Level
 
 class Engine:
 
@@ -13,6 +14,7 @@ class Engine:
     def __init__(self):
         
         self.loadArmyList()
+        self.level = Level("level3.txt")
         
     def getUnitIndex(self):
         self._index_for_units += 1
@@ -43,13 +45,11 @@ class Engine:
                                 u.attributes['y'].value )
                 
                 player.unitlist.append( tmpUnit )
-                self.units[tmpUnit.name] = tmpUnit
+                self.units[tmpUnit.id] = tmpUnit
                 
             self.players.append( player )
     
         xmldoc.unlink()   
-        
-    
         
     
 class Player:
