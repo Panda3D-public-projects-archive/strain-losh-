@@ -1,30 +1,9 @@
 from pandac.PandaModules import Point2, Point3, NodePath, Vec3
-from direct.actor.Actor import Actor
 from direct.interval.IntervalGlobal import Sequence, ActorInterval, Parallel, SoundInterval
 from random import randint
 
-class UnitLoader():
-    def __init__(self):
-        None
-    
-    def load(self, type):
-        if type == 'terminator':
-            model = Actor('terminator', {'run': 'terminator-run', 'idle02': 'terminator-run'})
-        elif type == 'marine_b':
-            model = Actor('marine_b', {'run': 'marine-run', 'idle02': 'marine-fire'})
-        elif type == 'commissar':
-            model = Actor('commissar', {'run': 'commissar-run'
-                                       ,'idle01': 'commissar-idle1'
-                                       ,'idle02': 'commissar-idle2'
-                                       ,'idle03': 'commissar-idle3'
-                                       ,'fire': 'commissar-fire'
-                                       })
-        return model
-
-
 class Unit():
     
-    #def __init__(self, name, type, x, y, parent_node):
     def __init__(self, id, owner, name, type, x, y ):
         self.id = id
         self.owner = owner
@@ -32,64 +11,23 @@ class Unit():
         self.type = type
         self.x = int(x)
         self.y = int(y)
-        self.parent_node = None
-        
-        self.model = None
-
-        
-    def init(self, parent_node):    
-        u = UnitLoader()
+           
         if self.type == 'terminator':
-            self.model = u.load(self.type)
-            self.model.setScale(0.25)
-            # bake in rotation transform because model is created facing towards screen
-            self.model.setH(180) 
-            self.model.flattenLight()
             self.default_AP = 8
             self.soundtype = '02'
         elif self.type == 'marine_b':
-            self.model = u.load(self.type)
-            #self.model.setPlayRate(1, 'run')
-            self.model.setScale(0.25)
-            # bake in rotation transform because model is created facing towards screen
-            self.model.setH(180) 
-            self.model.flattenLight()
             self.default_AP = 5
             self.soundtype = '01'
         elif self.type == 'commissar':
-            self.model = u.load(self.type)
-            #self.model.setPlayRate(1, 'run')
-            self.model.setScale(0.25)
-            # bake in rotation transform because model is created facing towards screen
-            self.model.setH(180) 
-            self.model.flattenLight()
             self.default_AP = 5
             self.soundtype = '01'            
 
         self.pos = Point2( self.x, self.y )
-        self.h = self.model.getH()
         self.current_AP = self.default_AP
         self.health = 10
         self.move_tiles = []
         self.open_tile_list = []
         self.closed_tile_list = []
-        self.unit_node = NodePath('unit')
-        self.model.reparentTo(self.unit_node)
-        self.unit_node.reparentTo(parent_node)
-        self.dummy_node = NodePath('dummy')
-        self.dummy_node.reparentTo(parent_node)
-        self.dest_node = NodePath('dest')
-        self.dest_node.reparentTo(parent_node)
-        self.model.setPos(base.calc_unit_pos(self.pos))
-        self.model.setTag('Unit', 'true')
-        self.model.setTag('Name', self.name)
-        base.level.game_data[int(self.pos.x)][int(self.pos.y)] = self
-        
-    def show(self):
-        self.model.reparentTo(parent_node)
-        
-    def hide(self):
-        self.model.reparentTo(hidden)
         
     def get_sound(self, action):
         if action == 'select':
@@ -144,6 +82,8 @@ class Unit():
         s = SoundInterval(self.get_sound('movend'))
         move = Sequence(Parallel(anim, seq), s)
         move.start()
+        base.level.node_data[int(self.pos.x)][int(self.pos.y)] = None
+        base.level.node_data[int(dest.x)][int(dest.y)] = self
         self.pos = dest
         #self.currAP = self.currAP - n[2]
         
@@ -161,7 +101,7 @@ class Unit():
         start = (self.pos, None, 0)
         self.open_tile_list.append(start)
         self.calc_move_nodes()
-        
+            
     def calc_move_nodes(self):
         #self.calc_los()
         while self.open_tile_list:
@@ -171,7 +111,7 @@ class Unit():
                 if n == c:
                     ignore = True
                     break
-            if base.level.game_data[int(n[0].x)][int(n[0].y)]:
+            if base.level.game_data[int(n[0].x)][int(n[0].y)] and (int(n[0].x) != self.x and int(n[0].y) != self.pos.y):
                 self.open_tile_list.remove(n)
                 ignore = True
                 break
@@ -180,7 +120,7 @@ class Unit():
                 self.open_tile_list.remove(n)
                 if n[2] < self.current_AP:
                     #add adjacent nodes to the open list
-                    x = n[0].x - base.tile_size
+                    x = n[0].x - 1
                     y = n[0].y
                     if x >= 0 and x < base.level.maxX and y >= 0 and y < base.level.maxY:
                         posleft = Point2(x, y)

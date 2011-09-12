@@ -1,10 +1,9 @@
 from direct.showbase import DirectObject
-from direct.actor.Actor import Actor
 from panda3d.core import Plane, Vec4, Vec3, Vec2, Point3, Point2
 from pandac.PandaModules import CollisionTraverser, CollisionHandlerQueue, CollisionNode, CollisionRay
 from pandac.PandaModules import GeomNode, CardMaker 
 from pandac.PandaModules import Texture, TextureStage, RenderAttrib, DepthOffsetAttrib, TransparencyAttrib
-from Unit import UnitLoader
+from ResourceManager import UnitLoader
 import math
 
 
@@ -27,9 +26,10 @@ class Interface(DirectObject.DirectObject):
         
         self.hovered_tile = None
         self.selected_unit = None
+        self.selected_unitmodel = None
+        self.off_model = None
         self.selected_unit_tex = loader.loadTexture('sel.png')
         self.selected_unit_tile = None
-        self.selected_unit_model = None
         self.ts = TextureStage('ts')
         self.ts.setMode(TextureStage.MBlend)
 
@@ -57,8 +57,6 @@ class Interface(DirectObject.DirectObject):
         self.keys['middle'] = 0
         self.keys['wheel_up'] = 0
         self.keys['wheel_down'] = 0
-        
-        self.unit_loader = UnitLoader()
         
         self.plane = Plane(Vec3(0, 0, 1), Point3(0, 0, 0))
     
@@ -228,38 +226,49 @@ class Interface(DirectObject.DirectObject):
     def select_unit(self, unit):
         self.deselect_unit()
         self.selected_unit = unit
-        pos = self.selected_unit.model.getPos()
+        self.selected_unitmodel = base.graphics_engine.unit_models[unit.id]
+        pos = self.selected_unitmodel.get_unit_grid_pos()
         if self.selected_unit.owner.name == 'ultramarinac':
             col = Vec4(1, 0, 0, 1)
         else:
             col = Vec4(0, 0, 1, 1)
-        self.mark_selected_tile(base.level.node_data[int(pos.getX())][int(pos.getY())], self.selected_unit_tex, col)
-        self.selected_unit_model = self.unit_loader.load(self.selected_unit.type)
-        self.selected_unit_model.reparentTo(base.alt_render)
-        self.selected_unit_model.setPos(0,-8,-1.7)
-        self.selected_unit_model.play('idle02')
-        self.selected_unit.find_path()
+        self.mark_selected_tile(base.graphics_engine.node_data[int(pos.x)][int(pos.y)], self.selected_unit_tex, col)
+        ul = UnitLoader()
+        self.off_model = ul.load(self.selected_unit.type, "off")
+        self.off_model.reparentTo(base.graphics_engine.alt_render)
+        self.off_model.setPos(0,-8,-1.7)
+        self.off_model.play('idle02')
+        #self.selected_unit.find_path()
 
     def deselect_unit(self):
         if self.selected_unit:
             self.clear_selected_tile(self.selected_unit_tile)
-            if self.selected_unit_model:
-                self.selected_unit_model.cleanup()
-                self.selected_unit_model.remove()
+            if self.off_model:
+                self.off_model.cleanup()
+                self.off_model.remove()
             self.selected_unit = None
+            self.selected_unitmodel = None
     
     def mouse_left_click(self):
         selected = self.find_object()
         if selected:
-            if selected.findNetTag('Unit').getTag('Unit') == 'true':
-                sel = base.engine.units[selected.findNetTag('Name').getTag('Name')] 
-                if self.selected_unit != sel:
-                    self.select_unit(sel)
-            else:
+            node_type = selected.findNetTag("type").getTag("type")
+            if node_type == "unit":
+                unit_id = int(selected.findNetTag("id").getTag("id"))
+                unit = base.engine.units[unit_id] 
+                if self.selected_unit != unit:
+                    self.select_unit(unit)
+            elif node_type == "tile":
                 p = selected.getParent().getPos()
-                u = base.level.game_data[int(p.x)][int(p.y)]
+                u = base.graphics_engine.unit_data[int(p.x)][int(p.y)]
                 if u:
-                    if self.selected_unit != u:
-                        self.select_unit(u)
-
+                    unit = base.engine.units[int(u.id)]
+                else:
+                    unit = None
+                if unit:
+                    if self.selected_unit != unit:
+                        self.select_unit(unit)
+                else:
+                    pos = Point2(int(p.x), int(p.y))
+                    #self.selected_unit.move(pos)
 
