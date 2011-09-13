@@ -1,5 +1,4 @@
 from pandac.PandaModules import Point2, Point3, NodePath, Vec3
-from direct.interval.IntervalGlobal import Sequence, ActorInterval, Parallel, SoundInterval
 from random import randint
 
 class Unit():
@@ -38,53 +37,6 @@ class Unit():
                 
     def talk(self, action):
         self.get_sound(action).play()
-        
-    def move(self, dest):
-        intervals = []
-        movement = []
-        seq = Sequence()
-        dur = 0
-        end = None
-        for n in self.closed_tile_list:
-            if n[0] == dest:
-                end = n
-                break
-        while end:
-            endpos = base.calc_unit_pos(Point3(end[0].x, end[0].y, 0))
-            parent = end[1]
-            if parent is None:
-                break
-            else:
-                startpos = base.calc_unit_pos(Point3(parent[0].x, parent[0].y, 0))
-                tupple = (startpos, endpos)
-                movement.append(tupple)             
-            end = end[1]
-        movement.reverse()
-        h = self.model.getH()
-        for m in movement:
-            self.dummy_node.setPos(m[0].x, m[0].y, 0)
-            self.dest_node.setPos(m[1].x, m[1].y, 0)
-            self.dummy_node.lookAt(self.dest_node)
-            endh = self.dummy_node.getH()
-            if endh != h:
-                i = self.model.quatInterval(0.2, hpr = Vec3(endh, 0, 0), startHpr = Vec3(h, 0, 0))
-                intervals.append(i)
-                h = endh
-                dur = dur + 0.2
-            i = self.model.posInterval(0.5, m[1], m[0])
-            dur = dur + 0.5
-            intervals.append(i)
-        for i in intervals:
-            seq.append(i)
-        anim = ActorInterval(self.model, 'run', loop = 1, duration = dur)
-        #seq.start()
-        s = SoundInterval(self.get_sound('movend'))
-        move = Sequence(Parallel(anim, seq), s)
-        move.start()
-        base.level.node_data[int(self.pos.x)][int(self.pos.y)] = None
-        base.level.node_data[int(dest.x)][int(dest.y)] = self
-        self.pos = dest
-        #self.currAP = self.currAP - n[2]
         
     def clear_open_list(self):
         del self.open_tile_list[0:]
