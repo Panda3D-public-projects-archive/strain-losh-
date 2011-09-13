@@ -4,10 +4,9 @@ from random import randint
 
 class Unit():
     
-    def __init__(self, id, owner, name, type, x, y ):
+    def __init__(self, id, owner, type, x, y ):
         self.id = id
         self.owner = owner
-        self.name = name
         self.type = type
         self.x = int(x)
         self.y = int(y)

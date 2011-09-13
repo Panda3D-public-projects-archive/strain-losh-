@@ -8,21 +8,17 @@ class Engine:
     units = {}
         
         
-    _index_for_players = 0
-    _index_for_units = 0
+    _index_uid = 0
+
         
     def __init__(self):
         
         self.loadArmyList()
         self.level = Level("level3.txt")
         
-    def getUnitIndex(self):
-        self._index_for_units += 1
-        return self._index_for_units -1
-    
-    def getPlayerIndex(self):
-        self._index_for_players += 1
-        return self._index_for_players -1
+    def getUID(self):
+        self._index_uid += 1
+        return self._index_uid -1
     
         
     def loadArmyList(self):
@@ -34,12 +30,11 @@ class Engine:
         
         
         for p in xmldoc.getElementsByTagName( 'player' ):
-            player = Player( self.getPlayerIndex(), p.attributes['name'].value )                        
+            player = Player( self.getUID(), p.attributes['name'].value )                        
             
             for u in p.getElementsByTagName( 'unit' ):
-                tmpUnit = Unit( self.getUnitIndex(),
+                tmpUnit = Unit( self.getUID(),
                                 player, 
-                                u.attributes['name'].value, 
                                 u.attributes['type'].value, 
                                 u.attributes['x'].value,
                                 u.attributes['y'].value )
