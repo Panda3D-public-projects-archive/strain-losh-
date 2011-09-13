@@ -1,6 +1,7 @@
 from panda3d.core import NodePath, Point2, Point3, CardMaker, VBase4, Vec3
 from panda3d.core import ShadeModelAttrib, DirectionalLight, AmbientLight
 from direct.interval.IntervalGlobal import Sequence, ActorInterval, Parallel, SoundInterval
+from direct.gui.DirectGui import DirectFrame, DirectLabel, DGG
 from ResourceManager import UnitLoader
 
 
@@ -69,7 +70,35 @@ class UnitModel:
         s = SoundInterval(self.get_sound('movend'))
         move = Sequence(Parallel(anim, seq), s)
         move.start()
-                
+        
+class Gui:
+    def __init__(self):
+        wp = base.win.getProperties() 
+        aspect = float(wp.getXSize()) / wp.getYSize()
+        self.sel_frame = DirectLabel(frameColor=(1,1,1,1) , frameSize=(0,0.3,0,0.3 ), pos = (-aspect, 0, 0.7))
+        self.sel_frame.reparentTo(aspect2d)
+        self.sel_frame.setTransparency(1)
+        cm = CardMaker("cm")
+        cm.setFrame(0, 0.02, 0, 0.3)
+        self.sel_border_left = aspect2d.attachNewNode(cm.generate())
+        self.sel_border_left.setPos(-aspect, 0, 0.7)
+        self.sel_border_left.setColor(0, 0, 0)
+        cm = CardMaker("cm")
+        cm.setFrame(0, 0.02, 0, 0.3)
+        self.sel_border_right = aspect2d.attachNewNode(cm.generate())
+        self.sel_border_right.setPos(-aspect + 0.3, 0, 0.7)
+        self.sel_border_right.setColor(0, 0, 0)
+        cm = CardMaker("cm")
+        cm.setFrame(0, 0.3, 0, 0.02)
+        self.sel_border_top = aspect2d.attachNewNode(cm.generate())
+        self.sel_border_top.setPos(-aspect, 0, 0.98)
+        self.sel_border_top.setColor(0, 0, 0)
+        cm = CardMaker("cm")
+        cm.setFrame(0, 0.32, 0, 0.02)
+        self.sel_border_bottom = aspect2d.attachNewNode(cm.generate())
+        self.sel_border_bottom.setPos(-aspect, 0, 0.98 - 0.3)
+        self.sel_border_bottom.setColor(0, 0, 0)                
+         
 
 class GraphicsEngine:
     
@@ -78,18 +107,12 @@ class GraphicsEngine:
     def __init__(self, engine):
         self.engine = engine
         self.node = render.attachNewNode("master")
-        
-        wp = base.win.getProperties() 
-        aspect = float(wp.getXSize()) / wp.getYSize()        
-        cm = CardMaker("unit")
-        cm.setFrame(0, 0.3, 0, 0.3)
-        self.unit_cm = aspect2d.attachNewNode(cm.generate())
-        self.unit_cm.setPos(-aspect, 0, 0.7)
-        self.init_alt_render()
-        
+
         self.init_level(engine.level)
         self.load_unit_models()
         self.init_lights()
+        self.gui = Gui()
+        self.init_alt_render()
         
     def init_alt_render(self):
         alt_buffer = base.win.makeTextureBuffer("texbuf", 256, 256)
@@ -98,8 +121,8 @@ class GraphicsEngine:
         self.alt_cam.reparentTo(self.alt_render)        
         self.alt_cam.setPos(0,-10,0)
         self.alt_render.setLightOff()
-        self.alt_render.setFogOff()     
-        self.unit_cm.setTexture(alt_buffer.getTexture())
+        self.alt_render.setFogOff()
+        self.gui.sel_frame["frameTexture"] = alt_buffer.getTexture()
                
     def init_lights(self):
         shade = ShadeModelAttrib.make(ShadeModelAttrib.MSmooth)
