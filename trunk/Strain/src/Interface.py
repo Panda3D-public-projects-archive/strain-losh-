@@ -30,8 +30,6 @@ class Interface(DirectObject.DirectObject):
         self.off_model = None
         self.selected_unit_tex = loader.loadTexture('sel.png')
         self.selected_unit_tile = None
-        self.ts = TextureStage('ts')
-        self.ts.setMode(TextureStage.MBlend)
 
         self.init_collision()
 
@@ -205,13 +203,15 @@ class Interface(DirectObject.DirectObject):
             nodepath.setColorScale(1, 1, 1, 1)
 
     def mark_selected_tile(self, nodepath, tex, color):
-        self.ts.setColor(color)
-        nodepath.setTexture(self.ts, tex)
+        ts = TextureStage('ts')
+        ts.setMode(TextureStage.MBlend)
+        ts.setColor(color)
+        nodepath.setTexture(ts, tex)
         self.selected_unit_tile = nodepath
         
     def clear_selected_tile(self, nodepath):
         if nodepath:
-            nodepath.setTextureOff(self.ts)
+            nodepath.setTextureOff()
  
     def hover(self, task):
         np = self.find_object()
