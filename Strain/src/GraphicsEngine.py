@@ -1,5 +1,6 @@
-from panda3d.core import NodePath, Point2, Point3, CardMaker, VBase4
+from panda3d.core import NodePath, Point2, Point3, CardMaker, VBase4, Vec3
 from panda3d.core import ShadeModelAttrib, DirectionalLight, AmbientLight
+from direct.interval.IntervalGlobal import Sequence, ActorInterval, Parallel, SoundInterval
 from ResourceManager import UnitLoader
 
 
@@ -26,6 +27,49 @@ class UnitModel:
     def get_unit_grid_pos(self):
         pos = self.model.getPos()
         return Point2(int(pos.x), int(pos.y))
+    
+    def create_move_animation(self, tile_list, dest):
+        intervals = []
+        movement = []
+        seq = Sequence()
+        dur = 0
+        end = None
+        for n in tile_list:
+            if n[0] == dest:
+                end = n
+                break
+        while end:
+            endpos = base.calc_unit_pos(Point3(end[0].x, end[0].y, 0))
+            parent = end[1]
+            if parent is None:
+                break
+            else:
+                startpos = base.calc_unit_pos(Point3(parent[0].x, parent[0].y, 0))
+                tupple = (startpos, endpos)
+                movement.append(tupple)             
+            end = end[1]
+        movement.reverse()
+        h = self.model.getH()
+        for m in movement:
+            self.dummy_node.setPos(m[0].x, m[0].y, 0)
+            self.dest_node.setPos(m[1].x, m[1].y, 0)
+            self.dummy_node.lookAt(self.dest_node)
+            endh = self.dummy_node.getH()
+            if endh != h:
+                i = self.model.quatInterval(0.2, hpr = Vec3(endh, 0, 0), startHpr = Vec3(h, 0, 0))
+                intervals.append(i)
+                h = endh
+                dur = dur + 0.2
+            i = self.model.posInterval(0.5, m[1], m[0])
+            dur = dur + 0.5
+            intervals.append(i)
+        for i in intervals:
+            seq.append(i)
+        anim = ActorInterval(self.model, 'run', loop = 1, duration = dur)
+        s = SoundInterval(self.get_sound('movend'))
+        move = Sequence(Parallel(anim, seq), s)
+        move.start()
+                
 
 class GraphicsEngine:
     
