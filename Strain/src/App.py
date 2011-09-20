@@ -37,8 +37,8 @@ class App(ShowBase):
         ShowBase.__init__(self)
         #PStatClient.connect()
         
-        self.engine = Engine() 
-        self.graphics_engine = GraphicsEngine(self.engine) 
+        self.engine = Engine()  
+        self.graphics_engine = GraphicsEngine(self.engine)
         self.interface = Interface()
 
         self.accept('i', self.info)
