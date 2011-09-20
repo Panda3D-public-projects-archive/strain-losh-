@@ -239,6 +239,12 @@ class Interface(DirectObject.DirectObject):
         self.off_model.setPos(0,-8,-1.7)
         self.off_model.play('idle02')
         #self.selected_unit.find_path()
+        
+    def select_prev_unit(self):
+        None
+        
+    def select_next_unit(self):
+        None     
 
     def deselect_unit(self):
         if self.selected_unit:

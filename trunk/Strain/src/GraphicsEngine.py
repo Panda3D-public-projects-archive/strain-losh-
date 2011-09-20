@@ -1,8 +1,9 @@
-from panda3d.core import NodePath, Point2, Point3, CardMaker, VBase4, Vec3
-from panda3d.core import ShadeModelAttrib, DirectionalLight, AmbientLight
+from panda3d.core import NodePath, Point2, Point3, CardMaker, VBase4, Vec3, GeomNode
+from panda3d.core import ShadeModelAttrib, DirectionalLight, AmbientLight, TransparencyAttrib
 from direct.interval.IntervalGlobal import Sequence, ActorInterval, Parallel, SoundInterval
 from direct.gui.DirectGui import DirectFrame, DirectLabel, DGG
 from ResourceManager import UnitLoader
+from direct.showbase import DirectObject
 
 
 class UnitModel:
@@ -71,34 +72,100 @@ class UnitModel:
         move = Sequence(Parallel(anim, seq), s)
         move.start()
         
-class Gui:
+class Gui(DirectObject.DirectObject):
     def __init__(self):
         wp = base.win.getProperties() 
         aspect = float(wp.getXSize()) / wp.getYSize()
         self.sel_frame = DirectLabel(frameColor=(1,1,1,1) , frameSize=(0,0.3,0,0.3 ), pos = (-aspect, 0, 0.7))
         self.sel_frame.reparentTo(aspect2d)
         self.sel_frame.setTransparency(1)
-        cm = CardMaker("cm")
-        cm.setFrame(0, 0.02, 0, 0.3)
-        self.sel_border_left = aspect2d.attachNewNode(cm.generate())
-        self.sel_border_left.setPos(-aspect, 0, 0.7)
-        self.sel_border_left.setColor(0, 0, 0)
-        cm = CardMaker("cm")
-        cm.setFrame(0, 0.02, 0, 0.3)
-        self.sel_border_right = aspect2d.attachNewNode(cm.generate())
-        self.sel_border_right.setPos(-aspect + 0.3, 0, 0.7)
-        self.sel_border_right.setColor(0, 0, 0)
-        cm = CardMaker("cm")
-        cm.setFrame(0, 0.3, 0, 0.02)
-        self.sel_border_top = aspect2d.attachNewNode(cm.generate())
-        self.sel_border_top.setPos(-aspect, 0, 0.98)
-        self.sel_border_top.setColor(0, 0, 0)
-        cm = CardMaker("cm")
-        cm.setFrame(0, 0.32, 0, 0.02)
-        self.sel_border_bottom = aspect2d.attachNewNode(cm.generate())
-        self.sel_border_bottom.setPos(-aspect, 0, 0.98 - 0.3)
-        self.sel_border_bottom.setColor(0, 0, 0)                
-         
+        plane = loader.loadModel('plane')
+        plane.setScale(2)
+        plane.flattenLight()
+        f = GuiFrame(0.3, 0.3, 0.01, Vec3(-aspect, 0, 0.7), VBase4(0, 0, 0, 0))
+        self.deselect_button = GuiButton(Point3(-aspect + 0.3 + 0.05, 0, 0.95), plane, aspect, "deselect")
+        self.punit_button = GuiButton(Point3(-aspect + 0.4 + 0.05, 0, 0.95), plane, aspect, "prev_unit")
+        self.nunit_button = GuiButton(Point3(-aspect + 0.5 + 0.05, 0, 0.95), plane, aspect, "next_unit")
+        
+        self.hovered_gui = None
+        
+        self.accept('mouse1-up', self.process_mouseclick)
+        
+        taskMgr.add(self.process_gui, 'process_gui_task')
+    
+    def process_mouseclick(self):
+        if self.hovered_gui == self.deselect_button:
+            base.interface.deselect_unit()
+        elif self.hovered_gui == self.punit_button:
+            base.interface.select_prev_unit()
+        elif self.hovered_gui == self.nunit_button:
+            base.interface.select_next_unit()            
+    
+    def process_gui(self, task):
+        if base.mouseWatcherNode.hasMouse(): 
+            mpos = base.mouseWatcherNode.getMouse()
+            if mpos.x >= self.deselect_button.pos_min_x and mpos.x <= self.deselect_button.pos_max_x and mpos.y >= self.deselect_button.pos_min_y and mpos.y <= self.deselect_button.pos_max_y:
+                self.hovered_gui = self.deselect_button
+                self.deselect_button.frame.setAlphaScale(1)                
+                self.punit_button.frame.setAlphaScale(0.5)
+                self.nunit_button.frame.setAlphaScale(0.5)
+            elif mpos.x >= self.punit_button.pos_min_x and mpos.x <= self.punit_button.pos_max_x and mpos.y >= self.punit_button.pos_min_y and mpos.y <= self.punit_button.pos_max_y:
+                self.hovered_gui = self.punit_button
+                self.deselect_button.frame.setAlphaScale(0.5)                
+                self.punit_button.frame.setAlphaScale(1)
+                self.nunit_button.frame.setAlphaScale(0.5)
+            elif mpos.x >= self.nunit_button.pos_min_x and mpos.x <= self.nunit_button.pos_max_x and mpos.y >= self.nunit_button.pos_min_y and mpos.y <= self.nunit_button.pos_max_y:
+                self.hovered_gui = self.nunit_button
+                self.deselect_button.frame.setAlphaScale(0.5)                
+                self.punit_button.frame.setAlphaScale(0.5)
+                self.nunit_button.frame.setAlphaScale(1)                
+            else:
+                self.hovered_gui = None
+                self.deselect_button.frame.setAlphaScale(0.5)                
+                self.punit_button.frame.setAlphaScale(0.5)
+                self.nunit_button.frame.setAlphaScale(0.5)
+        return task.cont
+
+class GuiFrame:
+    def __init__(self, width, height, border_size, pos, color):
+        self.node = NodePath("frame")
+        cm = CardMaker("cm_left")
+        cm.setFrame(0, border_size, 0, height)
+        n = self.node.attachNewNode(cm.generate())
+        n.setPos(0, 0, 0)
+        cm = CardMaker("cm_right")
+        cm.setFrame(0, border_size, 0, height)
+        n = self.node.attachNewNode(cm.generate())
+        n.setPos(width - border_size, 0, 0)
+        cm = CardMaker("cm_top")
+        cm.setFrame(0, width, height - border_size, width)
+        n = self.node.attachNewNode(cm.generate())
+        n.setPos(0, 0, 0)
+        cm = CardMaker("cm_bottom")
+        cm.setFrame(0, width, 0, border_size)
+        n = self.node.attachNewNode(cm.generate())
+        n.setPos(0, 0, 0)
+        self.node.reparentTo(aspect2d)
+        self.node.setColor(color)
+        self.node.setPos(pos)
+        self.node.flattenStrong()
+
+class GuiButton:
+    def __init__(self, pos, plane, aspect, name):
+        self.node = aspect2d.attachNewNode("guibutton")
+        self.node.setTransparency(TransparencyAttrib.MAlpha)
+        self.node.setAlphaScale(0.5) 
+        geom = GeomNode('plane')
+        geom.addGeomsFrom(plane.getChild(0).getChild(0).node())
+        self.frame = self.node.attachNewNode(geom) 
+        self.frame.setScale(0.05)
+        self.frame.setPos(pos)
+        self.node.setTexture(loader.loadTexture(name+".png"))
+        posx, posy = self.frame.getTightBounds()
+        self.pos_min_x = posx.getX() / aspect
+        self.pos_min_y = posx.getZ()
+        self.pos_max_x = posy.getX() / aspect
+        self.pos_max_y = posy.getZ()
 
 class GraphicsEngine:
     
