@@ -130,57 +130,6 @@ class Unit():
 
          
 
-    def calc_los(self):
-        #look at tiles adjacent to the unit, if there is a partial cover among them, treat it as a normal visible tile
-        myX = int( self.pos.x )
-        myY = int( self.pos.y )
-        
-        #list_passed_tiles = zeros( base.level.maxX, base.level.maxY )
-        list_passed_tiles = []         
-        list_visible_tiles = []
-        
-        #fill list_passed_tiles with zeros
-        for i in range(0, base.level.maxX ):
-            a = []
-            for j in range(0, base.level.maxY ):
-                a.append(0)
-            list_passed_tiles.append(a) 
-        
-        
-        
-        
-        for i in range( -1, 2 ):
-            for j in range( -1, 2 ):
-                curX = myX + i
-                curY = myY + j
-                
-                #ignore my own tile
-                if( i == 0 and j == 0 ):
-                    continue
-                                
-                #level bounds
-                if (curX < 0) or (curY < 0) or curX > base.level.maxX-1 or curY > base.level.maxY-1:
-                    continue
-                
-                if( list_passed_tiles[curX][curY] == 1 ):
-                    continue                    
-                
-                curValue = base.level._level_data[curX][curY]
-                
-                #it is too tall for us to see over
-                if( curValue > 1 ):
-                    continue
-                
-                #else add it into a visible list
-                list_visible_tiles.append( (curX, curY))
-                list_passed_tiles[curX][curY] = 1
-                
-                #print i,j
-        
-
-        print list_passed_tiles
-        print list_visible_tiles
-        pass
-        
+     
        
         
