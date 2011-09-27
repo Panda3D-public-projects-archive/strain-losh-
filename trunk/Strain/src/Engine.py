@@ -46,7 +46,7 @@ class Engine:
         self.loadArmyList()
         self.level = Level("level3.txt")
         
-        
+
         
         
     def getUID(self):
@@ -90,8 +90,13 @@ class Engine:
         y2 = target.y
         
         
-        absx0 = int( math.fabs(x2 - x1) );
-        absy0 = int( math.fabs(y2 - y1) );
+        #we can't look at ourselves
+        if( x1 == x2 and y1 == y2 ):
+            return []
+        
+        
+        absx0 = math.fabs(x2 - x1);
+        absy0 = math.fabs(y2 - y1);
         
 
         sgnx0 = signum( x2 - x1 );
@@ -112,12 +117,13 @@ class Engine:
         #so that all the next tiles we add are partial as well
         visibility = 0
 
-        
+    
+                
         if( absx0 > absy0 ):
             y_x = absy0/absx0;
             D = y_x -0.5;
 
-            for i in xrange( absx0 ):
+            for i in xrange( int( absx0 ) ):
                 if( D > 0 ):
                     if( sgny0 == -1 ): y -= 1
                     else: y += 1
@@ -133,6 +139,7 @@ class Engine:
                 #=========================TEST==========================================
                 list_visible_tiles, visibility = self.testTile(x, y, distance, list_visible_tiles, visibility)
                 
+
                 distance += 1
                 pass
             
@@ -141,7 +148,7 @@ class Engine:
             x_y = absx0/absy0;
             D = x_y -0.5;
 
-            for i in xrange( absy0 ):
+            for i in xrange( int( absy0 ) ):
         
                 if( D > 0 ):
                     if( sgnx0 == -1 ): x -= 1
@@ -158,6 +165,7 @@ class Engine:
                 #=========================TEST==========================================
                 list_visible_tiles, visibility = self.testTile( x, y, distance, list_visible_tiles, visibility )
                 
+
                 distance += 1
                 pass
                 
@@ -168,7 +176,6 @@ class Engine:
     #tests the tile for visibility
     def testTile(self, x, y, distance, list_visible_tiles, visibility ):
         
- 
         #level bounds
         if( x > self.level.maxX-1 or x < 0 or y > self.level.maxY-1 or y < 0 ):
             return( list_visible_tiles, visibility )
@@ -191,7 +198,43 @@ class Engine:
 
 
     
-    def getLOSList(self, position ):
-        pass        
+    def getLOSHList(self, position ):
+        
+        unique_losh_list = []
+        
+        clear_list = []
+        partial_list = []
+        
+        
+        for i in xrange( self.level.maxX ):
+            for j in xrange( self.level.maxY ):
+                for a in self.getLOS(position, Point2(i,j)):
+                    if( a[1] != 2 ):
+                        if( a[1] == 0 ):
+                            clear_list.append(a)
+                        else:
+                            partial_list.append(a)
+                        
+              
+                
+        #remove duplicates that are in clear list AND partial list
+        for a in clear_list:
+            for b in partial_list:
+                    if( a[0] == b[0] ):
+                        partial_list.remove(b)
+        
+        
+        #add only unique points from clear list
+        for a in clear_list:
+            if( unique_losh_list.__contains__( a ) == False ):        
+                unique_losh_list.append(a)
+        
+        #add points from partial list                
+        unique_losh_list.extend(partial_list)
+                
+                
+                
+        return unique_losh_list
+                
     
     
