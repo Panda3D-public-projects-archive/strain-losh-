@@ -24,6 +24,8 @@ class Interface(DirectObject.DirectObject):
         base.camera.lookAt(10, 10, 0)
         self.orbit(0, 0)
         
+        self.los_visible = False
+        
         self.hovered_tile = None
         self.selected_unit = None
         self.selected_unitmodel = None
@@ -41,6 +43,7 @@ class Interface(DirectObject.DirectObject):
         self.accept('a-up', self.event, ['left', 0])
         self.accept('d', self.event, ['right', 1])
         self.accept('d-up', self.event, ['right', 0])
+        self.accept('l-up', self.switch_los)
         self.accept("mouse1-up", self.mouse_left_click)
         self.accept("mouse3", self.start_orbit)
         self.accept("mouse3-up", self.stop_orbit)
@@ -202,6 +205,16 @@ class Interface(DirectObject.DirectObject):
         else:
             nodepath.setColorScale(1, 1, 1, 1)
 
+    def mark_tile(self, nodepath, flag):
+        if flag == 0:
+            flag = 2
+        elif flag == 1:
+            flag = 1
+        nodepath.setColorScale(flag, 0.6, 0.6, 1)
+        
+    def unmark_tile(self, nodepath):
+        nodepath.setColorScale(1, 1, 1, 1)
+    
     def mark_selected_tile(self, nodepath, tex, color):
         ts = TextureStage('ts')
         ts.setMode(TextureStage.MBlend)
@@ -255,6 +268,28 @@ class Interface(DirectObject.DirectObject):
             self.selected_unit = None
             self.selected_unitmodel = None
     
+    def display_los(self):
+        if self.selected_unit:
+            losh_list = base.engine.getLOSHList(Point2(self.selected_unit.x, self.selected_unit.y))
+            self.hide_los()
+            for tile in losh_list:
+                self.mark_tile(base.graphics_engine.node_data[int(tile[0].x)][int(tile[0].y)], tile[1])
+                
+    def hide_los(self):
+        #base.graphics_engine.level_node.setColorScale(1, 1, 1, 1)
+        for tile_list in base.graphics_engine.node_data:
+            for tile in tile_list:
+                self.unmark_tile(tile)       
+    
+    
+    def switch_los(self):
+        if self.los_visible == True:
+            self.hide_los()
+            self.los_visible = False
+        else:
+            self.display_los()
+            self.los_visible = True
+        
     def mouse_left_click(self):
         selected = self.find_object()
         if selected:
