@@ -34,7 +34,7 @@ class Interface(DirectObject.DirectObject):
         self.selected_unit_tex = loader.loadTexture('sel.png')
         self.selected_unit_tile = None
 
-        self.init_collision()
+        self.initCollision()
 
         self.accept('w', self.event, ['up', 1])
         self.accept('w-up', self.event, ['up', 0])
@@ -44,13 +44,13 @@ class Interface(DirectObject.DirectObject):
         self.accept('a-up', self.event, ['left', 0])
         self.accept('d', self.event, ['right', 1])
         self.accept('d-up', self.event, ['right', 0])
-        self.accept('l-up', self.switch_los)
-        self.accept('o-up', self.switch_unit_los)
-        self.accept("mouse1-up", self.mouse_left_click)
-        self.accept("mouse3", self.start_orbit)
-        self.accept("mouse3-up", self.stop_orbit)
-        self.accept("wheel_up", lambda : self.adjust_cam_dist(0.9))
-        self.accept("wheel_down", lambda : self.adjust_cam_dist(1.1))
+        self.accept('l-up', self.switchLos)
+        self.accept('o-up', self.switchUnitLos)
+        self.accept("mouse1-up", self.mouseLeftClick)
+        self.accept("mouse3", self.startOrbit)
+        self.accept("mouse3-up", self.stopOrbit)
+        self.accept("wheel_up", lambda : self.adjustCamDist(0.9))
+        self.accept("wheel_down", lambda : self.adjustCamDist(1.1))
         
         self.keys = {}
         self.keys['up'] = 0
@@ -63,10 +63,10 @@ class Interface(DirectObject.DirectObject):
         
         self.plane = Plane(Vec3(0, 0, 1), Point3(0, 0, 0))
     
-        taskMgr.add(self.update_camera, 'update_camera_task')
+        taskMgr.add(self.updateCamera, 'updateCamera_task')
         taskMgr.add(self.hover, 'hover_task')
 
-    def init_collision(self):
+    def initCollision(self):
         self.plane = Plane(Vec3(0, 0, 1), Point3(0, 0, 0))
         self.coll_trav = CollisionTraverser()
         self.coll_queue = CollisionHandlerQueue()
@@ -78,7 +78,7 @@ class Interface(DirectObject.DirectObject):
         self.coll_trav.addCollider(self.coll_nodepath, self.coll_queue)
     
     def find_object(self):
-        pos = self.get_mouse_pos()
+        pos = self.getMousePos()
         if pos:
             self.coll_ray.setFromLens(base.camNode, pos.getX(), pos.getY())
             self.coll_trav.traverse(render)
@@ -88,13 +88,13 @@ class Interface(DirectObject.DirectObject):
                 return np
         return None
      
-    def get_mouse_pos(self):
+    def getMousePos(self):
         if base.mouseWatcherNode.hasMouse(): 
             return base.mouseWatcherNode.getMouse() 
         return None
     
     def get_mouse_grid_coordinates(self):
-        mpos = self.get_mouse_pos()
+        mpos = self.getMousePos()
         pos3d = Point3()
         nearPoint = Point3()
         farPoint = Point3()
@@ -110,7 +110,7 @@ class Interface(DirectObject.DirectObject):
                 return None
         return None
     
-    def set_target(self, x, y, z):
+    def setTarget(self, x, y, z):
         x = self.clamp(x, self.pan_limits_x.getX(), self.pan_limits_x.getY())
         self.target.setX(x)
         y = self.clamp(y, self.pan_limits_y.getX(), self.pan_limits_y.getY())
@@ -120,14 +120,14 @@ class Interface(DirectObject.DirectObject):
     def clamp(self, val, min_val, max_val): 
         return min(max(val, min_val), max_val)
 
-    def adjust_cam_dist(self, factor):
+    def adjustCamDist(self, factor):
         self.cam_dist = self.cam_dist * factor
         self.orbit(0, 0)
     
-    def start_orbit(self): 
+    def startOrbit(self): 
         self.is_orbiting = True
             
-    def stop_orbit(self):
+    def stopOrbit(self):
         self.is_orbiting = False 
     
     def orbit(self, delta_x, delta_y):
@@ -150,11 +150,8 @@ class Interface(DirectObject.DirectObject):
         base.camera.setPos(new_cam_pos.getX(), new_cam_pos.getY(), new_cam_pos.getZ())                     
         base.camera.lookAt(self.target.getX(), self.target.getY(), self.target.getZ()) 
     
-    def event(self, button, value):
-        self.keys[button] = value
-    
-    def update_camera(self, task): 
-        mpos = self.get_mouse_pos()
+    def updateCamera(self, task): 
+        mpos = self.getMousePos()
         if mpos != None:
             if self.is_orbiting:
                 self.orbit((self.mx - mpos.getX()) * 100, (self.my - mpos.getY()) * 100)
@@ -197,6 +194,9 @@ class Interface(DirectObject.DirectObject):
             self.mx = mpos.getX()
             self.my = mpos.getY()
         return task.cont
+    
+    def event(self, button, value):
+        self.keys[button] = value    
 
     def mark_available_move_tile(self, nodepath):
         nodepath.setColorScale(2, 2, 2, 1)
@@ -215,8 +215,6 @@ class Interface(DirectObject.DirectObject):
         elif flag == 2:
             pass
             
-        
-        
     def unmark_tile(self, nodepath):
         nodepath.setColorScale(1, 1, 1, 1)
     
@@ -241,8 +239,8 @@ class Interface(DirectObject.DirectObject):
                 self.hovered_tile = np
         return task.cont 
 
-    def select_unit(self, unit):
-        self.deselect_unit()
+    def selectUnit(self, unit):
+        self.deselectUnit()
         self.selected_unit = unit
         self.selected_unitmodel = base.graphics_engine.unit_models[unit.id]
         pos = self.selected_unitmodel.get_unit_grid_pos()
@@ -258,13 +256,13 @@ class Interface(DirectObject.DirectObject):
         self.off_model.play('idle02')
         #self.selected_unit.find_path()
         
-    def select_prev_unit(self):
+    def selectPrevUnit(self):
         None
         
-    def select_next_unit(self):
+    def selectNextUnit(self):
         None     
 
-    def deselect_unit(self):
+    def deselectUnit(self):
         if self.selected_unit:
             self.clear_selected_tile(self.selected_unit_tile)
             if self.off_model:
@@ -273,47 +271,47 @@ class Interface(DirectObject.DirectObject):
             self.selected_unit = None
             self.selected_unitmodel = None
     
-    def display_los(self):
+    def displayLos(self):
         if self.selected_unit:
             losh_list = base.engine.getLOSHList(Point2(self.selected_unit.x, self.selected_unit.y))
-            self.hide_los()
+            self.hideLos()
             for tile in losh_list:
                 self.mark_tile(base.graphics_engine.node_data[int(tile[0].x)][int(tile[0].y)], tile[1])
                 
-    def hide_los(self):
+    def hideLos(self):
         #base.graphics_engine.level_node.setColorScale(1, 1, 1, 1)
         for tile_list in base.graphics_engine.node_data:
             for tile in tile_list:
                 self.unmark_tile(tile)       
     
-    def switch_los(self):
+    def switchLos(self):
         if self.los_visible == True:
-            self.hide_los()
+            self.hideLos()
             self.los_visible = False
         else:
-            self.display_los()
+            self.displayLos()
             self.los_visible = True
             
-    def display_unit_los(self):
+    def displayUnitLos(self):
         if self.selected_unit:
             a = base.engine.getLOS(Point2(self.selected_unit.x, self.selected_unit.y), Point2(13,13))
             for tile in a:
                 self.mark_tile(base.graphics_engine.node_data[int(tile[0].x)][int(tile[0].y)], tile[1])
                 
-    def hide_unit_los(self):
+    def hideUnitLos(self):
         for tile_list in base.graphics_engine.node_data:
             for tile in tile_list:
                 self.unmark_tile(tile)  
                 
-    def switch_unit_los(self):
+    def switchUnitLos(self):
         if self.unit_los_visible == True:
-            self.hide_unit_los()
+            self.hideUnitLos()
             self.unit_los_visible = False
         else:
-            self.display_unit_los()
+            self.displayUnitLos()
             self.unit_los_visible = True
         
-    def mouse_left_click(self):
+    def mouseLeftClick(self):
         selected = self.find_object()
         if selected:
             node_type = selected.findNetTag("type").getTag("type")
@@ -321,7 +319,7 @@ class Interface(DirectObject.DirectObject):
                 unit_id = int(selected.findNetTag("id").getTag("id"))
                 unit = base.engine.units[unit_id] 
                 if self.selected_unit != unit:
-                    self.select_unit(unit)
+                    self.selectUnit(unit)
             elif node_type == "tile":
                 p = selected.getParent().getPos()
                 u = base.graphics_engine.unit_data[int(p.x)][int(p.y)]
@@ -331,7 +329,7 @@ class Interface(DirectObject.DirectObject):
                     unit = None
                 if unit:
                     if self.selected_unit != unit:
-                        self.select_unit(unit)
+                        self.selectUnit(unit)
                 else:
                     pos = Point2(int(p.x), int(p.y))
                     #self.selected_unit.move(pos)
