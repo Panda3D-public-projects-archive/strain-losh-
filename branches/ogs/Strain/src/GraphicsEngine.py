@@ -5,19 +5,28 @@ from direct.gui.DirectGui import DirectFrame, DirectLabel, DGG
 from ResourceManager import UnitLoader
 from direct.showbase import DirectObject
 
+#===============================================================================
+# CLASS UnitModel --- DEFINITION
+#===============================================================================
 
 class UnitModel:
-    def __init__(self, model, unit):
+    def __init__(self, model, unit, player):
         self.model = model
         self.id = str(unit.id)
         self.model.setPos(self.get_unit_model_pos(unit.pos))
         self.model.setLightOff()
         self.model.setTag("type", "unit")
         self.model.setTag("id", self.id)
+        self.model.setTag("player", str(player.id))
+        self.model.setTag("team", player.team)
 
         self.node = NodePath(self.id)
         self.dummy_node = NodePath("dummy_"+self.id)
         self.dest_node = NodePath("dest_"+self.id)
+        if player.team == "1":
+            self.team_color = VBase4(1, 0, 0, 0)
+        elif player.team == "2":
+            self.team_color = VBase4(0, 0, 1, 0)
 
         self.model.reparentTo(self.node)
         self.dummy_node.reparentTo(self.node)
@@ -95,7 +104,7 @@ class Gui(DirectObject.DirectObject):
     
     def process_mouseclick(self):
         if self.hovered_gui == self.deselect_button:
-            base.interface.deselect_unit()
+            base.interface.deselectUnit()
         elif self.hovered_gui == self.punit_button:
             base.interface.select_prev_unit()
         elif self.hovered_gui == self.nunit_button:
@@ -177,6 +186,7 @@ class GraphicsEngine:
 
         self.init_level(engine.level)
         self.load_unit_models()
+        self.color_unit_tiles()
         self.init_lights()
         self.gui = Gui()
         self.init_alt_render()
@@ -221,6 +231,7 @@ class GraphicsEngine:
                     c.setScale(1, 1, tag + 1)
                     coef = 1 + 0.05*tag
                     c.setColorScale(coef, coef, coef, 1)
+                #c.flattenLight()
                 c.reparentTo(self.level_node)
             self.node_data.append(tile_nodes)
     
@@ -229,8 +240,13 @@ class GraphicsEngine:
         for player in self.engine.players:
             for u in player.unitlist:
                 model = ul.load(u.type, "render")
-                um = UnitModel(model, u)
+                um = UnitModel(model, u, player)
                 um.node.reparentTo(self.node)
                 self.unit_models[u.id] = um
                 self.unit_data[u.x][u.y] = um
 
+    def color_unit_tiles(self):
+        for unit in self.unit_models.itervalues():
+            u = base.engine.units[int(unit.id)]
+            tile = self.node_data[int(u.x)][int(u.y)]
+            base.interface.changeTileColor(tile, "_tile_unit_pos", unit.team_color)
