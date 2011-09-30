@@ -44,7 +44,7 @@ class Engine:
         self.__dict__ = self.__shared_state
 
         self.loadArmyList()
-        self.level = Level("level3.txt")
+        self.level = Level("level2.txt")
         
 
         
