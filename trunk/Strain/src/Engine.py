@@ -16,9 +16,10 @@ def signum( num ):
 
 class Player:
     
-    def __init__(self, id, name):
+    def __init__(self, id, name, team):
         self.id = id
         self.name = name 
+        self.team = team
         self.unitlist = []
         pass
 
@@ -63,7 +64,7 @@ class Engine:
         
         
         for p in xmldoc.getElementsByTagName( 'player' ):
-            player = Player( self.getUID(), p.attributes['name'].value )                        
+            player = Player( self.getUID(), p.attributes['name'].value, p.attributes['team'].value )                        
             
             for u in p.getElementsByTagName( 'unit' ):
                 tmpUnit = Unit( self.getUID(),
