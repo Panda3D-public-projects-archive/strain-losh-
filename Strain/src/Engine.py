@@ -6,11 +6,13 @@ import math
 
 
 
+
 def signum( num ):
     if( num < 0 ): 
         return -1
     elif( num >= 0 ):
         return 1
+
 
 
 
@@ -44,10 +46,16 @@ class Engine:
     def __init__(self):
         self.__dict__ = self.__shared_state
 
-        self.loadArmyList()
-        self.level = Level("level2.txt")
-        
 
+        self.level = Level("level2.txt")
+
+        #we make this so its size is the same as level 
+        self.dynamic_obstacles = [[(0,0)] * self.level.maxY for i in xrange(self.level.maxX)]
+
+        self.loadArmyList()
+
+        
+       
         
         
     def getUID(self):
@@ -67,18 +75,45 @@ class Engine:
             player = Player( self.getUID(), p.attributes['name'].value, p.attributes['team'].value )                        
             
             for u in p.getElementsByTagName( 'unit' ):
+                
+                x = int( u.attributes['x'].value )
+                y = int( u.attributes['y'].value )
+                
+                unittype = u.attributes['type'].value
+                
+                
+                #check to see level boundaries
+                if( self.outOfLevelBounds(x, y) ):
+                    print "This unit is out of level bounds", unittype, x, y
+                    continue
+                
+                #check to see if the tile is already occupied
+                if( self.dynamic_obstacles[x][y][0] != 0 ):
+                    print "This tile already occupied, unit cannot deploy here", x, y, unittype
+                    continue
+                 
+                
                 tmpUnit = Unit( self.getUID(),
                                 player, 
-                                u.attributes['type'].value, 
-                                u.attributes['x'].value,
-                                u.attributes['y'].value )
+                                unittype, 
+                                x,
+                                y )
                 
                 player.unitlist.append( tmpUnit )
                 self.units[tmpUnit.id] = tmpUnit
                 
+                self.dynamic_obstacles[x][y] = ( 1, tmpUnit.id )
+                
             self.players.append( player )
     
         xmldoc.unlink()   
+        
+
+    def outOfLevelBounds( self, x, y ):
+        if( x < 0 or y < 0 or x >= self.level.maxX or y >= self.level.maxY ):
+            return True
+        else: 
+            return False
         
     
     #this method returns list of tuples( Point2D, visibility ); visibility = {0:clear, 1:partial, 2:not visible}
@@ -178,17 +213,19 @@ class Engine:
     def testTile(self, x, y, distance, list_visible_tiles, visibility ):
         
         #level bounds
-        if( x > self.level.maxX-1 or x < 0 or y > self.level.maxY-1 or y < 0 ):
+        if( self.outOfLevelBounds(x, y) ):
             return( list_visible_tiles, visibility )
         
         #if we can't see here, set visibility to 2
         if( self.level._level_data[x][y] > 1 ):
             visibility = 2
         
-        #partial view, set to 1 if not already 2... if this is a tile next the origin, than ignore the partial
+        #partial view, increase visibility by one, if not already 2... 
+        #if this is a tile next the origin, than ignore the partial
+        #if we have already partial cover, and we come up on other, we cant see any further
         elif( self.level._level_data[x][y] == 1 ):
-            if( distance > 1 and visibility < 1 ):
-                visibility = 1
+            if( distance > 1 and visibility < 2 ):
+                visibility += 1
     
              
         list_visible_tiles.append( (Point2(x,y), visibility) )
@@ -201,41 +238,102 @@ class Engine:
     
     def getLOSHList(self, position ):
         
-        unique_losh_list = []
-        
-        clear_list = []
-        partial_list = []
-        
+        dict1 = {}
         
         for i in xrange( self.level.maxX ):
             for j in xrange( self.level.maxY ):
                 for a in self.getLOS(position, Point2(i,j)):
                     if( a[1] != 2 ):
-                        if( a[1] == 0 ):
-                            clear_list.append(a)
-                        else:
-                            partial_list.append(a)
                         
-              
-                
-        #remove duplicates that are in clear list AND partial list
-        for a in clear_list:
-            for b in partial_list:
-                    if( a[0] == b[0] ):
-                        partial_list.remove(b)
+                        try:
+                            if( dict1[a[0]] > a[1] ):
+                                dict1[a[0]] = a[1]
+                        except:
+                            dict1[a[0]] = a[1]
+                        
         
+        unique_losh_list = []        
         
-        #add only unique points from clear list
-        for a in clear_list:
-            if( unique_losh_list.__contains__( a ) == False ):        
-                unique_losh_list.append(a)
-        
-        #add points from partial list                
-        unique_losh_list.extend(partial_list)
-                
-                
+        #transform dict1 to list
+        for k in dict1.keys():
+            unique_losh_list.append( ( k, dict1[k])  )        
                 
         return unique_losh_list
                 
+                
+                
+    def getMoveList(self, unit ):    
+        
+        #this holds the same data as tmp_level, which we will convert to a list and than return
+        final_dict = {}
+
+        
+        open_list = [(unit.pos,unit.current_AP)]
+
+
+        
+        for tile, actionpoints in open_list:
+
+            for i in xrange(-1,2):
+                for j in xrange( -1,2 ):            
+                    
+                    if( i == 0 and j == 0):
+                        continue
+                    
+                    x = int( tile.x-i )
+                    y = int( tile.y-j )
+                    
+                    
+                    if( self.outOfLevelBounds(x, y) ):
+                        continue
+                    
+                    
+                    #if we are checking diagonally
+                    if( i == j or i == -j ):
+                        
+                        #we cant move diagonally around a corner
+                        if( self.level._level_data[x][ int( tile.y) ] != 0 or self.level._level_data[ int( tile.x ) ][y] != 0 ):
+                            continue
+                        
+                        ap = actionpoints - 1.5
+                            
+                    else:
+                        ap = actionpoints - 1
+                    
+                    
+                    
+                    if( ap < 0 ):
+                        continue
+                    
+                    
+                    
+                    if( self.level._level_data[x][y] == 0 and self.dynamic_obstacles[x][y][0] == 0 ):
+                        
+                        pt = Point2(x,y) 
+                        
+                        try:
+                            if( final_dict[pt] < ap ):
+                                final_dict[pt] = ap
+                                open_list.append( ( pt, ap ) ) 
+                        except:
+                                final_dict[pt] = ap
+                                open_list.append( ( pt, ap ) ) 
+
+                
+  
+    
+        final_list = []
+        
+        #transform dict to list
+        for k in final_dict.keys():
+            final_list.append( ( k, final_dict[k])  )
+        
+        
+        return final_list
+        
+
+    
+    
+    
     
     
