@@ -15,6 +15,7 @@ _TILE_HOVERED           = "_tile_hovered"
 _TILE_FULL_LOS          = "_tile_full_los"
 _TILE_PARTIAL_LOS       = "_tile_partial_los"
 _TILE_UNIT_POS          = "_tile_unit_pos"
+_TILE_MOVE              = "_tile_move"
 _TILE_RESET             = "_tile_reset"
 
 _UNIT_HOVERED           = "_unit_hovered"
@@ -43,6 +44,7 @@ class Interface(DirectObject.DirectObject):
         
         self.los_visible = False
         self.unit_los_visible = False
+        self.move_visible = False
         
         self.hovered_tile = None
         self.hovered_unit = None
@@ -64,6 +66,7 @@ class Interface(DirectObject.DirectObject):
         self.accept('d-up', self.setKey, ['right', 0])
         self.accept('l-up', self.switchLos)
         self.accept('o-up', self.switchUnitLos)
+        self.accept('m-up', self.switchUnitMove)
         self.accept("mouse1-up", self.mouseLeftClick)
         self.accept("mouse3", self.startOrbit)
         self.accept("mouse3-up", self.stopOrbit)
@@ -196,7 +199,7 @@ class Interface(DirectObject.DirectObject):
         else:
             unit.clearColorScale()
 
-    def changeTileColor(self, tile, event, rgba=None):
+    def changeTileColor(self, tile, event, rgba=None, flag=None):
         """Changes color of the tile nodepath according to event.
            Event defines the reason and scale for color change.
         """
@@ -208,6 +211,9 @@ class Interface(DirectObject.DirectObject):
             self.setTileColorScale(tile, 2, 0.6, 0.6, 1)
         elif event == _TILE_PARTIAL_LOS:
             self.setTileColorScale(tile, 1, 0.6, 0.6, 1)
+        elif event == _TILE_MOVE:
+            print flag
+            self.setTileColorScale(tile, 0.6, 0.6, 2, 1)
         elif event == _TILE_UNIT_POS:
             r = rgba.getX()
             g = rgba.getY()
@@ -338,7 +344,27 @@ class Interface(DirectObject.DirectObject):
         else:
             self.displayUnitLos()
             self.unit_los_visible = True
-        
+    
+    def displayUnitMove(self):
+        """Displays visual indicator of tiles which are in movement range of the selected unit."""
+        if self.selected_unit:
+            unit = base.engine.units[self.selected_unit.id]
+            ap = unit.current_AP
+            move_list = base.engine.getMoveList(unit)
+            for tile in move_list:
+                tile_node = base.graphics_engine.node_data[int(tile[0].x)][int(tile[0].y)]
+                f = (tile[1]/ap) + 1
+                self.changeTileColor(tile_node, _TILE_MOVE, flag=f)
+
+    def switchUnitMove(self):
+        """Switched the display of tiles available for movement for the selected unit."""
+        if self.move_visible == True:
+            self.resetAllTileColor()
+            self.move_visible = False
+        else:
+            self.displayUnitMove()
+            self.move_visible = True
+                
     def mouseLeftClick(self):
         """Handles left mouse click actions."""
         selected = self.getMouseHoveredObject()
