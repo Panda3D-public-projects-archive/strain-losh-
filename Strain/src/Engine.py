@@ -7,6 +7,7 @@ import math
 
 
 
+
 def signum( num ):
     if( num < 0 ): 
         return -1
@@ -54,8 +55,7 @@ class Engine:
 
         self.loadArmyList()
 
-        
-       
+
         
         
     def getUID(self):
@@ -261,65 +261,64 @@ class Engine:
         return unique_losh_list
                 
                 
+    """If this method returns a dictionary, than it includes the origin point"""
+    def getMoveList(self, unit, returnDict = False ):    
                 
-    def getMoveList(self, unit ):    
-        
-        #this holds the same data as tmp_level, which we will convert to a list and than return
         final_dict = {}
 
-        
         open_list = [(unit.pos,unit.current_AP)]
-
 
         
         for tile, actionpoints in open_list:
 
-            for i in xrange(-1,2):
-                for j in xrange( -1,2 ):            
+            for dx in xrange(-1,2):
+                for dy in xrange( -1,2 ):            
                     
-                    if( i == 0 and j == 0):
+                    if( dx == 0 and dy == 0):
                         continue
                     
-                    x = int( tile.x-i )
-                    y = int( tile.y-j )
+                    
+                    #we can't check our starting position
+                    if( tile.x + dx == unit.pos.x and tile.y + dy == unit.pos.y ):
+                        continue
+                    
+                    
+                    x = int( tile.x + dx )
+                    y = int( tile.y + dy )
                     
                     
                     if( self.outOfLevelBounds(x, y) ):
                         continue
                     
                     
+                    if( self.canIMoveHere(unit, tile, dx, dy) == False ):
+                        continue                   
+                    
+                    
                     #if we are checking diagonally
-                    if( i == j or i == -j ):
-                        
-                        #we cant move diagonally around a corner
-                        if( self.level._level_data[x][ int( tile.y) ] != 0 or self.level._level_data[ int( tile.x ) ][y] != 0 ):
-                            continue
-                        
+                    if( dx == dy or dx == -dy ):
                         ap = actionpoints - 1.5
-                            
                     else:
                         ap = actionpoints - 1
-                    
-                    
                     
                     if( ap < 0 ):
                         continue
                     
                     
+                    pt = Point2(x,y) 
                     
-                    if( self.level._level_data[x][y] == 0 and self.dynamic_obstacles[x][y][0] == 0 ):
-                        
-                        pt = Point2(x,y) 
-                        
-                        try:
-                            if( final_dict[pt] < ap ):
-                                final_dict[pt] = ap
-                                open_list.append( ( pt, ap ) ) 
-                        except:
-                                final_dict[pt] = ap
-                                open_list.append( ( pt, ap ) ) 
+                    try:
+                        if( final_dict[pt] < ap ):
+                            final_dict[pt] = ap
+                            open_list.append( ( pt, ap ) ) 
+                    except:
+                            final_dict[pt] = ap
+                            open_list.append( ( pt, ap ) ) 
 
-                
+
+        if( returnDict ):
+            final_dict[unit.pos] = unit.current_AP
+            return final_dict
   
     
         final_list = []
@@ -332,8 +331,121 @@ class Engine:
         return final_list
         
 
+
+    def canIMoveHere(self, unit, position, dx, dy ):
+              
+        dx = int( dx )
+        dy = int( dy )
+              
+        if( (dx != 1 and dx != 0 and dx != -1) and 
+            (dy != 1 and dy != 0 and dy != -1) ):
+            raise Exception( "Invalid dx (%d) or dy (%d)" %(dy ,dy) )
+        
+        ptx = int( position.x )
+        pty = int( position.y )
+        
+        #check diagonal if it is clear
+        if( dx != 0 and dy != 0 ):
+            
+            #if there is something in level in the way
+            if( self.level._level_data[ ptx + dx ][ pty ] != 0 or 
+                self.level._level_data[ ptx ][ pty + dy ] != 0 ):
+                return False
+        
+            #check if there is a dynamic thing in the way 
+            if( self.dynamic_obstacles[ ptx + dx ][ pty ][0] != 0 ):
+                #see if it is a unit
+                if( self.dynamic_obstacles[ ptx + dx ][ pty ][0] == 1 ):
+                    #so its a unit, see if it is friendly
+                    unit_id = self.dynamic_obstacles[ ptx + dx ][ pty ][1] 
+                    if( self.units[unit_id].owner != unit.owner ):
+                        return False
+                    
+
+            if( self.dynamic_obstacles[ ptx ][ pty + dy ][0] != 0 ):
+                if( self.dynamic_obstacles[ ptx ][ pty + dy ][0] == 1 ):
+                    unit_id = self.dynamic_obstacles[ ptx ][ pty + dy ][1] 
+                    if( self.units[unit_id].owner != unit.owner ):
+                        return False
+
+
+        #now check if the level is clear at that tile
+        if( self.level._level_data[ ptx + dx ][ pty + dy ] != 0 ):
+            return False
+        
+        #now check if there is a dynamic obstacle in the way
+        if( self.dynamic_obstacles[ ptx + dx ][ pty + dy ][0] != 0 ):
+            #ok if it a unit, it may be the current unit so we need to check that
+            if( self.dynamic_obstacles[ ptx + dx ][ pty + dy ][0] == 1 ):
+                if( self.dynamic_obstacles[ ptx + dx ][ pty + dy ][1] != unit.id ):
+                    return False
+
+            
+        return True
+        
+
+
     
-    
+    def getPath(self, unit, target_tile ):
+        
+        moveDict = self.getMoveList(unit, True)
+        
+        #if target_tile tile is not in the move list, then raise alarm
+        try:
+            moveDict[target_tile]
+        except:
+            print "getPath() got an invalid target_tile"
+            raise Exception( "getPath() got an invalid target_tile" )
+            return
+        
+        
+        x = target_tile.x
+        y = target_tile.y
+        
+        path_list = [ target_tile ]
+        
+        
+        while( 1 ):
+        
+            biggest_ap = ( 0, 0 )
+            
+            #find a tile with biggest remaining AP next to this one
+            for dx in xrange(-1,2):
+                for dy in xrange(-1,2):
+                    
+                    if( dx == 0 and dy == 0 ):
+                        continue
+                    
+                    pt = Point2( x+dx, y+dy )
+                    
+                    #check if the point is even in the list
+                    try:
+                        moveDict[pt]
+                    except:
+                        continue
+                    
+                    
+                    #if we can't move here just skip
+                    if( self.canIMoveHere( unit, Point2(x,y), dx, dy) == False ):
+                        continue
+                    
+                    #if we are looking at the origin, and we can move there, we just checked that, stop
+                    if( x + dx == unit.pos.x and y + dy == unit.pos.y ):
+                        return path_list
+                    
+                    #finally we can check the tile 
+                    if( moveDict[pt] > biggest_ap[1] ):
+                        biggest_ap =  (pt, moveDict[pt])
+                    
+            
+            path_list.append( biggest_ap[0] )
+            x = biggest_ap[0].x
+            y = biggest_ap[0].y
+        
+      
+        raise Exception( "hahahah how did you get to this part of code?" )
+        
+        pass
     
     
     
