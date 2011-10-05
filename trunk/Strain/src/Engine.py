@@ -64,10 +64,13 @@ class Engine:
 
         self.loadArmyList()
 
-        self.moveUnit( self.units[self.units.keys()[0]], Point2( 0, 0 )  )
+        
+        
+        
         
 
         
+
         
     def getUID(self):
         self.__index_uid += 1
@@ -145,7 +148,7 @@ class Engine:
             #check visibility to other units
             losh_dict = self.getLOSHList( unit.pos, True )            
             for unit2 in self.units:
-                if( losh_dict.has_key( unit2.pos ) ):
+                if unit2.pos in losh_dict:
                     
                     list_visible_units.append( unit2 )
                     
@@ -298,7 +301,7 @@ class Engine:
                 for a in self.getLOS(position, Point2(i,j)):
                     if( a[1] != 2 ):
                         
-                        if( losh_dict.has_key(a[0]) ):
+                        if a[0] in losh_dict:
                             if( losh_dict[a[0]] > a[1]):
                                 losh_dict[a[0]] = a[1]
                         else:
@@ -356,7 +359,7 @@ class Engine:
                     pt = Point2(x,y) 
                     
                     
-                    if( final_dict.has_key( pt ) ):
+                    if pt in final_dict:
                         if( final_dict[pt] < ap ):
                             final_dict[pt] = ap
                             open_list.append( ( pt, ap ) )
@@ -435,7 +438,7 @@ class Engine:
 
         
         #if target_tile tile is not in the move list, then raise alarm
-        if( moveDict.has_key( target_tile ) == False ):
+        if (target_tile in moveDict) == False:
             print "getPath() got an invalid target_tile"
             raise Exception( "getPath() got an invalid target_tile" )
             
@@ -461,7 +464,7 @@ class Engine:
                     pt = Point2( x+dx, y+dy )
                     
                     #check if the point is even in the list
-                    if( moveDict.has_key( pt ) == False ):
+                    if (pt in moveDict) == False:
                         continue
                     
                     
@@ -532,7 +535,7 @@ class Engine:
         losh_dict = self.getLOSHDict( unit.pos )
         
         
-        for enemy in self.units.keys():
+        for enemy in self.units:
             pass
         
         

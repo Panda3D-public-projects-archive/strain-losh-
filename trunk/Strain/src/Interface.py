@@ -301,7 +301,7 @@ class Interface(DirectObject.DirectObject):
         """
         if self.selected_unit:
             losh_dict = base.engine.getLOSHDict(Point2(self.selected_unit.x, self.selected_unit.y))
-            for tile in losh_dict.keys():
+            for tile in losh_dict:
                 tile_node = base.graphics_engine.node_data[int(tile.x)][int(tile.y)]
                 if losh_dict[tile] == 0:
                     self.changeTileColor(tile_node, _TILE_FULL_LOS)
@@ -351,7 +351,7 @@ class Interface(DirectObject.DirectObject):
             unit = base.engine.units[self.selected_unit.id]
             ap = unit.current_AP
             move_dict = base.engine.getMoveDict(unit)
-            for tile in move_dict.keys():
+            for tile in move_dict:
                 tile_node = base.graphics_engine.node_data[int(tile.x)][int(tile.y)]
                 f = (move_dict[tile]/ap) + 1
                 self.changeTileColor(tile_node, _TILE_MOVE, flag=f)
