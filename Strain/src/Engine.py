@@ -3,6 +3,7 @@ from Unit import Unit
 from Level import Level
 from pandac.PandaModules import Point2, Point3, NodePath, Vec3
 import math
+from Messaging import Message, Messaging
 
 
 
@@ -24,6 +25,7 @@ class Player:
         self.name = name 
         self.team = team
         self.unitlist = []
+        self.list_visible_enemies = []
         pass
 
 
@@ -39,7 +41,11 @@ class Engine:
     units = {}
         
         
-    _index_uid = 0
+    __index_uid = 0
+
+
+    dynamics = { 'empty' : 0,
+                 'unit' : 1 }
 
         
         
@@ -53,14 +59,19 @@ class Engine:
         #we make this so its size is the same as level 
         self.dynamic_obstacles = [[(0,0)] * self.level.maxY for i in xrange(self.level.maxX)]
 
+        self.turn = 0
+
+
         self.loadArmyList()
 
+        self.moveUnit( self.units[self.units.keys()[0]], Point2( 0, 0 )  )
+        
 
         
         
     def getUID(self):
-        self._index_uid += 1
-        return self._index_uid -1
+        self.__index_uid += 1
+        return self.__index_uid -1
     
         
     def loadArmyList(self):
@@ -88,7 +99,7 @@ class Engine:
                     continue
                 
                 #check to see if the tile is already occupied
-                if( self.dynamic_obstacles[x][y][0] != 0 ):
+                if( self.dynamic_obstacles[x][y][0] != Engine.dynamics['empty'] ):
                     print "This tile already occupied, unit cannot deploy here", x, y, unittype
                     continue
                  
@@ -102,11 +113,53 @@ class Engine:
                 player.unitlist.append( tmpUnit )
                 self.units[tmpUnit.id] = tmpUnit
                 
-                self.dynamic_obstacles[x][y] = ( 1, tmpUnit.id )
+                self.dynamic_obstacles[x][y] = ( Engine.dynamics['unit'], tmpUnit.id )
                 
             self.players.append( player )
     
         xmldoc.unlink()   
+
+
+
+
+    def beginTurn(self):
+        
+        #increment turn by one
+        self.turn += 1
+
+        
+        list_visible_units = []
+        
+        for player in self.players:
+            player.list_visible_enemies = []
+        
+        
+        #TODO: krav: napravit da ne dupla provjere
+        
+        #go through all units
+        for unit in self.units:
+            
+            #reset AP to default
+            unit.current_AP = unit.default_AP
+            
+            #check visibility to other units
+            losh_dict = self.getLOSHList( unit.pos, True )            
+            for unit2 in self.units:
+                if( losh_dict.has_key( unit2.pos ) ):
+                    
+                    list_visible_units.append( unit2 )
+                    
+                    if( unit2.owner != unit ):
+                        unit.owner.list_visible_enemies.append( unit2 )
+            
+        
+        
+        
+        
+        
+        
+        pass
+
         
 
     def outOfLevelBounds( self, x, y ):
@@ -236,33 +289,28 @@ class Engine:
 
 
     
-    def getLOSHList(self, position ):
+    def getLOSHDict(self, position ):
         
-        dict1 = {}
+        losh_dict = {}
         
         for i in xrange( self.level.maxX ):
             for j in xrange( self.level.maxY ):
                 for a in self.getLOS(position, Point2(i,j)):
                     if( a[1] != 2 ):
                         
-                        try:
-                            if( dict1[a[0]] > a[1] ):
-                                dict1[a[0]] = a[1]
-                        except:
-                            dict1[a[0]] = a[1]
-                        
+                        if( losh_dict.has_key(a[0]) ):
+                            if( losh_dict[a[0]] > a[1]):
+                                losh_dict[a[0]] = a[1]
+                        else:
+                            losh_dict[a[0]] = a[1]
+                            
         
-        unique_losh_list = []        
+        return losh_dict
         
-        #transform dict1 to list
-        for k in dict1.keys():
-            unique_losh_list.append( ( k, dict1[k])  )        
+               
                 
-        return unique_losh_list
-                
-                
-    """If this method returns a dictionary, than it includes the origin point"""
-    def getMoveList(self, unit, returnDict = False ):    
+
+    def getMoveDict(self, unit, returnOrigin = False ):    
                 
         final_dict = {}
 
@@ -307,29 +355,23 @@ class Engine:
                     
                     pt = Point2(x,y) 
                     
-                    try:
+                    
+                    if( final_dict.has_key( pt ) ):
                         if( final_dict[pt] < ap ):
                             final_dict[pt] = ap
-                            open_list.append( ( pt, ap ) ) 
-                    except:
+                            open_list.append( ( pt, ap ) )
+                    else: 
                             final_dict[pt] = ap
-                            open_list.append( ( pt, ap ) ) 
-
-
-        if( returnDict ):
+                            open_list.append( ( pt, ap ) )
+                        
+                    
+        if( returnOrigin ):
             final_dict[unit.pos] = unit.current_AP
             return final_dict
+        
+        return final_dict
   
-    
-        final_list = []
-        
-        #transform dict to list
-        for k in final_dict.keys():
-            final_list.append( ( k, final_dict[k])  )
-        
-        
-        return final_list
-        
+ 
 
 
     def canIMoveHere(self, unit, position, dx, dy ):
@@ -343,6 +385,19 @@ class Engine:
         
         ptx = int( position.x )
         pty = int( position.y )
+
+
+        #check if the level is clear at that tile
+        if( self.level._level_data[ ptx + dx ][ pty + dy ] != 0 ):
+            return False
+        
+        #check if there is a dynamic obstacle in the way
+        if( self.dynamic_obstacles[ ptx + dx ][ pty + dy ][0] != Engine.dynamics['empty'] ):
+            #ok if it a unit, it may be the current unit so we need to check that
+            if( self.dynamic_obstacles[ ptx + dx ][ pty + dy ][0] == Engine.dynamics['unit'] ):
+                if( self.dynamic_obstacles[ ptx + dx ][ pty + dy ][1] != unit.id ):
+                    return False
+
         
         #check diagonal if it is clear
         if( dx != 0 and dy != 0 ):
@@ -353,32 +408,20 @@ class Engine:
                 return False
         
             #check if there is a dynamic thing in the way 
-            if( self.dynamic_obstacles[ ptx + dx ][ pty ][0] != 0 ):
+            if( self.dynamic_obstacles[ ptx + dx ][ pty ][0] != Engine.dynamics['empty'] ):
                 #see if it is a unit
-                if( self.dynamic_obstacles[ ptx + dx ][ pty ][0] == 1 ):
+                if( self.dynamic_obstacles[ ptx + dx ][ pty ][0] == Engine.dynamics['unit'] ):
                     #so its a unit, see if it is friendly
                     unit_id = self.dynamic_obstacles[ ptx + dx ][ pty ][1] 
                     if( self.units[unit_id].owner != unit.owner ):
                         return False
                     
 
-            if( self.dynamic_obstacles[ ptx ][ pty + dy ][0] != 0 ):
-                if( self.dynamic_obstacles[ ptx ][ pty + dy ][0] == 1 ):
+            if( self.dynamic_obstacles[ ptx ][ pty + dy ][0] != Engine.dynamics['empty'] ):
+                if( self.dynamic_obstacles[ ptx ][ pty + dy ][0] == Engine.dynamics['unit'] ):
                     unit_id = self.dynamic_obstacles[ ptx ][ pty + dy ][1] 
                     if( self.units[unit_id].owner != unit.owner ):
                         return False
-
-
-        #now check if the level is clear at that tile
-        if( self.level._level_data[ ptx + dx ][ pty + dy ] != 0 ):
-            return False
-        
-        #now check if there is a dynamic obstacle in the way
-        if( self.dynamic_obstacles[ ptx + dx ][ pty + dy ][0] != 0 ):
-            #ok if it a unit, it may be the current unit so we need to check that
-            if( self.dynamic_obstacles[ ptx + dx ][ pty + dy ][0] == 1 ):
-                if( self.dynamic_obstacles[ ptx + dx ][ pty + dy ][1] != unit.id ):
-                    return False
 
             
         return True
@@ -388,15 +431,14 @@ class Engine:
     
     def getPath(self, unit, target_tile ):
         
-        moveDict = self.getMoveList(unit, True)
+        moveDict = self.getMoveDict(unit, True)
+
         
         #if target_tile tile is not in the move list, then raise alarm
-        try:
-            moveDict[target_tile]
-        except:
+        if( moveDict.has_key( target_tile ) == False ):
             print "getPath() got an invalid target_tile"
             raise Exception( "getPath() got an invalid target_tile" )
-            return
+            
         
         
         x = target_tile.x
@@ -419,9 +461,7 @@ class Engine:
                     pt = Point2( x+dx, y+dy )
                     
                     #check if the point is even in the list
-                    try:
-                        moveDict[pt]
-                    except:
+                    if( moveDict.has_key( pt ) == False ):
                         continue
                     
                     
@@ -431,6 +471,7 @@ class Engine:
                     
                     #if we are looking at the origin, and we can move there, we just checked that, stop
                     if( x + dx == unit.pos.x and y + dy == unit.pos.y ):
+                        path_list.reverse()
                         return path_list
                     
                     #finally we can check the tile 
@@ -445,7 +486,59 @@ class Engine:
       
         raise Exception( "hahahah how did you get to this part of code?" )
         
+        
+        
+    """This method will change the position of the unit without any checks, so call it AFTER you have checked that 
+     this move is legal. Does everything needed when moving an unit, moving it in dynamic_obstalces, and posting a message 
+     about it."""    
+    def _moveUnit(self, unit, new_position ):
+        
+        #delete from dynamic_obstacles
+        self.dynamic_obstacles[ int( unit.pos.x ) ][ int( unit.pos.y ) ] = ( Engine.dynamics['empty'], 0 )
+        
+        #remember old position and set new position
+        old_pos = unit.pos
+        unit.pos = new_position
+        
+        #set new dynamic_obstacles
+        self.dynamic_obstacles[ int( unit.pos.x ) ][ int( unit.pos.y ) ] = ( Engine.dynamics['unit'], unit.id )
+        
+        #add this action in message queue
+        #Messaging.queue_list.append( Message( Message.types['move'], ( unit.id, old_pos, unit.pos )  ) )
+        Messaging.move( unit.id, old_pos, unit.pos )
+        
+        
+        
+        
+    def moveUnit(self, unit, new_position ):
+        
+        try:
+            path = self.getPath( unit, new_position )
+        except:
+            raise Exception("Not a valid destination.")
+    
+        
+        for tile in path:
+            self._moveUnit( unit, tile )
+
+        
+        
         pass
     
     
+    #we calculate visibility when (unit) has moved
+    def calculateVisibility(self, unit ):
+        
+        losh_dict = self.getLOSHDict( unit.pos )
+        
+        
+        for enemy in self.units.keys():
+            pass
+        
+        
+        pass
+    
+
+
+
     
