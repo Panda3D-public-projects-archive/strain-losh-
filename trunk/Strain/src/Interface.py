@@ -1,10 +1,11 @@
 from direct.showbase import DirectObject
 from panda3d.core import Plane, Vec4, Vec3, Vec2, Point3, Point2
 from pandac.PandaModules import CollisionTraverser, CollisionHandlerQueue, CollisionNode, CollisionRay
-from pandac.PandaModules import GeomNode, CardMaker 
+from pandac.PandaModules import GeomNode, CardMaker, TextNode, Mat4
 from pandac.PandaModules import Texture, TextureStage, RenderAttrib, DepthOffsetAttrib, TransparencyAttrib
 from ResourceManager import UnitLoader
 import math
+
 
 #===============================================================================
 # GLOBAL DEFINITIONS
@@ -72,6 +73,7 @@ class Interface(DirectObject.DirectObject):
         self.accept("mouse3-up", self.stopOrbit)
         self.accept("wheel_up", lambda : self.adjustCamDist(0.9))
         self.accept("wheel_down", lambda : self.adjustCamDist(1.1))
+        self.accept('b-up', self.switchTiles2)
         
         self.keys = {}
         self.keys['up'] = 0
@@ -344,6 +346,37 @@ class Interface(DirectObject.DirectObject):
         else:
             self.displayUnitLos()
             self.unit_los_visible = True
+
+    
+    def switchTiles2(self):
+
+        for tile in base.engine.debug_dict:
+            tile_node = base.graphics_engine.node_data[int(tile.x)][int(tile.y)]
+            
+            text = TextNode('node name')
+            text.setText( "%d" % base.engine.debug_dict[tile])
+            
+            text.setCoordinateSystem( 0 )
+
+                        
+            text.setCardColor(0, 0, 0.5, 0.9)
+#            text.setCardAsMargin(0, 0, 0, 0)
+#            text.setCardDecal(True)
+            
+            
+            mat = (
+#                Mat4.scaleMat( 0, 1, 1) *
+                Mat4.rotateMat( -90, Vec3(1, 0, 0)) *
+                Mat4.translateMat( tile.x, tile.y, 1)
+                )
+            text.setTransform(mat)
+            
+            
+            base.graphics_engine.node.attachNewNode( text )
+            
+            pass
+        
+
     
     def displayUnitMove(self):
         """Displays visual indicator of tiles which are in movement range of the selected unit."""

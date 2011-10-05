@@ -64,9 +64,10 @@ class Engine:
 
         self.loadArmyList()
 
+
+        self.debug_dict = { Point2(3,2): 3 , Point2(1,1): 1, Point2(0,0): 0  }
         
-        
-        
+        self.debug_dict = self.getMoveDict(self.units[1])
         
 
         
