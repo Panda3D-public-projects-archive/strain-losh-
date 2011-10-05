@@ -300,12 +300,12 @@ class Interface(DirectObject.DirectObject):
            Tiles in partial view are marked with darker red color.
         """
         if self.selected_unit:
-            losh_list = base.engine.getLOSHList(Point2(self.selected_unit.x, self.selected_unit.y))
-            for tile in losh_list:
-                tile_node = base.graphics_engine.node_data[int(tile[0].x)][int(tile[0].y)]
-                if tile[1] == 0:
+            losh_dict = base.engine.getLOSHDict(Point2(self.selected_unit.x, self.selected_unit.y))
+            for tile in losh_dict.keys():
+                tile_node = base.graphics_engine.node_data[int(tile.x)][int(tile.y)]
+                if losh_dict[tile] == 0:
                     self.changeTileColor(tile_node, _TILE_FULL_LOS)
-                elif tile [1] == 1:
+                elif losh_dict[tile] == 1:
                     self.changeTileColor(tile_node, _TILE_PARTIAL_LOS)
                 else:
                     self.changeTileColor(tile_node, _TILE_RESET)      
@@ -350,10 +350,10 @@ class Interface(DirectObject.DirectObject):
         if self.selected_unit:
             unit = base.engine.units[self.selected_unit.id]
             ap = unit.current_AP
-            move_list = base.engine.getMoveList(unit)
-            for tile in move_list:
-                tile_node = base.graphics_engine.node_data[int(tile[0].x)][int(tile[0].y)]
-                f = (tile[1]/ap) + 1
+            move_dict = base.engine.getMoveDict(unit)
+            for tile in move_dict.keys():
+                tile_node = base.graphics_engine.node_data[int(tile.x)][int(tile.y)]
+                f = (move_dict[tile]/ap) + 1
                 self.changeTileColor(tile_node, _TILE_MOVE, flag=f)
 
     def switchUnitMove(self):
