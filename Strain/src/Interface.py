@@ -1,5 +1,5 @@
 from direct.showbase import DirectObject
-from panda3d.core import Plane, Vec4, Vec3, Vec2, Point3, Point2
+from panda3d.core import Plane, Vec4, Vec3, Vec2, Point3, Point2, NodePath
 from pandac.PandaModules import CollisionTraverser, CollisionHandlerQueue, CollisionNode, CollisionRay
 from pandac.PandaModules import GeomNode, CardMaker, TextNode, Mat4
 from pandac.PandaModules import Texture, TextureStage, RenderAttrib, DepthOffsetAttrib, TransparencyAttrib
@@ -54,6 +54,8 @@ class Interface(DirectObject.DirectObject):
         self.off_model = None
         self.selected_unit_tex = loader.loadTexture("sel.png")
         self.selected_unit_tile = None
+        
+        self.movetext_np = None
 
         self.initCollision()
 
@@ -73,7 +75,7 @@ class Interface(DirectObject.DirectObject):
         self.accept("mouse3-up", self.stopOrbit)
         self.accept("wheel_up", lambda : self.adjustCamDist(0.9))
         self.accept("wheel_down", lambda : self.adjustCamDist(1.1))
-        self.accept('b-up', self.switchTiles2)
+        self.accept('b-up', self.switchTiles2)        
         
         self.keys = {}
         self.keys['up'] = 0
@@ -345,9 +347,25 @@ class Interface(DirectObject.DirectObject):
             self.unit_los_visible = False
         else:
             self.displayUnitLos()
-            self.unit_los_visible = True
-
+            self.unit_los_visible = True        
     
+    def displayUnitMove(self):
+        """Displays visual indicator of tiles which are in movement range of the selected unit."""
+        if self.selected_unit:
+            unit = base.engine.units[self.selected_unit.id]
+            ap = unit.current_AP
+            move_dict = base.engine.getMoveDict(unit)
+            self.movetext_np = NodePath("movetext_np")
+            for tile in move_dict:
+                text = TextNode('node name')
+                text.setText( "%s" % move_dict[tile])
+                textNodePath = self.movetext_np.attachNewNode(text)
+                textNodePath.setColor(0, 0, 0)
+                textNodePath.setScale(0.5, 0.5, 0.5)
+                textNodePath.setPos(tile.x+0.2, tile.y+0.2, 0.5)
+                textNodePath.lookAt(tile.x+0.2, tile.y+0.2, -100)
+            self.movetext_np.reparentTo(base.graphics_engine.node)
+
     def switchTiles2(self):
 
         for tile in base.engine.debug_dict:
@@ -375,24 +393,11 @@ class Interface(DirectObject.DirectObject):
             base.graphics_engine.node.attachNewNode( text )
             
             pass
-        
-
-    
-    def displayUnitMove(self):
-        """Displays visual indicator of tiles which are in movement range of the selected unit."""
-        if self.selected_unit:
-            unit = base.engine.units[self.selected_unit.id]
-            ap = unit.current_AP
-            move_dict = base.engine.getMoveDict(unit)
-            for tile in move_dict:
-                tile_node = base.graphics_engine.node_data[int(tile.x)][int(tile.y)]
-                f = (move_dict[tile]/ap) + 1
-                self.changeTileColor(tile_node, _TILE_MOVE, flag=f)
 
     def switchUnitMove(self):
         """Switched the display of tiles available for movement for the selected unit."""
         if self.move_visible == True:
-            self.resetAllTileColor()
+            self.movetext_np.removeNode()
             self.move_visible = False
         else:
             self.displayUnitMove()
