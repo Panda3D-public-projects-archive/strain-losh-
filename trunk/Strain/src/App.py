@@ -44,6 +44,7 @@ class App(ShowBase):
 
         self.accept('i', self.info)
         self.accept('escape', self.escape)
+        self.accept('aspectRatioChanged', self.redraw)
     
     def escape(self):
         if self.interface.selected_unit:
@@ -51,6 +52,9 @@ class App(ShowBase):
         else:
             taskMgr.stop()
     
+    def redraw(self):
+        self.graphics_engine.redraw()
+
     """ 
     -----------------------------------
     debugging procedures and tasks
