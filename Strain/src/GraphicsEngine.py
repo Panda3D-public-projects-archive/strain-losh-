@@ -91,7 +91,7 @@ class Gui(DirectObject.DirectObject):
         plane = loader.loadModel('plane')
         plane.setScale(2)
         plane.flattenLight()
-        f = GuiFrame(0.3, 0.3, 0.01, Vec3(-aspect, 0, 0.7), VBase4(0, 0, 0, 0))
+        self.f = GuiFrame(0.3, 0.3, 0.01, Vec3(-aspect, 0, 0.7), VBase4(0, 0, 0, 0))
         self.deselect_button = GuiButton(Point3(-aspect + 0.3 + 0.05, 0, 0.95), plane, aspect, "deselect")
         self.punit_button = GuiButton(Point3(-aspect + 0.4 + 0.05, 0, 0.95), plane, aspect, "prev_unit")
         self.nunit_button = GuiButton(Point3(-aspect + 0.5 + 0.05, 0, 0.95), plane, aspect, "next_unit")
@@ -102,6 +102,35 @@ class Gui(DirectObject.DirectObject):
         
         taskMgr.add(self.process_gui, 'process_gui_task')
     
+    def redraw(self):
+        self.sel_frame.removeNode()
+        self.deselect_button.removeNode()
+        self.punit_button.removeNode()
+        self.nunit_button.removeNode()
+        self.f.removeNode()
+        wp = base.win.getProperties() 
+        aspect = float(wp.getXSize()) / wp.getYSize()
+
+        if aspect < 1:
+            aspect = 1
+            
+        self.sel_frame = DirectLabel(frameColor=(1,1,1,1) , frameSize=(0,0.3,0,0.3 ), pos = (-aspect, 0, 0.7))
+        self.sel_frame.reparentTo(aspect2d)
+        self.sel_frame.setTransparency(1)
+        
+        plane = loader.loadModel('plane')
+        plane.setScale(2)
+        plane.flattenLight()
+        self.f = GuiFrame(0.3, 0.3, 0.01, Vec3(-aspect, 0, 0.7), VBase4(0, 0, 0, 0))
+        self.deselect_button = GuiButton(Point3(-aspect + 0.3 + 0.05, 0, 0.95), plane, aspect, "deselect")
+        self.punit_button = GuiButton(Point3(-aspect + 0.4 + 0.05, 0, 0.95), plane, aspect, "prev_unit")
+        self.nunit_button = GuiButton(Point3(-aspect + 0.5 + 0.05, 0, 0.95), plane, aspect, "next_unit")
+        
+        self.hovered_gui = None
+        
+        self.accept('mouse1-up', self.process_mouseclick)
+
+        
     def process_mouseclick(self):
         if self.hovered_gui == self.deselect_button:
             base.interface.deselectUnit()
@@ -158,6 +187,9 @@ class GuiFrame:
         self.node.setColor(color)
         self.node.setPos(pos)
         self.node.flattenStrong()
+        
+    def removeNode(self):
+        self.node.removeNode()
 
 class GuiButton:
     def __init__(self, pos, plane, aspect, name):
@@ -175,6 +207,11 @@ class GuiButton:
         self.pos_min_y = posx.getZ()
         self.pos_max_x = posy.getX() / aspect
         self.pos_max_y = posy.getZ()
+        
+    def removeNode(self):
+            self.node.removeNode()
+     
+            
 
 class GraphicsEngine:
     
@@ -191,16 +228,21 @@ class GraphicsEngine:
         self.gui = Gui()
         self.init_alt_render()
         
+             
     def init_alt_render(self):
-        alt_buffer = base.win.makeTextureBuffer("texbuf", 256, 256)
+        self.alt_buffer = base.win.makeTextureBuffer("texbuf", 256, 256)
         self.alt_render = NodePath("offrender")
-        self.alt_cam = base.makeCamera(alt_buffer)
+        self.alt_cam = base.makeCamera(self.alt_buffer)
         self.alt_cam.reparentTo(self.alt_render)        
         self.alt_cam.setPos(0,-10,0)
         self.alt_render.setLightOff()
         self.alt_render.setFogOff()
-        self.gui.sel_frame["frameTexture"] = alt_buffer.getTexture()
-               
+        self.gui.sel_frame["frameTexture"] = self.alt_buffer.getTexture()
+
+    def redraw(self):
+        self.gui.redraw()
+        self.gui.sel_frame["frameTexture"] = self.alt_buffer.getTexture()
+       
     def init_lights(self):
         shade = ShadeModelAttrib.make(ShadeModelAttrib.MSmooth)
         render.setAttrib(shade)
