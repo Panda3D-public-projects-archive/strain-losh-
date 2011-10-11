@@ -85,16 +85,13 @@ class Gui(DirectObject.DirectObject):
     def __init__(self):
         wp = base.win.getProperties() 
         aspect = float(wp.getXSize()) / wp.getYSize()
-        self.sel_frame = DirectLabel(frameColor=(1,1,1,1) , frameSize=(0,0.3,0,0.3 ), pos = (-aspect, 0, 0.7))
-        self.sel_frame.reparentTo(aspect2d)
-        self.sel_frame.setTransparency(1)
         plane = loader.loadModel('plane')
         plane.setScale(2)
         plane.flattenLight()
-        self.f = GuiFrame(0.3, 0.3, 0.01, Vec3(-aspect, 0, 0.7), VBase4(0, 0, 0, 0))
-        self.deselect_button = GuiButton(Point3(-aspect + 0.3 + 0.05, 0, 0.95), plane, aspect, "deselect")
-        self.punit_button = GuiButton(Point3(-aspect + 0.4 + 0.05, 0, 0.95), plane, aspect, "prev_unit")
-        self.nunit_button = GuiButton(Point3(-aspect + 0.5 + 0.05, 0, 0.95), plane, aspect, "next_unit")
+        self.unit_card = GuiCard(0.3, 0.3, 0.01, None, "topleft", VBase4(0, 0, 0, 0))
+        self.deselect_button = GuiButton("topleft", Point3(0.3 + 0.05, 0, 0.95), aspect, plane, "deselect")
+        self.punit_button = GuiButton("topleft", Point3(0.4 + 0.05, 0, 0.95), aspect, plane, "prev_unit")
+        self.nunit_button = GuiButton("topleft", Point3(0.5 + 0.05, 0, 0.95), aspect, plane, "next_unit")
         
         self.hovered_gui = None
         
@@ -103,33 +100,20 @@ class Gui(DirectObject.DirectObject):
         taskMgr.add(self.process_gui, 'process_gui_task')
     
     def redraw(self):
-        self.sel_frame.removeNode()
-        self.deselect_button.removeNode()
-        self.punit_button.removeNode()
-        self.nunit_button.removeNode()
-        self.f.removeNode()
         wp = base.win.getProperties() 
         aspect = float(wp.getXSize()) / wp.getYSize()
-
-        if aspect < 1:
-            aspect = 1
-            
-        self.sel_frame = DirectLabel(frameColor=(1,1,1,1) , frameSize=(0,0.3,0,0.3 ), pos = (-aspect, 0, 0.7))
-        self.sel_frame.reparentTo(aspect2d)
-        self.sel_frame.setTransparency(1)
-        
-        plane = loader.loadModel('plane')
-        plane.setScale(2)
-        plane.flattenLight()
-        self.f = GuiFrame(0.3, 0.3, 0.01, Vec3(-aspect, 0, 0.7), VBase4(0, 0, 0, 0))
-        self.deselect_button = GuiButton(Point3(-aspect + 0.3 + 0.05, 0, 0.95), plane, aspect, "deselect")
-        self.punit_button = GuiButton(Point3(-aspect + 0.4 + 0.05, 0, 0.95), plane, aspect, "prev_unit")
-        self.nunit_button = GuiButton(Point3(-aspect + 0.5 + 0.05, 0, 0.95), plane, aspect, "next_unit")
-        
+        if aspect >= 1:
+            flag = "wide"
+            calc_aspect = aspect
+        elif aspect < 1 and aspect != 0:
+            flag = "tall"
+            calc_aspect = 1 / aspect
+   
+        self.unit_card.redraw()
+        self.deselect_button.redraw(calc_aspect, flag)
+        self.punit_button.redraw(calc_aspect, flag)
+        self.nunit_button.redraw(calc_aspect, flag)          
         self.hovered_gui = None
-        
-        self.accept('mouse1-up', self.process_mouseclick)
-
         
     def process_mouseclick(self):
         if self.hovered_gui == self.deselect_button:
@@ -164,35 +148,61 @@ class Gui(DirectObject.DirectObject):
                 self.nunit_button.frame.setAlphaScale(0.5)
         return task.cont
 
-class GuiFrame:
-    def __init__(self, width, height, border_size, pos, color):
-        self.node = NodePath("frame")
+class GuiCard:
+    def __init__(self, width, height, border_size, pos, hugpos, color):
+        self.hugpos = hugpos
+        self.width = width
+        self.height = height
+        self.border_size = border_size
+        self.pos = pos
+        self.node = NodePath("guicard")
+        self.frame_node = NodePath("frame")
         cm = CardMaker("cm_left")
         cm.setFrame(0, border_size, 0, height)
-        n = self.node.attachNewNode(cm.generate())
+        n = self.frame_node.attachNewNode(cm.generate())
         n.setPos(0, 0, 0)
         cm = CardMaker("cm_right")
         cm.setFrame(0, border_size, 0, height)
-        n = self.node.attachNewNode(cm.generate())
+        n = self.frame_node.attachNewNode(cm.generate())
         n.setPos(width - border_size, 0, 0)
         cm = CardMaker("cm_top")
         cm.setFrame(0, width, height - border_size, width)
-        n = self.node.attachNewNode(cm.generate())
+        n = self.frame_node.attachNewNode(cm.generate())
         n.setPos(0, 0, 0)
         cm = CardMaker("cm_bottom")
         cm.setFrame(0, width, 0, border_size)
-        n = self.node.attachNewNode(cm.generate())
+        n = self.frame_node.attachNewNode(cm.generate())
         n.setPos(0, 0, 0)
+        self.frame_node.setColor(color)
+        self.frame_node.flattenStrong()
+        self.frame_node.reparentTo(self.node)
+        cm = CardMaker("cm_back")
+        cm.setFrame(0+border_size, width-border_size, 0+border_size, height-border_size)
+        self.back_node = self.node.attachNewNode(cm.generate())
+        self.back_node.setPos(0, 0, 0)
+        self.back_node.setTransparency(1)
         self.node.reparentTo(aspect2d)
-        self.node.setColor(color)
-        self.node.setPos(pos)
-        self.node.flattenStrong()
-        
+        self.redraw()
+    
+    def setTexture(self, tex):
+        self.back_node.setTexture(tex)
+    
+    def redraw(self):
+        if self.hugpos == "topleft":
+            p = base.a2dTopLeft.getPos()
+            p.setZ(p.getZ() - self.height)
+        elif self.hugpos == "topright":
+            p = base.a2dTopRight.getPos()
+            p.setZ(p.getZ() - self.height)
+        elif self.hugpos == None:
+            p = self.pos
+        self.node.setPos(p)
+    
     def removeNode(self):
         self.node.removeNode()
 
 class GuiButton:
-    def __init__(self, pos, plane, aspect, name):
+    def __init__(self, hugpos, offset, aspect, plane, name):
         self.node = aspect2d.attachNewNode("guibutton")
         self.node.setTransparency(TransparencyAttrib.MAlpha)
         self.node.setAlphaScale(0.5) 
@@ -200,14 +210,30 @@ class GuiButton:
         geom.addGeomsFrom(plane.getChild(0).getChild(0).node())
         self.frame = self.node.attachNewNode(geom) 
         self.frame.setScale(0.05)
-        self.frame.setPos(pos)
         self.node.setTexture(loader.loadTexture(name+".png"))
-        posx, posy = self.frame.getTightBounds()
-        self.pos_min_x = posx.getX() / aspect
-        self.pos_min_y = posx.getZ()
-        self.pos_max_x = posy.getX() / aspect
-        self.pos_max_y = posy.getZ()
-        
+        self.hugpos = hugpos
+        self.offset = offset
+        self.redraw(aspect)
+
+    def redraw(self, aspect, flag="wide"):
+        if self.hugpos == "topleft":
+            p = base.a2dTopLeft.getPos()
+            p.setX(p.getX() + self.offset.getX())
+            p.setZ(p.getZ() - 0.05)
+        self.frame.setPos(p)
+        if flag == "wide":
+            posx, posy = self.frame.getTightBounds()
+            self.pos_min_x = posx.getX() / aspect
+            self.pos_min_y = posx.getZ()
+            self.pos_max_x = posy.getX() / aspect
+            self.pos_max_y = posy.getZ()
+        elif flag == "tall":
+            posx, posy = self.frame.getTightBounds()
+            self.pos_min_x = posx.getX()
+            self.pos_min_y = posx.getZ() / aspect
+            self.pos_max_x = posy.getX()
+            self.pos_max_y = posy.getZ() / aspect            
+            
     def removeNode(self):
             self.node.removeNode()
      
@@ -237,11 +263,10 @@ class GraphicsEngine:
         self.alt_cam.setPos(0,-10,0)
         self.alt_render.setLightOff()
         self.alt_render.setFogOff()
-        self.gui.sel_frame["frameTexture"] = self.alt_buffer.getTexture()
+        self.gui.unit_card.setTexture(self.alt_buffer.getTexture())
 
     def redraw(self):
         self.gui.redraw()
-        self.gui.sel_frame["frameTexture"] = self.alt_buffer.getTexture()
        
     def init_lights(self):
         shade = ShadeModelAttrib.make(ShadeModelAttrib.MSmooth)
