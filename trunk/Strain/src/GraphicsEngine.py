@@ -6,6 +6,8 @@ from pandac.PandaModules import CollisionTraverser, CollisionHandlerQueue, Colli
 from Camera import Camera
 from Interface import Interface
 from UnitModel import UnitModel
+from Messaging import EngMsg, Messaging, ClientMsg, Message
+import sys
 
 #===============================================================================
 # Panda3D parameter file handling
@@ -73,6 +75,9 @@ class GraphicsEngine(ShowBase):
         
         # debug
         self.accept("i", self.info)
+        
+        # Create messaging task
+        self.taskMgr.add(self.msgTask, "msg_task")
         
 
     def initAll(self, level):
@@ -170,6 +175,7 @@ class GraphicsEngine(ShowBase):
         unit.remove()
     
     def windowEvent(self, win):
+        pass
         if win.isClosed():
             self.destroy()
 
@@ -181,8 +187,13 @@ class GraphicsEngine(ShowBase):
         print self.render.analyze()
         
     def destroy(self):
+        # TODO: ogs: Nekad se na izlazu javlja:debug('feeder thread got sentinel -- exiting') - vjerovatno vezano uz threading, provjeriti
         if self.interface.selected_unit:
             self.interface.deselectUnit()
         else:
-            self.ignoreAll()
-            self.taskMgr.stop()
+            ClientMsg.shutdownEngine()            
+            sys.exit()
+
+    def msgTask(self, task):
+        return task.cont
+    
