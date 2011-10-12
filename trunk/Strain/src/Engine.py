@@ -8,7 +8,7 @@ from threading import Thread
 import time
 import logging
 import cPickle as pickle
-import sys
+import sys, traceback
 import Queue
 
 
@@ -499,6 +499,7 @@ class Engine( Thread ):
               
         if( (dx != 1 and dx != 0 and dx != -1) and 
             (dy != 1 and dy != 0 and dy != -1) ):
+            logger.critical( "Exception: %s... %s", sys.exc_info()[1], traceback.extract_stack() )
             raise Exception( "Invalid dx (%d) or dy (%d)" %(dy ,dy) )
         
         ptx = int( position.x )
@@ -555,6 +556,7 @@ class Engine( Thread ):
         #if target_tile tile is not in the move list, then raise alarm
         if (target_tile in moveDict) == False:
             print "getPath() got an invalid target_tile"
+            logger.critical("getPath() got an invalid target tile:%s", target_tile )
             raise Exception( "getPath() got an invalid target_tile" )
             
         
@@ -645,14 +647,12 @@ class Engine( Thread ):
             EngMsg.sendErrorMsg( "Wrong unit_id." )
             return
 
-        
-        path = self.getPath( self.units[unit_id], new_position )
-        
-        if( new_position in path ) == False :
-            logger.critical( "Not a valid destination." )
-            EngMsg.sendErrorMsg( "Not a valid destination." )
-            return
-        
+        try:
+            path = self.getPath( self.units[unit_id], new_position )
+        except Exception:
+            logger.critical( sys.exc_info()[1] )
+            EngMsg.sendErrorMsg( sys.exc_info()[1] )
+            return   
         
         #everything checks out, do the actual moving
         for tile in path:
