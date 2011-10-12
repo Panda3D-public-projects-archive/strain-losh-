@@ -1,11 +1,9 @@
 from direct.showbase import DirectObject
-from panda3d.core import Plane, Vec4, Vec3, Vec2, Point3, Point2, NodePath
+from panda3d.core import Plane, Vec4, Vec3, Vec2, Point4, Point3, Point2, NodePath
 from pandac.PandaModules import CollisionTraverser, CollisionHandlerQueue, CollisionNode, CollisionRay
-from pandac.PandaModules import GeomNode, CardMaker, TextNode, Mat4
+from pandac.PandaModules import GeomNode, CardMaker, TextNode
 from pandac.PandaModules import Texture, TextureStage, RenderAttrib, DepthOffsetAttrib, TransparencyAttrib
-from ResourceManager import UnitLoader
-import math
-
+from UnitModel import UnitModel
 
 #===============================================================================
 # GLOBAL DEFINITIONS
@@ -20,29 +18,18 @@ _TILE_MOVE              = "_tile_move"
 _TILE_RESET             = "_tile_reset"
 
 _UNIT_HOVERED           = "_unit_hovered"
-_UNIT_RESET             = "_unit_reset"
+_UNIT_RESET             = "_unit_reset"    
 
 #===============================================================================
 # CLASS Interface --- DEFINITION
 #===============================================================================
 
 class Interface(DirectObject.DirectObject):
-    def __init__(self):
+    def __init__(self, ge):
+        # Keep pointer to the GraphicsEngine parent class
+        self.ge = ge
         
-        base.disableMouse()
-        self.mx = 0
-        self.my = 0
-        self.is_orbiting = False
-        self.target = Vec3(0, 0, 0)
-        self.cam_dist = 40
-        self.pan_rate_div = 20
-        self.pan_limits_x = Vec2(-5, 15) 
-        self.pan_limits_y = Vec2(-5, 15)
-        self.plane = Plane(Vec3(0, 0, 1), Point3(0, 0, 0))
-        base.camera.setPos(10, 10, 20)
-        base.camera.lookAt(10, 10, 0)
-        self.orbit(0, 0)
-        
+        # Initialize variables
         self.los_visible = False
         self.unit_los_visible = False
         self.move_visible = False
@@ -52,141 +39,74 @@ class Interface(DirectObject.DirectObject):
         self.selected_unit = None
         self.selected_unitmodel = None
         self.off_model = None
-        self.selected_unit_tex = loader.loadTexture("sel.png")
+        self.selected_unit_tex = self.ge.loader.loadTexture("sel.png")
         self.selected_unit_tile = None
         
-        self.movetext_np = None
-
-        self.initCollision()
-
-        self.accept('w', self.setKey, ['up', 1])
-        self.accept('w-up', self.setKey, ['up', 0])
-        self.accept('s', self.setKey, ['down', 1])
-        self.accept('s-up', self.setKey, ['down', 0])                   
-        self.accept('a', self.setKey, ['left', 1])
-        self.accept('a-up', self.setKey, ['left', 0])
-        self.accept('d', self.setKey, ['right', 1])
-        self.accept('d-up', self.setKey, ['right', 0])
-        self.accept('l-up', self.switchLos)
-        self.accept('o-up', self.switchUnitLos)
-        self.accept('m-up', self.switchUnitMove)
-        self.accept("mouse1-up", self.mouseLeftClick)
-        self.accept("mouse3", self.startOrbit)
-        self.accept("mouse3-up", self.stopOrbit)
-        self.accept("wheel_up", lambda : self.adjustCamDist(0.9))
-        self.accept("wheel_down", lambda : self.adjustCamDist(1.1))
-        self.accept('b-up', self.switchTiles2)        
+        self.movetext_np = None       
         
-        self.keys = {}
-        self.keys['up'] = 0
-        self.keys['down'] = 0        
-        self.keys['left'] = 0
-        self.keys['right'] = 0
-        self.keys['middle'] = 0
-        self.keys['wheel_up'] = 0
-        self.keys['wheel_down'] = 0
+        wp = self.ge.win.getProperties() 
+        aspect = float(wp.getXSize()) / wp.getYSize()
+        plane = self.ge.loader.loadModel('plane')
+        plane.setScale(2)
+        plane.flattenLight()
+        self.unit_card = GuiCard(0.3, 0.3, 0.01, None, "topleft", Point4(0, 0, 0, 0))
+        self.unit_card.setTexture(self.ge.alt_buffer.getTexture())
+        self.deselect_button = GuiButton("topleft", Point3(0.3 + 0.05, 0, 0.95), aspect, plane, "deselect")
+        self.punit_button = GuiButton("topleft", Point3(0.4 + 0.05, 0, 0.95), aspect, plane, "prev_unit")
+        self.nunit_button = GuiButton("topleft", Point3(0.5 + 0.05, 0, 0.95), aspect, plane, "next_unit")
+        
+        self.hovered_gui = None
+        
+        self.accept('l', self.switchLos)
+        self.accept('o', self.switchUnitLos)
+        self.accept('m', self.switchUnitMove)
+        self.accept("mouse1-up", self.mouseLeftClick)
+        
+        self.ge.taskMgr.add(self.processGui, 'processGui_task')
+        self.ge.taskMgr.add(self.hover, 'hover_task')        
     
-        taskMgr.add(self.updateCamera, 'updateCamera_task')
-        taskMgr.add(self.hover, 'hover_task')
+    def redraw(self):
+        wp = self.ge.win.getProperties() 
+        aspect = float(wp.getXSize()) / wp.getYSize()
+        if aspect >= 1:
+            flag = "wide"
+            calc_aspect = aspect
+        elif aspect < 1 and aspect != 0:
+            flag = "tall"
+            calc_aspect = 1 / aspect
+   
+        self.unit_card.redraw()
+        self.deselect_button.redraw(calc_aspect, flag)
+        self.punit_button.redraw(calc_aspect, flag)
+        self.nunit_button.redraw(calc_aspect, flag)          
+        self.hovered_gui = None
 
-    def initCollision(self):
-        """Initializes objects needed to perform panda collisions."""
-        self.coll_trav = CollisionTraverser()
-        self.coll_queue = CollisionHandlerQueue()
-        self.coll_node = CollisionNode("mouse_ray")
-        self.coll_nodepath = base.camera.attachNewNode(self.coll_node)
-        self.coll_node.setFromCollideMask(GeomNode.getDefaultCollideMask())
-        self.coll_ray = CollisionRay()
-        self.coll_node.addSolid(self.coll_ray)
-        self.coll_trav.addCollider(self.coll_nodepath, self.coll_queue)
-    
+    def getMousePos(self):
+        """Returns mouse coordinates if mouse pointer is inside Panda window."""
+        if self.ge.mouseWatcherNode.hasMouse(): 
+            return self.ge.mouseWatcherNode.getMouse() 
+        return None
+
     def getMouseHoveredObject(self):
         """Returns the closest object in the scene graph over which we hover mouse pointer.
            Returns None if no objects found.
         """
         pos = self.getMousePos()
         if pos:
-            self.coll_ray.setFromLens(base.camNode, pos.getX(), pos.getY())
-            self.coll_trav.traverse(render)
-            if self.coll_queue.getNumEntries() > 0:
-                self.coll_queue.sortEntries()
-                np = self.coll_queue.getEntry(0).getIntoNodePath()
+            self.ge.coll_ray.setFromLens(self.ge.camNode, pos.getX(), pos.getY())
+            self.ge.coll_trav.traverse(self.ge.render)
+            if self.ge.coll_queue.getNumEntries() > 0:
+                self.ge.coll_queue.sortEntries()
+                np = self.ge.coll_queue.getEntry(0).getIntoNodePath()
                 return np
         return None
-     
-    def getMousePos(self):
-        """Returns mouse coordinates if mouse pointer is inside Panda window."""
-        if base.mouseWatcherNode.hasMouse(): 
-            return base.mouseWatcherNode.getMouse() 
-        return None
-    
-    def setTarget(self, x, y, z):
-        """Sets the target point which will be the center of camera view.""" 
-        x = self.clamp(x, self.pan_limits_x.getX(), self.pan_limits_x.getY())
-        self.target.setX(x)
-        y = self.clamp(y, self.pan_limits_y.getX(), self.pan_limits_y.getY())
-        self.target.setY(y)
-        self.target.setZ(z)
-        
-    def clamp(self, val, min_val, max_val):
-        """If val > min_val and val < max_val returns val
-           If val <= min_val returns min_val
-           If val >= max_val returns max_val
-        """
-        return min(max(val, min_val), max_val)
-
-    def adjustCamDist(self, factor):
-        """Adjusts distance from the camera to the level. Used for zooming of the camera."""
-        self.cam_dist = self.cam_dist * factor
-        self.orbit(0, 0)
-    
-    def startOrbit(self): 
-        """Sets camera is orbiting flag.
-           Fires when right mouse button is pressed.
-        """
-        self.is_orbiting = True
-            
-    def stopOrbit(self):
-        """Clears camera is orbiting flag.
-           Fires when right mouse button is depressed.
-        """
-        self.is_orbiting = False 
-    
-    def orbit(self, delta_x, delta_y):
-        """Handles camera orbiting (turning around camera target)."""
-        new_cam_hpr = Vec3() 
-        new_cam_pos = Vec3()
-        cam_hpr = base.camera.getHpr()  
-          
-        new_cam_hpr.setX(cam_hpr.getX() + delta_x) 
-        new_cam_hpr.setY(self.clamp(cam_hpr.getY() - delta_y, -85, -10)) 
-        new_cam_hpr.setZ(cam_hpr.getZ())
-          
-        base.camera.setHpr(new_cam_hpr)  
-          
-        radian_x = new_cam_hpr.getX() * (math.pi / 180.0) 
-        radian_y = new_cam_hpr.getY() * (math.pi / 180.0)  
-          
-        new_cam_pos.setX(self.cam_dist * math.sin(radian_x) * math.cos(radian_y) + self.target.getX())
-        new_cam_pos.setY(-self.cam_dist * math.cos(radian_x) * math.cos(radian_y) + self.target.getY()) 
-        new_cam_pos.setZ(-self.cam_dist * math.sin(radian_y) + self.target.getZ()) 
-        base.camera.setPos(new_cam_pos.getX(), new_cam_pos.getY(), new_cam_pos.getZ())                     
-        base.camera.lookAt(self.target.getX(), self.target.getY(), self.target.getZ()) 
-    
-   
-    def setKey(self, button, value):
-        """Sets the state of keyboard.
-           1 = pressed
-           0 = depressed
-        """
-        self.keys[button] = value    
 
     def setUnitColorScale(self, unit, r, g, b, alpha):
         """Sets color scale of unit nodepath.
            r, g, b, a = 1, 1, 1, 1 resets the color scale
         """
         unit.setColorScale(r, g, b, alpha)
-
+        
     def setTileColorScale(self, tile, r, g, b, alpha):
         """Sets color scale of tile nodepath.
         """
@@ -230,10 +150,10 @@ class Interface(DirectObject.DirectObject):
         else:
             tile.clearColorScale()
             #self.setTileColorScale(tile, 1, 1, 1, 1)
-
+            
     def resetAllTileColor(self):
         """Resets the color of all tiles in the level."""
-        for tile_list in base.graphics_engine.node_data:
+        for tile_list in self.ge.tile_np_list:
             for tile in tile_list:
                 self.changeTileColor(tile, _TILE_RESET)   
 
@@ -260,53 +180,16 @@ class Interface(DirectObject.DirectObject):
     def clearSelectedTile(self, tile):
         """Clear the mark from the tile of the selected unit."""
         self.clearTileBlendTexture(tile)
-
-    def selectUnit(self, unit):
-        """Performs actions for unit selection.
-           Clears previous selection, sets global Interface.selected_unit variable, marks selected unit tile,
-           loads and renders selected unit model in an off screen buffer for portrait display.
-        """
-        self.deselectUnit()
-        self.selected_unit = unit
-        self.selected_unitmodel = base.graphics_engine.unit_models[unit.id]
-        pos = self.selected_unitmodel.get_unit_grid_pos()
-        self.markSelectedTile(base.graphics_engine.node_data[int(pos.x)][int(pos.y)])
-        ul = UnitLoader()
-        self.off_model = ul.load(self.selected_unit.type, "off")
-        self.off_model.reparentTo(base.graphics_engine.alt_render)
-        self.off_model.setPos(0,-8,-1.7)
-        self.off_model.play("idle02")
-
-    def deselectUnit(self):
-        """Performs actions for unit deselection.
-           Clears unit tile, cleans up off screen models, 
-           clears Interface.selected_unit and Interface.selected_unitmodel variables.
-        """
-        if self.selected_unit:
-            self.clearSelectedTile(self.selected_unit_tile)
-            if self.off_model:
-                self.off_model.cleanup()
-                self.off_model.remove()
-            self.selected_unit = None
-            self.selected_unitmodel = None
         
-    def selectPrevUnit(self):
-        """Selects previous unit in the same team with unspent action points."""
-        None
-        
-    def selectNextUnit(self):
-        """Selects next unit in the same team with unspent action points."""
-        None     
-
     def displayLos(self):
         """Displays visual indicator of tiles which are in line of sight of the selected unit.
            Tiles in full view are marked with brighter red color.
            Tiles in partial view are marked with darker red color.
         """
         if self.selected_unit:
-            losh_dict = base.engine.getLOSHDict(Point2(self.selected_unit.x, self.selected_unit.y))
+            losh_dict = self.ge.engine.getLOSHDict(Point2(self.selected_unit.x, self.selected_unit.y))
             for tile in losh_dict:
-                tile_node = base.graphics_engine.node_data[int(tile.x)][int(tile.y)]
+                tile_node = self.ge.tile_np_list[int(tile.x)][int(tile.y)]
                 if losh_dict[tile] == 0:
                     self.changeTileColor(tile_node, _TILE_FULL_LOS)
                 elif losh_dict[tile] == 1:
@@ -330,9 +213,9 @@ class Interface(DirectObject.DirectObject):
            Currently enemy unit coordinates are hardcoded.
         """
         if self.selected_unit:
-            los_list = base.engine.getLOS(Point2(self.selected_unit.x, self.selected_unit.y), Point2(13,13))
+            los_list = self.ge.engine.getLOS(Point2(self.selected_unit.x, self.selected_unit.y), Point2(13,13))
             for tile in los_list:
-                tile_node = base.graphics_engine.node_data[int(tile[0].x)][int(tile[0].y)]
+                tile_node = self.ge.tile_np_list[int(tile[0].x)][int(tile[0].y)]
                 if tile[1] == 0:
                     self.changeTileColor(tile_node, _TILE_FULL_LOS)
                 elif tile [1] == 1:
@@ -352,9 +235,9 @@ class Interface(DirectObject.DirectObject):
     def displayUnitMove(self):
         """Displays visual indicator of tiles which are in movement range of the selected unit."""
         if self.selected_unit:
-            unit = base.engine.units[self.selected_unit.id]
+            unit = self.ge.engine.units[self.selected_unit.id]
             ap = unit.current_AP
-            move_dict = base.engine.getMoveDict(unit)
+            move_dict = self.ge.engine.getMoveDict(unit)
             self.movetext_np = NodePath("movetext_np")
             for tile in move_dict:
                 text = TextNode('node name')
@@ -364,35 +247,7 @@ class Interface(DirectObject.DirectObject):
                 textNodePath.setScale(0.5, 0.5, 0.5)
                 textNodePath.setPos(tile.x+0.2, tile.y+0.2, 0.5)
                 textNodePath.lookAt(tile.x+0.2, tile.y+0.2, -100)
-            self.movetext_np.reparentTo(base.graphics_engine.node)
-
-    def switchTiles2(self):
-
-        for tile in base.engine.debug_dict:
-            tile_node = base.graphics_engine.node_data[int(tile.x)][int(tile.y)]
-            
-            text = TextNode('node name')
-            text.setText( "%d" % base.engine.debug_dict[tile])
-            
-            text.setCoordinateSystem( 0 )
-
-                        
-            text.setCardColor(0, 0, 0.5, 0.9)
-#            text.setCardAsMargin(0, 0, 0, 0)
-#            text.setCardDecal(True)
-            
-            
-            mat = (
-#                Mat4.scaleMat( 0, 1, 1) *
-                Mat4.rotateMat( -90, Vec3(1, 0, 0)) *
-                Mat4.translateMat( tile.x, tile.y, 1)
-                )
-            text.setTransform(mat)
-            
-            
-            base.graphics_engine.node.attachNewNode( text )
-            
-            pass
+            self.movetext_np.reparentTo(self.ge.node)
 
     def switchUnitMove(self):
         """Switched the display of tiles available for movement for the selected unit."""
@@ -402,37 +257,76 @@ class Interface(DirectObject.DirectObject):
         else:
             self.displayUnitMove()
             self.move_visible = True
-                
+
+
+    def selectUnit(self, unit):
+        """Performs actions for unit selection.
+           Clears previous selection, sets global Interface.selected_unit variable, marks selected unit tile,
+           loads and renders selected unit model in an off screen buffer for portrait display.
+        """
+        self.deselectUnit()
+        self.selected_unit = unit
+        self.selected_unitmodel = self.ge.unit_np_dict[unit.id]
+        self.markSelectedTile(self.ge.tile_np_list[self.selected_unit.x][self.selected_unit.y])
+        self.off_model = UnitModel(unit, scale=1, h=0, pos=Point3(0,-8,-1.7))
+        self.off_model.reparentTo(self.ge.alt_render)
+        self.off_model.play("idle02")
+
+    def deselectUnit(self):
+        """Performs actions for unit deselection.
+           Clears unit tile, cleans up off screen models, 
+           clears Interface.selected_unit and Interface.selected_unitmodel variables.
+        """
+        if self.selected_unit:
+            self.clearSelectedTile(self.selected_unit_tile)
+            if self.off_model:
+                self.ge.destroyUnit(self.off_model)
+            self.selected_unit = None
+            self.selected_unitmodel = None
+        
+    def selectPrevUnit(self):
+        """Selects previous unit in the same team with unspent action points."""
+        None
+        
+    def selectNextUnit(self):
+        """Selects next unit in the same team with unspent action points."""
+        None   
+
     def mouseLeftClick(self):
-        """Handles left mouse click actions."""
-        selected = self.getMouseHoveredObject()
-        if selected:
-            node_type = selected.findNetTag("type").getTag("type")
-            if node_type == "unit":
-                unit_id = int(selected.findNetTag("id").getTag("id"))
-                unit = base.engine.units[unit_id] 
-                if self.selected_unit != unit:
-                    self.selectUnit(unit)
-            elif node_type == "tile":
-                p = selected.getParent().getPos()
-                u = base.graphics_engine.unit_data[int(p.x)][int(p.y)]
-                if u:
-                    unit = base.engine.units[int(u.id)]
-                else:
-                    unit = None
-                if unit:
+        """Handles left mouse click actions.
+           Procedure first checks for gui clicks, if there are none then it checks 3d collision.
+        """
+        if self.hovered_gui == self.deselect_button:
+            self.deselectUnit()
+        elif self.hovered_gui == self.punit_button:
+            self.selectPrevUnit()
+        elif self.hovered_gui == self.nunit_button:
+            self.selectNextUnit() 
+        else:    
+            selected = self.getMouseHoveredObject()
+            if selected:
+                node_type = selected.findNetTag("type").getTag("type")
+                if node_type == "unit":
+                    unit_id = int(selected.findNetTag("id").getTag("id"))
+                    unit = self.ge.engine.units[unit_id] 
                     if self.selected_unit != unit:
                         self.selectUnit(unit)
-                else:
-                    pos = Point2(int(p.x), int(p.y))
+                elif node_type == "tile":
+                    p = selected.getParent().getPos()
+                    u = self.ge.unit_np_list[int(p.x)][int(p.y)]
+                    if u:
+                        unit = self.ge.engine.units[int(u.id)]
+                    else:
+                        unit = None
+                    if unit:
+                        if self.selected_unit != unit:
+                            self.selectUnit(unit)
 
-                    
 #===============================================================================
 # CLASS Interface --- TASKS
 #===============================================================================
- 
     def hover(self, task):
-        """Task to visually mark tile over which are mouse pointer hovers."""
+        """Visually marks and selects tiles or units over which mouse cursor hovers."""
         np = self.getMouseHoveredObject()
         if np:
             node_type = np.findNetTag("type").getTag("type")
@@ -460,51 +354,130 @@ class Interface(DirectObject.DirectObject):
                 self.changeUnitColor(self.hovered_unit, _UNIT_RESET)
             if self.hovered_tile:
                 self.changeTileColor(self.hovered_tile, _TILE_RESET)                
-        return task.cont  
+        return task.cont 
     
-    def updateCamera(self, task):
-        """Task to update position of camera.""" 
-        mpos = self.getMousePos()
-        if mpos != None:
-            if self.is_orbiting:
-                self.orbit((self.mx - mpos.getX()) * 100, (self.my - mpos.getY()) * 100)
-            else: 
-                move_x = False
-                move_y = False
-                if self.keys['down']: 
-                    rad_x1 = base.camera.getH() * (math.pi / 180.0) 
-                    pan_rate1 = 0.2 * self.cam_dist / self.pan_rate_div 
-                    move_y = True 
-                if self.keys['up']: 
-                    rad_x1 = base.camera.getH() * (math.pi / 180.0) + math.pi 
-                    pan_rate1 = 0.2 * self.cam_dist / self.pan_rate_div 
-                    move_y = True 
-                if self.keys['left']: 
-                    rad_x2 = base.camera.getH() * (math.pi / 180.0) + math.pi * 0.5 
-                    pan_rate2 = 0.2 * self.cam_dist / self.pan_rate_div 
-                    move_x = True
-                if self.keys['right']: 
-                    rad_x2 = base.camera.getH() * (math.pi / 180.0) - math.pi*0.5 
-                    pan_rate2 = 0.2 * self.cam_dist / self.pan_rate_div 
-                    move_x = True 
-                
-                if move_y: 
-                    temp_x = self.target.getX() + math.sin(rad_x1) * pan_rate1 
-                    temp_x = self.clamp(temp_x, self.pan_limits_x.getX(), self.pan_limits_x.getY()) 
-                    self.target.setX(temp_x) 
-                    temp_y = self.target.getY() - math.cos(rad_x1) * pan_rate1 
-                    temp_y = self.clamp(temp_y, self.pan_limits_y.getX(), self.pan_limits_y.getY()) 
-                    self.target.setY(temp_y) 
-                    self.orbit(0, 0) 
-                if move_x: 
-                    temp_x = self.target.getX() - math.sin(rad_x2) * pan_rate2 
-                    temp_x = self.clamp(temp_x, self.pan_limits_x.getX(), self.pan_limits_x.getY()) 
-                    self.target.setX(temp_x) 
-                    temp_y = self.target.getY() + math.cos(rad_x2) * pan_rate2 
-                    temp_y = self.clamp(temp_y, self.pan_limits_y.getX(), self.pan_limits_y.getY()) 
-                    self.target.setY(temp_y) 
-                    self.orbit(0, 0)
-            self.mx = mpos.getX()
-            self.my = mpos.getY()
-        return task.cont                       
+    def processGui(self, task):
+        """Visually marks and selects GUI element over which mouse cursor hovers."""
+        # TODO: ogs/vjeks: Spremati GUI elemente u listu ili dict i napraviti pametnije iteriranje od ovakvog slaganja if-elseova
+        if self.ge.mouseWatcherNode.hasMouse(): 
+            mpos = self.ge.mouseWatcherNode.getMouse()
+            if mpos.x >= self.deselect_button.pos_min_x and mpos.x <= self.deselect_button.pos_max_x and mpos.y >= self.deselect_button.pos_min_y and mpos.y <= self.deselect_button.pos_max_y:
+                self.hovered_gui = self.deselect_button
+                self.deselect_button.frame.setAlphaScale(1)                
+                self.punit_button.frame.setAlphaScale(0.5)
+                self.nunit_button.frame.setAlphaScale(0.5)
+            elif mpos.x >= self.punit_button.pos_min_x and mpos.x <= self.punit_button.pos_max_x and mpos.y >= self.punit_button.pos_min_y and mpos.y <= self.punit_button.pos_max_y:
+                self.hovered_gui = self.punit_button
+                self.deselect_button.frame.setAlphaScale(0.5)                
+                self.punit_button.frame.setAlphaScale(1)
+                self.nunit_button.frame.setAlphaScale(0.5)
+            elif mpos.x >= self.nunit_button.pos_min_x and mpos.x <= self.nunit_button.pos_max_x and mpos.y >= self.nunit_button.pos_min_y and mpos.y <= self.nunit_button.pos_max_y:
+                self.hovered_gui = self.nunit_button
+                self.deselect_button.frame.setAlphaScale(0.5)                
+                self.punit_button.frame.setAlphaScale(0.5)
+                self.nunit_button.frame.setAlphaScale(1)                
+            else:
+                self.hovered_gui = None
+                self.deselect_button.frame.setAlphaScale(0.5)                
+                self.punit_button.frame.setAlphaScale(0.5)
+                self.nunit_button.frame.setAlphaScale(0.5)
+        return task.cont    
+
+
+#===============================================================================
+# CLASS GuiCard --- DEFINITION
+#===============================================================================
+class GuiCard:
+    def __init__(self, width, height, border_size, pos, hugpos, color):
+        self.hugpos = hugpos
+        self.width = width
+        self.height = height
+        self.border_size = border_size
+        self.pos = pos
+        self.node = NodePath("guicard")
+        self.frame_node = NodePath("frame")
+        cm = CardMaker("cm_left")
+        cm.setFrame(0, border_size, 0, height)
+        n = self.frame_node.attachNewNode(cm.generate())
+        n.setPos(0, 0, 0)
+        cm = CardMaker("cm_right")
+        cm.setFrame(0, border_size, 0, height)
+        n = self.frame_node.attachNewNode(cm.generate())
+        n.setPos(width - border_size, 0, 0)
+        cm = CardMaker("cm_top")
+        cm.setFrame(0, width, height - border_size, width)
+        n = self.frame_node.attachNewNode(cm.generate())
+        n.setPos(0, 0, 0)
+        cm = CardMaker("cm_bottom")
+        cm.setFrame(0, width, 0, border_size)
+        n = self.frame_node.attachNewNode(cm.generate())
+        n.setPos(0, 0, 0)
+        self.frame_node.setColor(color)
+        self.frame_node.flattenStrong()
+        self.frame_node.reparentTo(self.node)
+        cm = CardMaker("cm_back")
+        cm.setFrame(0+border_size, width-border_size, 0+border_size, height-border_size)
+        self.back_node = self.node.attachNewNode(cm.generate())
+        self.back_node.setPos(0, 0, 0)
+        self.back_node.setTransparency(1)
+        self.node.reparentTo(aspect2d)
+        self.redraw()
+    
+    def setTexture(self, tex):
+        self.back_node.setTexture(tex)
+    
+    def redraw(self):
+        if self.hugpos == "topleft":
+            p = base.a2dTopLeft.getPos()
+            p.setZ(p.getZ() - self.height)
+        elif self.hugpos == "topright":
+            p = base.a2dTopRight.getPos()
+            p.setZ(p.getZ() - self.height)
+        elif self.hugpos == None:
+            p = self.pos
+        self.node.setPos(p)
+    
+    def removeNode(self):
+        self.node.removeNode()
+
+
+#===============================================================================
+# CLASS GuiButton --- DEFINITION
+#===============================================================================
+class GuiButton:
+    def __init__(self, hugpos, offset, aspect, plane, name):
+        self.node = aspect2d.attachNewNode("guibutton")
+        self.node.setTransparency(TransparencyAttrib.MAlpha)
+        self.node.setAlphaScale(0.5) 
+        geom = GeomNode('plane')
+        geom.addGeomsFrom(plane.getChild(0).getChild(0).node())
+        self.frame = self.node.attachNewNode(geom) 
+        self.frame.setScale(0.05)
+        self.node.setTexture(loader.loadTexture(name+".png"))
+        self.hugpos = hugpos
+        self.offset = offset
+        self.redraw(aspect)
+
+    def redraw(self, aspect, flag="wide"):
+        if self.hugpos == "topleft":
+            p = base.a2dTopLeft.getPos()
+            p.setX(p.getX() + self.offset.getX())
+            p.setZ(p.getZ() - 0.05)
+        self.frame.setPos(p)
+        if flag == "wide":
+            posx, posy = self.frame.getTightBounds()
+            self.pos_min_x = posx.getX() / aspect
+            self.pos_min_y = posx.getZ()
+            self.pos_max_x = posy.getX() / aspect
+            self.pos_max_y = posy.getZ()
+        elif flag == "tall":
+            posx, posy = self.frame.getTightBounds()
+            self.pos_min_x = posx.getX()
+            self.pos_min_y = posx.getZ() / aspect
+            self.pos_max_x = posy.getX()
+            self.pos_max_y = posy.getZ() / aspect            
+            
+    def removeNode(self):
+            self.node.removeNode()   
+                  
 

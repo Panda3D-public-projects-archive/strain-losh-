@@ -1,30 +1,3 @@
-from direct.actor.Actor import Actor
-
-class UnitLoader:
-    def load(self, type, buffer):
-        if type == 'terminator':
-            model = Actor('terminator', {'run': 'terminator-run'
-                                        ,'idle02': 'terminator-run'
-                                        })
-        elif type == 'marine_b':
-            model = Actor('marine_b',   {'run': 'marine-run'
-                                        ,'idle02': 'marine-fire'
-                                        })
-        elif type == 'commissar':
-            model = Actor('commissar', {'run': 'commissar-run'
-                                       ,'idle01': 'commissar-idle1'
-                                       ,'idle02': 'commissar-idle2'
-                                       ,'idle03': 'commissar-idle3'
-                                       ,'fire': 'commissar-fire'
-                                       })
-        
-        if buffer != "off":
-            model.setScale(0.25)
-            # bake in rotation transform because model is created facing towards screen
-            model.setH(180) 
-            model.flattenLight()
-        return model
-
 class SoundLoader:
     def __init__(self):
         self.sounds = {}
