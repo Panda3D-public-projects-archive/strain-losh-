@@ -1,14 +1,22 @@
+import Engine
+
+
 class Level:
-    def __init__(self, name):
+    
+    def __init__(self, name):        
+        self.name = name    
         self.maxX = self.maxY = 0
-        self._level_data = []
+        self._level_data = []    
         
-        self.load(name)
+        Engine.logger.debug( "Level loading: %s", self.name )        
+        self.load(self.name)
+        Engine.logger.info( "Level: %s loaded OK", self.name )        
+
 
     def load(self, name):
         line_count = 0
-        file = open('levels/'+name, "r")
-        for line in file:
+        lvl_file = open('levels/'+name, "r")
+        for line in lvl_file:
             line_count = line_count + 1
             if line_count == 1:
                 s = line.split()
@@ -18,7 +26,7 @@ class Level:
                 s = s[0:self.maxX]
                 self._level_data.append(s)
            
-        file.close()
+        lvl_file.close()
         self._level_data.reverse()
         
         #convert entries in _level_data from string to integer AND change x-y order
