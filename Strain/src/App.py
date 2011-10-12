@@ -38,6 +38,7 @@ class App(ShowBase):
         #PStatClient.connect()
         
         self.engine = Engine()
+        self.engine.start()
         self.interface = Interface()  
         self.graphics_engine = GraphicsEngine(self.engine)
 

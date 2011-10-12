@@ -3,8 +3,23 @@ from Unit import Unit
 from Level import Level
 from pandac.PandaModules import Point2, Point3, NodePath, Vec3
 import math
-from Messaging import Message, Messaging
+from Messaging import EngMsg, Messaging, ClientMsg, Message
+from threading import Thread
+import time
+import logging
+import cPickle as pickle
+import sys
+import Queue
 
+
+
+#=============================SET UP LOGGING===================================
+logger = logging.getLogger('EngineLog')
+hdlr = logging.FileHandler('Engine.log')
+formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+hdlr.setFormatter(formatter)
+logger.addHandler(hdlr) 
+logger.setLevel(logging.DEBUG)
 
 
 
@@ -20,8 +35,8 @@ def signum( num ):
 
 class Player:
     
-    def __init__(self, id, name, team):
-        self.id = id
+    def __init__(self, in_id, name, team):
+        self.id = in_id
         self.name = name 
         self.team = team
         self.unitlist = []
@@ -33,14 +48,13 @@ class Player:
 
 
 
-class Engine:
+class Engine( Thread ):
     
-    __shared_state = {}
-
     players = []
     units = {}
         
-        
+
+      
     __index_uid = 0
 
 
@@ -51,27 +65,124 @@ class Engine:
         
     #====================================init======================================0
     def __init__(self):
-        self.__dict__ = self.__shared_state
+        Thread.__init__(self)
+        
+        self.stop = False
+
+        logger.info("------------------------Engine Starting------------------------")
 
 
-        self.level = Level("level2.txt")
+        self.level = Level( "level2.txt" )
 
         #we make this so its size is the same as level 
         self.dynamic_obstacles = [[(0,0)] * self.level.maxY for i in xrange(self.level.maxX)]
 
         self.turn = 0
 
-
+        
         self.loadArmyList()
 
 
-        self.debug_dict = { Point2(3,2): 3 , Point2(1,1): 1, Point2(0,0): 0  }
-        
-        self.debug_dict = self.getMoveDict(self.units[1])
-        
+        #=======================================================================
+        # self.debug_dict = { Point2(3,2): 3 , Point2(1,1): 1, Point2(0,0): 0  }
+        self.debug_dict = self.getMoveDict(self.units[2])
+        # self.moveUnit( self.units[1], Point2(0,0))
+        #=======================================================================
+
+
+
+
+    def run(self):
+        i = 0
+        while( self.stop == False ):
+            
+            i+=1
+            time.sleep( 0.1 )
+            print(i)
+
+        #=======================================================================
+        # 
+        #    if( i == 20 ):
+        #        print("saljem move msg")
+        #        ClientMsg.move(1, Point2(2,0), Point2(1,0))
+        #        
+        #    if( i == 100 ):
+        #        print("saljem shutdown")
+        #        ClientMsg.shutdownEngine()
+        #        
+        #    if( i == 40 ):
+        #        print("saljem get level")
+        #        ClientMsg.getLevel()
+        #        
+        #    if( i == 60 ):
+        #        print("saljem get engine_state")
+        #        ClientMsg.getEngineState()
+        #        
+        # 
+        # 
+        #    #if there is nothing in queue just skip
+        #    if( Messaging.client_queue.empty() == False ):
+        #        print "doso mesidj:", Messaging.client_queue.get_nowait()
+        #        
+        #=======================================================================
+
 
         
+            #if there is nothing in queue just skip
+            if( Messaging.engine_queue.empty() == False):
+                try:
+                    msg = Messaging.engine_queue.get_nowait()
+                    self.handleMsg( msg )
+                except Queue.Empty:
+                    #it doesn't matter if the queue is empty
+                    continue
+            
+        
+        
+        #we are shutting down the Engine        
+        Messaging.client_queue.close()
+        Messaging.engine_queue.close()
+        
+        logger.info( "++++++++++++++++++++++++Engine stopped!++++++++++++++++++++++++" )
+                
 
+
+    def handleMsg(self, msg):
+        """This method is the main method for handling incoming messages to the Engine"""
+        
+        logger.info("Received message: %s", msg )
+        
+                
+        if( msg.type == Message.types['engine_shutdown'] ):
+            self.stop = True
+            
+        elif( msg.type == Message.types['move'] ):            
+            self.moveUnit( msg.values['unit_id'], msg.values['new_position'] )
+            
+        elif( msg.type == Message.types['level'] ):                
+            EngMsg.sendLevel( pickle.dumps(self.level) )
+                        
+        elif( msg.type == Message.types['engine_state'] ):                
+            EngMsg.sendState( self.compileState() )            
+        else:
+            logger.error( "Unknown message Type: %s", msg )
+        
+        pass
+
+        
+    def compileState(self):
+        #TODO: krav: treba u paramtear ove funkcije primit za kojeg plejera se zove fja i prema tome ispunit cijeli state
+        
+        dic = {}
+        
+        dic[ 'pickled_units' ] = pickle.dumps( self.units )    
+        dic[ 'pickled_level' ] = pickle.dumps( self.level )        
+        dic[ 'turn' ] = self.turn        
+        dic[ 'pickled_players' ] = pickle.dumps( self.players )
+        
+        return dic
+    
+        
         
     def getUID(self):
         self.__index_uid += 1
@@ -79,6 +190,9 @@ class Engine:
     
         
     def loadArmyList(self):
+        
+        logger.debug( "Army lists loading" )
+        
         xmldoc = minidom.parse('etc/armylist.xml')
         #print xmldoc.firstChild.toxml()
         
@@ -123,7 +237,7 @@ class Engine:
     
         xmldoc.unlink()   
 
-
+        logger.info( "Army lists loaded OK" )
 
 
     def beginTurn(self):
@@ -211,7 +325,7 @@ class Engine:
         visibility = 0
 
     
-                
+        #TODO: krav: napravit da nemres vidit kroz dijagonale            
         if( absx0 > absy0 ):
             y_x = absy0/absx0;
             D = y_x -0.5;
@@ -448,6 +562,8 @@ class Engine:
         x = target_tile.x
         y = target_tile.y
         
+        
+        #TODO: krav: napravit da se listu upisuje i ap cost
         path_list = [ target_tile ]
         
         
@@ -492,10 +608,10 @@ class Engine:
         
         
         
-    """This method will change the position of the unit without any checks, so call it AFTER you have checked that 
-     this move is legal. Does everything needed when moving an unit, moving it in dynamic_obstalces, and posting a message 
-     about it."""    
     def _moveUnit(self, unit, new_position ):
+        """This method will change the position of the unit without any checks, so call it AFTER you have checked that 
+         this move is legal. Does everything needed when moving an unit, moving it in dynamic_obstalces, and posting a message 
+         about it."""    
         
         #delete from dynamic_obstacles
         self.dynamic_obstacles[ int( unit.pos.x ) ][ int( unit.pos.y ) ] = ( Engine.dynamics['empty'], 0 )
@@ -507,26 +623,41 @@ class Engine:
         #set new dynamic_obstacles
         self.dynamic_obstacles[ int( unit.pos.x ) ][ int( unit.pos.y ) ] = ( Engine.dynamics['unit'], unit.id )
         
+        
+        
         #add this action in message queue
-        #Messaging.queue_list.append( Message( Message.types['move'], ( unit.id, old_pos, unit.pos )  ) )
-        Messaging.move( unit.id, old_pos, unit.pos )
-        
-        
-        
-        
-    def moveUnit(self, unit, new_position ):
-        
-        try:
-            path = self.getPath( unit, new_position )
-        except:
-            raise Exception("Not a valid destination.")
-    
-        
-        for tile in path:
-            self._moveUnit( unit, tile )
+        #TODO: krav: add orientation here:
+        EngMsg.move( unit.id, unit.pos, Point2(0,0) )
 
         
+        #TODO: krav: ap this
+        #reduce amount of AP for unit
+        #unit.current_AP -= ap_cost
+        #EngMsg.apChange(unit.id, unit.current_AP )
         
+        
+        
+        
+    def moveUnit(self, unit_id, new_position ):
+        
+        if( unit_id in self.units ) == False:
+            logger.critical( "Got wrong unit id:%s", unit_id )
+            EngMsg.sendErrorMsg( "Wrong unit_id." )
+            return
+
+        
+        path = self.getPath( self.units[unit_id], new_position )
+        
+        if( new_position in path ) == False :
+            logger.critical( "Not a valid destination." )
+            EngMsg.sendErrorMsg( "Not a valid destination." )
+            return
+        
+        
+        #everything checks out, do the actual moving
+        for tile in path:
+            print tile 
+            self._moveUnit( self.units[unit_id], tile )
         pass
     
     
