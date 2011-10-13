@@ -3,12 +3,19 @@ from random import randint
 
 class Unit():
     
-    def __init__(self, id, owner, type, x, y ):
-        self.id = id
+    def __init__(self, in_id, owner, in_type, x, y ):
+        
+        self.id = in_id
         self.owner = owner
-        self.type = type
+        self.type = in_type
+        
         self.x = int(x)
         self.y = int(y)
+        
+        #TODO: KRAV: da je okrenut prma centru mape
+        self.orientation = Point2(x+1,y)
+        self.rotate_cost = 0
+           
            
         if self.type == 'terminator':
             self.default_AP = 8

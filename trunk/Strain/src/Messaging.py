@@ -75,10 +75,8 @@ class EngMsg:
         
     
     @staticmethod
-    def move( unit_id, new_position, orientation ):
-        EngMsg._putInQueue( Message( Message.types['move'], { 'unit_id':unit_id,
-                                                             'new_position':new_position,
-                                                             'orientation':orientation } ) ) 
+    def move( unit_id, move_actions ):
+        EngMsg._putInQueue( Message( Message.types['move'], move_actions ) ) 
                                                                       
     @staticmethod
     def sendState( engine_state ):

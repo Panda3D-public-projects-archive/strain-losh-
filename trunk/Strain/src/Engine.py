@@ -86,11 +86,14 @@ class Engine( Thread ):
         #=======================================================================
         # self.debug_dict = { Point2(3,2): 3 , Point2(1,1): 1, Point2(0,0): 0  }
         self.debug_dict = self.getMoveDict(self.units[2])
-        # self.moveUnit( self.units[1], Point2(0,0))
+        self.moveUnit( 1, Point2(0,0), Point2(1,0))
         #=======================================================================
+        a = self.getPath(self.units[1], Point2(0,0))
 
-
-
+        pass
+        
+        
+        
 
     def run(self):
         i = 0
@@ -157,7 +160,7 @@ class Engine( Thread ):
             self.stop = True
             
         elif( msg.type == Message.types['move'] ):            
-            self.moveUnit( msg.values['unit_id'], msg.values['new_position'] )
+            self.moveUnit( msg.values['unit_id'], msg.values['new_position'], msg.values['new_orientation'] )
             
         elif( msg.type == Message.types['level'] ):                
             EngMsg.sendLevel( pickle.dumps(self.level) )
@@ -331,6 +334,8 @@ class Engine( Thread ):
             D = y_x -0.5;
 
             for i in xrange( int( absx0 ) ):
+                
+                #diagonal step
                 if( D > 0 ):
                     if( sgny0 == -1 ): y -= 1
                     else: y += 1
@@ -550,6 +555,11 @@ class Engine( Thread ):
     
     def getPath(self, unit, target_tile ):
         
+        #if we are trying to find a path to the tile we are on
+        if( target_tile == unit.pos ):
+            return[]
+            
+        
         moveDict = self.getMoveDict(unit, True)
 
         
@@ -565,8 +575,7 @@ class Engine( Thread ):
         y = target_tile.y
         
         
-        #TODO: krav: napravit da se listu upisuje i ap cost
-        path_list = [ target_tile ]
+        path_list = [ (target_tile, moveDict[target_tile]) ]
         
         
         while( 1 ):
@@ -601,7 +610,7 @@ class Engine( Thread ):
                         biggest_ap =  (pt, moveDict[pt])
                     
             
-            path_list.append( biggest_ap[0] )
+            path_list.append( biggest_ap )
             x = biggest_ap[0].x
             y = biggest_ap[0].y
         
@@ -610,7 +619,7 @@ class Engine( Thread ):
         
         
         
-    def _moveUnit(self, unit, new_position ):
+    def _moveUnit(self, unit, new_position, ap_remaining ):
         """This method will change the position of the unit without any checks, so call it AFTER you have checked that 
          this move is legal. Does everything needed when moving an unit, moving it in dynamic_obstalces, and posting a message 
          about it."""    
@@ -618,46 +627,78 @@ class Engine( Thread ):
         #delete from dynamic_obstacles
         self.dynamic_obstacles[ int( unit.pos.x ) ][ int( unit.pos.y ) ] = ( Engine.dynamics['empty'], 0 )
         
-        #remember old position and set new position
-        old_pos = unit.pos
+        #set new position
         unit.pos = new_position
         
         #set new dynamic_obstacles
         self.dynamic_obstacles[ int( unit.pos.x ) ][ int( unit.pos.y ) ] = ( Engine.dynamics['unit'], unit.id )
         
-        
-        
-        #add this action in message queue
-        #TODO: krav: add orientation here:
-        EngMsg.move( unit.id, unit.pos, Point2(0,0) )
-
-        
-        #TODO: krav: ap this
         #reduce amount of AP for unit
-        #unit.current_AP -= ap_cost
-        #EngMsg.apChange(unit.id, unit.current_AP )
+        unit.current_AP = ap_remaining
+
+
+    
+    def _rotateUnit(self, unit, new_orientation ):
+        #TODO: KRAV: SREDIT OVO S ORJENTACIJOM
+        if unit.orientation != new_orientation:
+            unit.orientation = new_orientation
+            return True
+        return False
         
         
-        
-        
-    def moveUnit(self, unit_id, new_position ):
+    def moveUnit(self, unit_id, new_position, new_orientation ):
         
         if( unit_id in self.units ) == False:
             logger.critical( "Got wrong unit id:%s", unit_id )
             EngMsg.sendErrorMsg( "Wrong unit_id." )
             return
 
+        unit = self.units[unit_id]
+
         try:
-            path = self.getPath( self.units[unit_id], new_position )
+            path = self.getPath( unit, new_position )
         except Exception:
             logger.critical( sys.exc_info()[1] )
             EngMsg.sendErrorMsg( sys.exc_info()[1] )
             return   
         
+        
+        move_actions = []
+        
+        
         #everything checks out, do the actual moving
-        for tile in path:
-            print tile 
-            self._moveUnit( self.units[unit_id], tile )
+        for tile, ap_remaining in path:
+            
+            if self._rotateUnit( unit, tile ):
+                move_actions.append( ('rotate', tile) )
+            
+            self._moveUnit( unit, tile, ap_remaining )
+            move_actions.append( ('move', tile, ap_remaining) )
+            
+            if self.isMovementInterrupted( unit ):
+                break
+            
+            #if this is the last tile than apply last orientation change
+            if( tile == path[-1][0] ):
+                if self._rotateUnit(unit, new_orientation):
+                    move_actions.append( ('rotate', new_orientation) )
+                    
+
+            
+        EngMsg.move( unit.id, move_actions )
+            
+            
+            
+            
+            
+        pass
+    
+    
+    def isMovementInterrupted(self, unit):
+        """Reterns True if movement needs to stop"""
+        #TODO: krav: check overwatch
+        
+        return False
         pass
     
     
