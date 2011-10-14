@@ -37,7 +37,6 @@ class Interface(DirectObject.DirectObject):
         self.hovered_tile = None
         self.hovered_unit = None
         self.selected_unit = None
-        self.selected_unitmodel = None
         self.off_model = None
         self.selected_unit_tex = self.ge.loader.loadTexture("sel.png")
         self.selected_unit_tile = None
@@ -170,7 +169,7 @@ class Interface(DirectObject.DirectObject):
     
     def markSelectedTile(self, tile):
         """Marks the tile of the selected unit with circular pointer in color of the unit's team."""
-        if self.selected_unit.owner.name == "ultramarinac":
+        if self.selected_unit.model.findNetTag("player_name").getTag("player_name") == "ultramarinac":
             color = Vec4(1, 0, 0, 1)
         else:
             color = Vec4(0, 0, 1, 1)
@@ -278,23 +277,23 @@ class Interface(DirectObject.DirectObject):
         """
         self.deselectUnit()
         self.selected_unit = unit
-        self.selected_unitmodel = self.ge.unit_np_dict[unit.id]
-        self.markSelectedTile(self.ge.tile_np_list[self.selected_unit.x][self.selected_unit.y])
-        self.off_model = UnitModel(unit, scale=1, h=0, pos=Point3(0,-8,-1.7))
+        pos = self.selected_unit.model.getPos()
+        self.markSelectedTile(self.ge.tile_np_list[int(pos.getX())][int(pos.getY())])
+        u = self.ge.units[int(unit.id)]
+        self.off_model = UnitModel(u, scale=1, h=0, pos=Point3(0,-8,-1.7))
         self.off_model.reparentTo(self.ge.alt_render)
         self.off_model.play("idle02")
 
     def deselectUnit(self):
         """Performs actions for unit deselection.
            Clears unit tile, cleans up off screen models, 
-           clears Interface.selected_unit and Interface.selected_unitmodel variables.
+           clears Interface.selected_unit variable.
         """
         if self.selected_unit:
             self.clearSelectedTile(self.selected_unit_tile)
             if self.off_model:
                 self.ge.destroyUnit(self.off_model)
             self.selected_unit = None
-            self.selected_unitmodel = None
         
     def selectPrevUnit(self):
         """Selects previous unit in the same team with unspent action points."""
@@ -320,16 +319,19 @@ class Interface(DirectObject.DirectObject):
                 node_type = selected.findNetTag("type").getTag("type")
                 if node_type == "unit":
                     unit_id = int(selected.findNetTag("id").getTag("id"))
-                    unit = self.ge.units[unit_id] 
+                    unit = self.ge.unit_np_dict[unit_id] 
                     if self.selected_unit != unit:
                         self.selectUnit(unit)
                 elif node_type == "tile":
                     p = selected.getParent().getPos()
                     u = self.ge.unit_np_list[int(p.x)][int(p.y)]
                     if u:
-                        unit = self.ge.units[int(u.id)]
+                        unit = u
                     else:
                         unit = None
+                        if self.selected_unit:
+                            # Send movement message to engine
+                            self.ge.createMoveMsg(self.selected_unit, Point2(p.x, p.y), Point2(p.x+1, p.y+1))
                     if unit:
                         if self.selected_unit != unit:
                             self.selectUnit(unit)

@@ -3,6 +3,7 @@ from panda3d.core import loadPrcFileData
 from panda3d.core import NodePath, Point2, Point3, CardMaker, VBase4, Vec3, GeomNode
 from panda3d.core import ShadeModelAttrib, DirectionalLight, AmbientLight, TransparencyAttrib
 from pandac.PandaModules import CollisionTraverser, CollisionHandlerQueue, CollisionNode, CollisionRay
+from direct.interval.IntervalGlobal import Sequence, ActorInterval, Parallel, Func
 from Camera import Camera
 from Interface import Interface
 from UnitModel import UnitModel
@@ -62,7 +63,7 @@ class GraphicsEngine(ShowBase):
        Handles scene graph objects and runs a main draw loop.
     """
     
-    def __init__(self, engine):
+    def __init__(self):
         """Initializes all components of scene graph and Panda3d ShowBase class which creates window for us."""
         
         logger.info("---------------------GraphicsEngine Starting------------------------")
@@ -72,7 +73,7 @@ class GraphicsEngine(ShowBase):
         # Create messaging task
         self.taskMgr.add(self.msgTask, "msg_task")
         
-        logger.info("---------------------Get Engine State------------------------")
+        # Get engine state (initializes players, units, levels)
         ClientMsg.getEngineState()
         
         # Main node in a scene graph. Everything should be reparented to this node or another node under this node
@@ -207,15 +208,70 @@ class GraphicsEngine(ShowBase):
             ClientMsg.shutdownEngine()            
             sys.exit()
             
+    def setUnitNpList(self, unit, old_pos):
+        pos = unit.model.getPos()
+        self.unit_np_list[int(pos.getX())][int(pos.getY())] = unit
+        self.unit_np_list[int(old_pos.getX())][int(old_pos.getY())] = None
+
+    def playUnitAnim(self, unit, action_list):
+        intervals = []
+        duration = 0.0
+        start_pos = unit.model.getPos()
+        for idx, action in enumerate(action_list):
+            type = action[0]
+            if idx == 0:
+                curr_pos = start_pos
+                curr_h = unit.model.getH()
+            else:
+                curr_pos = dest_pos
+                curr_h = dest_h
+                
+            dest_pos = Point3(action[1].getX() + 0.5, action[1].getY() + 0.5, 0.3)
+            if type == "move":
+                unit.dummy_node.setPos(curr_pos)
+                unit.dest_node.setPos(dest_pos)
+                unit.dummy_node.lookAt(unit.dest_node)
+                dest_h = unit.dummy_node.getH()
+                # Model heading is different than movement heading, first create animation that turns model to his destination
+                i_h = None
+                if dest_h != curr_h:
+                    i_h = unit.model.quatInterval(0.2, hpr = Point3(dest_h, 0, 0), startHpr = Point3(curr_h, 0, 0))
+                    curr_h = dest_h
+                i = unit.model.posInterval(0.5, dest_pos, curr_pos)
+                duration = duration + 0.5
+                if i_h:
+                    p = Parallel(i, i_h)
+                else:
+                    p = i
+                intervals.append(p)
+        
+        seq = Sequence()
+        for i in intervals:
+            seq.append(i)
+        #return
+        anim = ActorInterval(unit.model, 'run', loop = 1, duration = duration)
+        move = Sequence(Parallel(anim, seq), 
+                        Func(self.setUnitNpList, self.unit_np_dict[int(unit.id)], start_pos), 
+                        Func(self.interface.selectUnit, self.unit_np_dict[int(unit.id)]))
+        move.start()
+
+    def createMoveMsg(self, unit, pos, orientation):
+        ClientMsg.move(int(unit.id), pos, orientation)
+           
     def handleMsg(self, msg):
         """Handles incoming messages."""
         logger.info("Received message: %s", msg)
         if msg.type == Message.types['engine_state']:
             self.level = pickle.loads(msg.values['pickled_level'])
-            self.units = pickle.loads(msg.values['pickled_units'])      
+            self.units = pickle.loads(msg.values['pickled_units'])
             self.turn = msg.values['turn']
             self.players = pickle.loads(msg.values['pickled_players'])
             self.initAll(self.level, self.players, self.units)
+        elif msg.type == Message.types['move']:
+            unit_id = msg.values[0]
+            tile_list = msg.values[1]
+            self.interface.deselectUnit()
+            self.playUnitAnim(self.unit_np_dict[unit_id], tile_list)
         else:
             logger.error("Unknown message Type: %s", msg)
 
