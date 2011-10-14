@@ -217,6 +217,7 @@ class GraphicsEngine(ShowBase):
         intervals = []
         duration = 0.0
         start_pos = unit.model.getPos()
+        end_pos = action_list[-2][1]
         for idx, action in enumerate(action_list):
             type = action[0]
             if idx == 0:
@@ -251,8 +252,8 @@ class GraphicsEngine(ShowBase):
         #return
         anim = ActorInterval(unit.model, 'run', loop = 1, duration = duration)
         move = Sequence(Parallel(anim, seq), 
-                        Func(self.setUnitNpList, self.unit_np_dict[int(unit.id)], start_pos), 
-                        Func(self.interface.selectUnit, self.unit_np_dict[int(unit.id)]))
+                        Func(self.setUnitNpList, self.unit_np_dict[int(unit.id)], start_pos),
+                        Func(self.interface.markSelectedTile, self.tile_np_list[int(end_pos.getX())][int(end_pos.getY())]))
         move.start()
 
     def createMoveMsg(self, unit, pos, orientation):
@@ -270,7 +271,8 @@ class GraphicsEngine(ShowBase):
         elif msg.type == Message.types['move']:
             unit_id = msg.values[0]
             tile_list = msg.values[1]
-            self.interface.deselectUnit()
+            unit = self.unit_np_dict[unit_id]
+            self.interface.clearSelectedTile(self.tile_np_list[int(unit.model.getX())][int(unit.model.getY())])
             self.playUnitAnim(self.unit_np_dict[unit_id], tile_list)
         else:
             logger.error("Unknown message Type: %s", msg)
