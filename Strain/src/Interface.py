@@ -187,6 +187,9 @@ class Interface(DirectObject.DirectObject):
            Tiles in partial view are marked with darker red color.
         """
         if self.selected_unit:
+            pass
+            # TODO: krav: Dodati msg koji grafici vraca LOSHDict
+            """
             losh_dict = self.ge.engine.getLOSHDict(Point2(self.selected_unit.x, self.selected_unit.y))
             for tile in losh_dict:
                 tile_node = self.ge.tile_np_list[int(tile.x)][int(tile.y)]
@@ -196,7 +199,8 @@ class Interface(DirectObject.DirectObject):
                     self.changeTileColor(tile_node, _TILE_PARTIAL_LOS)
                 else:
                     self.changeTileColor(tile_node, _TILE_RESET)      
-    
+            """
+            
     def switchLos(self):
         """Switches the display of line of sight for the selected unit on or off."""
         if self.los_visible == True:
@@ -213,6 +217,8 @@ class Interface(DirectObject.DirectObject):
            Currently enemy unit coordinates are hardcoded.
         """
         if self.selected_unit:
+            pass
+            """
             los_list = self.ge.engine.getLOS(Point2(self.selected_unit.x, self.selected_unit.y), Point2(13,13))
             for tile in los_list:
                 tile_node = self.ge.tile_np_list[int(tile[0].x)][int(tile[0].y)]
@@ -222,7 +228,8 @@ class Interface(DirectObject.DirectObject):
                     self.changeTileColor(tile_node, _TILE_PARTIAL_LOS)
                 else:
                     self.changeTileColor(tile_node, _TILE_RESET)
-                
+            """
+             
     def switchUnitLos(self):
         """Switched the display of line of sight from selected unit to enemy unit on or off."""
         if self.unit_los_visible == True:
@@ -235,6 +242,8 @@ class Interface(DirectObject.DirectObject):
     def displayUnitMove(self):
         """Displays visual indicator of tiles which are in movement range of the selected unit."""
         if self.selected_unit:
+            pass
+            """
             unit = self.ge.engine.units[self.selected_unit.id]
             ap = unit.current_AP
             move_dict = self.ge.engine.getMoveDict(unit)
@@ -248,15 +257,18 @@ class Interface(DirectObject.DirectObject):
                 textNodePath.setPos(tile.x+0.2, tile.y+0.2, 0.5)
                 textNodePath.lookAt(tile.x+0.2, tile.y+0.2, -100)
             self.movetext_np.reparentTo(self.ge.node)
-
+            """
+            
     def switchUnitMove(self):
         """Switched the display of tiles available for movement for the selected unit."""
         if self.move_visible == True:
-            self.movetext_np.removeNode()
-            self.move_visible = False
+            pass
+            #self.movetext_np.removeNode()
+            #self.move_visible = False
         else:
-            self.displayUnitMove()
-            self.move_visible = True
+            pass
+            #self.displayUnitMove()
+            #self.move_visible = True
 
 
     def selectUnit(self, unit):
@@ -308,14 +320,14 @@ class Interface(DirectObject.DirectObject):
                 node_type = selected.findNetTag("type").getTag("type")
                 if node_type == "unit":
                     unit_id = int(selected.findNetTag("id").getTag("id"))
-                    unit = self.ge.engine.units[unit_id] 
+                    unit = self.ge.units[unit_id] 
                     if self.selected_unit != unit:
                         self.selectUnit(unit)
                 elif node_type == "tile":
                     p = selected.getParent().getPos()
                     u = self.ge.unit_np_list[int(p.x)][int(p.y)]
                     if u:
-                        unit = self.ge.engine.units[int(u.id)]
+                        unit = self.ge.units[int(u.id)]
                     else:
                         unit = None
                     if unit:
