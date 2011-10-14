@@ -6,7 +6,7 @@ from panda3d.core import Point4, Point3, NodePath
 # CLASS UnitModel --- DEFINITION
 #===============================================================================
 class UnitModel:
-    def __init__(self, unit, player=None, scale=0.25, h=180, pos=None):
+    def __init__(self, unit, scale=0.25, h=180, pos=None):
         self.model = self.load(unit.type)
         self.id = str(unit.id)
         if pos:
@@ -16,9 +16,8 @@ class UnitModel:
         self.model.setLightOff()
         self.model.setTag("type", "unit")
         self.model.setTag("id", self.id)
-        if player:
-            self.model.setTag("player", str(player.id))
-            self.model.setTag("team", player.team)
+        self.model.setTag("player", str(unit.owner))
+        #self.model.setTag("team", player.team)
         
         self.model.setScale(scale)
         # Bake in rotation transform because model is created facing towards screen (h=180)
@@ -28,11 +27,10 @@ class UnitModel:
         self.node = NodePath(self.id)
         self.dummy_node = NodePath("dummy_"+self.id)
         self.dest_node = NodePath("dest_"+self.id)
-        if player:
-            if player.team == "1":
-                self.team_color = Point4(1, 0, 0, 0)
-            elif player.team == "2":
-                self.team_color = Point4(0, 0, 1, 0)
+        if unit.owner.team == "1":
+            self.team_color = Point4(1, 0, 0, 0)
+        elif unit.owner.team == "2":
+            self.team_color = Point4(0, 0, 1, 0)
         
         self.model.reparentTo(self.node)
         self.dummy_node.reparentTo(self.node)

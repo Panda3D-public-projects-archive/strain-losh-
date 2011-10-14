@@ -8,6 +8,9 @@ from Interface import Interface
 from UnitModel import UnitModel
 from Messaging import EngMsg, Messaging, ClientMsg, Message
 import sys
+import logging
+import Queue
+import cPickle as pickle
 
 #===============================================================================
 # Panda3D parameter file handling
@@ -39,6 +42,18 @@ if config["scene-explorer"] == "1":
     loadPrcFileData("", "want-directtools #t")
     loadPrcFileData("", "want-tk #t")
 
+
+#===============================================================================
+# SET UP LOGGING
+#===============================================================================
+logger = logging.getLogger('GraphicsLog')
+hdlr = logging.FileHandler('Graphics.log')
+formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+hdlr.setFormatter(formatter)
+logger.addHandler(hdlr) 
+logger.setLevel(logging.DEBUG)
+
+
 #===============================================================================
 # CLASS GraphicsEngine --- DEFINITION
 #===============================================================================
@@ -49,45 +64,43 @@ class GraphicsEngine(ShowBase):
     
     def __init__(self, engine):
         """Initializes all components of scene graph and Panda3d ShowBase class which creates window for us."""
+        
+        logger.info("---------------------GraphicsEngine Starting------------------------")
         ShowBase.__init__(self)
         #PStatClient.connect()
+
+        # Create messaging task
+        self.taskMgr.add(self.msgTask, "msg_task")
         
-        # Instance of the main game engine
-        # TODO: ogs: Prebaciti komunikaciju na messaging
-        self.engine = engine
+        logger.info("---------------------Get Engine State------------------------")
+        ClientMsg.getEngineState()
         
         # Main node in a scene graph. Everything should be reparented to this node or another node under this node
         # This node is reparented to render
         self.node = self.render.attachNewNode("master")
-
-        self.initAll(engine.level)
         
-        # Initialize custom app camera implementation
         # Disable default Panda3d camera implementation
         self.disableMouse()
-        self.app_camera = Camera(self.camera, self.mouseWatcherNode, engine.level.maxX, engine.level.maxY)
-        # Initialize graphical user interface elements
-        self.interface = Interface(self)
-        
+
         self.accept("window-event", self.windowEvent)
-        self.accept('aspectRatioChanged', self.redraw)
         self.accept("escape", self.destroy)
+        self.accept('aspectRatioChanged', self.redraw)        
         
         # debug
         self.accept("i", self.info)
-        
-        # Create messaging task
-        self.taskMgr.add(self.msgTask, "msg_task")
-        
 
-    def initAll(self, level):
+    def initAll(self, level, players, units):
         """Initializes all the components of scene graph."""
         # TODO: ogs: Napraviti proceduru i za deinicijalizaciju svega i testirati kroz pstats
         self.initLevel(level)
-        self.initUnits()
+        self.initUnits(players, units)
         self.initLights()
         self.initAltBuffer()
-        self.initCollision()     
+        self.initCollision()  
+        # Initialize custom app camera implementation
+        self.app_camera = Camera(self.camera, self.mouseWatcherNode, self.level.maxX, self.level.maxY) 
+        # Initialize graphical user interface elements
+        self.interface = Interface(self)  
     
     def initLevel(self, level):
         # Main level node in a scene graph
@@ -117,23 +130,24 @@ class GraphicsEngine(ShowBase):
                 tile_nodes.append(c)
             self.tile_np_list.append(tile_nodes)
 
-    def initUnits(self):
+    def initUnits(self, players, units):
         # Set up dictionaries for player and unit nodepaths
         self.player_np_dict = {}
         self.unit_np_dict = {}
         
-        for player in self.engine.players:
+        for player in players:
             # Create a node in the scene graph for each player
             player_node = self.node.attachNewNode(str(player.id) + "_playernode")
             self.player_np_dict[player.id] = player_node 
-            for unit in player.unitlist:
-                um = UnitModel(unit, player)
-                um.node.reparentTo(self.node)
-                # Keep unit nodepath in dictionary of all unit nodepaths
-                self.unit_np_dict[unit.id] = um
-                # Keep unit nodepath in list corresponding to level size
-                # This will be dinamically altered when units change position
-                self.unit_np_list[unit.x][unit.y] = um
+            
+        for unit in units.itervalues():
+            um = UnitModel(unit)
+            um.node.reparentTo(self.node)
+            # Keep unit nodepath in dictionary of all unit nodepaths
+            self.unit_np_dict[unit.id] = um
+            # Keep unit nodepath in list corresponding to level size
+            # This will be dinamically altered when units change position
+            self.unit_np_list[unit.x][unit.y] = um
 
     def initLights(self):
         shade = ShadeModelAttrib.make(ShadeModelAttrib.MSmooth)
@@ -175,7 +189,6 @@ class GraphicsEngine(ShowBase):
         unit.remove()
     
     def windowEvent(self, win):
-        pass
         if win.isClosed():
             self.destroy()
 
@@ -193,7 +206,27 @@ class GraphicsEngine(ShowBase):
         else:
             ClientMsg.shutdownEngine()            
             sys.exit()
+            
+    def handleMsg(self, msg):
+        """Handles incoming messages."""
+        logger.info("Received message: %s", msg)
+        if msg.type == Message.types['engine_state']:
+            self.level = pickle.loads(msg.values['pickled_level'])
+            self.units = pickle.loads(msg.values['pickled_units'])      
+            self.turn = msg.values['turn']
+            self.players = pickle.loads(msg.values['pickled_players'])
+            self.initAll(self.level, self.players, self.units)
+        else:
+            logger.error("Unknown message Type: %s", msg)
 
     def msgTask(self, task):
+        """Task that listens for messages on client queue."""
+        if Messaging.client_queue.empty() == False:
+            try:
+                msg = Messaging.client_queue.get_nowait()
+                self.handleMsg(msg)
+            except Queue.Empty:
+                #it doesn't matter if the queue is empty
+                pass        
         return task.cont
     
