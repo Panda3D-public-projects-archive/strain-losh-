@@ -86,7 +86,7 @@ class Engine( Thread ):
         #=======================================================================
         # self.debug_dict = { Point2(3,2): 3 , Point2(1,1): 1, Point2(0,0): 0  }
         self.debug_dict = self.getMoveDict(self.units[2])
-        self.moveUnit( 1, Point2(0,0), Point2(1,0))
+        #self.moveUnit( 1, Point2(0,0), Point2(1,0))
         #=======================================================================
         a = self.getPath(self.units[1], Point2(0,0))
 
@@ -160,7 +160,7 @@ class Engine( Thread ):
             self.stop = True
             
         elif( msg.type == Message.types['move'] ):            
-            self.moveUnit( msg.values['unit_id'], msg.values['new_position'], msg.values['new_orientation'] )
+            self.moveUnit( msg.values['unit_id'], msg.values['new_position'], msg.values['orientation'] )
             
         elif( msg.type == Message.types['level'] ):                
             EngMsg.sendLevel( pickle.dumps(self.level) )
