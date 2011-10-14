@@ -282,7 +282,7 @@ class Interface(DirectObject.DirectObject):
         u = self.ge.units[int(unit.id)]
         self.off_model = UnitModel(u, scale=1, h=0, pos=Point3(0,-8,-1.7))
         self.off_model.reparentTo(self.ge.alt_render)
-        self.off_model.play("idle02")
+        self.off_model.play(self.off_model.getAnimName("idle"))
 
     def deselectUnit(self):
         """Performs actions for unit deselection.

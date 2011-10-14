@@ -1,11 +1,13 @@
 from direct.actor.Actor import Actor
 from panda3d.core import Point4, Point3, Point2, NodePath
+import random
 
 #===============================================================================
 # CLASS UnitModel --- DEFINITION
 #===============================================================================
 class UnitModel:
     def __init__(self, unit, scale=0.25, h=180, pos=None):
+        self.anim_count_dict = {}
         self.model = self.load(unit.type)
         self.id = str(unit.id)
         
@@ -41,12 +43,16 @@ class UnitModel:
     def load(self, type):
         if type == 'terminator':
             model = Actor('terminator', {'run': 'terminator-run'
-                                        ,'idle02': 'terminator-run'
+                                        ,'idle01': 'terminator-run'
                                         })
+            self.anim_count_dict['run'] = 1
+            self.anim_count_dict['idle'] = 1
         elif type == 'marine_b':
             model = Actor('marine_b',   {'run': 'marine-run'
-                                        ,'idle02': 'marine-fire'
+                                        ,'idle01': 'marine-fire'
                                         })
+            self.anim_count_dict['run'] = 1
+            self.anim_count_dict['idle'] = 1
         elif type == 'commissar':
             model = Actor('commissar', {'run': 'commissar-run'
                                        ,'idle01': 'commissar-idle1'
@@ -54,7 +60,13 @@ class UnitModel:
                                        ,'idle03': 'commissar-idle3'
                                        ,'fire': 'commissar-fire'
                                        })
+            self.anim_count_dict['run'] = 1
+            self.anim_count_dict['idle'] = 3
         return model
+    
+    def getAnimName(self, type):
+        num = random.randint(1, self.anim_count_dict[type])
+        return type + str(num).zfill(2)    
     
     def calcWorldPos(self, x, y):
         return Point3(x + 0.5, y + 0.5, 0.3)
