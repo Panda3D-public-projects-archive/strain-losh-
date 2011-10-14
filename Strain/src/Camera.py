@@ -113,42 +113,43 @@ class Camera(DirectObject.DirectObject):
             mpos = self.mwn.getMouse()
             if self.is_orbiting:
                 self.orbit((self.mx - mpos.getX()) * 100, (self.my - mpos.getY()) * 100)
-            else: 
-                move_x = False
-                move_y = False
-                if self.keys['down']: 
-                    rad_x1 = self.camera.getH() * (math.pi / 180.0) 
-                    pan_rate1 = 0.2 * self.cam_dist / self.pan_rate_div 
-                    move_y = True 
-                if self.keys['up']: 
-                    rad_x1 = self.camera.getH() * (math.pi / 180.0) + math.pi 
-                    pan_rate1 = 0.2 * self.cam_dist / self.pan_rate_div 
-                    move_y = True 
-                if self.keys['left']: 
-                    rad_x2 = self.camera.getH() * (math.pi / 180.0) + math.pi * 0.5 
-                    pan_rate2 = 0.2 * self.cam_dist / self.pan_rate_div 
-                    move_x = True
-                if self.keys['right']: 
-                    rad_x2 = self.camera.getH() * (math.pi / 180.0) - math.pi*0.5 
-                    pan_rate2 = 0.2 * self.cam_dist / self.pan_rate_div 
-                    move_x = True 
+
+            move_x = False
+            move_y = False
+            if self.keys['down']: 
+                rad_x1 = self.camera.getH() * (math.pi / 180.0) 
+                pan_rate1 = 0.2 * self.cam_dist / self.pan_rate_div 
+                move_y = True 
+            if self.keys['up']: 
+                rad_x1 = self.camera.getH() * (math.pi / 180.0) + math.pi 
+                pan_rate1 = 0.2 * self.cam_dist / self.pan_rate_div 
+                move_y = True 
+            if self.keys['left']: 
+                rad_x2 = self.camera.getH() * (math.pi / 180.0) + math.pi * 0.5 
+                pan_rate2 = 0.2 * self.cam_dist / self.pan_rate_div 
+                move_x = True
+            if self.keys['right']: 
+                rad_x2 = self.camera.getH() * (math.pi / 180.0) - math.pi*0.5 
+                pan_rate2 = 0.2 * self.cam_dist / self.pan_rate_div 
+                move_x = True 
+            
+            if move_y: 
+                temp_x = self.target.getX() + math.sin(rad_x1) * pan_rate1 
+                temp_x = self.clamp(temp_x, self.pan_limits_x.getX(), self.pan_limits_x.getY()) 
+                self.target.setX(temp_x) 
+                temp_y = self.target.getY() - math.cos(rad_x1) * pan_rate1 
+                temp_y = self.clamp(temp_y, self.pan_limits_y.getX(), self.pan_limits_y.getY()) 
+                self.target.setY(temp_y) 
+                self.orbit(0, 0) 
+            if move_x: 
+                temp_x = self.target.getX() - math.sin(rad_x2) * pan_rate2 
+                temp_x = self.clamp(temp_x, self.pan_limits_x.getX(), self.pan_limits_x.getY()) 
+                self.target.setX(temp_x) 
+                temp_y = self.target.getY() + math.cos(rad_x2) * pan_rate2 
+                temp_y = self.clamp(temp_y, self.pan_limits_y.getX(), self.pan_limits_y.getY()) 
+                self.target.setY(temp_y) 
+                self.orbit(0, 0)
                 
-                if move_y: 
-                    temp_x = self.target.getX() + math.sin(rad_x1) * pan_rate1 
-                    temp_x = self.clamp(temp_x, self.pan_limits_x.getX(), self.pan_limits_x.getY()) 
-                    self.target.setX(temp_x) 
-                    temp_y = self.target.getY() - math.cos(rad_x1) * pan_rate1 
-                    temp_y = self.clamp(temp_y, self.pan_limits_y.getX(), self.pan_limits_y.getY()) 
-                    self.target.setY(temp_y) 
-                    self.orbit(0, 0) 
-                if move_x: 
-                    temp_x = self.target.getX() - math.sin(rad_x2) * pan_rate2 
-                    temp_x = self.clamp(temp_x, self.pan_limits_x.getX(), self.pan_limits_x.getY()) 
-                    self.target.setX(temp_x) 
-                    temp_y = self.target.getY() + math.cos(rad_x2) * pan_rate2 
-                    temp_y = self.clamp(temp_y, self.pan_limits_y.getX(), self.pan_limits_y.getY()) 
-                    self.target.setY(temp_y) 
-                    self.orbit(0, 0)
             self.mx = mpos.getX()
             self.my = mpos.getY()
         return task.cont                       
