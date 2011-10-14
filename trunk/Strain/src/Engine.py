@@ -669,8 +669,7 @@ class Engine( Thread ):
         #everything checks out, do the actual moving
         for tile, ap_remaining in path:
             
-            if self._rotateUnit( unit, tile ):
-                move_actions.append( ('rotate', tile) )
+            self._rotateUnit( unit, tile )
             
             self._moveUnit( unit, tile, ap_remaining )
             move_actions.append( ('move', tile, ap_remaining) )
