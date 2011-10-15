@@ -22,19 +22,13 @@ class Msg:
     UNIT = 8                #value - pickled unit
 
     
-    def decode(self, value = None ):
-        for key in Msg.types.keys():
-            if Msg.types[key] == value:
-                return key
-
-    
     
     def __init__(self, in_type, values = None ):
         self.type = in_type
         self.values = values
 
     def __repr__(self):
-        return "type:%s  value:%s" % ( self.decode( self.type ), self.values )
+        return "type:%d  value:%s" % ( self.type, self.values )
 
 
 class Messaging:

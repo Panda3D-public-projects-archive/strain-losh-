@@ -274,7 +274,9 @@ class Engine( Thread ):
         #TODO: krav: napravit da ne dupla provjere
         
         #go through all units
-        for unit in self.units:
+        for unit_id in self.units:
+            
+            unit = self.units[unit_id]
             
             #replenish AP
             unit.current_AP = unit.default_AP
@@ -296,10 +298,10 @@ class Engine( Thread ):
                     
             #        list_visible_units.append( unit2 )
                     
-            #        if( unit2.owner != unit ):
-            #            unit.owner.list_visible_enemies.append( unit2 )
+            #        if( unit2.owner != unit_id ):
+            #            unit_id.owner.list_visible_enemies.append( unit2 )
             
-            #after updating everything send unit data to client        
+            #after updating everything send unit_id data to client        
             EngMsg.sendUnit( pickle.dumps(unit) )
         
         
