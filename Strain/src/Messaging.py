@@ -9,21 +9,22 @@ import sys
 
 
 
-class Message:
+class Msg:
 
 
-    types = { 'move' : 1,           #values - (unit_id, old_position, new_position)  
-              #'ap_change' : 2,      #values - new value
-              'engine_shutdown' : 3,#no additional values
-              'error' : 4,          #value - error message
-              'engine_state' : 5,    #values - dictionary of values
-              'level' : 6           #values - level
-             }
-    
+    MOVE = 1                #values - list of move actions ('move',tile) followed by ('rotate',tile)
+    NEW_TURN = 2            #value - turn number
+    ENGINE_SHUTDOWN = 3     #no values
+    ERROR = 4               #value - error message
+    ENGINE_STATE = 5        #value - dictionary of values
+    LEVEL = 6               #value - pickled level
+    END_TURN = 7            #no values
+    UNIT = 8                #value - pickled unit
+
     
     def decode(self, value = None ):
-        for key in Message.types.keys():
-            if Message.types[key] == value:
+        for key in Msg.types.keys():
+            if Msg.types[key] == value:
                 return key
 
     
@@ -76,22 +77,28 @@ class EngMsg:
     
     @staticmethod
     def move( unit_id, move_actions ):
-        EngMsg._putInQueue( Message( Message.types['move'], (unit_id, move_actions) ) ) 
+        EngMsg._putInQueue( Msg( Msg.MOVE, (unit_id, move_actions) ) ) 
                                                                       
     @staticmethod
     def sendState( engine_state ):
-        EngMsg._putInQueue( Message( Message.types['engine_state'], engine_state ) )
+        EngMsg._putInQueue( Msg( Msg.ENGINE_STATE, engine_state ) )
     
     @staticmethod
     def sendLevel( pickled_level ):
-        EngMsg._putInQueue( Message( Message.types['level'], pickled_level ) )
+        EngMsg._putInQueue( Msg( Msg.LEVEL, pickled_level ) )
     
     @staticmethod
     def sendErrorMsg( error_msg ):
-        EngMsg._putInQueue( Message( Message.types['error'], error_msg ) )
+        EngMsg._putInQueue( Msg( Msg.ERROR, error_msg ) )
+    
+    @staticmethod
+    def sendNewTurn( turn_num ):
+        EngMsg._putInQueue( Msg( Msg.NEW_TURN, turn_num ) )
     
     
-    
+    @staticmethod
+    def sendUnit( pickled_unit ):
+        EngMsg._putInQueue( Msg( Msg.UNIT, pickled_unit ) )
     
 class ClientMsg:
     
@@ -109,22 +116,24 @@ class ClientMsg:
     
     @staticmethod
     def getEngineState():
-        ClientMsg._putInQueue( Message( Message.types['engine_state'] ) )
+        ClientMsg._putInQueue( Msg( Msg.ENGINE_STATE ) )
     
     @staticmethod
     def getLevel():
-        ClientMsg._putInQueue( Message( Message.types['level'] ) )
+        ClientMsg._putInQueue( Msg( Msg.LEVEL ) )
     
     @staticmethod
     def move( unit_id, new_position, orientation ):
-        ClientMsg._putInQueue( Message( Message.types['move'], { 'unit_id':unit_id, 
+        ClientMsg._putInQueue( Msg( Msg.MOVE, { 'unit_id':unit_id, 
                                                                 'new_position':new_position, 
                                                                 'orientation':orientation } ) ) 
 
     @staticmethod
     def shutdownEngine():
-        ClientMsg._putInQueue( Message( Message.types['engine_shutdown'] ) ) 
+        ClientMsg._putInQueue( Msg( Msg.ENGINE_SHUTDOWN ) ) 
         
-        
+    @staticmethod
+    def endTurn():
+        ClientMsg._putInQueue( Msg( Msg.END_TURN ) )
         
         

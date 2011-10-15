@@ -15,7 +15,13 @@ class Unit():
         #TODO: KRAV: da je okrenut prma centru mape
         self.orientation = Point2(x+1,y)
         self.rotate_cost = 0
-           
+        
+        self.losh_dict = {}
+        
+        self.move_dict = {}
+        
+        self.resting = False
+        
            
         if self.type == 'terminator':
             self.default_AP = 8

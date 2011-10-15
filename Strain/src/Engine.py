@@ -3,7 +3,7 @@ from Unit import Unit
 from Level import Level
 from pandac.PandaModules import Point2, Point3, NodePath, Vec3
 import math
-from Messaging import EngMsg, Messaging, ClientMsg, Message
+from Messaging import EngMsg, Messaging, ClientMsg, Msg
 from threading import Thread
 import time
 import logging
@@ -83,12 +83,9 @@ class Engine( Thread ):
         self.loadArmyList()
 
 
-        #=======================================================================
-        # self.debug_dict = { Point2(3,2): 3 , Point2(1,1): 1, Point2(0,0): 0  }
-        self.debug_dict = self.getMoveDict(self.units[2])
-        #self.moveUnit( 1, Point2(0,0), Point2(1,0))
-        #=======================================================================
-        a = self.getPath(self.units[1], Point2(0,0))
+        self.turn = 0
+        self.beginTurn()
+
 
         pass
         
@@ -156,19 +153,25 @@ class Engine( Thread ):
         logger.info("Received message: %s", msg )
         
                 
-        if( msg.type == Message.types['engine_shutdown'] ):
+        if( msg.type == Msg.ENGINE_SHUTDOWN ):
             self.stop = True
             
-        elif( msg.type == Message.types['move'] ):            
+        elif( msg.type == Msg.MOVE ):            
             self.moveUnit( msg.values['unit_id'], msg.values['new_position'], msg.values['orientation'] )
             
-        elif( msg.type == Message.types['level'] ):                
+        elif( msg.type == Msg.LEVEL ):                
             EngMsg.sendLevel( pickle.dumps(self.level) )
                         
-        elif( msg.type == Message.types['engine_state'] ):                
-            EngMsg.sendState( self.compileState() )            
+        elif( msg.type == Msg.ENGINE_STATE ):                
+            EngMsg.sendState( self.compileState() )
+            
+        elif( msg.type == Msg.END_TURN ):
+            self.endTurn()
+                        
         else:
             logger.error( "Unknown message Type: %s", msg )
+        
+        
         
         pass
 
@@ -243,16 +246,29 @@ class Engine( Thread ):
         logger.info( "Army lists loaded OK" )
 
 
+    def endTurn(self):
+        
+        #TODO: krav: end turn here
+        self.beginTurn()
+        
+        pass
+
+
+    #TODO: krav: ovo treba parametar koji plejer je trnutno aktivan da mu ne posaljem krive unite
     def beginTurn(self):
+        
         
         #increment turn by one
         self.turn += 1
 
+        #TODO: krav: visible units here:
+        #list_visible_units = []
         
-        list_visible_units = []
+        #for player in self.players:
+        #    player.list_visible_enemies = []
         
-        for player in self.players:
-            player.list_visible_enemies = []
+        
+        EngMsg.sendNewTurn( self.turn )
         
         
         #TODO: krav: napravit da ne dupla provjere
@@ -260,20 +276,31 @@ class Engine( Thread ):
         #go through all units
         for unit in self.units:
             
-            #reset AP to default
+            #replenish AP
             unit.current_AP = unit.default_AP
             
-            #check visibility to other units
-            losh_dict = self.getLOSHList( unit.pos, True )            
-            for unit2 in self.units:
-                if unit2.pos in losh_dict:
-                    
-                    list_visible_units.append( unit2 )
-                    
-                    if( unit2.owner != unit ):
-                        unit.owner.list_visible_enemies.append( unit2 )
+            if unit.resting:
+                unit.current_AP += 1
+                unit.resting = False
+                
             
-        
+            
+            
+            #get new move_dict
+            unit.move_dict = self.getMoveDict(unit)
+            unit.losh_dict = self.getLOSHDict(unit.pos)
+            
+            #check visibility to other units
+            #for unit2 in self.units:
+            #    if unit2.pos in losh_dict:
+                    
+            #        list_visible_units.append( unit2 )
+                    
+            #        if( unit2.owner != unit ):
+            #            unit.owner.list_visible_enemies.append( unit2 )
+            
+            #after updating everything send unit data to client        
+            EngMsg.sendUnit( pickle.dumps(unit) )
         
         
         
@@ -672,7 +699,7 @@ class Engine( Thread ):
             self._rotateUnit( unit, tile )
             
             self._moveUnit( unit, tile, ap_remaining )
-            move_actions.append( ('move', tile, ap_remaining) )
+            move_actions.append( ('move', tile ) )
             
             if self.isMovementInterrupted( unit ):
                 break
@@ -682,19 +709,21 @@ class Engine( Thread ):
                 if self._rotateUnit(unit, new_orientation):
                     move_actions.append( ('rotate', new_orientation) )
                     
-
+                    
+        #we moved a unit so update its move_dict and losh_dict
+        unit.move_dict = self.getMoveDict(unit)
+        unit.losh_dict = self.getLOSHDict(unit.pos)
+                    
             
         EngMsg.move( unit.id, move_actions )
-            
-            
-            
+        EngMsg.sendUnit( pickle.dumps(unit) )
             
             
         pass
     
     
     def isMovementInterrupted(self, unit):
-        """Reterns True if movement needs to stop"""
+        """Returns True if movement needs to stop"""
         #TODO: krav: check overwatch
         
         return False
