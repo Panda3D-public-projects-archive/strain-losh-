@@ -7,7 +7,7 @@ from direct.interval.IntervalGlobal import Sequence, ActorInterval, Parallel, Fu
 from Camera import Camera
 from Interface import Interface
 from UnitModel import UnitModel
-from Messaging import EngMsg, Messaging, ClientMsg, Message
+from Messaging import EngMsg, Messaging, ClientMsg, Msg
 import sys
 import logging
 import Queue
@@ -262,13 +262,13 @@ class GraphicsEngine(ShowBase):
     def handleMsg(self, msg):
         """Handles incoming messages."""
         logger.info("Received message: %s", msg)
-        if msg.type == Message.types['engine_state']:
+        if msg.type == Msg.ENGINE_STATE:
             self.level = pickle.loads(msg.values['pickled_level'])
             self.units = pickle.loads(msg.values['pickled_units'])
             self.turn = msg.values['turn']
             self.players = pickle.loads(msg.values['pickled_players'])
             self.initAll(self.level, self.players, self.units)
-        elif msg.type == Message.types['move']:
+        elif msg.type == Msg.MOVE:
             unit_id = msg.values[0]
             tile_list = msg.values[1]
             unit = self.unit_np_dict[unit_id]
