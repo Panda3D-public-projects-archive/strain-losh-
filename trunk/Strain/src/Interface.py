@@ -4,6 +4,7 @@ from pandac.PandaModules import CollisionTraverser, CollisionHandlerQueue, Colli
 from pandac.PandaModules import GeomNode, CardMaker, TextNode
 from pandac.PandaModules import Texture, TextureStage, RenderAttrib, DepthOffsetAttrib, TransparencyAttrib
 from UnitModel import UnitModel
+from Console import GuiConsole
 
 #===============================================================================
 # GLOBAL DEFINITIONS
@@ -55,6 +56,8 @@ class Interface(DirectObject.DirectObject):
         self.nunit_button = GuiButton("topleft", Point3(0.5 + 0.05, 0, 0.95), aspect, plane, "next_unit")
         
         self.hovered_gui = None
+        
+        self.console = GuiConsole(base.a2dBottomLeft, 1.5, 0.4)
         
         self.accept('l', self.switchLos)
         self.accept('o', self.switchUnitLos)
