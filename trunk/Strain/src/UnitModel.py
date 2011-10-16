@@ -39,6 +39,10 @@ class UnitModel:
         self.model.reparentTo(self.node)
         self.dummy_node.reparentTo(self.node)
         self.dest_node.reparentTo(self.node)
+        
+        if unit.type=="terminator":
+            t = loader.loadTexture("terminator2.tga")
+            self.model.setTexture(t, 1)
 
     def load(self, type):
         if type == 'terminator':
