@@ -6,7 +6,7 @@ import textwrap, re, string
 
 class GuiConsole(DirectObject.DirectObject):
     
-    def __init__(self, parent, h_size, v_size):
+    def __init__(self, parent, h_size, v_size, aspect):
         self.h_size = h_size
         self.v_size = v_size
         self.scale = 0.04
@@ -14,13 +14,18 @@ class GuiConsole(DirectObject.DirectObject):
         
         self.pos_min_x = 0
         self.pos_min_y = 0
-        self.pos_max_x = self.h_size / self.scale 
-        self.pos_max_y = self.v_size / self.scale
+        self.pos_max_x = self.h_size
+        self.pos_max_y = self.v_size
+        
+        if aspect > 0:
+            self.pos_max_x /= aspect
+        else:
+            self.pos_max_y *= aspect
 
         self.consoleFrame = DirectFrame( relief = DGG.RIDGE
                                          , frameColor = (0, 0, 0, 0.2)
                                          , scale = self.scale
-                                         , frameSize = (self.pos_min_x, self.pos_max_x, self.pos_min_y, self.pos_max_y) )
+                                         , frameSize = (0, self.h_size / self.scale, 0, self.v_size / self.scale) )
         
         if parent == base.a2dBottomLeft:
             self.pos_min_x -= 1
@@ -51,7 +56,7 @@ class GuiConsole(DirectObject.DirectObject):
         self.consoleEntry["frameSize"]=(0,self.h_size/self.scale,0,1)
         self.consoleEntry["width"]=self.h_size/self.scale
         
-        self.consoleFrame.reparentTo(base.a2dBottomLeft)
+        self.consoleFrame.reparentTo(parent)
         
         self.textBuffer = list()
         self.textBufferLength = 10
@@ -68,7 +73,8 @@ class GuiConsole(DirectObject.DirectObject):
                               , align=TextNode.ALeft
                               , mayChange=1
                               , scale=1.0
-                              , fg = (100,100,100,1))
+                              , fg = (100,100,100,1)
+                              , shadow = (0, 0, 0, 1))
                               #, frame = (200,0,0,1) )
           label.setFont( fixedWidthFont )
           self.consoleOutputList.append( label )        
@@ -78,6 +84,14 @@ class GuiConsole(DirectObject.DirectObject):
         self.linewrap.width = self.linelength
         self.toggleConsole()
         
+    def show(self):
+        if self.consoleFrame.isHidden():
+            self.consoleFrame.toggleVis()
+
+    def hide(self):
+        if not self.consoleFrame.isHidden():
+            self.consoleFrame.toggleVis()
+            
     def toggleConsole(self):
         self.consoleFrame.toggleVis()
         hidden = self.consoleFrame.isHidden()
