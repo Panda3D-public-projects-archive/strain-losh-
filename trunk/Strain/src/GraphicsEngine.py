@@ -102,6 +102,9 @@ class GraphicsEngine(ShowBase):
         self.app_camera = Camera(self.camera, self.mouseWatcherNode, self.level.maxX, self.level.maxY) 
         # Initialize graphical user interface elements
         self.interface = Interface(self)  
+        
+        # Create unit anim task
+        self.taskMgr.add(self.animTask, "anim_task")        
     
     def initLevel(self, level):
         # Main level node in a scene graph
@@ -286,5 +289,19 @@ class GraphicsEngine(ShowBase):
             except Queue.Empty:
                 #it doesn't matter if the queue is empty
                 pass        
+        return task.cont
+    
+    def animTask(self, task):
+        """Task to animate draw units while they are idling."""
+        dt = globalClock.getDt()
+        for unit in self.unit_np_dict.itervalues():
+            unit.passtime = unit.passtime + dt
+
+            if unit.passtime > unit.idletime:
+                anim = unit.getAnimName("idle")
+                unit.model.play(anim)
+                unit.passtime = 0
+                unit.setIdleTime()
+            
         return task.cont
     

@@ -40,6 +40,9 @@ class UnitModel:
         self.dummy_node.reparentTo(self.node)
         self.dest_node.reparentTo(self.node)
         
+        self.passtime = 0
+        self.setIdleTime()
+        
         if unit.type=="terminator":
             t = loader.loadTexture("terminator2.tga")
             self.model.setTexture(t, 1)
@@ -67,6 +70,9 @@ class UnitModel:
             self.anim_count_dict['run'] = 1
             self.anim_count_dict['idle'] = 3
         return model
+    
+    def setIdleTime(self):
+        self.idletime = random.randint(10, 20)
     
     def getAnimName(self, type):
         num = random.randint(1, self.anim_count_dict[type])
