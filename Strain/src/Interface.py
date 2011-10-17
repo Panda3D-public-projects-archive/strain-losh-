@@ -26,6 +26,7 @@ _UNIT_RESET             = "_unit_reset"
 #===============================================================================
 
 class Interface(DirectObject.DirectObject):
+    buttons = {}
     def __init__(self, ge):
         # Keep pointer to the GraphicsEngine parent class
         self.ge = ge
@@ -54,10 +55,17 @@ class Interface(DirectObject.DirectObject):
         self.deselect_button = GuiButton("topleft", Point3(0.3 + 0.05, 0, 0.95), aspect, plane, "deselect")
         self.punit_button = GuiButton("topleft", Point3(0.4 + 0.05, 0, 0.95), aspect, plane, "prev_unit")
         self.nunit_button = GuiButton("topleft", Point3(0.5 + 0.05, 0, 0.95), aspect, plane, "next_unit")
+        self.endturn_button = GuiButton("topleft", Point3(0.6 + 0.05, 0, 0.95), aspect, plane, "end_turn")
+        
+        #Mirkova zelja moja zapovijed
+        self.buttons["deselect"] = self.deselect_button
+        self.buttons["prev_unit"] = self.punit_button
+        self.buttons["next_unit"] = self.nunit_button
+        self.buttons["end_turn"] = self.endturn_button
         
         self.hovered_gui = None
         
-        self.console = GuiConsole(base.a2dBottomLeft, 1.5, 0.4)
+        self.console = GuiConsole(base.a2dBottomLeft, 1.5, 0.4, aspect)
         
         self.accept('l', self.switchLos)
         self.accept('o', self.switchUnitLos)
@@ -78,9 +86,10 @@ class Interface(DirectObject.DirectObject):
             calc_aspect = 1 / aspect
    
         self.unit_card.redraw()
-        self.deselect_button.redraw(calc_aspect, flag)
-        self.punit_button.redraw(calc_aspect, flag)
-        self.nunit_button.redraw(calc_aspect, flag)          
+        
+        for button in self.buttons.values():
+            button.redraw(calc_aspect, flag)
+
         self.hovered_gui = None
 
     def getMousePos(self):
@@ -304,7 +313,10 @@ class Interface(DirectObject.DirectObject):
         
     def selectNextUnit(self):
         """Selects next unit in the same team with unspent action points."""
-        None   
+        None
+        
+    def endTurn(self):
+        """Ends the turn"""   
 
     def mouseLeftClick(self):
         """Handles left mouse click actions.
@@ -316,6 +328,8 @@ class Interface(DirectObject.DirectObject):
             self.selectPrevUnit()
         elif self.hovered_gui == self.nunit_button:
             self.selectNextUnit() 
+        elif self.hovered_gui == self.endturn_button:
+            self.endTurn()
         else:    
             selected = self.getMouseHoveredObject()
             if selected:
@@ -375,29 +389,29 @@ class Interface(DirectObject.DirectObject):
     
     def processGui(self, task):
         """Visually marks and selects GUI element over which mouse cursor hovers."""
-        # TODO: ogs/vjeks: Spremati GUI elemente u listu ili dict i napraviti pametnije iteriranje od ovakvog slaganja if-elseova
         if self.ge.mouseWatcherNode.hasMouse(): 
             mpos = self.ge.mouseWatcherNode.getMouse()
-            if mpos.x >= self.deselect_button.pos_min_x and mpos.x <= self.deselect_button.pos_max_x and mpos.y >= self.deselect_button.pos_min_y and mpos.y <= self.deselect_button.pos_max_y:
-                self.hovered_gui = self.deselect_button
-                self.deselect_button.frame.setAlphaScale(1)                
-                self.punit_button.frame.setAlphaScale(0.5)
-                self.nunit_button.frame.setAlphaScale(0.5)
-            elif mpos.x >= self.punit_button.pos_min_x and mpos.x <= self.punit_button.pos_max_x and mpos.y >= self.punit_button.pos_min_y and mpos.y <= self.punit_button.pos_max_y:
-                self.hovered_gui = self.punit_button
-                self.deselect_button.frame.setAlphaScale(0.5)                
-                self.punit_button.frame.setAlphaScale(1)
-                self.nunit_button.frame.setAlphaScale(0.5)
-            elif mpos.x >= self.nunit_button.pos_min_x and mpos.x <= self.nunit_button.pos_max_x and mpos.y >= self.nunit_button.pos_min_y and mpos.y <= self.nunit_button.pos_max_y:
-                self.hovered_gui = self.nunit_button
-                self.deselect_button.frame.setAlphaScale(0.5)                
-                self.punit_button.frame.setAlphaScale(0.5)
-                self.nunit_button.frame.setAlphaScale(1)                
-            else:
+            hovering_over_something = False
+            
+            #Vidi me kako iteriram kroz dictionary
+            for button in self.buttons.values():
+                button.frame.setAlphaScale(0.5)
+                if mpos.x >= button.pos_min_x and mpos.x <= button.pos_max_x and mpos.y >= button.pos_min_y and mpos.y <= button.pos_max_y:
+                    self.hovered_gui = button
+                    button.frame.setAlphaScale(1)
+                    hovering_over_something = True
+                    self.console.hide()
+            #Hovering iznad konzole
+            # TODO: srediti da kad konzola ima fokus da se ne hajda! 
+            if  mpos.x >= self.console.pos_min_x and mpos.x <= self.console.pos_max_x and mpos.y >= self.console.pos_min_y and mpos.y <= self.console.pos_max_y:                 
+                self.hovered_gui = self.console
+                hovering_over_something = True
+                self.console.show()
+                                
+            if not hovering_over_something:
                 self.hovered_gui = None
-                self.deselect_button.frame.setAlphaScale(0.5)                
-                self.punit_button.frame.setAlphaScale(0.5)
-                self.nunit_button.frame.setAlphaScale(0.5)
+                self.console.hide()
+  
         return task.cont    
 
 
