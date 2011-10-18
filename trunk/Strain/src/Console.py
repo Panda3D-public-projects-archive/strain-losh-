@@ -67,7 +67,7 @@ class GuiConsole(DirectObject.DirectObject):
         # output lines
         self.consoleOutputList = list()
         for i in xrange( self.numlines ):
-          label = OnscreenText( parent = self.consoleFrame
+            label = OnscreenText( parent = self.consoleFrame
                               , text = ""
                               , pos = (0, i+1.5)
                               , align=TextNode.ALeft
@@ -76,8 +76,8 @@ class GuiConsole(DirectObject.DirectObject):
                               , fg = (100,100,100,1)
                               , shadow = (0, 0, 0, 1))
                               #, frame = (200,0,0,1) )
-          label.setFont( fixedWidthFont )
-          self.consoleOutputList.append( label )        
+            label.setFont( fixedWidthFont )
+            self.consoleOutputList.append( label )        
         
         self.linelength = int((h_size/self.scale - 5) / 0.5)
         self.linewrap = textwrap.TextWrapper()
@@ -97,39 +97,39 @@ class GuiConsole(DirectObject.DirectObject):
         hidden = self.consoleFrame.isHidden()
         #self.consoleEntry['focus'] != hidden
         if hidden:
-          #self.ignoreAll()
-          self.accept( 'control', self.toggleConsole )
+            #self.ignoreAll()
+            self.accept( 'control', self.toggleConsole )
         else:
-          #self.ignoreAll()
-          #self.accept( 'page_up', self.scroll, [-5] )
-          #self.accept( 'page_up-repeat', self.scroll, [-5] )
-          #self.accept( 'page_down', self.scroll, [5] )
-          #self.accept( 'page_down-repeat', self.scroll, [5] )
-          #self.accept( 'window-event', self.windowEvent)
-          
-          #self.accept( 'arrow_up'  , self.scrollCmd, [ 1] )
-          #self.accept( 'arrow_down', self.scrollCmd, [-1] )
-          
-          self.accept( 'control', self.toggleConsole )
-          #self.accept( self.autocomplete_key, self.autocomplete )
-          #self.accept( self.autohelp_key, self.autohelp )
-          
-          # accept v, c and x, where c & x copy's the whole console text
-          #messenger.toggleVerbose()
-          #for osx use ('meta')
-          #if sys.platform == 'darwin':
-          #  self.accept( 'meta', self.unfocus )
-          #  self.accept( 'meta-up', self.focus )
-          #  self.accept( 'meta-c', self.copy )
-          #  self.accept( 'meta-x', self.cut )
-          #  self.accept( 'meta-v', self.paste )
-          #for windows use ('control')
-          #if sys.platform == 'win32' or sys.platform == 'linux2':
-          #  self.accept( 'control', self.unfocus )
-          #  self.accept( 'control-up', self.focus )
-          #  self.accept( 'control-c', self.copy )
-          #  self.accept( 'control-x', self.cut )
-          #  self.accept( 'control-v', self.paste )
+            #self.ignoreAll()
+            #self.accept( 'page_up', self.scroll, [-5] )
+            #self.accept( 'page_up-repeat', self.scroll, [-5] )
+            #self.accept( 'page_down', self.scroll, [5] )
+            #self.accept( 'page_down-repeat', self.scroll, [5] )
+            #self.accept( 'window-event', self.windowEvent)
+              
+            #self.accept( 'arrow_up'  , self.scrollCmd, [ 1] )
+            #self.accept( 'arrow_down', self.scrollCmd, [-1] )
+              
+            self.accept( 'control', self.toggleConsole )
+            #self.accept( self.autocomplete_key, self.autocomplete )
+            #self.accept( self.autohelp_key, self.autohelp )
+              
+            # accept v, c and x, where c & x copy's the whole console text
+            #messenger.toggleVerbose()
+            #for osx use ('meta')
+            #if sys.platform == 'darwin':
+            #  self.accept( 'meta', self.unfocus )
+            #  self.accept( 'meta-up', self.focus )
+            #  self.accept( 'meta-c', self.copy )
+            #  self.accept( 'meta-x', self.cut )
+            #  self.accept( 'meta-v', self.paste )
+            #for windows use ('control')
+            #if sys.platform == 'win32' or sys.platform == 'linux2':
+            #  self.accept( 'control', self.unfocus )
+            #  self.accept( 'control-up', self.focus )
+            #  self.accept( 'control-c', self.copy )
+            #  self.accept( 'control-x', self.cut )
+            #  self.accept( 'control-v', self.paste )
           
     def onEnterPress(self, textEntered):
         # set to last message
@@ -146,22 +146,22 @@ class GuiConsole(DirectObject.DirectObject):
     
         splitLines = self.linewrap.wrap(printString)
         for line in splitLines:
-          self.textBuffer.append( [line, color] )
-          self.textBuffer.pop(0)
+            self.textBuffer.append( [line, color] )
+            self.textBuffer.pop(0)
         
         self.updateOutput()
   
     def updateOutput( self ):
-       for lineNumber in xrange(self.numlines):
-          lineText, color = self.textBuffer[lineNumber + self.textBufferPos]
-          self.consoleOutputList[self.numlines - lineNumber - 1].setText( lineText )
-          self.consoleOutputList[self.numlines - lineNumber - 1]['fg'] = color
+        for lineNumber in xrange(self.numlines):
+            lineText, color = self.textBuffer[lineNumber + self.textBufferPos]
+            self.consoleOutputList[self.numlines - lineNumber - 1].setText( lineText )
+            self.consoleOutputList[self.numlines - lineNumber - 1]['fg'] = color
 
     def focus( self ):
-       self.consoleEntry['focus'] = 1
+        self.consoleEntry['focus'] = 1
       
     def unfocus( self ):
-       self.consoleEntry['focus'] = 0
+        self.consoleEntry['focus'] = 0
     
     def getTightBounds(self):
         l,r,b,t = self.consoleFrame.getBounds() 
