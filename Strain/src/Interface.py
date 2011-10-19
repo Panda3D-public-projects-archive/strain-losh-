@@ -45,6 +45,11 @@ class Interface(DirectObject.DirectObject):
         
         self.movetext_np = None       
         
+        self.move_timer = 0
+        self.unit_move_destination = None
+        self.turn_np = NodePath("turn_arrows_np")
+        self.turn_np.reparentTo(self.ge.render)
+        
         wp = self.ge.win.getProperties() 
         aspect = float(wp.getXSize()) / wp.getYSize()
         plane = self.ge.loader.loadModel('plane')
@@ -70,10 +75,12 @@ class Interface(DirectObject.DirectObject):
         self.accept('l', self.switchLos)
         self.accept('o', self.switchUnitLos)
         self.accept('m', self.switchUnitMove)
-        self.accept("mouse1-up", self.mouseLeftClick)
+        self.accept("mouse1", self.mouseLeftClick)
+        self.accept("mouse1-up", self.mouseLeftClickUp)
         
         self.ge.taskMgr.add(self.processGui, 'processGui_task')
-        self.ge.taskMgr.add(self.hover, 'hover_task')        
+        self.ge.taskMgr.add(self.hover, 'hover_task') 
+        self.ge.taskMgr.add(self.turnUnit, 'turnUnit_task')       
     
     def redraw(self):
         wp = self.ge.win.getProperties() 
@@ -191,6 +198,55 @@ class Interface(DirectObject.DirectObject):
     def clearSelectedTile(self, tile):
         """Clear the mark from the tile of the selected unit."""
         self.clearTileBlendTexture(tile)
+
+    def loadTurnArrows(self, dest):
+        for i in xrange(8):
+            """m = self.ge.loader.loadModel("arrow")
+            m.setScale(0.1, 0.1, 0.1)
+            m.setR(35)
+            m.setLightOff()
+            m.flattenLight()
+            m.setColor(1, 1, 1)
+            x = dest.getX()+0.5
+            y = dest.getY()+0.5
+            """
+            m = self.ge.loader.loadModel("sphere")
+            m.setScale(0.07, 0.07, 0.07)
+            x = dest.getX()+0.5
+            y = dest.getY()+0.5   
+            delta = 0.4   
+            height = 0.8     
+            if i == 0:
+                pos = Point3(x-delta, y+delta, height)
+                h = 45
+            elif i == 1:
+                pos = Point3(x, y+delta, height)
+                h = 0
+            elif i ==2:
+                pos = Point3(x+delta, y+delta, height)
+                h = -45
+            elif i ==3:
+                pos = Point3(x-delta, y, height)
+                h = 90
+            elif i ==4:
+                pos = Point3(x+delta, y, height)
+                h = -90
+            if i == 5:
+                pos = Point3(x-delta, y-delta, height)
+                h = 135
+            elif i == 6:
+                pos = Point3(x, y-delta, height)
+                h = 180
+            elif i ==7:
+                pos = Point3(x+delta, y-delta, height)
+                h = 225                
+            m.setPos(pos)
+            m.setH(h)
+            m.reparentTo(self.turn_np)
+        
+    def removeTurnArrows(self):
+        for child in self.turn_np.getChildren():
+            child.remove()
         
     def displayLos(self):
         """Displays visual indicator of tiles which are in line of sight of the selected unit.
@@ -322,6 +378,7 @@ class Interface(DirectObject.DirectObject):
         """Handles left mouse click actions.
            Procedure first checks for gui clicks, if there are none then it checks 3d collision.
         """
+        self.destination = None
         if self.hovered_gui == self.deselect_button:
             self.deselectUnit()
         elif self.hovered_gui == self.punit_button:
@@ -347,11 +404,23 @@ class Interface(DirectObject.DirectObject):
                     else:
                         unit = None
                         if self.selected_unit:
-                            # Send movement message to engine
-                            self.ge.createMoveMsg(self.selected_unit, Point2(p.x, p.y), Point2(p.x+1, p.y+1))
+                            # Remember movement tile so we can send movement message when mouse is depressed
+                            self.unit_move_destination = Point2(p.x, p.y)
                     if unit:
                         if self.selected_unit != unit:
                             self.selectUnit(unit)
+                            
+    def mouseLeftClickUp(self):
+        """Handles left mouse click actions when mouse button is depressed.
+           Used for unit movement.
+        """
+        if self.selected_unit and self.unit_move_destination:   
+            # Send movement message to engine
+            o = Point2(self.unit_move_destination.getX()+1, self.unit_move_destination.getY()+1)
+            self.ge.createMoveMsg(self.selected_unit, self.unit_move_destination, o)
+        self.unit_move_destination = None
+        self.move_timer = 0
+        self.removeTurnArrows()
 
 #===============================================================================
 # CLASS Interface --- TASKS
@@ -413,6 +482,15 @@ class Interface(DirectObject.DirectObject):
                 self.console.hide()
   
         return task.cont    
+
+    def turnUnit(self, task):
+        if self.unit_move_destination and self.move_timer < 1:
+            dt = globalClock.getDt()
+            self.move_timer += dt
+            if self.move_timer > 1:
+                self.loadTurnArrows(self.unit_move_destination)
+                    
+        return task.cont
 
 
 #===============================================================================

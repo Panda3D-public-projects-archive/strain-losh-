@@ -220,6 +220,8 @@ class GraphicsEngine(ShowBase):
         intervals = []
         duration = 0.0
         start_pos = unit.model.getPos()
+        for i in action_list:
+            print i
         end_pos = action_list[-2][1]
         for idx, action in enumerate(action_list):
             type = action[0]
@@ -264,7 +266,7 @@ class GraphicsEngine(ShowBase):
            
     def handleMsg(self, msg):
         """Handles incoming messages."""
-        logger.info("Received message: %s", msg)
+        logger.info("Received message: %s", msg.type)
         if msg.type == Msg.ENGINE_STATE:
             self.level = pickle.loads(msg.values['pickled_level'])
             self.units = pickle.loads(msg.values['pickled_units'])
@@ -277,6 +279,7 @@ class GraphicsEngine(ShowBase):
             unit = self.unit_np_dict[unit_id]
             self.interface.clearSelectedTile(self.tile_np_list[int(unit.model.getX())][int(unit.model.getY())])
             self.playUnitAnim(self.unit_np_dict[unit_id], tile_list)
+        # TODO: ogs: implementirati primanje ostalih poruka
         else:
             logger.error("Unknown message Type: %s", msg)
 
@@ -295,7 +298,7 @@ class GraphicsEngine(ShowBase):
         """Task to animate draw units while they are idling."""
         dt = globalClock.getDt()
         for unit in self.unit_np_dict.itervalues():
-            unit.passtime = unit.passtime + dt
+            unit.passtime += dt
 
             if unit.passtime > unit.idletime:
                 anim = unit.getAnimName("idle")
