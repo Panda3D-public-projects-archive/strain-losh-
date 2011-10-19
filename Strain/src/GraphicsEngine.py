@@ -121,15 +121,15 @@ class GraphicsEngine(ShowBase):
             for y in xrange(0, level.maxY): 
                 tag = level._level_data[x][y]
                 c = self.loader.loadModel("tile")
-                c.setPos(x, y, 0)
-                c.setTag("pos", "%(X)s-%(Y)s" % {"X":x, "Y":y})
-                c.setTag("type", "tile") 
                 if tag != 0:
                     c.setScale(1, 1, tag + 1)
                     #TODO: ogs: Srediti ovaj colorScale, izgleda da ne radi dobro s ovom teksturom
                     coef = 1 + 0.05 * tag
                     c.setColorScale(coef, coef, coef, 1)
                     c.flattenLight()
+                c.setPos(x, y, 0)
+                c.setTag("pos", "%(X)s-%(Y)s" % {"X":x, "Y":y})
+                c.setTag("type", "tile")                     
                 c.reparentTo(self.level_node)
                 tile_nodes.append(c)
             self.tile_np_list.append(tile_nodes)
@@ -250,7 +250,14 @@ class GraphicsEngine(ShowBase):
                 else:
                     p = i
                 intervals.append(p)
-        
+            elif type == "rotate":
+                unit.dummy_node.setPos(curr_pos)
+                unit.dest_node.setPos(dest_pos)
+                unit.dummy_node.lookAt(unit.dest_node)
+                dest_h = unit.dummy_node.getH() 
+                i_h = unit.model.quatInterval(0.2, hpr = Point3(dest_h, 0, 0), startHpr = Point3(curr_h, 0, 0))
+                duration = duration + 0.2
+                intervals.append(i_h)                 
         seq = Sequence()
         for i in intervals:
             seq.append(i)

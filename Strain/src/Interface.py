@@ -21,6 +21,16 @@ _TILE_RESET             = "_tile_reset"
 _UNIT_HOVERED           = "_unit_hovered"
 _UNIT_RESET             = "_unit_reset"    
 
+_UNIT_HEADING_NONE      = 0
+_UNIT_HEADING_NW        = 1
+_UNIT_HEADING_N         = 2
+_UNIT_HEADING_NE        = 3
+_UNIT_HEADING_W         = 4
+_UNIT_HEADING_E         = 5
+_UNIT_HEADING_SW        = 6
+_UNIT_HEADING_S         = 7
+_UNIT_HEADING_SE        = 8
+
 #===============================================================================
 # CLASS Interface --- DEFINITION
 #===============================================================================
@@ -47,8 +57,12 @@ class Interface(DirectObject.DirectObject):
         
         self.move_timer = 0
         self.unit_move_destination = None
+        self.unit_move_orientation = _UNIT_HEADING_NONE
         self.turn_np = NodePath("turn_arrows_np")
         self.turn_np.reparentTo(self.ge.render)
+        self.plane = Plane(Vec3(0, 0, 1), Point3(0, 0, 0.3))  
+        self.dummy_turn_pos_node = NodePath("dummy_turn_pos_node")
+        self.dummy_turn_dest_node = NodePath("dummy_turn_dest_node")
         
         wp = self.ge.win.getProperties() 
         aspect = float(wp.getXSize()) / wp.getYSize()
@@ -70,7 +84,7 @@ class Interface(DirectObject.DirectObject):
         
         self.hovered_gui = None
         
-        self.console = GuiConsole(base.a2dBottomLeft, 1.5, 0.4, aspect)
+        self.console = GuiConsole(self.ge.a2dBottomLeft, 1.5, 0.4, aspect)
         
         self.accept('l', self.switchLos)
         self.accept('o', self.switchUnitLos)
@@ -200,6 +214,7 @@ class Interface(DirectObject.DirectObject):
         self.clearTileBlendTexture(tile)
 
     def loadTurnArrows(self, dest):
+        self.turn_arrow_dict = {}        
         for i in xrange(8):
             """m = self.ge.loader.loadModel("arrow")
             m.setScale(0.1, 0.1, 0.1)
@@ -219,34 +234,51 @@ class Interface(DirectObject.DirectObject):
             if i == 0:
                 pos = Point3(x-delta, y+delta, height)
                 h = 45
+                key = _UNIT_HEADING_NW
             elif i == 1:
                 pos = Point3(x, y+delta, height)
                 h = 0
+                key = _UNIT_HEADING_N                
             elif i ==2:
                 pos = Point3(x+delta, y+delta, height)
                 h = -45
+                key = _UNIT_HEADING_NE                
             elif i ==3:
                 pos = Point3(x-delta, y, height)
                 h = 90
+                key = _UNIT_HEADING_W                
             elif i ==4:
                 pos = Point3(x+delta, y, height)
                 h = -90
+                key = _UNIT_HEADING_E                
             if i == 5:
                 pos = Point3(x-delta, y-delta, height)
                 h = 135
+                key = _UNIT_HEADING_SW                
             elif i == 6:
                 pos = Point3(x, y-delta, height)
                 h = 180
+                key = _UNIT_HEADING_S                
             elif i ==7:
                 pos = Point3(x+delta, y-delta, height)
-                h = 225                
+                h = 225               
+                key = _UNIT_HEADING_SE
             m.setPos(pos)
             m.setH(h)
             m.reparentTo(self.turn_np)
+            self.turn_arrow_dict[key] = m
         
     def removeTurnArrows(self):
         for child in self.turn_np.getChildren():
             child.remove()
+        self.turn_arrow_dict = {}
+            
+    def markTurnArrow(self, key):
+        for i in self.turn_arrow_dict.itervalues():
+            i.setColor(1,1,1)
+        if key != _UNIT_HEADING_NONE:
+            self.turn_arrow_dict[key].setColor(1,0,0)
+        self.unit_move_orientation = key
         
     def displayLos(self):
         """Displays visual indicator of tiles which are in line of sight of the selected unit.
@@ -414,9 +446,26 @@ class Interface(DirectObject.DirectObject):
         """Handles left mouse click actions when mouse button is depressed.
            Used for unit movement.
         """
-        if self.selected_unit and self.unit_move_destination:   
+        if self.selected_unit and self.unit_move_destination and self.unit_move_orientation != _UNIT_HEADING_NONE:   
             # Send movement message to engine
-            o = Point2(self.unit_move_destination.getX()+1, self.unit_move_destination.getY()+1)
+            x = self.unit_move_destination.getX()
+            y = self.unit_move_destination.getY()
+            if self.unit_move_orientation == _UNIT_HEADING_NW:
+                o = Point2(x-1, y+1)
+            elif self.unit_move_orientation == _UNIT_HEADING_N:
+                o = Point2(x, y+1)
+            elif self.unit_move_orientation == _UNIT_HEADING_NE:
+                o = Point2(x+1, y+1)
+            elif self.unit_move_orientation == _UNIT_HEADING_W:
+                o = Point2(x-1, y)
+            elif self.unit_move_orientation == _UNIT_HEADING_E:
+                o = Point2(x+1, y)
+            elif self.unit_move_orientation == _UNIT_HEADING_SW:
+                o = Point2(x-1, y-1)
+            elif self.unit_move_orientation == _UNIT_HEADING_S:
+                o = Point2(x, y-1)
+            elif self.unit_move_orientation == _UNIT_HEADING_SE:
+                o = Point2(x+1, y-1)
             self.ge.createMoveMsg(self.selected_unit, self.unit_move_destination, o)
         self.unit_move_destination = None
         self.move_timer = 0
@@ -471,7 +520,7 @@ class Interface(DirectObject.DirectObject):
                     hovering_over_something = True
                     self.console.hide()
             #Hovering iznad konzole
-            # TODO: srediti da kad konzola ima fokus da se ne hajda! 
+            # TODO: vjeks: srediti da kad konzola ima fokus da se ne hajda! 
             if  mpos.x >= self.console.pos_min_x and mpos.x <= self.console.pos_max_x and mpos.y >= self.console.pos_min_y and mpos.y <= self.console.pos_max_y:                 
                 self.hovered_gui = self.console
                 hovering_over_something = True
@@ -484,12 +533,46 @@ class Interface(DirectObject.DirectObject):
         return task.cont    
 
     def turnUnit(self, task):
-        if self.unit_move_destination and self.move_timer < 1:
-            dt = globalClock.getDt()
-            self.move_timer += dt
-            if self.move_timer > 1:
-                self.loadTurnArrows(self.unit_move_destination)
-                    
+        if self.unit_move_destination: 
+            if self.move_timer < 0.1:
+                dt = globalClock.getDt()
+                self.move_timer += dt
+                if self.move_timer > 0.1:
+                    self.loadTurnArrows(self.unit_move_destination)
+                    pos = Point3(self.unit_move_destination.getX()+0.5, self.unit_move_destination.getY()+0.5, 0.3)
+                    self.dummy_turn_pos_node.setPos(pos)
+            else: 
+                if self.ge.mouseWatcherNode.hasMouse(): 
+                    mpos = self.ge.mouseWatcherNode.getMouse() 
+                    pos3d = Point3() 
+                    nearPoint = Point3() 
+                    farPoint = Point3() 
+                    self.ge.camLens.extrude(mpos, nearPoint, farPoint) 
+                    if self.plane.intersectsLine(pos3d, self.ge.render.getRelativePoint(self.ge.camera, nearPoint), self.ge.render.getRelativePoint(self.ge.camera, farPoint)): 
+                        self.dummy_turn_dest_node.setPos(pos3d)
+                        self.dummy_turn_pos_node.lookAt(self.dummy_turn_dest_node)
+                        h = self.dummy_turn_pos_node.getH()
+                        dest_node_pos = Point2(int(self.dummy_turn_dest_node.getX()), int(self.dummy_turn_dest_node.getY()))
+                        pos_node_pos = Point2(int(self.dummy_turn_pos_node.getX()), int(self.dummy_turn_pos_node.getY()))
+                        if dest_node_pos == pos_node_pos:
+                            key = _UNIT_HEADING_NONE
+                        elif h >= -22.5 and h < 22.5:
+                            key = _UNIT_HEADING_N
+                        elif h >= 22.5 and h < 67.5:
+                            key = _UNIT_HEADING_NW
+                        elif h >= 67.5 and h < 112.5:
+                            key = _UNIT_HEADING_W
+                        elif h >= 112.5 and h < 157.5:
+                            key = _UNIT_HEADING_SW
+                        elif (h >= 157.5 and h <= 180) or (h >= -180 and h < -157.5):
+                            key = _UNIT_HEADING_S
+                        elif h >= -157.5 and h < -112.5:
+                            key = _UNIT_HEADING_SE
+                        elif h >= -112.5 and h < -67.5:
+                            key = _UNIT_HEADING_E
+                        elif h >= -67.5 and h < -22.5:
+                            key = _UNIT_HEADING_NE
+                        self.markTurnArrow(key)
         return task.cont
 
 
