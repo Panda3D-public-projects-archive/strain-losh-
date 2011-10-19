@@ -379,7 +379,7 @@ class Interface(DirectObject.DirectObject):
         self.selected_unit = unit
         pos = self.selected_unit.model.getPos()
         self.markSelectedTile(self.ge.tile_np_list[int(pos.getX())][int(pos.getY())])
-        u = self.ge.units[int(unit.id)]
+        u = self.ge.unit_np_dict[int(unit.id)].unit
         self.off_model = UnitModel(u, scale=1, h=0, pos=Point3(0,-8,-1.7))
         self.off_model.reparentTo(self.ge.alt_render)
         self.off_model.play(self.off_model.getAnimName("idle"))

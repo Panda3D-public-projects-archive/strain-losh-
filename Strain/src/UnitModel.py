@@ -10,6 +10,7 @@ class UnitModel:
         self.anim_count_dict = {}
         self.model = self.load(unit.type)
         self.id = str(unit.id)
+        self.unit = unit
         
         # Bake in rotation transform because model is created facing towards screen (h=180)
         self.model.setScale(scale)

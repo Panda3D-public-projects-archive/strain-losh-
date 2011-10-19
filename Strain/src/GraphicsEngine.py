@@ -70,6 +70,8 @@ class GraphicsEngine(ShowBase):
         ShowBase.__init__(self)
         #PStatClient.connect()
 
+        self.engineLoaded = False
+
         # Create messaging task
         self.taskMgr.add(self.msgTask, "msg_task")
         
@@ -191,6 +193,9 @@ class GraphicsEngine(ShowBase):
         """Removes unit nodepath from scenegraph. It will eventually be collected by gc and destroyed."""
         unit.cleanup()
         unit.remove()
+        
+    def updateUnit(self, unit):
+        self.unit_np_dict[unit.id].unit = unit
     
     def windowEvent(self, win):
         if win.isClosed():
@@ -276,19 +281,27 @@ class GraphicsEngine(ShowBase):
         logger.info("Received message: %s", msg.type)
         if msg.type == Msg.ENGINE_STATE:
             self.level = pickle.loads(msg.values['pickled_level'])
-            self.units = pickle.loads(msg.values['pickled_units'])
             self.turn = msg.values['turn']
-            self.players = pickle.loads(msg.values['pickled_players'])
-            self.initAll(self.level, self.players, self.units)
+            players = pickle.loads(msg.values['pickled_players'])            
+            units = pickle.loads(msg.values['pickled_units'])
+            self.initAll(self.level, players, units)
+            if not self.engineLoaded:
+                self.engineLoaded = True
         elif msg.type == Msg.MOVE:
             unit_id = msg.values[0]
             tile_list = msg.values[1]
             unit = self.unit_np_dict[unit_id]
             self.interface.clearSelectedTile(self.tile_np_list[int(unit.model.getX())][int(unit.model.getY())])
             self.playUnitAnim(self.unit_np_dict[unit_id], tile_list)
+        elif msg.type == Msg.NEW_TURN:
+            pass
+        elif msg.type == Msg.UNIT:
+            if self.engineLoaded:
+                unit = pickle.loads(msg.values)
+                self.updateUnit(unit)
         # TODO: ogs: implementirati primanje ostalih poruka
         else:
-            logger.error("Unknown message Type: %s", msg)
+            logger.error("Unknown message Type: %s", msg.type)
 
     def msgTask(self, task):
         """Task that listens for messages on client queue."""
