@@ -67,32 +67,29 @@ class Engine( Thread ):
     def __init__(self):
         Thread.__init__(self)
         
-        self.stop = False
-
         logger.info("------------------------Engine Starting------------------------")
 
+        self.stop = False
+        self.level = None 
+        self.dynamic_obstacles = []
+        self.turn = 0        
+        
+        
+
+    def run(self):
 
         self.level = Level( "level2.txt" )
 
         #we make this so its size is the same as level 
         self.dynamic_obstacles = [[(0,0)] * self.level.maxY for i in xrange(self.level.maxX)]
 
-        self.turn = 0
-
-        
         self.loadArmyList()
 
-
         self.turn = 0
+        
         self.beginTurn()
 
-
-        pass
         
-        
-        
-
-    def run(self):
         i = 0
         while( self.stop == False ):
             
@@ -139,12 +136,15 @@ class Engine( Thread ):
             
         
         
-        #we are shutting down the Engine        
+        #we are shutting down everything   
         Messaging.client_queue.close()
         Messaging.engine_queue.close()
         
+        
         logger.info( "++++++++++++++++++++++++Engine stopped!++++++++++++++++++++++++" )
-                
+
+
+        return 0
 
 
     def handleMsg(self, msg):
@@ -596,7 +596,7 @@ class Engine( Thread ):
         if (target_tile in moveDict) == False:
             print "getPath() got an invalid target_tile"
             logger.critical("getPath() got an invalid target tile:%s", target_tile )
-            raise Exception( "getPath() got an invalid target_tile" )
+            raise Exception( "Trying to move to an invalid target_tile:%s", target_tile )
             
         
         
@@ -679,37 +679,46 @@ class Engine( Thread ):
         
         if( unit_id in self.units ) == False:
             logger.critical( "Got wrong unit id:%s", unit_id )
-            EngMsg.sendErrorMsg( "Wrong unit_id." )
+            EngMsg.sendErrorMsg( "Wrong unit id." )
             return
 
         unit = self.units[unit_id]
 
-        try:
-            path = self.getPath( unit, new_position )
-        except Exception:
-            logger.critical( sys.exc_info()[1] )
-            EngMsg.sendErrorMsg( sys.exc_info()[1] )
-            return   
-        
-        
         move_actions = []
         
-        
-        #everything checks out, do the actual moving
-        for tile, ap_remaining in path:
+        #special case if we just need to rotate the unit
+        if unit.pos == new_position:
             
-            self._rotateUnit( unit, tile )
+            #see if we actually need to rotate the unit
+            if self._rotateUnit( unit, new_orientation ):
+                move_actions.append( ('rotate', new_orientation) )
+            #if not, than do nothing
+            else:
+                return
             
-            self._moveUnit( unit, tile, ap_remaining )
-            move_actions.append( ('move', tile ) )
+        #otherwise do the whole moving thing
+        else:
+            try:
+                path = self.getPath( unit, new_position )
+            except Exception:
+                logger.critical( sys.exc_info()[1] )
+                EngMsg.sendErrorMsg( sys.exc_info()[1] )
+                return   
             
-            if self.isMovementInterrupted( unit ):
-                break
-            
-            #if this is the last tile than apply last orientation change
-            if( tile == path[-1][0] ):
-                if self._rotateUnit(unit, new_orientation):
-                    move_actions.append( ('rotate', new_orientation) )
+            #everything checks out, do the actual moving
+            for tile, ap_remaining in path:
+                self._rotateUnit( unit, tile )
+                self._moveUnit( unit, tile, ap_remaining )
+                move_actions.append( ('move', tile ) )
+
+                #TODO: krav: movement interrupt                
+                if self.isMovementInterrupted( unit ):
+                    break
+                
+                #if this is the last tile than apply last orientation change
+                if( tile == path[-1][0] ):
+                    if self._rotateUnit(unit, new_orientation):
+                        move_actions.append( ('rotate', new_orientation) )
                     
                     
         #we moved a unit so update its move_dict and losh_dict
