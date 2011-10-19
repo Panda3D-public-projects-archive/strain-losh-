@@ -428,11 +428,17 @@ class Interface(DirectObject.DirectObject):
                     unit = self.ge.unit_np_dict[unit_id] 
                     if self.selected_unit != unit:
                         self.selectUnit(unit)
+                    else:
+                        # Remember movement tile so we can send orientation message when mouse is depressed
+                        self.unit_move_destination = Point2(int(unit.model.getX()), int(unit.model.getY()))
                 elif node_type == "tile":
                     p = selected.getParent().getPos()
                     u = self.ge.unit_np_list[int(p.x)][int(p.y)]
                     if u:
                         unit = u
+                        if self.selected_unit == unit:
+                            # Remember movement tile so we can send orientation message when mouse is depressed
+                            self.unit_move_destination = Point2(p.x, p.y)
                     else:
                         unit = None
                         if self.selected_unit:

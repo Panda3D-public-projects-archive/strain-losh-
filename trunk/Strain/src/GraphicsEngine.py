@@ -218,16 +218,19 @@ class GraphicsEngine(ShowBase):
             
     def setUnitNpList(self, unit, old_pos):
         pos = unit.model.getPos()
-        self.unit_np_list[int(pos.getX())][int(pos.getY())] = unit
         self.unit_np_list[int(old_pos.getX())][int(old_pos.getY())] = None
+        self.unit_np_list[int(pos.getX())][int(pos.getY())] = unit
 
     def playUnitAnim(self, unit, action_list):
         intervals = []
         duration = 0.0
         start_pos = unit.model.getPos()
-        for i in action_list:
-            print i
-        end_pos = action_list[-2][1]
+        # if legth of action list is greater than 1, we have movement and rotation information
+        if len(action_list) > 1:
+            end_pos = action_list[-2][1]
+        # otherwise, we are just rotating the unit so end_pos is the same as unit pos
+        else:
+            end_pos = Point2(int(unit.model.getX()), int(unit.model.getY()))
         for idx, action in enumerate(action_list):
             type = action[0]
             if idx == 0:
