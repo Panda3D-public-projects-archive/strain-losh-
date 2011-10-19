@@ -190,7 +190,7 @@ class GraphicsEngine(ShowBase):
         self.coll_trav.addCollider(self.coll_nodepath, self.coll_queue)
 
     def destroyUnit(self, unit):
-        """Removes unit nodepath from scenegraph. It will eventually be collected by gc and destroyed."""
+        """Removes unit nodepath from scenegraph. It will eventually be collected by reference-counting mechanism and destroyed."""
         unit.cleanup()
         unit.remove()
         
@@ -278,6 +278,9 @@ class GraphicsEngine(ShowBase):
 
     def createMoveMsg(self, unit, pos, orientation):
         ClientMsg.move(int(unit.id), pos, orientation)
+        
+    def createEndTurnMsg(self):
+        ClientMsg.endTurn()
            
     def handleMsg(self, msg):
         """Handles incoming messages."""
@@ -297,7 +300,7 @@ class GraphicsEngine(ShowBase):
             self.interface.clearSelectedTile(self.tile_np_list[int(unit.model.getX())][int(unit.model.getY())])
             self.playUnitAnim(self.unit_np_dict[unit_id], tile_list)
         elif msg.type == Msg.NEW_TURN:
-            pass
+            print msg.values
         elif msg.type == Msg.UNIT:
             if self.engineLoaded:
                 unit = pickle.loads(msg.values)

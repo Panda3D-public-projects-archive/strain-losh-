@@ -404,7 +404,8 @@ class Interface(DirectObject.DirectObject):
         None
         
     def endTurn(self):
-        """Ends the turn"""   
+        """Ends the turn"""
+        self.ge.createEndTurnMsg() 
 
     def mouseLeftClick(self):
         """Handles left mouse click actions.
