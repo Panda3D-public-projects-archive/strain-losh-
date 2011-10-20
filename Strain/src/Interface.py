@@ -1,4 +1,5 @@
 from direct.showbase import DirectObject
+from direct.gui.OnscreenText import OnscreenText
 from panda3d.core import Plane, Vec4, Vec3, Vec2, Point4, Point3, Point2, NodePath
 from pandac.PandaModules import CollisionTraverser, CollisionHandlerQueue, CollisionNode, CollisionRay
 from pandac.PandaModules import GeomNode, CardMaker, TextNode
@@ -63,6 +64,10 @@ class Interface(DirectObject.DirectObject):
         self.plane = Plane(Vec3(0, 0, 1), Point3(0, 0, 0.3))  
         self.dummy_turn_pos_node = NodePath("dummy_turn_pos_node")
         self.dummy_turn_dest_node = NodePath("dummy_turn_dest_node")
+        
+        self.unit_type_print = OnscreenText(text = 'Type:', pos = (0.8, 0.9), scale = 0.05)
+        self.unit_HP_print = OnscreenText(text = 'HP:', pos = (0.8, 0.85), scale = 0.05)
+        self.unit_AP_print = OnscreenText(text = 'AP:', pos = (0.8, 0.80), scale = 0.05)
         
         wp = self.ge.win.getProperties() 
         aspect = float(wp.getXSize()) / wp.getYSize()
@@ -389,6 +394,7 @@ class Interface(DirectObject.DirectObject):
         self.off_model = UnitModel(u, scale=1, h=0, pos=Point3(0,-8,-1.7))
         self.off_model.reparentTo(self.ge.alt_render)
         self.off_model.play(self.off_model.getAnimName("idle"))
+        self.printUnitData()
 
     def deselectUnit(self):
         """Performs actions for unit deselection.
@@ -409,6 +415,16 @@ class Interface(DirectObject.DirectObject):
         """Selects next unit in the same team with unspent action points."""
         None
         
+    def printUnitData(self):
+        unit = self.selected_unit
+        if unit:
+            unit_type = self.ge.getUnitData(unit, "type")
+            unit_HP = self.ge.getUnitData(unit, "HP")
+            unit_AP = self.ge.getUnitData(unit, "AP")
+            self.unit_type_print.setText("Type: " + unit_type)
+            self.unit_HP_print.setText("HP: " + str(unit_HP))
+            self.unit_AP_print.setText("AP: " + str(unit_AP))
+    
     def endTurn(self):
         """Ends the turn"""
         self.ge.createEndTurnMsg() 
