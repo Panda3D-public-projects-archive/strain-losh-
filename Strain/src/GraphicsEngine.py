@@ -89,6 +89,9 @@ class GraphicsEngine(ShowBase):
         self.accept("escape", self.destroy)
         self.accept('aspectRatioChanged', self.redraw)        
         
+        # global flag to disable user interface (when animations are playing etc)
+        self.interface_disabled = False
+        
         # debug
         self.accept("i", self.info)
 
@@ -215,6 +218,12 @@ class GraphicsEngine(ShowBase):
         else:
             ClientMsg.shutdownEngine()            
             sys.exit()
+
+    def setInterfaceEnable(self):
+        self.interface_disabled = False
+        
+    def setInterfaceDisable(self):
+        self.interface_disabled = True
             
     def getUnitData(self, unit, type):
         if type == "type":
