@@ -25,17 +25,20 @@ class Unit():
            
         if self.type == 'terminator':
             self.default_AP = 8
+            self.default_HP = 10
             self.soundtype = '02'
         elif self.type == 'marine_b':
             self.default_AP = 5
+            self.default_HP = 9
             self.soundtype = '01'
         elif self.type == 'commissar':
             self.default_AP = 5
+            self.default_HP = 8
             self.soundtype = '01'            
 
         self.pos = Point2( self.x, self.y )
         self.current_AP = self.default_AP
-        self.health = 10
+        self.health = self.default_HP
         
     def get_sound(self, action):
         if action == 'select':
