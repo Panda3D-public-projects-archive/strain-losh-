@@ -215,7 +215,7 @@ class Interface(DirectObject.DirectObject):
 
     def loadTurnArrows(self, dest):
         self.turn_arrow_dict = {}        
-        for i in xrange(8):
+        for i in xrange(9):
             """m = self.ge.loader.loadModel("arrow")
             m.setScale(0.1, 0.1, 0.1)
             m.setR(35)
@@ -263,6 +263,10 @@ class Interface(DirectObject.DirectObject):
                 pos = Point3(x+delta, y-delta, height)
                 h = 225               
                 key = _UNIT_HEADING_SE
+            elif i == 8:
+                pos = Point3(x, y, height)
+                h = 0
+                key = _UNIT_HEADING_NONE
             m.setPos(pos)
             m.setH(h)
             m.reparentTo(self.turn_np)
@@ -276,7 +280,9 @@ class Interface(DirectObject.DirectObject):
     def markTurnArrow(self, key):
         for i in self.turn_arrow_dict.itervalues():
             i.setColor(1,1,1)
-        if key != _UNIT_HEADING_NONE:
+        if key == _UNIT_HEADING_NONE:
+            self.turn_arrow_dict[key].setColor(0,0,1)
+        else:
             self.turn_arrow_dict[key].setColor(1,0,0)
         self.unit_move_orientation = key
         

@@ -7,7 +7,7 @@ from direct.interval.IntervalGlobal import Sequence, ActorInterval, Parallel, Fu
 from Camera import Camera
 from Interface import Interface
 from UnitModel import UnitModel
-from Messaging import EngMsg, Messaging, ClientMsg, Msg
+from Messaging import Messaging, ClientMsg, Msg
 import sys
 import logging
 import Queue
