@@ -223,6 +223,10 @@ class GraphicsEngine(ShowBase):
             return unit.unit.health
         elif type == "AP":
             return unit.unit.current_AP
+        elif type == "default_HP":
+            return unit.unit.default_HP
+        elif type == "default_AP":
+            return unit.unit.default_AP
     
     def setUnitNpList(self, unit, old_pos):
         pos = unit.model.getPos()
