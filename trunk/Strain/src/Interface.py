@@ -7,6 +7,10 @@ from pandac.PandaModules import Texture, TextureStage, RenderAttrib, DepthOffset
 from UnitModel import UnitModel
 from Console import GuiConsole
 
+from direct.gui.DirectGui import DirectFrame, DirectEntry, DGG
+from direct.gui.OnscreenText import OnscreenText
+from pandac.PandaModules import TextNode
+
 #===============================================================================
 # GLOBAL DEFINITIONS
 #===============================================================================
@@ -65,10 +69,6 @@ class Interface(DirectObject.DirectObject):
         self.dummy_turn_pos_node = NodePath("dummy_turn_pos_node")
         self.dummy_turn_dest_node = NodePath("dummy_turn_dest_node")
         
-        self.unit_type_print = OnscreenText(text = 'Type:', pos = (0.8, 0.9), scale = 0.05)
-        self.unit_HP_print = OnscreenText(text = 'HP:', pos = (0.8, 0.85), scale = 0.05)
-        self.unit_AP_print = OnscreenText(text = 'AP:', pos = (0.8, 0.80), scale = 0.05)
-        
         wp = self.ge.win.getProperties() 
         aspect = float(wp.getXSize()) / wp.getYSize()
         plane = self.ge.loader.loadModel('plane')
@@ -90,6 +90,7 @@ class Interface(DirectObject.DirectObject):
         self.hovered_gui = None
         
         self.console = GuiConsole(self.ge.a2dBottomLeft, 1.5, 0.4, aspect)
+        self.stats = GuiTextFrame(Point3(0.3, 0, -0.1), 0.4, 0.2, 3)
         
         self.accept('l', self.switchLos)
         self.accept('o', self.switchUnitLos)
@@ -421,9 +422,11 @@ class Interface(DirectObject.DirectObject):
             unit_type = self.ge.getUnitData(unit, "type")
             unit_HP = self.ge.getUnitData(unit, "HP")
             unit_AP = self.ge.getUnitData(unit, "AP")
-            self.unit_type_print.setText("Type: " + unit_type)
-            self.unit_HP_print.setText("HP: " + str(unit_HP))
-            self.unit_AP_print.setText("AP: " + str(unit_AP))
+            unit_default_HP = self.ge.getUnitData(unit, "default_HP")
+            unit_default_AP = self.ge.getUnitData(unit, "default_AP")
+            self.stats.write(1, unit_type)
+            self.stats.write(2, "HP: " + str(unit_HP) + "/" + str(unit_default_HP))
+            self.stats.write(3, "AP: " + str(unit_AP) + "/" + str(unit_default_AP))
     
     def endTurn(self):
         """Ends the turn"""
@@ -701,4 +704,49 @@ class GuiButton:
     def removeNode(self):
             self.node.removeNode()   
                   
+class GuiTextFrame:
+    def __init__(self, offset, h_size, v_size, numLines):
+        self.numLines = numLines
+        self.frame = DirectFrame(   relief = DGG.FLAT
+                                  , frameColor = (0, 0, 0, 0.2)
+                                  , scale = 1
+                                  , frameSize = (0, h_size, 0, -v_size) )
+        
+        self.frame.reparentTo(base.a2dTopLeft)
+        self.offset = offset
+        self.frame.setPos(self.offset.getX(), 0, self.offset.getZ())
 
+        fixedWidthFont = loader.loadFont("etc/monoMMM_5.ttf")
+        if not fixedWidthFont.isValid():
+            print "pandaInteractiveConsole.py :: could not load the defined font %s" % str(self.font)
+            fixedWidthFont = DGG.getDefaultFont()
+        
+        self.lineHeight = v_size*0.9 / numLines
+        # output lines
+        self.frameOutputList = list()
+        for i in xrange( self.numLines ):
+            label = OnscreenText( parent = self.frame
+                              , text = ""
+                              , pos = (0.005, -(i+1)*self.lineHeight)
+                              , align=TextNode.ALeft
+                              , mayChange=1
+                              , scale=0.05
+                              , fg = (100,100,100,1)
+                              , shadow = (0, 0, 0, 1))
+                              #, frame = (200,0,0,1) )
+            label.setFont( fixedWidthFont )
+            self.frameOutputList.append( label )
+
+    def write(self, lineNumber, text):
+        if lineNumber > self.numLines:
+            return
+        self.frameOutputList[lineNumber - 1].setText(text)
+        
+    def redraw(self):
+        p = base.a2dTopLeft.getPos()
+        p.setX(p.getX() + self.offset.getX())
+        p.setZ(p.getZ() - 0.05)
+        self.frame.setPos(p)
+
+
+                  
