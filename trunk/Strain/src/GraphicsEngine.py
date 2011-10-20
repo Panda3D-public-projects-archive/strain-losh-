@@ -216,6 +216,14 @@ class GraphicsEngine(ShowBase):
             ClientMsg.shutdownEngine()            
             sys.exit()
             
+    def getUnitData(self, unit, type):
+        if type == "type":
+            return unit.unit.type
+        elif type == "HP":
+            return unit.unit.health
+        elif type == "AP":
+            return unit.unit.current_AP
+    
     def setUnitNpList(self, unit, old_pos):
         pos = unit.model.getPos()
         self.unit_np_list[int(old_pos.getX())][int(old_pos.getY())] = None
@@ -273,7 +281,9 @@ class GraphicsEngine(ShowBase):
         anim = ActorInterval(unit.model, 'run', loop = 1, duration = duration)
         move = Sequence(Parallel(anim, seq), 
                         Func(self.setUnitNpList, self.unit_np_dict[int(unit.id)], start_pos),
-                        Func(self.interface.markSelectedTile, self.tile_np_list[int(end_pos.getX())][int(end_pos.getY())]))
+                        Func(self.interface.markSelectedTile, self.tile_np_list[int(end_pos.getX())][int(end_pos.getY())]),
+                        #Func(self.interface.printUnitData, unit)
+                        )
         move.start()
 
     def createMoveMsg(self, unit, pos, orientation):
@@ -305,6 +315,7 @@ class GraphicsEngine(ShowBase):
             if self.engineLoaded:
                 unit = pickle.loads(msg.values)
                 self.updateUnit(unit)
+                self.interface.printUnitData()
         # TODO: ogs: implementirati primanje ostalih poruka
         else:
             logger.error("Unknown message Type: %s", msg.type)
