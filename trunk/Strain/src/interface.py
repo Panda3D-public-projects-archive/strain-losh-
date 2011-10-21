@@ -77,7 +77,7 @@ class Interface(DirectObject.DirectObject):
         
         self.hovered_gui = None
         
-        self.console = GuiConsole(self.ge.a2dBottomLeft, 1.5, 0.4, aspect)
+        self.console = GuiConsole(self.ge.a2dBottomLeft, 1.5, 0.4, aspect, self.ge)
         self.stats = GuiTextFrame(Point3(0.3, 0, -0.1), 0.4, 0.2, 3)
         
         self.accept('l', self.switchLos)
