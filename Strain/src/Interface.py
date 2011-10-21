@@ -10,6 +10,7 @@ from Console import GuiConsole
 from direct.gui.DirectGui import DirectFrame, DirectEntry, DGG
 from direct.gui.OnscreenText import OnscreenText
 from pandac.PandaModules import TextNode
+from Unit import Unit
 
 #===============================================================================
 # GLOBAL DEFINITIONS
@@ -26,15 +27,6 @@ _TILE_RESET             = "_tile_reset"
 _UNIT_HOVERED           = "_unit_hovered"
 _UNIT_RESET             = "_unit_reset"    
 
-_UNIT_HEADING_NONE      = 0
-_UNIT_HEADING_NW        = 1
-_UNIT_HEADING_N         = 2
-_UNIT_HEADING_NE        = 3
-_UNIT_HEADING_W         = 4
-_UNIT_HEADING_E         = 5
-_UNIT_HEADING_SW        = 6
-_UNIT_HEADING_S         = 7
-_UNIT_HEADING_SE        = 8
 
 #===============================================================================
 # CLASS Interface --- DEFINITION
@@ -62,7 +54,7 @@ class Interface(DirectObject.DirectObject):
         
         self.move_timer = 0
         self.unit_move_destination = None
-        self.unit_move_orientation = _UNIT_HEADING_NONE
+        self.unit_move_orientation = Unit.HEADING_NONE
         self.turn_np = NodePath("turn_arrows_np")
         self.turn_np.reparentTo(self.ge.render)
         self.plane = Plane(Vec3(0, 0, 1), Point3(0, 0, 0.3))  
@@ -240,39 +232,39 @@ class Interface(DirectObject.DirectObject):
             if i == 0:
                 pos = Point3(x-delta, y+delta, height)
                 h = 45
-                key = _UNIT_HEADING_NW
+                key = Unit.HEADING_NW
             elif i == 1:
                 pos = Point3(x, y+delta, height)
                 h = 0
-                key = _UNIT_HEADING_N                
+                key = Unit.HEADING_N                
             elif i ==2:
                 pos = Point3(x+delta, y+delta, height)
                 h = -45
-                key = _UNIT_HEADING_NE                
+                key = Unit.HEADING_NE                
             elif i ==3:
                 pos = Point3(x-delta, y, height)
                 h = 90
-                key = _UNIT_HEADING_W                
+                key = Unit.HEADING_W                
             elif i ==4:
                 pos = Point3(x+delta, y, height)
                 h = -90
-                key = _UNIT_HEADING_E                
+                key = Unit.HEADING_E                
             if i == 5:
                 pos = Point3(x-delta, y-delta, height)
                 h = 135
-                key = _UNIT_HEADING_SW                
+                key = Unit.HEADING_SW                
             elif i == 6:
                 pos = Point3(x, y-delta, height)
                 h = 180
-                key = _UNIT_HEADING_S                
+                key = Unit.HEADING_S                
             elif i ==7:
                 pos = Point3(x+delta, y-delta, height)
                 h = 225               
-                key = _UNIT_HEADING_SE
+                key = Unit.HEADING_SE
             elif i == 8:
                 pos = Point3(x, y, height)
                 h = 0
-                key = _UNIT_HEADING_NONE
+                key = Unit.HEADING_NONE
             m.setPos(pos)
             m.setH(h)
             m.reparentTo(self.turn_np)
@@ -286,7 +278,7 @@ class Interface(DirectObject.DirectObject):
     def markTurnArrow(self, key):
         for i in self.turn_arrow_dict.itervalues():
             i.setColor(1,1,1)
-        if key == _UNIT_HEADING_NONE:
+        if key == Unit.HEADING_NONE:
             self.turn_arrow_dict[key].setColor(0,0,1)
         else:
             self.turn_arrow_dict[key].setColor(1,0,0)
@@ -478,25 +470,25 @@ class Interface(DirectObject.DirectObject):
         """Handles left mouse click actions when mouse button is depressed.
            Used for unit movement.
         """
-        if self.selected_unit and self.unit_move_destination and self.unit_move_orientation != _UNIT_HEADING_NONE:   
+        if self.selected_unit and self.unit_move_destination and self.unit_move_orientation != Unit.HEADING_NONE:   
             # Send movement message to engine
             x = self.unit_move_destination.getX()
             y = self.unit_move_destination.getY()
-            if self.unit_move_orientation == _UNIT_HEADING_NW:
+            if self.unit_move_orientation == Unit.HEADING_NW:
                 o = Point2(x-1, y+1)
-            elif self.unit_move_orientation == _UNIT_HEADING_N:
+            elif self.unit_move_orientation == Unit.HEADING_N:
                 o = Point2(x, y+1)
-            elif self.unit_move_orientation == _UNIT_HEADING_NE:
+            elif self.unit_move_orientation == Unit.HEADING_NE:
                 o = Point2(x+1, y+1)
-            elif self.unit_move_orientation == _UNIT_HEADING_W:
+            elif self.unit_move_orientation == Unit.HEADING_W:
                 o = Point2(x-1, y)
-            elif self.unit_move_orientation == _UNIT_HEADING_E:
+            elif self.unit_move_orientation == Unit.HEADING_E:
                 o = Point2(x+1, y)
-            elif self.unit_move_orientation == _UNIT_HEADING_SW:
+            elif self.unit_move_orientation == Unit.HEADING_SW:
                 o = Point2(x-1, y-1)
-            elif self.unit_move_orientation == _UNIT_HEADING_S:
+            elif self.unit_move_orientation == Unit.HEADING_S:
                 o = Point2(x, y-1)
-            elif self.unit_move_orientation == _UNIT_HEADING_SE:
+            elif self.unit_move_orientation == Unit.HEADING_SE:
                 o = Point2(x+1, y-1)
             self.ge.createMoveMsg(self.selected_unit, self.unit_move_destination, o)
         self.unit_move_destination = None
@@ -587,23 +579,23 @@ class Interface(DirectObject.DirectObject):
                         dest_node_pos = Point2(int(self.dummy_turn_dest_node.getX()), int(self.dummy_turn_dest_node.getY()))
                         pos_node_pos = Point2(int(self.dummy_turn_pos_node.getX()), int(self.dummy_turn_pos_node.getY()))
                         if dest_node_pos == pos_node_pos:
-                            key = _UNIT_HEADING_NONE
+                            key = Unit.HEADING_NONE
                         elif h >= -22.5 and h < 22.5:
-                            key = _UNIT_HEADING_N
+                            key = Unit.HEADING_N
                         elif h >= 22.5 and h < 67.5:
-                            key = _UNIT_HEADING_NW
+                            key = Unit.HEADING_NW
                         elif h >= 67.5 and h < 112.5:
-                            key = _UNIT_HEADING_W
+                            key = Unit.HEADING_W
                         elif h >= 112.5 and h < 157.5:
-                            key = _UNIT_HEADING_SW
+                            key = Unit.HEADING_SW
                         elif (h >= 157.5 and h <= 180) or (h >= -180 and h < -157.5):
-                            key = _UNIT_HEADING_S
+                            key = Unit.HEADING_S
                         elif h >= -157.5 and h < -112.5:
-                            key = _UNIT_HEADING_SE
+                            key = Unit.HEADING_SE
                         elif h >= -112.5 and h < -67.5:
-                            key = _UNIT_HEADING_E
+                            key = Unit.HEADING_E
                         elif h >= -67.5 and h < -22.5:
-                            key = _UNIT_HEADING_NE
+                            key = Unit.HEADING_NE
                         self.markTurnArrow(key)
         return task.cont
 

@@ -1,5 +1,5 @@
 import Engine
-
+from pandac.PandaModules import Point2#@UnresolvedImport
 
 class Level:
     
@@ -12,6 +12,7 @@ class Level:
         self.load(self.name)
         Engine.logger.info( "Level: %s loaded OK", self.name )        
 
+        self.center = Point2( self.maxX / 2, self.maxY / 2 )
 
     def load(self, name):
         line_count = 0

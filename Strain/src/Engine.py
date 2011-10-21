@@ -1,7 +1,7 @@
 from xml.dom import minidom
 from Unit import Unit
 from Level import Level
-from pandac.PandaModules import Point2, Point3, NodePath, Vec3 #@UnresolvedImport
+from pandac.PandaModules import Point2#@UnresolvedImport
 import math
 from Messaging import EngMsg, Msg
 from direct.stdpy import threading2 as threading
@@ -29,7 +29,46 @@ def signum( num ):
     elif( num >= 0 ):
         return 1
 
+_PI = math.pi
+_PI_2 = _PI / 2
+_3_PI_2 = 3 * _PI / 2
+_PI_4 = _PI / 4
+_3_PI_4 = 3 * _PI / 4 
+_5_PI_4 = 5 * _PI / 4
+_2_PI = 2 * _PI
+_PI_8 = _PI / 8
+_3_PI_8 = 3 * _PI / 8
+_5_PI_8 = 5 * _PI / 8
+_7_PI_8 = 7 * _PI / 8
 
+
+def getHeading( myPosition, lookAtPoint ):
+    
+    #trivial check if this is the same position, if it is, return none
+    if myPosition == lookAtPoint:
+        return Unit.HEADING_NONE
+    
+    angle = math.atan2( lookAtPoint.y - myPosition.y , lookAtPoint.x - myPosition.x )
+
+    if angle < -_7_PI_8:
+        return Unit.HEADING_W
+    elif angle < -_5_PI_8:
+        return Unit.HEADING_SW
+    elif angle < -_3_PI_8:
+        return Unit.HEADING_S
+    elif angle < -_PI_8:
+        return Unit.HEADING_SE
+    elif angle < _PI_8:
+        return Unit.HEADING_E
+    elif angle < _3_PI_8:
+        return Unit.HEADING_NE
+    elif angle < _5_PI_8:
+        return Unit.HEADING_N
+    elif angle < _7_PI_8:
+        return Unit.HEADING_NW
+    
+    return Unit.HEADING_W
+    
 
 
 class Player:
@@ -52,20 +91,29 @@ class Engine( Thread ):
     players = []
     units = {}
         
-
-      
+    __shared_state = {}
+    __instance = None
+          
     __index_uid = 0
 
 
     dynamics = { 'empty' : 0,
                  'unit' : 1 }
 
+    @staticmethod
+    def getInstance():
+        """Singleton implementation"""
+        if not Engine.__instance:
+            Engine.__instance = Engine()
+        return Engine.__instance
         
         
     #====================================init======================================0
     def __init__(self):
         logger.info("------------------------Engine Starting------------------------")
-        
+        self.__dict__ = self.__shared_state
+        Engine.__instance = self
+
         Thread.__init__(self)
         
 
@@ -76,7 +124,6 @@ class Engine( Thread ):
         
         self.name = "EngineThread"
 
-        
 
     def run(self):
 
@@ -92,7 +139,8 @@ class Engine( Thread ):
         self.turn = 0        
         self.beginTurn()
 
-        i = 0
+
+
         while( self.stop == False ):
             
             time.sleep( 0.1 )
@@ -198,6 +246,8 @@ class Engine( Thread ):
                                 unittype, 
                                 x,
                                 y )
+                
+                tmpUnit.heading = getHeading(tmpUnit.pos, self.level.center)
                 
                 player.unitlist.append( tmpUnit )
                 self.units[tmpUnit.id] = tmpUnit
@@ -632,10 +682,10 @@ class Engine( Thread ):
 
 
     
-    def _rotateUnit(self, unit, new_orientation ):
+    def _rotateUnit(self, unit, new_heading ):
         #TODO: KRAV: SREDIT OVO S ORJENTACIJOM
-        if unit.orientation != new_orientation:
-            unit.orientation = new_orientation
+        if unit.heading != new_heading:
+            unit.heading = new_heading
             return True
         return False
         
