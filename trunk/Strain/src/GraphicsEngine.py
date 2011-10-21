@@ -11,6 +11,7 @@ import sys
 import logging
 import cPickle as pickle
 from Messaging import ClientMsg, Msg
+from Unit import Unit
 
 #===============================================================================
 # Panda3D parameter file handling

@@ -1,7 +1,23 @@
-from pandac.PandaModules import Point2, Point3, NodePath, Vec3
+from pandac.PandaModules import Point2 #@UnresolvedImport
 from random import randint
 
+
+
+
+
 class Unit():
+    
+    
+    HEADING_NONE      = 0
+    HEADING_NW        = 1
+    HEADING_N         = 2
+    HEADING_NE        = 3
+    HEADING_W         = 4
+    HEADING_E         = 5
+    HEADING_SW        = 6
+    HEADING_S         = 7
+    HEADING_SE        = 8
+    
     
     def __init__(self, in_id, owner, in_type, x, y ):
         
@@ -12,8 +28,7 @@ class Unit():
         self.x = int(x)
         self.y = int(y)
         
-        #TODO: KRAV: da je okrenut prma centru mape
-        self.orientation = Point2(x+1,y)
+        self.heading = Unit.HEADING_N
         self.rotate_cost = 0
         
         self.losh_dict = {}
@@ -43,10 +58,10 @@ class Unit():
     def get_sound(self, action):
         if action == 'select':
             s = randint(1, 4)
-            return base.sound_manager.sounds['select'+self.soundtype+'0'+str(s)]
+            return base.sound_manager.sounds['select'+self.soundtype+'0'+str(s)] #@UndefinedVariable
         elif action == 'movend':
             s = randint(1, 3)
-            return base.sound_manager.sounds['movend'+self.soundtype+'0'+str(s)]
+            return base.sound_manager.sounds['movend'+self.soundtype+'0'+str(s)] #@UndefinedVariable
                 
     def talk(self, action):
         self.get_sound(action).play()
