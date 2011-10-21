@@ -7,11 +7,10 @@ from direct.interval.IntervalGlobal import Sequence, ActorInterval, Parallel, Fu
 from Camera import Camera
 from Interface import Interface
 from UnitModel import UnitModel
-from Messaging import Messaging, ClientMsg, Msg
 import sys
 import logging
-import Queue
 import cPickle as pickle
+from Messaging import ClientMsg, Msg
 
 #===============================================================================
 # Panda3D parameter file handling
@@ -216,7 +215,8 @@ class GraphicsEngine(ShowBase):
         if self.interface.selected_unit:
             self.interface.deselectUnit()
         else:
-            ClientMsg.shutdownEngine()            
+            ClientMsg.shutdownEngine()          
+            ClientMsg.close()  
             sys.exit()
 
     def setInterfaceEnable(self):
@@ -335,13 +335,9 @@ class GraphicsEngine(ShowBase):
 
     def msgTask(self, task):
         """Task that listens for messages on client queue."""
-        if Messaging.client_queue.empty() == False:
-            try:
-                msg = Messaging.client_queue.get_nowait()
-                self.handleMsg(msg)
-            except Queue.Empty:
-                #it doesn't matter if the queue is empty
-                pass        
+        msg = ClientMsg.readMsg()        
+        if msg:
+            self.handleMsg(msg)            
         return task.cont
     
     def animTask(self, task):
