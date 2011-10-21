@@ -3,7 +3,7 @@ from Unit import Unit
 from Level import Level
 from pandac.PandaModules import Point2, Point3, NodePath, Vec3
 import math
-from Messaging import *
+from Messaging import EngMsg, Msg
 from threading import Thread
 #from direct.stdpy.threading2 import Thread
 import time
@@ -91,8 +91,6 @@ class Engine( Thread ):
         self.turn = 0        
         self.beginTurn()
 
-        time.sleep( 1 )
-        
         i = 0
         while( self.stop == False ):
             
