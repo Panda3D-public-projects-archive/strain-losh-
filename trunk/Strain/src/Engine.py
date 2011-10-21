@@ -96,7 +96,7 @@ class Engine( Thread ):
           
     __index_uid = 0
 
-
+    #TODO: krav: maknut ovo i stavit konstante
     dynamics = { 'empty' : 0,
                  'unit' : 1 }
 
@@ -682,15 +682,15 @@ class Engine( Thread ):
 
 
     
-    def _rotateUnit(self, unit, new_heading ):
-        #TODO: KRAV: SREDIT OVO S ORJENTACIJOM
-        if unit.heading != new_heading:
-            unit.heading = new_heading
+    def _rotateUnit(self, unit, look_at_tile ):
+        tmp_heading = getHeading(unit.pos, look_at_tile)
+        if unit.heading != tmp_heading:
+            unit.heading = tmp_heading
             return True
         return False
         
         
-    def moveUnit(self, unit_id, new_position, new_orientation ):
+    def moveUnit(self, unit_id, new_position, new_heading ):
         
         if( unit_id in self.units ) == False:
             logger.critical( "Got wrong unit id:%s", unit_id )
@@ -705,8 +705,8 @@ class Engine( Thread ):
         if unit.pos == new_position:
             
             #see if we actually need to rotate the unit
-            if self._rotateUnit( unit, new_orientation ):
-                move_actions.append( ('rotate', new_orientation) )
+            if self._rotateUnit( unit, new_heading ):
+                move_actions.append( ('rotate', new_heading) )
             #if not, than do nothing
             else:
                 return
@@ -732,8 +732,8 @@ class Engine( Thread ):
                 
                 #if this is the last tile than apply last orientation change
                 if( tile == path[-1][0] ):
-                    if self._rotateUnit(unit, new_orientation):
-                        move_actions.append( ('rotate', new_orientation) )
+                    if self._rotateUnit(unit, new_heading):
+                        move_actions.append( ('rotate', new_heading) )
                     
                     
         #we moved a unit so update its move_dict and losh_dict
