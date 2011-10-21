@@ -300,6 +300,7 @@ class GraphicsEngine(ShowBase):
                         )
         move.start()
 
+    # TODO: ogs: maknuti ove pozive i zvati direktno messaging.py
     def createMoveMsg(self, unit, pos, orientation):
         ClientMsg.move(int(unit.id), pos, orientation)
         
