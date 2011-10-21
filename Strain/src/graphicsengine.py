@@ -103,7 +103,7 @@ class GraphicsEngine(ShowBase):
         self.initAltBuffer()
         self.initCollision()  
         # Initialize custom app camera implementation
-        self.app_camera = Camera(self.camera, self.mouseWatcherNode, self.level.maxX, self.level.maxY) 
+        self.app_camera = Camera(self.camera, self.mouseWatcherNode, self.level.maxX, self.level.maxY, self.taskMgr) 
         # Initialize graphical user interface elements
         self.interface = Interface(self)  
         
@@ -211,7 +211,6 @@ class GraphicsEngine(ShowBase):
         print self.render.analyze()
         
     def destroy(self):
-        # TODO: ogs: Nekad se na izlazu javlja:debug('feeder thread got sentinel -- exiting') - vjerovatno vezano uz threading, provjeriti
         if self.interface.selected_unit:
             self.interface.deselectUnit()
         else:
@@ -253,15 +252,15 @@ class GraphicsEngine(ShowBase):
         else:
             end_pos = Point2(int(unit.model.getX()), int(unit.model.getY()))
         for idx, action in enumerate(action_list):
-            type = action[0]
+            #action_type = action[0]
+            dest_pos = Point3(action[1].getX() + 0.5, action[1].getY() + 0.5, 0.3)
+            dest_h = 0
             if idx == 0:
                 curr_pos = start_pos
                 curr_h = unit.model.getH()
             else:
                 curr_pos = dest_pos
                 curr_h = dest_h
-                
-            dest_pos = Point3(action[1].getX() + 0.5, action[1].getY() + 0.5, 0.3)
             if type == "move":
                 unit.dummy_node.setPos(curr_pos)
                 unit.dest_node.setPos(dest_pos)
@@ -343,7 +342,7 @@ class GraphicsEngine(ShowBase):
     
     def animTask(self, task):
         """Task to animate draw units while they are idling."""
-        dt = globalClock.getDt()
+        dt = self.globalClock.getDt()
         for unit in self.unit_np_dict.itervalues():
             unit.passtime += dt
 

@@ -7,7 +7,7 @@ import math
 #===============================================================================
 class Camera(DirectObject.DirectObject):    
     
-    def __init__(self, camera, mwn, maxX, maxY):
+    def __init__(self, camera, mwn, maxX, maxY, taskMgr):
         self.camera = camera
         self.mwn = mwn
         

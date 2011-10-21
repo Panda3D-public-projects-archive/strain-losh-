@@ -6,6 +6,7 @@ Created on 4.10.2011.
 import sys
 import cPickle as pickle
 from pandac.PandaModules import *
+# TODO: krav (by ogs): Daj sredi ovaj wild import
 from direct.distributed.PyDatagram import PyDatagram
 from direct.distributed.PyDatagramIterator import PyDatagramIterator
 import engine as Engine
@@ -185,8 +186,7 @@ class ClientMsg:
         """Return the message, if any, or None if there was nothing to read"""
         if not ClientMsg.myConnection:        
             ClientMsg.connect()
-        
-        if ClientMsg.cReader.dataAvailable():            
+        if ClientMsg.cReader.dataAvailable():
             datagram = PyDatagram()                          
             if ClientMsg.cReader.getData(datagram):
                 dgi = PyDatagramIterator(datagram)                
@@ -196,7 +196,6 @@ class ClientMsg:
                 Engine.logger.info("Client received a message:%s", msg.type)
                                 
                 return msg
-          
         return None    
     
     @staticmethod

@@ -48,20 +48,20 @@ class UnitModel:
             t = loader.loadTexture("terminator2.tga")
             self.model.setTexture(t, 1)
 
-    def load(self, type):
-        if type == 'terminator':
+    def load(self, unit_type):
+        if unit_type == 'terminator':
             model = Actor('terminator', {'run': 'terminator-run'
                                         ,'idle01': 'terminator-run'
                                         })
             self.anim_count_dict['run'] = 1
             self.anim_count_dict['idle'] = 1
-        elif type == 'marine_b':
+        elif unit_type == 'marine_b':
             model = Actor('marine_b',   {'run': 'marine-run'
                                         ,'idle01': 'marine-fire'
                                         })
             self.anim_count_dict['run'] = 1
             self.anim_count_dict['idle'] = 1
-        elif type == 'commissar':
+        elif unit_type == 'commissar':
             model = Actor('commissar', {'run': 'commissar-run'
                                        ,'idle01': 'commissar-idle1'
                                        ,'idle02': 'commissar-idle2'
