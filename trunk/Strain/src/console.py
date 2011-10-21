@@ -1,12 +1,13 @@
 from direct.showbase import DirectObject
 from direct.gui.DirectGui import DirectFrame, DirectEntry, DGG
 from direct.gui.OnscreenText import OnscreenText
+from panda3d.core import Point3#@UnresolvedImport
 from pandac.PandaModules import TextNode#@UnresolvedImport
 import textwrap, re, string
 
 class GuiConsole(DirectObject.DirectObject):
     
-    def __init__(self, parent, h_size, v_size, aspect):
+    def __init__(self, parent, h_size, v_size, aspect, ge):
         self.h_size = h_size
         self.v_size = v_size
         self.scale = 0.04
@@ -27,13 +28,13 @@ class GuiConsole(DirectObject.DirectObject):
                                          , scale = self.scale
                                          , frameSize = (0, self.h_size / self.scale, 0, self.v_size / self.scale) )
         
-        if parent == base.a2dBottomLeft:
+        if parent == ge.a2dBottomLeft:
             self.pos_min_x -= 1
             self.pos_min_y -= 1
             self.pos_max_x -= 1 
             self.pos_max_y -= 1
       
-        fixedWidthFont = loader.loadFont("etc/monoMMM_5.ttf")
+        fixedWidthFont = ge.loader.loadFont("etc/monoMMM_5.ttf")
         if not fixedWidthFont.isValid():
             print "pandaInteractiveConsole.py :: could not load the defined font %s" % str(self.font)
             fixedWidthFont = DGG.getDefaultFont()
@@ -82,7 +83,7 @@ class GuiConsole(DirectObject.DirectObject):
                               , scale=1.0
                               , fg = (100,100,100,1)
                               , shadow = (0, 0, 0, 1))
-                              #, frame = (200,0,0,1) )
+                            # , frame = (200,0,0,1) )
             label.setFont( fixedWidthFont )
             self.consoleOutputList.append( label )        
         
