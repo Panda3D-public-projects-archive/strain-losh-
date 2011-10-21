@@ -1,11 +1,11 @@
 from xml.dom import minidom
 from Unit import Unit
 from Level import Level
-from pandac.PandaModules import Point2, Point3, NodePath, Vec3
+from pandac.PandaModules import Point2, Point3, NodePath, Vec3 #@UnresolvedImport
 import math
 from Messaging import EngMsg, Msg
+from direct.stdpy import threading2 as threading
 from threading import Thread
-#from direct.stdpy.threading2 import Thread
 import time
 import logging
 import sys, traceback
@@ -73,8 +73,9 @@ class Engine( Thread ):
         self.level = None 
         self.dynamic_obstacles = []
         self.turn = 0        
+        
+        self.name = "EngineThread"
 
-        #TODO: krav: stavit engine thread ime
         
 
     def run(self):
