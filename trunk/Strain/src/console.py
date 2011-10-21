@@ -1,7 +1,7 @@
 from direct.showbase import DirectObject
 from direct.gui.DirectGui import DirectFrame, DirectEntry, DGG
 from direct.gui.OnscreenText import OnscreenText
-from pandac.PandaModules import TextNode
+from pandac.PandaModules import TextNode#@UnresolvedImport
 import textwrap, re, string
 
 class GuiConsole(DirectObject.DirectObject):

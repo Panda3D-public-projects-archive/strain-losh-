@@ -1,5 +1,5 @@
 from direct.actor.Actor import Actor
-from panda3d.core import Point4, Point3, Point2, NodePath
+from panda3d.core import Point4, Point3, NodePath#@UnresolvedImport
 import random
 
 #===============================================================================
@@ -75,9 +75,9 @@ class UnitModel:
     def setIdleTime(self):
         self.idletime = random.randint(10, 20)
     
-    def getAnimName(self, type):
-        num = random.randint(1, self.anim_count_dict[type])
-        return type + str(num).zfill(2)    
+    def getAnimName(self, anim_type):
+        num = random.randint(1, self.anim_count_dict[anim_type])
+        return anim_type + str(num).zfill(2)    
     
     def calcWorldPos(self, x, y):
         return Point3(x + 0.5, y + 0.5, 0.3)

@@ -1,5 +1,5 @@
 from direct.showbase import DirectObject
-from panda3d.core import Point2, Vec3
+from panda3d.core import Point2, Vec3#@UnresolvedImport
 import math
 
 #===============================================================================

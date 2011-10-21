@@ -1,4 +1,4 @@
-import Engine
+import engine as Engine
 from pandac.PandaModules import Point2#@UnresolvedImport
 
 class Level:

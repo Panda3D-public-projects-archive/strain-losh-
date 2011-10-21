@@ -1,17 +1,16 @@
 from direct.showbase.ShowBase import ShowBase
-from panda3d.core import loadPrcFileData
-from panda3d.core import NodePath, Point2, Point3, CardMaker, VBase4, Vec3, GeomNode
-from panda3d.core import ShadeModelAttrib, DirectionalLight, AmbientLight, TransparencyAttrib
-from pandac.PandaModules import CollisionTraverser, CollisionHandlerQueue, CollisionNode, CollisionRay
+from panda3d.core import loadPrcFileData#@UnresolvedImport
+from panda3d.core import NodePath, Point2, Point3, VBase4, GeomNode#@UnresolvedImport
+from panda3d.core import ShadeModelAttrib, DirectionalLight, AmbientLight#@UnresolvedImport
+from pandac.PandaModules import CollisionTraverser, CollisionHandlerQueue, CollisionNode, CollisionRay#@UnresolvedImport
 from direct.interval.IntervalGlobal import Sequence, ActorInterval, Parallel, Func
-from Camera import Camera
-from Interface import Interface
-from UnitModel import UnitModel
+from camera import Camera
+from interface import Interface
+from unitmodel import UnitModel
 import sys
 import logging
 import cPickle as pickle
-from Messaging import ClientMsg, Msg
-from Unit import Unit
+from messaging import ClientMsg, Msg
 
 #===============================================================================
 # Panda3D parameter file handling
