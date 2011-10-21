@@ -342,7 +342,7 @@ class GraphicsEngine(ShowBase):
     
     def animTask(self, task):
         """Task to animate draw units while they are idling."""
-        dt = self.globalClock.getDt()
+        dt = globalClock.getDt()#@UndefinedVariable
         for unit in self.unit_np_dict.itervalues():
             unit.passtime += dt
 
