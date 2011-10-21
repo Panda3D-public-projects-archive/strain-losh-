@@ -3,14 +3,13 @@ from Unit import Unit
 from Level import Level
 from pandac.PandaModules import Point2, Point3, NodePath, Vec3
 import math
-from Messaging import EngMsg, Messaging, ClientMsg, Msg
+from Messaging import *
 from threading import Thread
+#from direct.stdpy.threading2 import Thread
 import time
 import logging
-import cPickle as pickle
 import sys, traceback
-import Queue
-
+import cPickle as pickle
 
 
 #=============================SET UP LOGGING===================================
@@ -65,93 +64,60 @@ class Engine( Thread ):
         
     #====================================init======================================0
     def __init__(self):
+        logger.info("------------------------Engine Starting------------------------")
+        
         Thread.__init__(self)
         
-        logger.info("------------------------Engine Starting------------------------")
 
         self.stop = False
         self.level = None 
         self.dynamic_obstacles = []
         self.turn = 0        
-        
+
+        #TODO: krav: stavit engine thread ime
         
 
     def run(self):
 
+        EngMsg.startServer()
+        
         self.level = Level( "level2.txt" )
 
         #we make this so its size is the same as level 
         self.dynamic_obstacles = [[(0,0)] * self.level.maxY for i in xrange(self.level.maxX)]
-
+        
         self.loadArmyList()
 
-        self.turn = 0
-        
+        self.turn = 0        
         self.beginTurn()
 
+        time.sleep( 1 )
         
         i = 0
         while( self.stop == False ):
             
-            i+=1
             time.sleep( 0.1 )
-            #print(i)
 
-        #=======================================================================
-        # 
-        #    if( i == 20 ):
-        #        print("saljem move msg")
-        #        ClientMsg.move(1, Point2(2,0), Point2(1,0))
-        #        
-        #    if( i == 100 ):
-        #        print("saljem shutdown")
-        #        ClientMsg.shutdownEngine()
-        #        
-        #    if( i == 40 ):
-        #        print("saljem get level")
-        #        ClientMsg.getLevel()
-        #        
-        #    if( i == 60 ):
-        #        print("saljem get engine_state")
-        #        ClientMsg.getEngineState()
-        #        
-        # 
-        # 
-        #    #if there is nothing in queue just skip
-        #    if( Messaging.client_queue.empty() == False ):
-        #        print "doso mesidj:", Messaging.client_queue.get_nowait()
-        #        
-        #=======================================================================
+            #see if there is a new client connected
+            EngMsg.listenForConnections()
 
-
-        
-            #if there is nothing in queue just skip
-            if( Messaging.engine_queue.empty() == False):
-                try:
-                    msg = Messaging.engine_queue.get_nowait()
-                    self.handleMsg( msg )
-                except Queue.Empty:
-                    #it doesn't matter if the queue is empty
-                    continue
-            
+            #get a mesasge if there is one
+            msg = EngMsg.readMsg()
+            if msg:
+                self.handleMsg( msg )
         
         
         #we are shutting down everything   
-        Messaging.client_queue.close()
-        Messaging.engine_queue.close()
-        
+        EngMsg.close()
+       
         
         logger.info( "++++++++++++++++++++++++Engine stopped!++++++++++++++++++++++++" )
-
 
         return 0
 
 
     def handleMsg(self, msg):
-        """This method is the main method for handling incoming messages to the Engine"""
-        
-        logger.info("Received message: %s", msg )
-        
+        """This method is the main method for handling incoming messages to the Engine"""     
                 
         if( msg.type == Msg.ENGINE_SHUTDOWN ):
             self.stop = True
