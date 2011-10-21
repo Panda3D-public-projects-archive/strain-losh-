@@ -555,7 +555,7 @@ class Interface(DirectObject.DirectObject):
     def turnUnit(self, task):
         if self.unit_move_destination: 
             if self.move_timer < 0.1:
-                dt = globalClock.getDt()
+                dt = self.ge.globalClock.getDt()
                 self.move_timer += dt
                 if self.move_timer > 0.1:
                     self.loadTurnArrows(self.unit_move_destination)
@@ -632,7 +632,7 @@ class GuiCard:
         self.back_node = self.node.attachNewNode(cm.generate())
         self.back_node.setPos(0, 0, 0)
         self.back_node.setTransparency(1)
-        self.node.reparentTo(aspect2d)
+        self.node.reparentTo(aspect2d)#@UndefinedVariable
         self.redraw()
     
     def setTexture(self, tex):
@@ -640,10 +640,10 @@ class GuiCard:
     
     def redraw(self):
         if self.hugpos == "topleft":
-            p = base.a2dTopLeft.getPos()
+            p = base.a2dTopLeft.getPos()#@UndefinedVariable
             p.setZ(p.getZ() - self.height)
         elif self.hugpos == "topright":
-            p = base.a2dTopRight.getPos()
+            p = base.a2dTopRight.getPos()#@UndefinedVariable
             p.setZ(p.getZ() - self.height)
         elif self.hugpos == None:
             p = self.pos
@@ -658,21 +658,21 @@ class GuiCard:
 #===============================================================================
 class GuiButton:
     def __init__(self, hugpos, offset, aspect, plane, name):
-        self.node = aspect2d.attachNewNode("guibutton")
+        self.node = aspect2d.attachNewNode("guibutton")#@UndefinedVariable
         self.node.setTransparency(TransparencyAttrib.MAlpha)
         self.node.setAlphaScale(0.5) 
         geom = GeomNode('plane')
         geom.addGeomsFrom(plane.getChild(0).getChild(0).node())
         self.frame = self.node.attachNewNode(geom) 
         self.frame.setScale(0.05)
-        self.node.setTexture(loader.loadTexture(name+".png"))
+        self.node.setTexture(loader.loadTexture(name+".png"))#@UndefinedVariable
         self.hugpos = hugpos
         self.offset = offset
         self.redraw(aspect)
 
     def redraw(self, aspect, flag="wide"):
         if self.hugpos == "topleft":
-            p = base.a2dTopLeft.getPos()
+            p = base.a2dTopLeft.getPos()#@UndefinedVariable
             p.setX(p.getX() + self.offset.getX())
             p.setZ(p.getZ() - 0.05)
         self.frame.setPos(p)
@@ -700,11 +700,11 @@ class GuiTextFrame:
                                   , scale = 1
                                   , frameSize = (0, h_size, 0, -v_size) )
         
-        self.frame.reparentTo(base.a2dTopLeft)
+        self.frame.reparentTo(base.a2dTopLeft)#@UndefinedVariable
         self.offset = offset
         self.frame.setPos(self.offset.getX(), 0, self.offset.getZ())
 
-        fixedWidthFont = loader.loadFont("etc/monoMMM_5.ttf")
+        fixedWidthFont = loader.loadFont("etc/monoMMM_5.ttf")#@UndefinedVariable
         if not fixedWidthFont.isValid():
             print "pandaInteractiveConsole.py :: could not load the defined font %s" % str(self.font)
             fixedWidthFont = DGG.getDefaultFont()
@@ -721,7 +721,7 @@ class GuiTextFrame:
                               , scale=0.05
                               , fg = (100,100,100,1)
                               , shadow = (0, 0, 0, 1))
-                              #, frame = (200,0,0,1) )
+                            # , frame = (200,0,0,1) )
             label.setFont( fixedWidthFont )
             self.frameOutputList.append( label )
 
@@ -731,7 +731,7 @@ class GuiTextFrame:
         self.frameOutputList[lineNumber - 1].setText(text)
         
     def redraw(self):
-        p = base.a2dTopLeft.getPos()
+        p = base.a2dTopLeft.getPos()#@UndefinedVariable
         p.setX(p.getX() + self.offset.getX())
         p.setZ(p.getZ() - 0.05)
         self.frame.setPos(p)
