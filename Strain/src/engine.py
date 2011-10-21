@@ -1,9 +1,9 @@
 from xml.dom import minidom
-from Unit import Unit
-from Level import Level
+from unit import Unit
+from level import Level
 from pandac.PandaModules import Point2#@UnresolvedImport
 import math
-from Messaging import EngMsg, Msg
+from messaging import EngMsg, Msg
 from threading import Thread
 import time
 import logging

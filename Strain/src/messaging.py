@@ -3,14 +3,12 @@ Created on 4.10.2011.
 
 @author: krav
 '''
-import Engine
 import sys
 import cPickle as pickle
 from pandac.PandaModules import *
 from direct.distributed.PyDatagram import PyDatagram
 from direct.distributed.PyDatagramIterator import PyDatagramIterator
-#import GraphicsEngine
-#from GraphicsEngine import GraphicsEngine
+import engine as Engine
 
 
 IP_ADDRESS = 'localhost'

@@ -1,5 +1,5 @@
-from Engine import Engine
-from GraphicsEngine import GraphicsEngine
+from engine import Engine
+from graphicsengine import GraphicsEngine
         
 class App():
     def __init__(self):

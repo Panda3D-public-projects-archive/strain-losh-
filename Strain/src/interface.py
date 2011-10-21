@@ -1,16 +1,12 @@
 from direct.showbase import DirectObject
+from panda3d.core import Plane, Vec4, Vec3, Point4, Point3, Point2, NodePath#@UnresolvedImport
+from pandac.PandaModules import GeomNode, CardMaker, TextNode#@UnresolvedImport
+from pandac.PandaModules import TextureStage, TransparencyAttrib#@UnresolvedImport
+from direct.gui.DirectGui import DirectFrame, DGG
 from direct.gui.OnscreenText import OnscreenText
-from panda3d.core import Plane, Vec4, Vec3, Vec2, Point4, Point3, Point2, NodePath
-from pandac.PandaModules import CollisionTraverser, CollisionHandlerQueue, CollisionNode, CollisionRay
-from pandac.PandaModules import GeomNode, CardMaker, TextNode
-from pandac.PandaModules import Texture, TextureStage, RenderAttrib, DepthOffsetAttrib, TransparencyAttrib
-from UnitModel import UnitModel
-from Console import GuiConsole
-
-from direct.gui.DirectGui import DirectFrame, DirectEntry, DGG
-from direct.gui.OnscreenText import OnscreenText
-from pandac.PandaModules import TextNode
-from Unit import Unit
+from unit import Unit
+from unitmodel import UnitModel
+from console import GuiConsole
 
 #===============================================================================
 # GLOBAL DEFINITIONS
