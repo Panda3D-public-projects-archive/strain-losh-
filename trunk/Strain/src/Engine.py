@@ -4,7 +4,6 @@ from Level import Level
 from pandac.PandaModules import Point2#@UnresolvedImport
 import math
 from Messaging import EngMsg, Msg
-from direct.stdpy import threading2 as threading
 from threading import Thread
 import time
 import logging
