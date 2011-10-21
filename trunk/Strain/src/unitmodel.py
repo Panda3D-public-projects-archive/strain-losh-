@@ -45,7 +45,7 @@ class UnitModel:
         self.setIdleTime()
         
         if unit.type=="terminator":
-            t = loader.loadTexture("terminator2.tga")
+            t = loader.loadTexture("terminator2.tga")#@UndefinedVariable
             self.model.setTexture(t, 1)
 
     def load(self, unit_type):

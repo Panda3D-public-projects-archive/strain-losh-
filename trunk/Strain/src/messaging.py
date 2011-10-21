@@ -173,7 +173,7 @@ class ClientMsg:
         ClientMsg.tcpSocket = ClientMsg.cManager.openTCPServerRendezvous(TCP_PORT, backlog)
         ClientMsg.cListener.addConnection(ClientMsg.tcpSocket)
         
-         # how long until we give up trying to reach the server?
+        # how long until we give up trying to reach the server?
         timeout_in_miliseconds = 3000  # 3 seconds               
         ClientMsg.myConnection = ClientMsg.cManager.openTCPClientConnection(IP_ADDRESS, TCP_PORT, timeout_in_miliseconds)
         
