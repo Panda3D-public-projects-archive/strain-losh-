@@ -125,7 +125,7 @@ class Engine( Thread ):
 
 
     def run(self):
-
+        print "poceo engine"
         EngMsg.startServer()
         
         self.level = Level( "level2.txt" )
@@ -158,6 +158,7 @@ class Engine( Thread ):
        
         
         logger.info( "++++++++++++++++++++++++Engine stopped!++++++++++++++++++++++++" )
+        print "++++++++++++++++++++++++Engine stopped!++++++++++++++++++++++++" 
 
         return 0
 
