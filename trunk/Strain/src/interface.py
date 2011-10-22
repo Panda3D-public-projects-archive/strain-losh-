@@ -555,7 +555,7 @@ class Interface(DirectObject.DirectObject):
     def turnUnit(self, task):
         if self.unit_move_destination: 
             if self.move_timer < 0.1:
-                dt = self.ge.globalClock.getDt()
+                dt = globalClock.getDt()
                 self.move_timer += dt
                 if self.move_timer > 0.1:
                     self.loadTurnArrows(self.unit_move_destination)
