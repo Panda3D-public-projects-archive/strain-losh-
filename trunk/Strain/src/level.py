@@ -8,9 +8,9 @@ class Level:
         self.maxX = self.maxY = 0
         self._level_data = []    
         
-        Engine.logger.debug( "Level loading: %s", self.name )        
+        Engine.notify.debug( "Level loading: %s", self.name )        
         self.load(self.name)
-        Engine.logger.info( "Level: %s loaded OK", self.name )        
+        Engine.notify.info( "Level: %s loaded OK", self.name )        
 
         self.center = Point2( self.maxX / 2, self.maxY / 2 )
 

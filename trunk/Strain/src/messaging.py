@@ -84,7 +84,7 @@ class EngMsg:
     def close():
         for client in EngMsg.activeConnections:
             EngMsg.cManager.closeConnection(client)
-            Engine.logger.info("Closing connection with:%s", client.getAddress())
+            Engine.notify.info("Closing connection with:%s", client.getAddress())
     
     @staticmethod
     def handleConnections():
@@ -101,14 +101,14 @@ class EngMsg:
                 newConnection.setNoDelay(1)
                 EngMsg.activeConnections.append( ( newConnection, newConnection.getAddress() ) ) # Remember connection
                 EngMsg.cReader.addConnection(newConnection)     # Begin reading connection        
-                Engine.logger.info("Client connected:%s::%s,", netAddress, newConnection.getAddress())
-                print "Client connected:", newConnection.getAddress()
+                Engine.notify.info("Client connected:%s", netAddress )
+
                    
         #check for diconnects
         for connection, address in EngMsg.activeConnections[:]:   
             if not connection.getSocket().Active():
                 print "Client disconnected:", address
-                Engine.logger.info("Client diconnected:%s", address)
+                Engine.notify.info("Client diconnected:%s", address)
                 EngMsg.cListener.removeConnection( connection )
                 EngMsg.cReader.removeConnection( connection )
                 EngMsg.cManager.closeConnection( connection )
@@ -122,19 +122,27 @@ class EngMsg:
             myPyDatagram = PyDatagram()
             myPyDatagram.addString(pickle.dumps(msg))
             if EngMsg.cWriter.send(myPyDatagram, client):
-                Engine.logger.debug("Sent client message:%s", msg )
+                Engine.notify.debug( "Sent client:%s\tmessage:%s" , address, msg )
         
     
     @staticmethod
     def readMsg():
         """Return the message, if any, or None if there was nothing to read"""
         if EngMsg.cReader.dataAvailable():
-            datagram = PyDatagram()
+            datagram = NetDatagram() #@UndefinedVariable
             if EngMsg.cReader.getData(datagram):
                 dgi = PyDatagramIterator(datagram)
                 msg = pickle.loads(dgi.getString())
-                Engine.logger.info("Engine received a message:%s", msg)
-                print "Engine received a message:", msg
+                  
+                #print datagram.getConnection()
+                #for c, a in EngMsg.activeConnections:
+                #    print c
+                #    if datagram.getConnection() == c:
+                #        print "isto je"
+                
+                
+                Engine.notify.info("Engine received a message:%s, from:%s", msg, str(datagram.getConnection().getAddress()))
+                #return (msg, datagram.getConnection() )
                 return msg
           
         return None
@@ -144,12 +152,10 @@ class EngMsg:
         try:
             EngMsg.broadcastMsg(msg)
         except:
-            Engine.logger.critical("Could not send message to clients, reason :%s", sys.exc_info()[1])
-            print "Could not send message to clients, reason :%s", sys.exc_info()[1]
+            Engine.notify.critical("Could not send message to clients, reason :%s", sys.exc_info()[1])
             return
         
-        Engine.logger.info("Engine posted a message: %s" % msg )
-        print "Engine posted a message: %s" % msg
+        Engine.notify.info("Engine posted a message: %s" , msg )
     
     @staticmethod
     def move(unit_id, move_actions):
@@ -224,8 +230,7 @@ class ClientMsg:
                 dgi = PyDatagramIterator(datagram)                
                 msg = pickle.loads(dgi.getString())                
                 #TODO: ogs: sredit da ti ovdje pise u GraphicsEngine, nemres stavit import jer je onda ciklicki povezano
-                #GraphicsEngine.logger.info("Client received a message:", msg)
-                Engine.logger.info("Client received a message:%s", msg.type)
+                Engine.notify.info("Client received a message:%s", msg)
                                 
                 return msg
         return None    
@@ -256,7 +261,7 @@ class ClientMsg:
                  
         #TODO: ogs: sredit da ti ovdje pise u GraphicsEngine, nemres stavit import jer je onda ciklicki povezano
         #GraphicsEngine.logger.debug("Client posted a message: %s", msg)
-        Engine.logger.debug("Client posted a message: %s", msg)
+        Engine.notify.debug("Client posted a message: %s", msg)
 
     
     @staticmethod

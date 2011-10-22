@@ -11,16 +11,32 @@ import sys, traceback
 import cPickle as pickle
 
 
-#=============================SET UP LOGGING===================================
-logger = logging.getLogger('EngineLog')
-hdlr = logging.FileHandler('Engine.log')
-formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
-hdlr.setFormatter(formatter)
-logger.addHandler(hdlr) 
-logger.setLevel(logging.DEBUG)
+class Notify():
+    
+    def __init__(self):
+        #=============================SET UP LOGGING===================================
+        self.logger = logging.getLogger('EngineLog')
+        self.hdlr = logging.FileHandler('Engine.log')
+        self.formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+        self.hdlr.setFormatter(self.formatter)
+        self.logger.addHandler(self.hdlr) 
+        self.logger.setLevel(logging.DEBUG)
+        
 
+    def critical(self,msg, *args):
+        self.error(msg, *args)        
+    def debug(self, msg,*args ):
+        self.error(msg,*args)
+        
+    def info(self, msg,*args ):
+        self.error(msg,*args)
+            
+    def error(self, msg,*args ):
+        self.logger.critical(msg, *args)
+        print msg%args
+    
 
-
+notify = Notify()
 
 def signum( num ):
     if( num < 0 ): 
@@ -109,7 +125,7 @@ class Engine( Thread ):
         
     #====================================init======================================0
     def __init__(self):
-        logger.info("------------------------Engine Starting------------------------")
+        notify.info("------------------------Engine Starting------------------------")
         self.__dict__ = self.__shared_state
         Engine.__instance = self
 
@@ -157,7 +173,7 @@ class Engine( Thread ):
         EngMsg.close()
        
         
-        logger.info( "++++++++++++++++++++++++Engine stopped!++++++++++++++++++++++++" )
+        notify.info( "++++++++++++++++++++++++Engine stopped!++++++++++++++++++++++++" )
         print "++++++++++++++++++++++++Engine stopped!++++++++++++++++++++++++" 
 
         return 0
@@ -182,7 +198,7 @@ class Engine( Thread ):
             self.endTurn()
                         
         else:
-            logger.error( "Unknown message Type: %s", msg )
+            notify.error( "Unknown message Type: %s", msg )
         
         
         
@@ -210,7 +226,7 @@ class Engine( Thread ):
         
     def loadArmyList(self):
         
-        logger.debug( "Army lists loading" )
+        notify.debug( "Army lists loading" )
         
         xmldoc = minidom.parse('etc/armylist.xml')
         #print xmldoc.firstChild.toxml()
@@ -258,7 +274,7 @@ class Engine( Thread ):
     
         xmldoc.unlink()   
 
-        logger.info( "Army lists loaded OK" )
+        notify.info( "Army lists loaded OK" )
 
 
     def endTurn(self):
@@ -548,7 +564,7 @@ class Engine( Thread ):
               
         if( (dx != 1 and dx != 0 and dx != -1) and 
             (dy != 1 and dy != 0 and dy != -1) ):
-            logger.critical( "Exception: %s... %s", sys.exc_info()[1], traceback.extract_stack() )
+            notify.critical( "Exception: %s... %s", sys.exc_info()[1], traceback.extract_stack() )
             raise Exception( "Invalid dx (%d) or dy (%d)" %(dy ,dy) )
         
         ptx = int( position.x )
@@ -610,7 +626,7 @@ class Engine( Thread ):
         #if target_tile tile is not in the move list, then raise alarm
         if (target_tile in moveDict) == False:
             print "getPath() got an invalid target_tile"
-            logger.critical("getPath() got an invalid target tile:%s", target_tile )
+            notify.critical("getPath() got an invalid target tile:%s", target_tile )
             raise Exception( "Trying to move to an invalid target_tile:%s", target_tile )
             
         
@@ -693,7 +709,7 @@ class Engine( Thread ):
     def moveUnit(self, unit_id, new_position, new_heading ):
         
         if( unit_id in self.units ) == False:
-            logger.critical( "Got wrong unit id:%s", unit_id )
+            notify.critical( "Got wrong unit id:%s", unit_id )
             EngMsg.sendErrorMsg( "Wrong unit id." )
             return
 
@@ -716,7 +732,7 @@ class Engine( Thread ):
             try:
                 path = self.getPath( unit, new_position )
             except Exception:
-                logger.critical( sys.exc_info()[1] )
+                notify.critical( sys.exc_info()[1] )
                 EngMsg.sendErrorMsg( sys.exc_info()[1] )
                 return   
             
