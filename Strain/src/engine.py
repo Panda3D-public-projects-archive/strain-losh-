@@ -125,7 +125,7 @@ class Engine( Thread ):
 
 
     def run(self):
-        print "poceo engine"
+        print "Engine started"
         EngMsg.startServer()
         
         self.level = Level( "level2.txt" )
@@ -145,7 +145,7 @@ class Engine( Thread ):
             time.sleep( 0.1 )
 
             #see if there is a new client connected
-            EngMsg.listenForConnections()
+            EngMsg.handleConnections()
 
             #get a mesasge if there is one
             msg = EngMsg.readMsg()
