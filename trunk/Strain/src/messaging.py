@@ -36,9 +36,22 @@ class Msg:
         self.values = value
 
     def __repr__(self):
-        if self.type == 5 or self.type == 6 or self.type == 8:
-            return "type:%d  value:" % (self.type)
-        return "type:%d  value:%s" % (self.type, self.values)
+        if self.type == Msg.ENGINE_STATE:
+            return "type:ENGINE_STATE"
+        elif self.type == Msg.MOVE:
+            return "type:MOVE, value:%s" % str(self.values)
+        elif self.type == Msg.NEW_TURN:
+            return "type:NEW_TURN, value:%s" % str(self.values)
+        elif self.type == Msg.ERROR:
+            return "type:ERROR, value:%s" % str(self.values)
+        elif self.type == Msg.LEVEL:
+            return "type:LEVEL"
+        elif self.type == Msg.END_TURN:
+            return "type:END_TURN, value:%s" % str(self.values)
+        elif self.type == Msg.UNIT:
+            return "type:UNIT"  
+        
+        return "type:%d  value:%s" % (self.type, str(self.values))
 
 
 
@@ -61,6 +74,7 @@ class EngMsg:
         EngMsg.cReader = QueuedConnectionReader(EngMsg.cManager, 0) #@UndefinedVariable
         EngMsg.cWriter = ConnectionWriter(EngMsg.cManager, 0) #@UndefinedVariable
         
+  
         backlog = 5
         tcpSocket = EngMsg.cManager.openTCPServerRendezvous(TCP_PORT , backlog)        
         
@@ -70,11 +84,12 @@ class EngMsg:
     def close():
         for client in EngMsg.activeConnections:
             EngMsg.cManager.closeConnection(client)
-            Engine.logger.info("Closing connection with:%s", client)
+            Engine.logger.info("Closing connection with:%s", client.getAddress())
     
     @staticmethod
-    def listenForConnections():
+    def handleConnections():
         
+        #check for new connections
         if EngMsg.cListener.newConnectionAvailable():
         
             rendezvous = PointerToConnection() #@UndefinedVariable
@@ -83,17 +98,27 @@ class EngMsg:
         
             if EngMsg.cListener.getNewConnection(rendezvous, netAddress, newConnection):
                 newConnection = newConnection.p()
-                EngMsg.activeConnections.append(newConnection) # Remember connection
-                EngMsg.cReader.addConnection(newConnection)     # Begin reading connection    
-                Engine.logger.info("Client connected:%s::%s,", netAddress, newConnection)
-                print "Client connected:", newConnection
-    
-    
+                newConnection.setNoDelay(1)
+                EngMsg.activeConnections.append( ( newConnection, newConnection.getAddress() ) ) # Remember connection
+                EngMsg.cReader.addConnection(newConnection)     # Begin reading connection        
+                Engine.logger.info("Client connected:%s::%s,", netAddress, newConnection.getAddress())
+                print "Client connected:", newConnection.getAddress()
+                   
+        #check for diconnects
+        for connection, address in EngMsg.activeConnections[:]:   
+            if not connection.getSocket().Active():
+                print "Client disconnected:", address
+                Engine.logger.info("Client diconnected:%s", address)
+                EngMsg.cListener.removeConnection( connection )
+                EngMsg.cReader.removeConnection( connection )
+                EngMsg.cManager.closeConnection( connection )
+                EngMsg.activeConnections.remove( ( connection, address ) )
+                
     @staticmethod
     def broadcastMsg(msg):
 
         # broadcast a message to all clients
-        for client in EngMsg.activeConnections: 
+        for client, address in EngMsg.activeConnections: 
             myPyDatagram = PyDatagram()
             myPyDatagram.addString(pickle.dumps(msg))
             if EngMsg.cWriter.send(myPyDatagram, client):
@@ -109,6 +134,7 @@ class EngMsg:
                 dgi = PyDatagramIterator(datagram)
                 msg = pickle.loads(dgi.getString())
                 Engine.logger.info("Engine received a message:%s", msg)
+                print "Engine received a message:", msg
                 return msg
           
         return None
@@ -119,9 +145,11 @@ class EngMsg:
             EngMsg.broadcastMsg(msg)
         except:
             Engine.logger.critical("Could not send message to clients, reason :%s", sys.exc_info()[1])
-    
-        Engine.logger.info("Engine posted a message: %s", msg)
+            print "Could not send message to clients, reason :%s", sys.exc_info()[1]
+            return
         
+        Engine.logger.info("Engine posted a message: %s" % msg )
+        print "Engine posted a message: %s" % msg
     
     @staticmethod
     def move(unit_id, move_actions):
@@ -163,29 +191,33 @@ class ClientMsg:
     
     @staticmethod
     def connect():
-        print "trying to connect to server."
+        print "Trying to connect to server:",IP_ADDRESS,":",TCP_PORT
+        
         ClientMsg.cManager = QueuedConnectionManager() #@UndefinedVariable
-        ClientMsg.cListener = QueuedConnectionListener(ClientMsg.cManager, 0) #@UndefinedVariable
         ClientMsg.cReader = QueuedConnectionReader(ClientMsg.cManager, 0) #@UndefinedVariable
         ClientMsg.cWriter = ConnectionWriter(ClientMsg.cManager, 0) #@UndefinedVariable
-        
-        backlog = 5
-        ClientMsg.tcpSocket = ClientMsg.cManager.openTCPServerRendezvous(TCP_PORT, backlog)
-        ClientMsg.cListener.addConnection(ClientMsg.tcpSocket)
         
         # how long until we give up trying to reach the server?
         timeout_in_miliseconds = 3000  # 3 seconds               
         ClientMsg.myConnection = ClientMsg.cManager.openTCPClientConnection(IP_ADDRESS, TCP_PORT, timeout_in_miliseconds)
         
         if ClientMsg.myConnection:
-            print "Client connected to:", ClientMsg.myConnection
+            ClientMsg.myConnection.setNoDelay(1)
             ClientMsg.cReader.addConnection(ClientMsg.myConnection)
-
+            
+            #print( dir(ClientMsg.myConnection) )
+            print "Client connected to:", ClientMsg.myConnection.getAddress()
+            return 1
+            
+        return 0
+            
     @staticmethod
     def readMsg():
         """Return the message, if any, or None if there was nothing to read"""
         if not ClientMsg.myConnection:        
-            ClientMsg.connect()
+            if not ClientMsg.connect():
+                return None
+            
         if ClientMsg.cReader.dataAvailable():
             datagram = PyDatagram()                          
             if ClientMsg.cReader.getData(datagram):
@@ -200,9 +232,15 @@ class ClientMsg:
     
     @staticmethod
     def sendMsg(msg):
+        
+        if not ClientMsg.myConnection:
+            if not ClientMsg.connect():
+                return
+        
         datagram = PyDatagram()        
         datagram.addString(pickle.dumps(msg, pickle.HIGHEST_PROTOCOL))   
         ClientMsg.cWriter.send(datagram, ClientMsg.myConnection)
+
         
     @staticmethod
     def close():
