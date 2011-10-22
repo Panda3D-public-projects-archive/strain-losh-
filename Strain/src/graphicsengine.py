@@ -252,15 +252,15 @@ class GraphicsEngine(ShowBase):
         else:
             end_pos = Point2(int(unit.model.getX()), int(unit.model.getY()))
         for idx, action in enumerate(action_list):
-            #action_type = action[0]
-            dest_pos = Point3(action[1].getX() + 0.5, action[1].getY() + 0.5, 0.3)
-            dest_h = 0
+            type = action[0]
             if idx == 0:
                 curr_pos = start_pos
                 curr_h = unit.model.getH()
             else:
                 curr_pos = dest_pos
                 curr_h = dest_h
+                
+            dest_pos = Point3(action[1].getX() + 0.5, action[1].getY() + 0.5, 0.3)
             if type == "move":
                 unit.dummy_node.setPos(curr_pos)
                 unit.dest_node.setPos(dest_pos)
