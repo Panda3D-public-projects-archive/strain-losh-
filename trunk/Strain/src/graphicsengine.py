@@ -214,7 +214,7 @@ class GraphicsEngine(ShowBase):
         if self.interface.selected_unit:
             self.interface.deselectUnit()
         else:
-            ClientMsg.shutdownEngine()          
+            #ClientMsg.shutdownEngine()          
             ClientMsg.close()  
             sys.exit()
 
