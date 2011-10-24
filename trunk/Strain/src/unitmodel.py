@@ -7,7 +7,7 @@ from unit import Unit
 # CLASS UnitModel --- DEFINITION
 #===============================================================================
 class UnitModel:
-    def __init__(self, unit, scale=0.25, h=180, pos=None):
+    def __init__(self, unit, scale=0.25, h=180, pos=None, off=False):
         self.anim_count_dict = {}
         self.model = self.load(unit.type)
         self.id = str(unit.id)
@@ -49,25 +49,26 @@ class UnitModel:
         elif unit.owner_id == "2":
             self.team_color = Point4(0, 0, 1, 0)
 
-        if self.unit.heading == Unit.HEADING_NW:
-            o = Point2(x-1, y+1)
-        elif self.unit.heading == Unit.HEADING_N:
-            o = Point2(x, y+1)
-        elif self.unit.heading == Unit.HEADING_NE:
-            o = Point2(x+1, y+1)
-        elif self.unit.heading == Unit.HEADING_W:
-            o = Point2(x-1, y)
-        elif self.unit.heading == Unit.HEADING_E:
-            o = Point2(x+1, y)
-        elif self.unit.heading == Unit.HEADING_SW:
-            o = Point2(x-1, y-1)
-        elif self.unit.heading == Unit.HEADING_S:
-            o = Point2(x, y-1)
-        elif self.unit.heading == Unit.HEADING_SE:
-            o = Point2(x+1, y-1)
+        if not off:
+            if self.unit.heading == Unit.HEADING_NW:
+                o = Point2(x-1, y+1)
+            elif self.unit.heading == Unit.HEADING_N:
+                o = Point2(x, y+1)
+            elif self.unit.heading == Unit.HEADING_NE:
+                o = Point2(x+1, y+1)
+            elif self.unit.heading == Unit.HEADING_W:
+                o = Point2(x-1, y)
+            elif self.unit.heading == Unit.HEADING_E:
+                o = Point2(x+1, y)
+            elif self.unit.heading == Unit.HEADING_SW:
+                o = Point2(x-1, y-1)
+            elif self.unit.heading == Unit.HEADING_S:
+                o = Point2(x, y-1)
+            elif self.unit.heading == Unit.HEADING_SE:
+                o = Point2(x+1, y-1)
         
-        self.dest_node.setPos(o.getX()+0.5, o.getY()+0.5, 0.3)
-        self.model.lookAt(self.dest_node)
+            self.dest_node.setPos(o.getX()+0.5, o.getY()+0.5, 0.3)
+            self.model.lookAt(self.dest_node)
         
         self.model.reparentTo(self.node)
         self.dummy_node.reparentTo(self.node)
