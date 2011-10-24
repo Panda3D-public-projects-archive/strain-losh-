@@ -338,6 +338,8 @@ class GraphicsEngine(ShowBase):
                 unit = pickle.loads(msg.values)
                 self.updateUnit(unit)
                 self.interface.printUnitData()
+        elif msg.type == Msg.ERROR:
+            self.interface.console.onEnterPress(str(msg.values))
         # TODO: ogs: implementirati primanje ostalih poruka
         else:
             logger.error("Unknown message Type: %s", msg.type)
