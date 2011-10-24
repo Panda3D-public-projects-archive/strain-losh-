@@ -531,7 +531,15 @@ class Interface(DirectObject.DirectObject):
                         self.dummy_turn_dest_node.setPos(pos3d)
                         self.dummy_turn_pos_node.lookAt(self.dummy_turn_dest_node)
                         h = self.dummy_turn_pos_node.getH()
-                        dest_node_pos = Point2(int(self.dummy_turn_dest_node.getX()), int(self.dummy_turn_dest_node.getY()))
+                        if self.dummy_turn_dest_node.getX() >= 0:
+                            x = int(self.dummy_turn_dest_node.getX())
+                        else:
+                            x = int(self.dummy_turn_dest_node.getX()-1)
+                        if self.dummy_turn_dest_node.getY() >= 0:
+                            y = int(self.dummy_turn_dest_node.getY())
+                        else:
+                            y = int(self.dummy_turn_dest_node.getY()-1)    
+                        dest_node_pos = Point2(x, y)
                         pos_node_pos = Point2(int(self.dummy_turn_pos_node.getX()), int(self.dummy_turn_pos_node.getY()))
                         if dest_node_pos == pos_node_pos:
                             key = Unit.HEADING_NONE
