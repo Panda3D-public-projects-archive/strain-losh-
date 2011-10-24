@@ -81,7 +81,6 @@ class Interface(DirectObject.DirectObject):
         self.stats = GuiTextFrame(Point3(0.3, 0, -0.1), 0.4, 0.2, 3)
         
         self.accept('l', self.switchLos)
-        self.accept('o', self.switchUnitLos)
         self.accept('m', self.switchUnitMove)
         self.accept('escape', self.escapeEvent)
         self.accept("mouse1", self.mouseLeftClick)
@@ -211,15 +210,6 @@ class Interface(DirectObject.DirectObject):
     def loadTurnArrows(self, dest):
         self.turn_arrow_dict = {}        
         for i in xrange(9):
-            """m = self.ge.loader.loadModel("arrow")
-            m.setScale(0.1, 0.1, 0.1)
-            m.setR(35)
-            m.setLightOff()
-            m.flattenLight()
-            m.setColor(1, 1, 1)
-            x = dest.getX()+0.5
-            y = dest.getY()+0.5
-            """
             m = self.ge.loader.loadModel("sphere")
             m.setScale(0.07, 0.07, 0.07)
             x = dest.getX()+0.5
@@ -287,10 +277,7 @@ class Interface(DirectObject.DirectObject):
            Tiles in partial view are marked with darker red color.
         """
         if self.selected_unit:
-            pass
-            # TODO: krav: Dodati msg koji grafici vraca LOSHDict
-            """
-            losh_dict = self.ge.engine.getLOSHDict(Point2(self.selected_unit.x, self.selected_unit.y))
+            losh_dict = self.selected_unit.unit.losh_dict
             for tile in losh_dict:
                 tile_node = self.ge.tile_np_list[int(tile.x)][int(tile.y)]
                 if losh_dict[tile] == 0:
@@ -298,8 +285,7 @@ class Interface(DirectObject.DirectObject):
                 elif losh_dict[tile] == 1:
                     self.changeTileColor(tile_node, _TILE_PARTIAL_LOS)
                 else:
-                    self.changeTileColor(tile_node, _TILE_RESET)      
-            """
+                    self.changeTileColor(tile_node, _TILE_RESET)
             
     def switchLos(self):
         """Switches the display of line of sight for the selected unit on or off."""
@@ -308,45 +294,12 @@ class Interface(DirectObject.DirectObject):
             self.los_visible = False
         else:
             self.displayLos()
-            self.los_visible = True
-            
-    def displayUnitLos(self):
-        """Displays visual indicator of tiles which are in line of sight from selected unit to enemy unit.
-           Tiles in full view are marked with brighter red color.
-           Tiles in partial view are marked with darker red color.        
-           Currently enemy unit coordinates are hardcoded.
-        """
-        if self.selected_unit:
-            pass
-            """
-            los_list = self.ge.engine.getLOS(Point2(self.selected_unit.x, self.selected_unit.y), Point2(13,13))
-            for tile in los_list:
-                tile_node = self.ge.tile_np_list[int(tile[0].x)][int(tile[0].y)]
-                if tile[1] == 0:
-                    self.changeTileColor(tile_node, _TILE_FULL_LOS)
-                elif tile [1] == 1:
-                    self.changeTileColor(tile_node, _TILE_PARTIAL_LOS)
-                else:
-                    self.changeTileColor(tile_node, _TILE_RESET)
-            """
-             
-    def switchUnitLos(self):
-        """Switched the display of line of sight from selected unit to enemy unit on or off."""
-        if self.unit_los_visible == True:
-            self.resetAllTileColor()
-            self.unit_los_visible = False
-        else:
-            self.displayUnitLos()
-            self.unit_los_visible = True        
+            self.los_visible = True       
     
     def displayUnitMove(self):
         """Displays visual indicator of tiles which are in movement range of the selected unit."""
         if self.selected_unit:
-            pass
-            """
-            unit = self.ge.engine.units[self.selected_unit.id]
-            ap = unit.current_AP
-            move_dict = self.ge.engine.getMoveDict(unit)
+            move_dict = self.selected_unit.unit.move_dict
             self.movetext_np = NodePath("movetext_np")
             for tile in move_dict:
                 text = TextNode('node name')
@@ -357,18 +310,16 @@ class Interface(DirectObject.DirectObject):
                 textNodePath.setPos(tile.x+0.2, tile.y+0.2, 0.5)
                 textNodePath.lookAt(tile.x+0.2, tile.y+0.2, -100)
             self.movetext_np.reparentTo(self.ge.node)
-            """
             
     def switchUnitMove(self):
         """Switched the display of tiles available for movement for the selected unit."""
         if self.move_visible == True:
-            pass
-            #self.movetext_np.removeNode()
-            #self.move_visible = False
+            self.movetext_np.removeNode()
+            self.move_visible = False
         else:
             pass
-            #self.displayUnitMove()
-            #self.move_visible = True
+            self.displayUnitMove()
+            self.move_visible = True
 
 
     def selectUnit(self, unit):
