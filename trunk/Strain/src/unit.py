@@ -25,9 +25,6 @@ class Unit():
         self.owner_id = owner_id
         self.type = in_type
         
-        self.x = int(x)
-        self.y = int(y)
-        
         self.heading = Unit.HEADING_N
         self.rotate_cost = 0
         
@@ -51,7 +48,7 @@ class Unit():
             self.default_HP = 8
             self.soundtype = '01'            
 
-        self.pos = Point2( self.x, self.y )
+        self.pos = Point2( x, y )
         self.current_AP = self.default_AP
         self.health = self.default_HP
         
