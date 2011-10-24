@@ -73,7 +73,6 @@ class UnitModel:
             self.marker_color = Point4(1, 0, 0, 1)
         elif unit.owner_id == "2":
             self.marker_color = Point4(0.106, 0.467, 0.878, 1)
-            #self.marker_color = Point4(1, 0, 0, 1)
         else:
             self.marker_color = Point4(0, 1, 0, 1)
             
@@ -124,6 +123,27 @@ class UnitModel:
                                        })
             self.anim_count_dict['run'] = 1
             self.anim_count_dict['idle'] = 3
+        elif unit_type == 'assault':
+            model = Actor('assault', {'run': 'assault-run1'
+                                       ,'run02': 'assault-run2'
+                                       ,'idle01': 'assault-idle1'
+                                       ,'idle02': 'assault-idle2'
+                                       })
+            self.anim_count_dict['run'] = 2
+            self.anim_count_dict['idle'] = 2    
+        elif unit_type == 'librarian':
+            model = Actor('librarian', {'run': 'librarian-run1'
+                                       ,'idle01': 'librarian-idle1'
+                                       })
+            self.anim_count_dict['run'] = 1
+            self.anim_count_dict['idle'] = 1       
+        elif unit_type == 'daemon_prince':
+            model = Actor('daemon_prince', {'run': 'daemon_prince-run1'
+                                       ,'idle01': 'daemon_prince-idle1'
+                                       ,'idle02': 'daemon_prince-idle2'            
+                                       })
+            self.anim_count_dict['run'] = 1
+            self.anim_count_dict['idle'] = 2                           
         return model
     
     def setIdleTime(self):

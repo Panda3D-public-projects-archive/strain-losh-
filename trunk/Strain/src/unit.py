@@ -46,7 +46,19 @@ class Unit():
         elif self.type == 'commissar':
             self.default_AP = 5
             self.default_HP = 8
-            self.soundtype = '01'            
+            self.soundtype = '01'        
+        elif self.type == 'assault':
+            self.default_AP = 7
+            self.default_HP = 5
+            self.soundtype = '01'   
+        elif self.type == 'librarian':
+            self.default_AP = 7
+            self.default_HP = 5
+            self.soundtype = '01'  
+        elif self.type == 'daemon_prince':
+            self.default_AP = 15
+            self.default_HP = 8
+            self.soundtype = '01'                                        
 
         self.pos = Point2( x, y )
         self.current_AP = self.default_AP

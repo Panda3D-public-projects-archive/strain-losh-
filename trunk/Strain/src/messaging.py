@@ -14,8 +14,8 @@ import threading
 import collections
 
 
-#IP_ADDRESS = 'localhost'
-IP_ADDRESS = 'krav.servebeer.com'
+IP_ADDRESS = 'localhost'
+#IP_ADDRESS = 'krav.servebeer.com'
 #NAME = 'blood angels'
 NAME = 'ultramarines'
 TCP_PORT = 56005
