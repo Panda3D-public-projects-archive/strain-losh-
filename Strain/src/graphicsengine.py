@@ -242,20 +242,20 @@ class GraphicsEngine(ShowBase):
             return unit.unit.default_AP
     
     def setUnitNpList(self, unit, old_pos):
-        pos = unit.model.getPos()
+        pos = unit.node.getPos()
         self.unit_np_list[int(old_pos.getX())][int(old_pos.getY())] = None
         self.unit_np_list[int(pos.getX())][int(pos.getY())] = unit
 
     def playUnitAnim(self, unit, action_list):
         intervals = []
         duration = 0.0
-        start_pos = unit.model.getPos()
+        start_pos = unit.node.getPos()
         # if legth of action list is greater than 1, we have movement and rotation information
         if len(action_list) > 1:
             end_pos = action_list[-2][1]
         # otherwise, we are just rotating the unit so end_pos is the same as unit pos
         else:
-            end_pos = Point2(int(unit.model.getX()), int(unit.model.getY()))
+            end_pos = Point2(int(unit.node.getX()), int(unit.node.getY()))
         for idx, action in enumerate(action_list):
             type = action[0]
             if idx == 0:
@@ -267,8 +267,8 @@ class GraphicsEngine(ShowBase):
                 
             dest_pos = Point3(action[1].getX() + 0.5, action[1].getY() + 0.5, 0.3)
             if type == "move":
-                unit.dummy_node.setPos(curr_pos)
-                unit.dest_node.setPos(dest_pos)
+                unit.dummy_node.setPos(self.render, curr_pos)
+                unit.dest_node.setPos(self.render, dest_pos)
                 unit.dummy_node.lookAt(unit.dest_node)
                 dest_h = unit.dummy_node.getH()
                 # Model heading is different than movement heading, first create animation that turns model to his destination
@@ -276,7 +276,7 @@ class GraphicsEngine(ShowBase):
                 if dest_h != curr_h:
                     i_h = unit.model.quatInterval(0.2, hpr = Point3(dest_h, 0, 0), startHpr = Point3(curr_h, 0, 0))
                     curr_h = dest_h
-                i = unit.model.posInterval(0.5, dest_pos, curr_pos)
+                i = unit.node.posInterval(0.5, dest_pos, curr_pos)
                 duration = duration + 0.5
                 if i_h:
                     p = Parallel(i, i_h)
@@ -284,8 +284,8 @@ class GraphicsEngine(ShowBase):
                     p = i
                 intervals.append(p)
             elif type == "rotate":
-                unit.dummy_node.setPos(curr_pos)
-                unit.dest_node.setPos(dest_pos)
+                unit.dummy_node.setPos(self.render, curr_pos)
+                unit.dest_node.setPos(self.render, dest_pos)
                 unit.dummy_node.lookAt(unit.dest_node)
                 dest_h = unit.dummy_node.getH() 
                 i_h = unit.model.quatInterval(0.2, hpr = Point3(dest_h, 0, 0), startHpr = Point3(curr_h, 0, 0))
@@ -297,8 +297,7 @@ class GraphicsEngine(ShowBase):
         #return
         anim = ActorInterval(unit.model, 'run', loop = 1, duration = duration)
         move = Sequence(Parallel(anim, seq), 
-                        Func(self.setUnitNpList, self.unit_np_dict[int(unit.id)], start_pos),
-                        Func(self.interface.markSelectedTile, self.tile_np_list[int(end_pos.getX())][int(end_pos.getY())]),
+                        Func(self.setUnitNpList, self.unit_np_dict[int(unit.id)], start_pos)
                         #Func(self.interface.printUnitData, unit)
                         )
         move.start()
@@ -329,7 +328,6 @@ class GraphicsEngine(ShowBase):
             unit_id = msg.values[0]
             tile_list = msg.values[1]
             unit = self.unit_np_dict[unit_id]
-            self.interface.clearSelectedTile(self.tile_np_list[int(unit.model.getX())][int(unit.model.getY())])
             self.playUnitAnim(self.unit_np_dict[unit_id], tile_list)
         elif msg.type == Msg.NEW_TURN:
             print msg.values

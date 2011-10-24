@@ -15,8 +15,8 @@ import collections
 
 
 IP_ADDRESS = 'localhost'
-NAME = 'blood angels'
-#NAME = 'ultramarines'
+#NAME = 'blood angels'
+NAME = 'ultramarines'
 TCP_PORT = 56005
 
 class Msg:

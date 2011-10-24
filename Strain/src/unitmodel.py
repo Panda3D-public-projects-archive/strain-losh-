@@ -13,6 +13,14 @@ class UnitModel:
         self.id = str(unit.id)
         self.unit = unit
         
+        self.node = NodePath(self.id)
+        self.dummy_node = NodePath("dummy_"+self.id)
+        self.dest_node = NodePath("dest_"+self.id)
+        
+        self.model.reparentTo(self.node)
+        self.dummy_node.reparentTo(self.node)
+        self.dest_node.reparentTo(self.node)        
+        
         # Bake in rotation transform because model is created facing towards screen (h=180)
         self.model.setScale(scale)
         self.model.setH(h)
@@ -22,27 +30,16 @@ class UnitModel:
         y = int(unit.pos.getY())
         
         if pos:
-            self.model.setPos(pos)
+            self.node.setPos(pos)
         else:
-            self.model.setPos(self.calcWorldPos(x, y))
+            self.node.setPos(self.calcWorldPos(x, y))
 
         self.model.setLightOff()
-        self.model.setTag("type", "unit")
-        self.model.setTag("id", str(self.id))
-        
-        #TODO: ogs: ovo sam ti promijenio jer vise nema owner, nego owner_id (ak je owner bio unutra, pickle bi zapicklao i cijeli player objekt unutra
-        self.model.setTag("player_id", str(unit.owner_id))
-        
-        #TODO: ogs: ovo sam ti zakomentirao
-        #self.model.setTag("player_name", str(unit.owner.name))
-        
-        #TODO: ogs: ovo sam ti promijenio da koristi privremeno owner_id ionak imamo sam 2 plejer zasad
-        self.model.setTag("team", str(unit.owner_id))       
+        self.node.setTag("type", "unit")
+        self.node.setTag("id", str(self.id))        
+        self.node.setTag("player_id", str(unit.owner_id))
+        self.node.setTag("team", str(unit.owner_id))
 
-        self.node = NodePath(self.id)
-        self.dummy_node = NodePath("dummy_"+self.id)
-        self.dest_node = NodePath("dest_"+self.id)
-        
         #TODO: ogs: ovo sam ti promijenio ad isto koristi owner_id
         if unit.owner_id == "1":
             self.team_color = Point4(1, 0, 0, 0)
@@ -67,12 +64,26 @@ class UnitModel:
             elif self.unit.heading == Unit.HEADING_SE:
                 o = Point2(x+1, y-1)
         
-            self.dest_node.setPos(o.getX()+0.5, o.getY()+0.5, 0.3)
+            self.dest_node.setPos(render, o.getX()+0.5, o.getY()+0.5, 0.3)
             self.model.lookAt(self.dest_node)
         
-        self.model.reparentTo(self.node)
-        self.dummy_node.reparentTo(self.node)
-        self.dest_node.reparentTo(self.node)
+        if unit.owner_id == "1":
+            self.marker_color = Point4(1, 0, 0, 1)
+        elif unit.owner_id == "2":
+            self.marker_color = Point4(0.106, 0.467, 0.878, 1)
+            #self.marker_color = Point4(1, 0, 0, 1)
+        else:
+            self.marker_color = Point4(0, 1, 0, 1)
+            
+        self.marker = loader.loadModel("ripple-split")
+        self.marker.reparentTo(self.node)
+        self.marker.setP(-90)
+        self.marker.setScale(0.7, 0.7, 0.7)
+        self.marker.setColor(self.marker_color)
+        self.marker.setLightOff()
+        self.marker.setPos(0, 0, 0.02)
+        #self.marker.flattenLight()
+        self.marker.hide()
         
         self.passtime = 0
         self.setIdleTime()
