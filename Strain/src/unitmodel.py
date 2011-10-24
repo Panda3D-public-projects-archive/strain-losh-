@@ -28,16 +28,24 @@ class UnitModel:
         self.model.setLightOff()
         self.model.setTag("type", "unit")
         self.model.setTag("id", str(self.id))
-        self.model.setTag("player_id", str(unit.owner.id))
-        self.model.setTag("player_name", str(unit.owner.name))
-        self.model.setTag("team", str(unit.owner.team))       
+        
+        #TODO: ogs: ovo sam ti promijenio jer vise nema owner, nego owner_id (ak je owner bio unutra, pickle bi zapicklao i cijeli player objekt unutra
+        self.model.setTag("player_id", str(unit.owner_id))
+        
+        #TODO: ogs: ovo sam ti zakomentirao
+        #self.model.setTag("player_name", str(unit.owner.name))
+        
+        #TODO: ogs: ovo sam ti promijenio da koristi privremeno owner_id ionak imamo sam 2 plejer zasad
+        self.model.setTag("team", str(unit.owner_id))       
 
         self.node = NodePath(self.id)
         self.dummy_node = NodePath("dummy_"+self.id)
         self.dest_node = NodePath("dest_"+self.id)
-        if unit.owner.team == "1":
+        
+        #TODO: ogs: ovo sam ti promijenio ad isto koristi owner_id
+        if unit.owner_id == "1":
             self.team_color = Point4(1, 0, 0, 0)
-        elif unit.owner.team == "2":
+        elif unit.owner_id == "2":
             self.team_color = Point4(0, 0, 1, 0)
 
         self.model.reparentTo(self.node)

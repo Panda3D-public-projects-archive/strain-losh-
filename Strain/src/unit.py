@@ -19,10 +19,10 @@ class Unit():
     HEADING_SE        = 8
     
     
-    def __init__(self, in_id, owner, in_type, x, y ):
+    def __init__(self, in_id, owner_id, in_type, x, y ):
         
         self.id = in_id
-        self.owner = owner
+        self.owner_id = owner_id
         self.type = in_type
         
         self.x = int(x)

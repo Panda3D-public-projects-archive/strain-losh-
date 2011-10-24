@@ -94,6 +94,7 @@ class Player:
         self.team = team
         self.unitlist = []
         self.list_visible_enemies = []
+        self.connection = None
         pass
 
 
@@ -151,6 +152,7 @@ class Engine( Thread ):
         
         self.loadArmyList()
 
+        
         self.turn = 0        
         self.beginTurn()
 
@@ -166,7 +168,7 @@ class Engine( Thread ):
             #get a mesasge if there is one
             msg = EngMsg.readMsg()
             if msg:
-                self.handleMsg( msg )
+                self.handleMsg( msg[0], msg[1] )
         
         
         #we are shutting down everything   
@@ -179,7 +181,7 @@ class Engine( Thread ):
         return 0
 
 
-    def handleMsg(self, msg):
+    def handleMsg(self, msg, source):
         """This method is the main method for handling incoming messages to the Engine"""     
                 
         if( msg.type == Msg.ENGINE_SHUTDOWN ):
@@ -212,8 +214,9 @@ class Engine( Thread ):
 
         dic[ 'pickled_units' ] = pickle.dumps( self.units )    
         dic[ 'pickled_level' ] = pickle.dumps( self.level )        
-        dic[ 'turn' ] = self.turn        
-        dic[ 'pickled_players' ] = pickle.dumps( self.players )
+        dic[ 'turn' ] = self.turn     
+        #TODO: krav: vidit kaj cemo s ovim   
+        #dic[ 'pickled_players' ] = pickle.dumps( self.players )
         
         return dic
     
@@ -236,7 +239,7 @@ class Engine( Thread ):
         
         
         for p in xmldoc.getElementsByTagName( 'player' ):
-            player = Player( self.getUID(), p.attributes['name'].value, p.attributes['team'].value )                        
+            player = Player( p.attributes['id'].value, p.attributes['name'].value, p.attributes['team'].value )                        
             
             for u in p.getElementsByTagName( 'unit' ):
                 
@@ -258,7 +261,7 @@ class Engine( Thread ):
                  
                 
                 tmpUnit = Unit( self.getUID(),
-                                player, 
+                                player.id, 
                                 unittype, 
                                 x,
                                 y )
@@ -597,14 +600,14 @@ class Engine( Thread ):
                 if( self.dynamic_obstacles[ ptx + dx ][ pty ][0] == Engine.dynamics['unit'] ):
                     #so its a unit, see if it is friendly
                     unit_id = self.dynamic_obstacles[ ptx + dx ][ pty ][1] 
-                    if( self.units[unit_id].owner != unit.owner ):
+                    if( self.units[unit_id].owner_id != unit.owner_id ):
                         return False
                     
 
             if( self.dynamic_obstacles[ ptx ][ pty + dy ][0] != Engine.dynamics['empty'] ):
                 if( self.dynamic_obstacles[ ptx ][ pty + dy ][0] == Engine.dynamics['unit'] ):
                     unit_id = self.dynamic_obstacles[ ptx ][ pty + dy ][1] 
-                    if( self.units[unit_id].owner != unit.owner ):
+                    if( self.units[unit_id].owner_id != unit.owner_id ):
                         return False
 
             
@@ -732,7 +735,7 @@ class Engine( Thread ):
             try:
                 path = self.getPath( unit, new_position )
             except Exception:
-                notify.critical( sys.exc_info()[1] )
+                notify.critical( "Exception:%s", sys.exc_info()[1] )
                 EngMsg.sendErrorMsg( sys.exc_info()[1] )
                 return   
             

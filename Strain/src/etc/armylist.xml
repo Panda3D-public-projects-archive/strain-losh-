@@ -2,13 +2,13 @@
 
 <armylist>
 
-	<player name="ultramarinac" team="1">
+	<player name="blood angels" team="1" id="1">
 		<unit x="3" y="2" type="commissar"/>
 		<unit x="1" y="2" type="marine_b"/>		
 		<unit x="12" y="19" type="terminator"/>
 	</player>
 
-	<player name="ejndzel" team = "2">
+	<player name="ultramarines" team = "2" id="2">
 		<unit x="3" y="1" type="terminator"/>
 		<unit x="14" y="14" type="terminator"/>
 	</player>
