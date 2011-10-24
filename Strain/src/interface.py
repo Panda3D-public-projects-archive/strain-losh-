@@ -83,6 +83,7 @@ class Interface(DirectObject.DirectObject):
         self.accept('l', self.switchLos)
         self.accept('o', self.switchUnitLos)
         self.accept('m', self.switchUnitMove)
+        self.accept('escape', self.escapeEvent)
         self.accept("mouse1", self.mouseLeftClick)
         self.accept("mouse1-up", self.mouseLeftClickUp)
         
@@ -385,6 +386,12 @@ class Interface(DirectObject.DirectObject):
         self.off_model.play(self.off_model.getAnimName("idle"))
         self.printUnitData()
 
+    def escapeEvent(self):
+        if self.selected_unit:
+            self.deselectUnit()
+        else:
+            messenger.send("shutdown-event")
+
     def deselectUnit(self):
         """Performs actions for unit deselection.
            Clears unit tile, cleans up off screen models, 
@@ -395,6 +402,7 @@ class Interface(DirectObject.DirectObject):
             if self.off_model:
                 self.ge.destroyUnit(self.off_model)
             self.selected_unit = None
+
         
     def selectPrevUnit(self):
         """Selects previous unit in the same team with unspent action points."""
