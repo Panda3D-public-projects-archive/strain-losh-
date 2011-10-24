@@ -155,7 +155,7 @@ class GraphicsEngine(ShowBase):
             self.unit_np_dict[unit.id] = um
             # Keep unit nodepath in list corresponding to level size
             # This will be dinamically altered when units change position
-            self.unit_np_list[unit.x][unit.y] = um
+            self.unit_np_list[int(unit.pos.getX())][int(unit.pos.getY())] = um
 
     def initLights(self):
         shade = ShadeModelAttrib.make(ShadeModelAttrib.MSmooth)

@@ -17,10 +17,13 @@ class UnitModel:
         self.model.setH(h)
         self.model.flattenLight() 
         
+        x = int(unit.pos.getX())
+        y = int(unit.pos.getY())
+        
         if pos:
             self.model.setPos(pos)
         else:
-            self.model.setPos(self.calcWorldPos(unit.x, unit.y))
+            self.model.setPos(self.calcWorldPos(x, y))
 
         self.model.setLightOff()
         self.model.setTag("type", "unit")

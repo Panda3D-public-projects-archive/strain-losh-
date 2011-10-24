@@ -209,7 +209,7 @@ class Engine( Thread ):
         #TODO: krav: treba u paramtear ove funkcije primit za kojeg plejera se zove fja i prema tome ispunit cijeli state
         
         dic = {}
-        
+
         dic[ 'pickled_units' ] = pickle.dumps( self.units )    
         dic[ 'pickled_level' ] = pickle.dumps( self.level )        
         dic[ 'turn' ] = self.turn        
