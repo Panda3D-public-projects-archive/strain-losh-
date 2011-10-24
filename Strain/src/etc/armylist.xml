@@ -6,11 +6,14 @@
 		<unit x="3" y="2" type="commissar"/>
 		<unit x="1" y="2" type="marine_b"/>		
 		<unit x="12" y="19" type="terminator"/>
+		<unit x="2" y="2" type="librarian"/>		
 	</player>
 
 	<player name="ultramarines" team = "2" id="2">
 		<unit x="3" y="1" type="terminator"/>
 		<unit x="14" y="14" type="terminator"/>
+		<unit x="13" y="14" type="assault"/>
+		<unit x="13" y="15" type="daemon_prince"/>		
 	</player>
 
 
