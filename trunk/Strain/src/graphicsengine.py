@@ -85,8 +85,8 @@ class GraphicsEngine(ShowBase):
         self.disableMouse()
 
         self.accept("window-event", self.windowEvent)
-        self.accept("escape", self.destroy)
-        self.accept('aspectRatioChanged', self.redraw)        
+        self.accept('aspectRatioChanged', self.redraw)
+        self.accept("shutdown-event", self.shutdownClient)        
         
         # global flag to disable user interface (when animations are playing etc)
         self.interface_disabled = False
@@ -209,7 +209,7 @@ class GraphicsEngine(ShowBase):
     
     def windowEvent(self, win):
         if win.isClosed():
-            self.destroy()
+            self.shutdownClient()
 
     def redraw(self):
         pass
@@ -218,13 +218,10 @@ class GraphicsEngine(ShowBase):
         #print render.ls()
         print self.render.analyze()
         
-    def destroy(self):
-        if self.interface.selected_unit:
-            self.interface.deselectUnit()
-        else:
-            #ClientMsg.shutdownEngine()          
-            ClientMsg.close()  
-            sys.exit()
+    def shutdownClient(self):
+        #ClientMsg.shutdownEngine()
+        ClientMsg.close()
+        sys.exit()
 
     def setInterfaceEnable(self):
         self.interface_disabled = False
