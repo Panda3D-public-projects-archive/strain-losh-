@@ -385,7 +385,7 @@ class Interface(DirectObject.DirectObject):
             selected = self.getMouseHoveredObject()
             if selected:
                 node_type = selected.findNetTag("type").getTag("type")
-                if node_type == "unit":
+                if node_type == "unit" or node_type == "unit_marker":
                     unit_id = int(selected.findNetTag("id").getTag("id"))
                     unit = self.ge.unit_np_dict[unit_id] 
                     if self.selected_unit != unit:
@@ -456,6 +456,16 @@ class Interface(DirectObject.DirectObject):
                         self.changeTileColor(self.hovered_tile, _TILE_RESET)
                     self.changeTileColor(np, _TILE_HOVERED)
                     self.hovered_tile = np
+            elif node_type == "unit_marker":
+                np_unit = self.ge.unit_np_dict[int(np.findNetTag("id").getTag("id"))].model
+                if self.hovered_tile:
+                    self.changeTileColor(self.hovered_tile, _TILE_RESET)  
+                    self.hovered_tile = None              
+                if self.hovered_unit != np_unit:
+                    if self.hovered_unit:
+                        self.changeUnitColor(self.hovered_unit, _UNIT_RESET)
+                    self.changeUnitColor(np_unit, _UNIT_HOVERED)
+                    self.hovered_unit = np_unit                
             elif node_type == "unit":
                 np_unit = np.getParent()
                 if self.hovered_tile:
