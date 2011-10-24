@@ -165,15 +165,14 @@ class Engine( Thread ):
             #see if there is a new client connected
             EngMsg.handleConnections()
 
-            #get a mesasge if there is one
+            #get a message if there is one
             msg = EngMsg.readMsg()
             if msg:
                 self.handleMsg( msg[0], msg[1] )
         
         
         #we are shutting down everything   
-        EngMsg.close()
-       
+        EngMsg.close()       
         
         notify.info( "++++++++++++++++++++++++Engine stopped!++++++++++++++++++++++++" )
         print "++++++++++++++++++++++++Engine stopped!++++++++++++++++++++++++" 
@@ -183,18 +182,19 @@ class Engine( Thread ):
 
     def handleMsg(self, msg, source):
         """This method is the main method for handling incoming messages to the Engine"""     
-                
+        
         if( msg.type == Msg.ENGINE_SHUTDOWN ):
+            EngMsg.sendErrorMsg("Server is shutting down")
             self.stop = True
             
         elif( msg.type == Msg.MOVE ):            
-            self.moveUnit( msg.values['unit_id'], msg.values['new_position'], msg.values['orientation'] )
+            self.moveUnit( msg.values['unit_id'], msg.values['new_position'], msg.values['orientation'], source )
             
         elif( msg.type == Msg.LEVEL ):                
             EngMsg.sendLevel( pickle.dumps(self.level) )
                         
         elif( msg.type == Msg.ENGINE_STATE ):                
-            EngMsg.sendState( self.compileState() )
+            EngMsg.sendState( self.compileState(), source )
             
         elif( msg.type == Msg.END_TURN ):
             self.endTurn()
@@ -709,12 +709,14 @@ class Engine( Thread ):
         return False
         
         
-    def moveUnit(self, unit_id, new_position, new_heading ):
+    def moveUnit(self, unit_id, new_position, new_heading, source ):
         
         if( unit_id in self.units ) == False:
             notify.critical( "Got wrong unit id:%s", unit_id )
-            EngMsg.sendErrorMsg( "Wrong unit id." )
+            EngMsg.sendErrorMsg( "Wrong unit id.", source )
             return
+
+        #TODO: krav: provjerit dal ovaj plejer koji je poslao move eksli smije micat ovaj unit
 
         unit = self.units[unit_id]
 
@@ -736,7 +738,7 @@ class Engine( Thread ):
                 path = self.getPath( unit, new_position )
             except Exception:
                 notify.critical( "Exception:%s", sys.exc_info()[1] )
-                EngMsg.sendErrorMsg( sys.exc_info()[1] )
+                EngMsg.sendErrorMsg( sys.exc_info()[1], source )
                 return   
             
             #everything checks out, do the actual moving

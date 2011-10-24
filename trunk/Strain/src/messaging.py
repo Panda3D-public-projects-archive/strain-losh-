@@ -15,9 +15,9 @@ import collections
 
 
 IP_ADDRESS = 'localhost'
+NAME = 'blood angels'
+#NAME = 'ultramarines'
 TCP_PORT = 56005
-
-
 
 class Msg:
 
@@ -87,7 +87,7 @@ class EngMsg:
     def close():
         for client, address, name in EngMsg.activeConnections:
             EngMsg.cManager.closeConnection(client)
-            engine.notify.info("Closing connection with:%s@%s", name, address)
+            engine.notify.info("Closing connection with: %s @ %s", name, address)
     
     @staticmethod
     def handleConnections():
@@ -119,6 +119,8 @@ class EngMsg:
                         
                         #see if there is already a connection for this player, if yes than disconnect it
                         if player.connection != None:
+                            EngMsg.sendErrorMsg("Disconnecting because this player is connecting from other connection", player.connection )
+                            #TODO: krav: da se na klijentu eksli diskonekta i da se vidi kaj se desilo
                             EngMsg.disconnect( player.connection, player.connection.getAddress(), player.name )
                             engine.notify.info("Player %s disconnected because he was logging in from other connection", player.name)
                             
@@ -126,7 +128,7 @@ class EngMsg:
                         player.connection = conn
                 
                 EngMsg.cReader.addConnection(conn)
-                engine.notify.info("Client connected:%s@%s", player_name, conn.getAddress() )
+                engine.notify.info("Client connected: %s @ %s", player_name, conn.getAddress() )
                 EngMsg.activeConnections.append( ( conn, conn.getAddress(), player_name ) )
                 
             else:
@@ -140,8 +142,7 @@ class EngMsg:
         #check for disconnects
         for connection, address, name in EngMsg.activeConnections[:]:   
             if not connection.getSocket().Active():
-                print "Client disconnected:", name, "@", address
-                engine.notify.info("Client disconnected:%s@%s", name, address)
+                engine.notify.info("Client disconnected: %s @ %s", name, address)
                 EngMsg.disconnect(connection, address, name)
     
     @staticmethod
@@ -211,7 +212,7 @@ class EngMsg:
             netDatagram = NetDatagram()
             netDatagram.addString(pickle.dumps(msg))
             if EngMsg.cWriter.send(netDatagram, client):
-                engine.notify.debug( "Sent client:%s@%s\tmessage:%s" , name, address, msg )
+                engine.notify.debug( "Sent client: %s @ %s\tmessage:%s" , name, address, msg )
         
     
     @staticmethod
@@ -224,16 +225,24 @@ class EngMsg:
                 msg = pickle.loads(dgi.getString())
                 engine.notify.info("Engine received a message:%s, from:%s", msg, str(datagram.getConnection().getAddress()))
                 return (msg, datagram.getConnection() )
-                #return msg
+
           
         return None
           
     @staticmethod
-    def _sendMsg(msg):
+    def _sendMsg(msg, source = None):
         try:
-            EngMsg.broadcastMsg(msg)
+            if source:
+                for conn, address, name in EngMsg.activeConnections:
+                    if conn == source:
+                        netDatagram = NetDatagram()
+                        netDatagram.addString(pickle.dumps(msg))
+                        if EngMsg.cWriter.send(netDatagram, conn):
+                            engine.notify.debug( "Sent client: %s @ %s\tmessage:%s" , name, address, msg )
+            else:
+                EngMsg.broadcastMsg(msg)
         except:
-            engine.notify.critical("Could not send message to clients, reason :%s", sys.exc_info()[1])
+            engine.notify.critical("Could not send message to clients, reason : %s", sys.exc_info()[1])
             return
         
         engine.notify.info("Engine posted a message: %s" , msg )
@@ -243,21 +252,20 @@ class EngMsg:
         EngMsg._sendMsg(Msg(Msg.MOVE, (unit_id, move_actions))) 
                                                                       
     @staticmethod
-    def sendState(engine_state):
-        EngMsg._sendMsg(Msg(Msg.ENGINE_STATE, engine_state))
+    def sendState(engine_state, source):
+        EngMsg._sendMsg(Msg(Msg.ENGINE_STATE, engine_state), source)
     
     @staticmethod
     def sendLevel(pickled_level):
         EngMsg._sendMsg(Msg(Msg.LEVEL, pickled_level))
     
     @staticmethod
-    def sendErrorMsg(error_msg):
-        EngMsg._sendMsg(Msg(Msg.ERROR, error_msg))
+    def sendErrorMsg(error_msg, source = None):
+        EngMsg._sendMsg(Msg(Msg.ERROR, error_msg), source)
     
     @staticmethod
     def sendNewTurn(turn_num):
         EngMsg._sendMsg(Msg(Msg.NEW_TURN, turn_num))
-    
     
     @staticmethod
     def sendUnit(pickled_unit):
@@ -337,7 +345,7 @@ class ClientMsg:
         if EngMsg.getData(s, 2) != 'Send your name':
             return False
 
-        s.SendData('blood angels')
+        s.SendData(NAME)
 
         welcomeMsg = EngMsg.getData(s, 2)
         
