@@ -1,6 +1,7 @@
 from direct.actor.Actor import Actor
-from panda3d.core import Point4, Point3, NodePath#@UnresolvedImport
+from panda3d.core import Point4, Point3, Point2, NodePath#@UnresolvedImport
 import random
+from unit import Unit
 
 #===============================================================================
 # CLASS UnitModel --- DEFINITION
@@ -48,6 +49,26 @@ class UnitModel:
         elif unit.owner_id == "2":
             self.team_color = Point4(0, 0, 1, 0)
 
+        if self.unit.heading == Unit.HEADING_NW:
+            o = Point2(x-1, y+1)
+        elif self.unit.heading == Unit.HEADING_N:
+            o = Point2(x, y+1)
+        elif self.unit.heading == Unit.HEADING_NE:
+            o = Point2(x+1, y+1)
+        elif self.unit.heading == Unit.HEADING_W:
+            o = Point2(x-1, y)
+        elif self.unit.heading == Unit.HEADING_E:
+            o = Point2(x+1, y)
+        elif self.unit.heading == Unit.HEADING_SW:
+            o = Point2(x-1, y-1)
+        elif self.unit.heading == Unit.HEADING_S:
+            o = Point2(x, y-1)
+        elif self.unit.heading == Unit.HEADING_SE:
+            o = Point2(x+1, y-1)
+        
+        self.dest_node.setPos(o.getX()+0.5, o.getY()+0.5, 0.3)
+        self.model.lookAt(self.dest_node)
+        
         self.model.reparentTo(self.node)
         self.dummy_node.reparentTo(self.node)
         self.dest_node.reparentTo(self.node)
