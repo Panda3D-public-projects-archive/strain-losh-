@@ -193,19 +193,6 @@ class Interface(DirectObject.DirectObject):
     def clearTileBlendTexture(self, tile):
         """Clears all blended textures from a tile."""
         tile.setTextureOff()
-    
-    def markSelectedTile(self, tile):
-        """Marks the tile of the selected unit with circular pointer in color of the unit's team."""
-        if self.selected_unit.model.findNetTag("player_name").getTag("player_name") == "ultramarinac":
-            color = Vec4(1, 0, 0, 1)
-        else:
-            color = Vec4(0, 0, 1, 1)
-        self.setTileBlendTexture(tile, self.selected_unit_tex, color)
-        self.selected_unit_tile = tile
-        
-    def clearSelectedTile(self, tile):
-        """Clear the mark from the tile of the selected unit."""
-        self.clearTileBlendTexture(tile)
 
     def loadTurnArrows(self, dest):
         self.turn_arrow_dict = {}        
@@ -329,8 +316,9 @@ class Interface(DirectObject.DirectObject):
         """
         self.deselectUnit()
         self.selected_unit = unit
-        pos = self.selected_unit.model.getPos()
-        self.markSelectedTile(self.ge.tile_np_list[int(pos.getX())][int(pos.getY())])
+        pos = self.selected_unit.node.getPos()
+        #self.markSelectedTile(self.ge.tile_np_list[int(pos.getX())][int(pos.getY())])
+        self.selected_unit.marker.show()
         u = self.ge.unit_np_dict[int(unit.id)].unit
         self.off_model = UnitModel(u, scale=1, h=0, pos=Point3(0,-8,-1.7), off=True)
         self.off_model.reparentTo(self.ge.alt_render)
@@ -349,7 +337,8 @@ class Interface(DirectObject.DirectObject):
            clears Interface.selected_unit variable.
         """
         if self.selected_unit:
-            self.clearSelectedTile(self.selected_unit_tile)
+            #self.clearSelectedTile(self.selected_unit_tile)
+            self.selected_unit.marker.hide()
             if self.off_model:
                 self.ge.destroyUnit(self.off_model)
             self.selected_unit = None
@@ -403,7 +392,7 @@ class Interface(DirectObject.DirectObject):
                         self.selectUnit(unit)
                     else:
                         # Remember movement tile so we can send orientation message when mouse is depressed
-                        self.unit_move_destination = Point2(int(unit.model.getX()), int(unit.model.getY()))
+                        self.unit_move_destination = Point2(int(unit.node.getX()), int(unit.node.getY()))
                 elif node_type == "tile":
                     p = selected.getParent().getPos()
                     u = self.ge.unit_np_list[int(p.x)][int(p.y)]
