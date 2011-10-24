@@ -1,5 +1,7 @@
 from direct.actor.Actor import Actor
 from panda3d.core import Point4, Point3, Point2, NodePath#@UnresolvedImport
+from panda3d.core import PointLight#@UnresolvedImport
+from pandac.PandaModules import TransparencyAttrib#@UnresolvedImport
 import random
 from unit import Unit
 
@@ -80,7 +82,15 @@ class UnitModel:
         self.marker.setP(-90)
         self.marker.setScale(0.7, 0.7, 0.7)
         self.marker.setColor(self.marker_color)
-        self.marker.setLightOff()
+        plight = PointLight('plight')
+        plight.setColor(Point4(0.2, 0.2, 0.2, 1))
+        plnp = self.node.attachNewNode(plight)
+        plnp.setPos(0, 0, 0)
+        self.marker.setLight(plnp)
+        self.marker.setTransparency(TransparencyAttrib.MAlpha)
+        self.marker.setAlphaScale(0.5) 
+        self.marker.setTag("type", "unit_marker")
+        
         self.marker.setPos(0, 0, 0.02)
         #self.marker.flattenLight()
         self.marker.hide()
