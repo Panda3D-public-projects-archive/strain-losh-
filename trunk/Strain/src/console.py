@@ -97,8 +97,9 @@ class GuiConsole(DirectObject.DirectObject):
             self.consoleFrame.toggleVis()
 
     def hide(self):
-        if not self.consoleFrame.isHidden():
-            self.consoleFrame.toggleVis()
+        pass
+        #if not self.consoleFrame.isHidden():
+        #    self.consoleFrame.toggleVis()
             
     def toggleConsole(self):
         self.consoleFrame.toggleVis()

@@ -340,6 +340,7 @@ class GraphicsEngine(ShowBase):
                 self.interface.printUnitData()
         elif msg.type == Msg.ERROR:
             self.interface.console.onEnterPress(str(msg.values))
+            self.interface.console.show()
         # TODO: ogs: implementirati primanje ostalih poruka
         else:
             logger.error("Unknown message Type: %s", msg.type)
