@@ -94,11 +94,16 @@ class GraphicsEngine(ShowBase):
         # debug
         self.accept("i", self.info)
 
-    def initAll(self, level, players, units):
+
+    def initAll(self, level, units):
+    #TODO: ogs: ovo sam ti zakomentirao
+    #def initAll(self, level, players, units):
         """Initializes all the components of scene graph."""
         # TODO: ogs: Napraviti proceduru i za deinicijalizaciju svega i testirati kroz pstats
         self.initLevel(level)
-        self.initUnits(players, units)
+        #TODO: ogs: ovo sam ti zakomentirao        
+        #self.initUnits(players, units)
+        self.initUnits(units)
         self.initLights()
         self.initAltBuffer()
         self.initCollision()  
@@ -138,15 +143,18 @@ class GraphicsEngine(ShowBase):
                 tile_nodes.append(c)
             self.tile_np_list.append(tile_nodes)
 
-    def initUnits(self, players, units):
+    #TODO: ogs: ovo sam ti zakomentirao
+    #def initUnits(self, players, units):
+    def initUnits(self, units):
         # Set up dictionaries for player and unit nodepaths
-        self.player_np_dict = {}
         self.unit_np_dict = {}
         
-        for player in players:
+        #TODO: ogs: ovo sam ti zakomentirao        
+        #self.player_np_dict = {}
+        #for player in players:
             # Create a node in the scene graph for each player
-            player_node = self.node.attachNewNode(str(player.id) + "_playernode")
-            self.player_np_dict[player.id] = player_node 
+        #    player_node = self.node.attachNewNode(str(player.id) + "_playernode")
+        #    self.player_np_dict[player.id] = player_node 
             
         for unit in units.itervalues():
             um = UnitModel(unit)
@@ -311,9 +319,13 @@ class GraphicsEngine(ShowBase):
         if msg.type == Msg.ENGINE_STATE:
             self.level = pickle.loads(msg.values['pickled_level'])
             self.turn = msg.values['turn']
-            players = pickle.loads(msg.values['pickled_players'])            
             units = pickle.loads(msg.values['pickled_units'])
-            self.initAll(self.level, players, units)
+            
+            #TODO: ogs: ovo sam ti zakomentirao
+            #players = pickle.loads(msg.values['pickled_players'])            
+            #self.initAll(self.level, players, units)
+            
+            self.initAll(self.level, units)
             if not self.engineLoaded:
                 self.engineLoaded = True
         elif msg.type == Msg.MOVE:
