@@ -156,10 +156,10 @@ class Engine( Thread ):
         self.turn = 0        
         self.beginTurn()
 
-
-
+        #+++++++++++++++++++++++++++++++++++++++++++++MAIN LOOP+++++++++++++++++++++++++++++++++++++++++++++
+        #+++++++++++++++++++++++++++++++++++++++++++++MAIN LOOP+++++++++++++++++++++++++++++++++++++++++++++
         while( self.stop == False ):
-            
+
             time.sleep( 0.1 )
 
             #see if there is a new client connected
@@ -170,12 +170,13 @@ class Engine( Thread ):
             if msg:
                 self.handleMsg( msg[0], msg[1] )
         
+        #+++++++++++++++++++++++++++++++++++++++++++++MAIN LOOP+++++++++++++++++++++++++++++++++++++++++++++
+        #+++++++++++++++++++++++++++++++++++++++++++++MAIN LOOP+++++++++++++++++++++++++++++++++++++++++++++
         
         #we are shutting down everything   
-        EngMsg.close()       
+        EngMsg.stopServer()       
         
-        notify.info( "++++++++++++++++++++++++Engine stopped!++++++++++++++++++++++++" )
-        print "++++++++++++++++++++++++Engine stopped!++++++++++++++++++++++++" 
+        notify.info( "++++++++++++++++++++++++Engine stopped!++++++++++++++++++++++++" ) 
 
         return 0
 
