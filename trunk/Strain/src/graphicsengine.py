@@ -16,13 +16,13 @@ from messaging import ClientMsg, Msg
 # Panda3D parameter file handling
 #===============================================================================
 
-loadPrcFileData("", "model-path "+"$MAIN_DIR/models")
-loadPrcFileData("", "model-path "+"$MAIN_DIR/sounds")
-loadPrcFileData("", "model-path "+"$MAIN_DIR/textures")
+loadPrcFileData("", "model-path "+"./data/models")
+loadPrcFileData("", "model-path "+"./data/sounds")
+loadPrcFileData("", "model-path "+"./data/textures")
 
 # config dictionary variable
 config = {} 
-cfile = open("etc/user.cfg", "r")
+cfile = open("data/config/user.cfg", "r")
 while 1:
     string = cfile.readline()
     if (string == ""):

@@ -34,7 +34,7 @@ class GuiConsole(DirectObject.DirectObject):
             self.pos_max_x -= 1 
             self.pos_max_y -= 1
       
-        fixedWidthFont = ge.loader.loadFont("etc/monoMMM_5.ttf")
+        fixedWidthFont = ge.loader.loadFont("data/config/monoMMM_5.ttf")
         if not fixedWidthFont.isValid():
             print "pandaInteractiveConsole.py :: could not load the defined font %s" % str(self.font)
             fixedWidthFont = DGG.getDefaultFont()
