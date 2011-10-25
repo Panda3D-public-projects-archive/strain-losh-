@@ -1,10 +1,12 @@
 import engine as Engine
 from pandac.PandaModules import Point2#@UnresolvedImport
 
+LEVELS_ROOT = "./data/levels/"
+
 class Level:
-    
+        
     def __init__(self, name):        
-        self.name = name    
+        self.name = LEVELS_ROOT + name    
         self.maxX = self.maxY = 0
         self._level_data = []    
         
@@ -16,7 +18,7 @@ class Level:
 
     def load(self, name):
         line_count = 0
-        lvl_file = open('levels/'+name, "r")
+        lvl_file = open( name, "r")
         for line in lvl_file:
             line_count = line_count + 1
             if line_count == 1:

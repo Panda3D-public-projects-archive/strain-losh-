@@ -232,7 +232,7 @@ class Engine( Thread ):
         
         notify.debug( "Army lists loading" )
         
-        xmldoc = minidom.parse('etc/armylist.xml')
+        xmldoc = minidom.parse('data/armylist.xml')
         #print xmldoc.firstChild.toxml()
         
         self.players = []

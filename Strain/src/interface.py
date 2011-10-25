@@ -670,7 +670,7 @@ class GuiTextFrame:
         self.offset = offset
         self.frame.setPos(self.offset.getX(), 0, self.offset.getZ())
 
-        fixedWidthFont = loader.loadFont("etc/monoMMM_5.ttf")#@UndefinedVariable
+        fixedWidthFont = loader.loadFont("data/config/monoMMM_5.ttf")#@UndefinedVariable
         if not fixedWidthFont.isValid():
             print "pandaInteractiveConsole.py :: could not load the defined font %s" % str(self.font)
             fixedWidthFont = DGG.getDefaultFont()
