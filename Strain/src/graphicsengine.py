@@ -73,10 +73,7 @@ class GraphicsEngine(ShowBase):
 
         # Create messaging task
         self.taskMgr.add(self.msgTask, "msg_task")
-        
-        # Get engine state (initializes players, units, levels)
-        ClientMsg.getEngineState()
-        
+             
         # Main node in a scene graph. Everything should be reparented to this node or another node under this node
         # This node is reparented to render
         self.node = self.render.attachNewNode("master")
@@ -220,7 +217,7 @@ class GraphicsEngine(ShowBase):
         
     def shutdownClient(self):
         #ClientMsg.shutdownEngine()
-        ClientMsg.close()
+        ClientMsg.disconnect()
         sys.exit()
 
     def setInterfaceEnable(self):
@@ -345,6 +342,10 @@ class GraphicsEngine(ShowBase):
 
     def msgTask(self, task):
         """Task that listens for messages on client queue."""
+        
+        #needs to be called every frame, this takes care of connection
+        ClientMsg.handleConnection()
+        
         msg = ClientMsg.readMsg()        
         if msg:
             self.handleMsg(msg)            

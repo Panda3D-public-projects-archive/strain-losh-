@@ -14,6 +14,8 @@ import threading
 import collections
 
 
+
+
 IP_ADDRESS = 'localhost'
 #IP_ADDRESS = 'krav.servebeer.com'
 #NAME = 'blood angels'
@@ -80,15 +82,25 @@ class EngMsg:
         
   
         backlog = 5
-        tcpSocket = EngMsg.cManager.openTCPServerRendezvous(TCP_PORT , backlog)        
+        EngMsg.tcpSocket = EngMsg.cManager.openTCPServerRendezvous(TCP_PORT , backlog)        
         
-        EngMsg.cListener.addConnection(tcpSocket)
+        EngMsg.cListener.addConnection(EngMsg.tcpSocket)
     
     @staticmethod
-    def close():
-        for client, address, name in EngMsg.activeConnections:
-            EngMsg.cManager.closeConnection(client)
+    def stopServer():
+        for client, address, name in EngMsg.activeConnections[:]:
+            EngMsg.disconnect(client, address, name)
             engine.notify.info("Closing connection with: %s @ %s", name, address)
+    
+        EngMsg.activeConnections = []
+        
+        EngMsg.cManager = None
+        EngMsg.cListener = None
+        EngMsg.cReader = None
+        EngMsg.cWriter = None
+        EngMsg.tcpSocket = None
+     
+        EngMsg.handshakedConnections = None
     
     @staticmethod
     def handleConnections():
@@ -289,22 +301,15 @@ class ClientMsg:
     
     @staticmethod
     def connect():
-        
-        if ClientMsg.num_failed_attempts == 5:
-            print "Already failed to connect 5 times, will not try anymore..."
-            ClientMsg.num_failed_attempts += 1
-            
-        if ClientMsg.num_failed_attempts > 5:
-            return False
-        
-        print "Trying to connect to server:",IP_ADDRESS,":",TCP_PORT
+        #TODO: ogs: i ovo moras maknut na logger od klijenta
+        engine.notify.info( "Trying to connect to server: %s:%s", IP_ADDRESS, TCP_PORT )
         
         ClientMsg.cManager = QueuedConnectionManager()
         ClientMsg.cReader = QueuedConnectionReader(ClientMsg.cManager, 0)
         ClientMsg.cWriter = ConnectionWriter(ClientMsg.cManager, 0)
         
         # how long until we give up trying to reach the server?
-        timeout_in_miliseconds = 3000  # 3 seconds               
+        timeout_in_miliseconds = 3000  # 3 seconds
         ClientMsg.myConnection = ClientMsg.cManager.openTCPClientConnection(IP_ADDRESS, TCP_PORT, timeout_in_miliseconds)
         
         if ClientMsg.myConnection:
@@ -313,36 +318,75 @@ class ClientMsg:
             #try handshaking
             if not ClientMsg.handshake():
                 ClientMsg.disconnect()
+                #TODO: ogs: i ovo moras maknut na logger od klijenta
                 engine.notify.error( "Did not pass handshake.")
-                ClientMsg.num_failed_attempts += 1
                 return False
             
             ClientMsg.cReader.addConnection(ClientMsg.myConnection)
             
-            ClientMsg.num_failed_attempts = 0
-            print "Client connected to:", ClientMsg.myConnection.getAddress()
+            #TODO: ogs: i ovo moras maknut na logger od klijenta
+            engine.notify.info( "Connected to server: %s", ClientMsg.myConnection.getAddress() )
             return True
             
-        ClientMsg.num_failed_attempts += 1
         return False
+            
             
     @staticmethod
     def disconnect():
-        ClientMsg.cReader.removeConnection( ClientMsg.myConnection )
-        ClientMsg.cManager.closeConnection( ClientMsg.myConnection )
+        if ClientMsg.myConnection:
+            ClientMsg.cReader.removeConnection( ClientMsg.myConnection )
+            ClientMsg.cManager.closeConnection( ClientMsg.myConnection )
+            
         ClientMsg.myConnection = None
+            
+            
+    @staticmethod
+    def handleConnection():
+        """Return True if connection is ok, returns False if there is no connection."""
+        
+        #if we are not connected, try to connect
+        if not ClientMsg.myConnection:
+            
+            if ClientMsg.num_failed_attempts > 5:
+                return False
+            
+            #if we already tried 5 times, don't even bother
+            if ClientMsg.num_failed_attempts == 5:
+                engine.notify.error("Failed to connect %d times, giving up.", ClientMsg.num_failed_attempts)
+                ClientMsg.num_failed_attempts += 1
+                return False
+            
+            if ClientMsg.connect():
+                #every time we reconnect to server, get the engine state 
+                ClientMsg.getEngineState()
+                ClientMsg.num_failed_attempts = 0             
+                return True
+            else:
+                ClientMsg.num_failed_attempts += 1                
+                return False
+            
+        
+        #check the connection, if there is none, disconnect everything and return false
+        if not ClientMsg.myConnection.getSocket().Active():
+            #TODO: ogs: prebacit i ovo na klijentov logger
+            engine.notify.error( "Lost connection to server: %s", IP_ADDRESS )
+            ClientMsg.disconnect()
+            return False
+
+        #we are connected and everything is ok
+        return True
             
     @staticmethod
     def handshake():
         s = ClientMsg.myConnection.getSocket()
 
-        s.SendData('LOSH?')
+        s.SendData('LOSH?')        
         
         if EngMsg.getData(s, 2) != 'LOSH!':
             return False
 
         s.SendData('Strain?')
-        
+                
         if EngMsg.getData(s, 2) != 'Send your name':
             return False
 
@@ -358,10 +402,10 @@ class ClientMsg:
     @staticmethod
     def readMsg():
         """Return the message, if any, or None if there was nothing to read"""
-        if not ClientMsg.myConnection:        
-            if not ClientMsg.connect():
-                return None
-            
+        
+        if not ClientMsg.myConnection:
+            return None
+        
         if ClientMsg.cReader.dataAvailable():
             datagram = NetDatagram()                          
             if ClientMsg.cReader.getData(datagram):
@@ -373,32 +417,18 @@ class ClientMsg:
                 return msg
                                             
         return None    
-    
+
+        
     @staticmethod
-    def sendMsg(msg):
-        
+    def _sendMsg(msg):        
+
         if not ClientMsg.myConnection:
-            if not ClientMsg.connect():
-                return
-        
+            return
+         
         datagram = NetDatagram()        
         datagram.addString(pickle.dumps(msg, pickle.HIGHEST_PROTOCOL))   
         ClientMsg.cWriter.send(datagram, ClientMsg.myConnection)
 
-        
-    @staticmethod
-    def close():
-        ClientMsg.cManager.closeConnection(ClientMsg.myConnection)
-    
-    @staticmethod
-    def _sendMsg(msg):
-        
-        if not ClientMsg.myConnection:        
-            if not ClientMsg.connect():
-                return
-
-
-        ClientMsg.sendMsg(msg)
                  
         #TODO: ogs: sredit da ti ovdje pise u GraphicsEngine, nemres stavit import jer je onda ciklicki povezano
         #GraphicsEngine.logger.debug("Client posted a message: %s", msg)
