@@ -375,13 +375,20 @@ class Interface(DirectObject.DirectObject):
         self.destination = None
         if self.hovered_gui == self.deselect_button:
             self.deselectUnit()
+            self.console.unfocus()
         elif self.hovered_gui == self.punit_button:
             self.selectPrevUnit()
+            self.console.unfocus()
         elif self.hovered_gui == self.nunit_button:
-            self.selectNextUnit() 
+            self.selectNextUnit()
+            self.console.unfocus() 
         elif self.hovered_gui == self.endturn_button:
             self.endTurn()
-        else:    
+            self.console.unfocus()
+        elif self.hovered_gui == self.console:
+            self.console.focus()
+        else:
+            self.console.unfocus()    
             selected = self.getMouseHoveredObject()
             if selected:
                 node_type = selected.findNetTag("type").getTag("type")
