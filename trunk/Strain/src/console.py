@@ -12,8 +12,8 @@ CONSOLE_PLAYER2_TEXT = 4
 
 CONSOLE_SYSTEM_ERROR_TEXT_COLOR = (255, 0, 0, 1)
 CONSOLE_SYSTEM_MESSAGE_TEXT_COLOR = (255, 255, 255, 1)
-CONSOLE_PLAYER1_TEXT_COLOR = (0, 150, 0, 1)
-CONSOLE_PLAYER2_TEXT_COLOR = (0, 100, 0, 1)
+CONSOLE_PLAYER1_TEXT_COLOR = (0, 150, 0, 0.8)
+CONSOLE_PLAYER2_TEXT_COLOR = (0, 100, 0, 0.8)
 
 
 
@@ -66,7 +66,7 @@ class GuiConsole(DirectObject.DirectObject):
                                     , entryFont   = fixedWidthFont
                                     , scale       = 1
                                     , frameColor  = (0,0,0,0.2)
-                                    , text_fg     = (255, 255, 255, 1)
+                                    , text_fg     = (0, 1, 0, 1)
                                     , text_shadow = (0, 0, 0, 1))
         
         
