@@ -11,6 +11,7 @@ import sys
 import logging
 import cPickle as pickle
 from messaging import ClientMsg, Msg
+from console import *
 
 #===============================================================================
 # Panda3D parameter file handling
@@ -334,7 +335,7 @@ class GraphicsEngine(ShowBase):
                 self.updateUnit(unit)
                 self.interface.printUnitData()
         elif msg.type == Msg.ERROR:
-            self.interface.console.onEnterPress(str(msg.values))
+            self.interface.console.consoleOutput(str(msg.values), CONSOLE_SYSTEM_ERROR)
             self.interface.console.show()
         # TODO: ogs: implementirati primanje ostalih poruka
         else:
