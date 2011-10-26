@@ -161,7 +161,7 @@ class GuiConsole(DirectObject.DirectObject):
         self.textBufferPos = self.textBufferLength-self.numlines
         # clear line
         self.consoleEntry.enterText('')
-        self.consoleOutput(textEntered, CONSOLE_PLAYER1)
+        self.consoleOutput(textEntered, CONSOLE_PLAYER1_TEXT)
         self.focus()
 
     def manageFocus(self):
@@ -176,7 +176,7 @@ class GuiConsole(DirectObject.DirectObject):
             self.write(printString, CONSOLE_SYSTEM_ERROR_TEXT_COLOR)
         elif msgType == CONSOLE_SYSTEM_MESSAGE:
             self.write(printString, CONSOLE_SYSTEM_MESSAGE_TEXT_COLOR)
-        elif msgType == CONSOLE_PLAYER1:
+        elif msgType == CONSOLE_PLAYER1_TEXT:
             self.write(printString, CONSOLE_PLAYER1_TEXT_COLOR)
         else:
             self.write(printString, CONSOLE_PLAYER2_TEXT_COLOR)
