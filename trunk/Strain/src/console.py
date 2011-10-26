@@ -5,6 +5,18 @@ from panda3d.core import Point3#@UnresolvedImport
 from pandac.PandaModules import TextNode#@UnresolvedImport
 import textwrap, re, string
 
+CONSOLE_SYSTEM_ERROR = 1
+CONSOLE_SYSTEM_MESSAGE = 2
+CONSOLE_PLAYER1_TEXT = 3
+CONSOLE_PLAYER2_TEXT = 4
+
+CONSOLE_SYSTEM_ERROR_TEXT_COLOR = (255, 0, 0, 1)
+CONSOLE_SYSTEM_MESSAGE_TEXT_COLOR = (255, 255, 255, 1)
+CONSOLE_PLAYER1_TEXT_COLOR = (0, 150, 0, 1)
+CONSOLE_PLAYER2_TEXT_COLOR = (0, 100, 0, 1)
+
+
+
 class GuiConsole(DirectObject.DirectObject):
     
     def __init__(self, parent, h_size, v_size, aspect, ge):
@@ -50,7 +62,7 @@ class GuiConsole(DirectObject.DirectObject):
                                     , pos         = (0.01, 0, 0.02)
                                     , initialText = "Enter text..."
                                     , numLines    = 1
-                                    , focus       = 1
+                                    , focus       = 0
                                     , entryFont   = fixedWidthFont
                                     , scale       = 1
                                     , frameColor  = (0,0,0,0.2)
@@ -87,7 +99,7 @@ class GuiConsole(DirectObject.DirectObject):
             label.setFont( fixedWidthFont )
             self.consoleOutputList.append( label )        
         
-        self.linelength = int((h_size/self.scale - 5) / 0.5)
+        self.linelength = 57
         self.linewrap = textwrap.TextWrapper()
         self.linewrap.width = self.linelength
         self.toggleConsole()
@@ -108,6 +120,8 @@ class GuiConsole(DirectObject.DirectObject):
         if hidden:
             #self.ignoreAll()
             self.accept( 'control', self.toggleConsole )
+            self.accept( 'enter', self.manageFocus )
+            self.accept( 'escape', self.unfocus)
         else:
             #self.ignoreAll()
             #self.accept( 'page_up', self.scroll, [-5] )
@@ -120,6 +134,8 @@ class GuiConsole(DirectObject.DirectObject):
             #self.accept( 'arrow_down', self.scrollCmd, [-1] )
               
             self.accept( 'control', self.toggleConsole )
+            self.accept( 'enter', self.manageFocus )
+            self.accept( 'escape', self.unfocus)
             #self.accept( self.autocomplete_key, self.autocomplete )
             #self.accept( self.autohelp_key, self.autohelp )
               
@@ -145,10 +161,27 @@ class GuiConsole(DirectObject.DirectObject):
         self.textBufferPos = self.textBufferLength-self.numlines
         # clear line
         self.consoleEntry.enterText('')
-        self.write(textEntered)
+        self.consoleOutput(textEntered, CONSOLE_PLAYER1)
         self.focus()
 
-    
+    def manageFocus(self):
+        if self.consoleFrame.isHidden():
+            self.consoleFrame.toggleVis()
+            
+        if self.consoleEntry["focus"] == 0:
+            self.focus()
+            
+    def consoleOutput(self, printString, msgType):
+        if msgType == CONSOLE_SYSTEM_ERROR:
+            self.write(printString, CONSOLE_SYSTEM_ERROR_TEXT_COLOR)
+        elif msgType == CONSOLE_SYSTEM_MESSAGE:
+            self.write(printString, CONSOLE_SYSTEM_MESSAGE_TEXT_COLOR)
+        elif msgType == CONSOLE_PLAYER1:
+            self.write(printString, CONSOLE_PLAYER1_TEXT_COLOR)
+        else:
+            self.write(printString, CONSOLE_PLAYER2_TEXT_COLOR)
+                
+        
     def write( self, printString, color=(100,100,100,0.5) ):
         # remove not printable characters (which can be input by console input)
         printString = re.sub( r'[^%s]' % re.escape(string.printable[:95]), "", printString)
