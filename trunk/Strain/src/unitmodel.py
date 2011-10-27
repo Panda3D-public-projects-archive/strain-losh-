@@ -42,45 +42,22 @@ class UnitModel:
         self.node.setTag("player_id", str(unit.owner_id))
         self.node.setTag("team", str(unit.owner_id))
 
-        #TODO: ogs: ovo sam ti promijenio ad isto koristi owner_id
-        if unit.owner_id == "1":
-            self.team_color = Point4(1, 0, 0, 0)
-        elif unit.owner_id == "2":
-            self.team_color = Point4(0, 0, 1, 0)
-
+        # If unit model is not rendered for portrait, set its heading as received from server
         if not off:
-            if self.unit.heading == Unit.HEADING_NW:
-                o = Point2(x-1, y+1)
-            elif self.unit.heading == Unit.HEADING_N:
-                o = Point2(x, y+1)
-            elif self.unit.heading == Unit.HEADING_NE:
-                o = Point2(x+1, y+1)
-            elif self.unit.heading == Unit.HEADING_W:
-                o = Point2(x-1, y)
-            elif self.unit.heading == Unit.HEADING_E:
-                o = Point2(x+1, y)
-            elif self.unit.heading == Unit.HEADING_SW:
-                o = Point2(x-1, y-1)
-            elif self.unit.heading == Unit.HEADING_S:
-                o = Point2(x, y-1)
-            elif self.unit.heading == Unit.HEADING_SE:
-                o = Point2(x+1, y-1)
-        
-            self.dest_node.setPos(render, o.getX()+0.5, o.getY()+0.5, 0.3)
-            self.model.lookAt(self.dest_node)
-        
+            self.setHeading(self.unit.heading)
+
         if unit.owner_id == "1":
-            self.marker_color = Point4(1, 0, 0, 1)
+            self.team_color = Point4(1, 0, 0, 1)
         elif unit.owner_id == "2":
-            self.marker_color = Point4(0.106, 0.467, 0.878, 1)
+            self.team_color = Point4(0.106, 0.467, 0.878, 1)
         else:
-            self.marker_color = Point4(0, 1, 0, 1)
+            self.team_color = Point4(0, 1, 0, 1)
             
         self.marker = loader.loadModel("ripple-split")
         self.marker.reparentTo(self.node)
         self.marker.setP(-90)
         self.marker.setScale(0.7, 0.7, 0.7)
-        self.marker.setColor(self.marker_color)
+        self.marker.setColor(self.team_color)
         plight = PointLight('plight')
         plight.setColor(Point4(0.2, 0.2, 0.2, 1))
         plnp = self.node.attachNewNode(plight)
@@ -160,7 +137,34 @@ class UnitModel:
         self.node.reparentTo(node)
         
     def setPos(self, pos):
-        self.node.setPos(pos)      
+        self.node.setPos(pos)   
+        
+    def getHeadingTile(self, heading):
+        x = int(self.unit.pos.getX())
+        y = int(self.unit.pos.getY())        
+        
+        if heading == Unit.HEADING_NW:
+            o = Point2(x-1, y+1)
+        elif heading == Unit.HEADING_N:
+            o = Point2(x, y+1)
+        elif heading == Unit.HEADING_NE:
+            o = Point2(x+1, y+1)
+        elif heading == Unit.HEADING_W:
+            o = Point2(x-1, y)
+        elif heading == Unit.HEADING_E:
+            o = Point2(x+1, y)
+        elif heading == Unit.HEADING_SW:
+            o = Point2(x-1, y-1)
+        elif heading == Unit.HEADING_S:
+            o = Point2(x, y-1)
+        elif heading == Unit.HEADING_SE:
+            o = Point2(x+1, y-1)
+        return o
+    
+    def setHeading(self, heading):
+        tile_pos = self.getHeadingTile(heading)
+        self.dest_node.setPos(render, tile_pos.getX()+0.5, tile_pos.getY()+0.5, 0.3)
+        self.model.lookAt(self.dest_node)
         
     def play(self, anim):
         self.model.play(anim)
