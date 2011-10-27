@@ -1,4 +1,3 @@
-import engine as Engine
 from pandac.PandaModules import Point2#@UnresolvedImport
 
 LEVELS_ROOT = "./data/levels/"
@@ -7,12 +6,11 @@ class Level:
         
     def __init__(self, name):        
         self.name = LEVELS_ROOT + name    
-        self.maxX = self.maxY = 0
+        self.maxX = 0
+        self.maxY = 0
         self._level_data = []    
         
-        Engine.notify.debug( "Level loading: %s", self.name )        
-        self.load(self.name)
-        Engine.notify.info( "Level: %s loaded OK", self.name )        
+        self.load(self.name)        
 
         self.center = Point2( self.maxX / 2, self.maxY / 2 )
 
