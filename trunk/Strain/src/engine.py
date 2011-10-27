@@ -146,7 +146,7 @@ class Engine( Thread ):
         self.level = Level( "level2.txt" )
 
         #we make this so its size is the same as level 
-        self.dynamic_obstacles = [[(0,0)] * self.level.maxY for i in xrange(self.level.maxX)]
+        self.dynamic_obstacles = [[(0,0)] * self.level.maxY for i in xrange(self.level.maxX)] #@UnusedVariable
         
         self.loadArmyList()
 
@@ -206,9 +206,7 @@ class Engine( Thread ):
         pass
 
         
-    def compileState(self):
-        #TODO: krav: treba u paramtear ove funkcije primit za kojeg plejera se zove fja i prema tome ispunit cijeli state
-        
+    def compileState(self):        
         dic = {}
 
         dic[ 'pickled_units' ] = pickle.dumps( self.units )    
@@ -279,29 +277,19 @@ class Engine( Thread ):
 
     def endTurn(self):
         
-        #TODO: krav: end turn here
         self.beginTurn()
         
         pass
 
 
-    #TODO: krav: ovo treba parametar koji plejer je trnutno aktivan da mu ne posaljem krive unite
     def beginTurn(self):
         
         
         #increment turn by one
         self.turn += 1
 
-        #TODO: krav: visible units here:
-        #list_visible_units = []
-        
-        #for player in self.players:
-        #    player.list_visible_enemies = []
-        
-        
         EngMsg.sendNewTurn( self.turn )
         
-              
         #go through all units
         for unit_id in self.units:
             
@@ -319,15 +307,7 @@ class Engine( Thread ):
             unit.move_dict = self.getMoveDict(unit)
             unit.losh_dict = self.getLOSHDict(unit.pos)
             
-            #check visibility to other units
-            #for unit2 in self.units:
-            #    if unit2.pos in losh_dict:
-                    
-            #        list_visible_units.append( unit2 )
-                    
-            #        if( unit2.owner != unit_id ):
-            #            unit_id.owner.list_visible_enemies.append( unit2 )
-            
+
             #after updating everything send unit_id data to client        
             EngMsg.sendUnit( pickle.dumps(unit) )
         
@@ -376,15 +356,12 @@ class Engine( Thread ):
         #we add tiles to list with this visibility, if we encounter a partial obstacle, we change this to 1
         #so that all the next tiles we add are partial as well
         visibility = 0
-
-    
-        #TODO: krav: napravit da nemres vidit kroz dijagonale            
+        
         if( absx0 > absy0 ):
             y_x = absy0/absx0;
             D = y_x -0.5;
 
-            for i in xrange( int( absx0 ) ):
-
+            for i in xrange( int( absx0 ) ): #@UnusedVariable
                 lastx = x
                 lasty = y
                 
@@ -400,7 +377,7 @@ class Engine( Thread ):
                 D += y_x
                 
                 #=========================TEST==========================================
-                list_visible_tiles, visibility = self.testTile( x, y, distance, list_visible_tiles, visibility )
+                list_visible_tiles, visibility = self.testTile( x, y, distance, list_visible_tiles, visibility, lastx, lasty )
                 
                 distance += 1
             
@@ -409,7 +386,9 @@ class Engine( Thread ):
             x_y = absx0/absy0;
             D = x_y -0.5;
 
-            for i in xrange( int( absy0 ) ):
+            for i in xrange( int( absy0 ) ): #@UnusedVariable
+                lastx = x
+                lasty = y
         
                 if( D > 0 ):
                     if( sgnx0 == -1 ): x -= 1
@@ -422,7 +401,7 @@ class Engine( Thread ):
                 D += x_y
                 
                 #=========================TEST==========================================
-                list_visible_tiles, visibility = self.testTile( x, y, distance, list_visible_tiles, visibility )
+                list_visible_tiles, visibility = self.testTile( x, y, distance, list_visible_tiles, visibility, lastx, lasty )
                 
                 distance += 1
                 
@@ -431,27 +410,55 @@ class Engine( Thread ):
                 
 
     #tests the tile for visibility
-    def testTile(self, x, y, distance, list_visible_tiles, visibility ):
+    def testTile(self, x, y, distance, list_visible_tiles, visibility, lastx, lasty ):
         
         #level bounds
         if( self.outOfLevelBounds(x, y) ):
             return( list_visible_tiles, visibility )
         
-        #if we can't see here, set visibility to 2
+        #if we can't see here, set visibility to 2, and return
         if( self.level._level_data[x][y] > 1 ):
             visibility = 2
+            list_visible_tiles.append( (Point2(x,y), visibility) )                    
+            return( list_visible_tiles, visibility )
         
-        #partial view, increase visibility by one, if not already 2... 
-        #if this is a tile next the origin, than ignore the partial
-        #if we have already partial cover, and we come up on other, we cant see any further
-        elif( self.level._level_data[x][y] == 1 ):
-            if( distance > 1 and visibility < 2 ):
-                visibility += 1
+        #partial view, increase visibility by one 
+        if( self.level._level_data[x][y] == 1 ):
+            #if this is a tile next the origin, than ignore the partial
+            if distance > 1 and visibility < 2:
+                    visibility += 1
     
-             
-        list_visible_tiles.append( (Point2(x,y), visibility) )
-
-                    
+        #diagonal
+        if lastx != x and lasty != y:
+            
+            #if both side tiles are totally blocked, just set visibility to 2 and return
+            if self.level._level_data[x][lasty] > 1 and self.level._level_data[lastx][y] > 1:
+                visibility = 2
+                
+            #if both side tiles are partially blocked, set partial visibility
+            elif self.level._level_data[x][lasty] == 1 and self.level._level_data[lastx][y] == 1:
+                if distance > 1 and visibility < 2:                    
+                        visibility += 1
+                
+            #if one side tile is completely blocked
+            elif self.level._level_data[x][lasty] >= 2:
+                
+                #if other side tile is empty, or partial, treat it as partial cover
+                if self.level._level_data[lastx][y] <= 1:
+                    if distance > 1 and visibility < 2:                    
+                            visibility += 1
+                
+            #if one side tile is completely blocked
+            elif self.level._level_data[lastx][y] >= 2:
+                
+                #if other side tile is empty, or partial, treat it as partial cover
+                if self.level._level_data[x][lasty] <= 1:
+                    if distance > 1 and visibility < 2:                    
+                            visibility += 1
+                
+        
+        
+        list_visible_tiles.append( (Point2(x,y), visibility) )                    
         return( list_visible_tiles, visibility )
 
 
@@ -472,7 +479,7 @@ class Engine( Thread ):
                         else:
                             losh_dict[a[0]] = a[1]
                             
-        
+
         return losh_dict
         
                
@@ -698,8 +705,6 @@ class Engine( Thread ):
             EngMsg.sendErrorMsg( "Wrong unit id.", source )
             return
 
-        #TODO: krav: provjerit dal ovaj plejer koji je poslao move eksli smije micat ovaj unit
-
         unit = self.units[unit_id]
 
         move_actions = []
@@ -728,8 +733,7 @@ class Engine( Thread ):
                 self._rotateUnit( unit, tile )
                 self._moveUnit( unit, tile, ap_remaining )
                 move_actions.append( ('move', tile ) )
-
-                #TODO: krav: movement interrupt                
+                
                 if self.isMovementInterrupted( unit ):
                     break
                 
@@ -753,7 +757,6 @@ class Engine( Thread ):
     
     def isMovementInterrupted(self, unit):
         """Returns True if movement needs to stop"""
-        #TODO: krav: check overwatch
         
         return False
         pass
@@ -761,14 +764,6 @@ class Engine( Thread ):
     
     #we calculate visibility when (unit) has moved
     def calculateVisibility(self, unit ):
-        
-        losh_dict = self.getLOSHDict( unit.pos )
-        
-        
-        for enemy in self.units:
-            pass
-        
-        
         pass
     
 
