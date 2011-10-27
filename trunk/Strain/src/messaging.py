@@ -22,6 +22,7 @@ IP_ADDRESS = 'localhost'
 NAME = 'ultramarines'
 TCP_PORT = 56005
 
+
 class Msg:
 
 
@@ -133,7 +134,6 @@ class EngMsg:
                         #see if there is already a connection for this player, if yes than disconnect it
                         if player.connection != None:
                             EngMsg.sendErrorMsg("Disconnecting because this player is connecting from other connection", player.connection )
-                            #TODO: krav: da se na klijentu eksli diskonekta i da se vidi kaj se desilo
                             EngMsg.disconnect( player.connection, player.connection.getAddress(), player.name )
                             engine.notify.info("Player %s disconnected because he was logging in from other connection", player.name)
                             
@@ -157,6 +157,7 @@ class EngMsg:
             if not connection.getSocket().Active():
                 engine.notify.info("Client disconnected: %s @ %s", name, address)
                 EngMsg.disconnect(connection, address, name)
+    
     
     @staticmethod
     def disconnect( connection, address, name ):
@@ -297,6 +298,7 @@ class ClientMsg:
     
     num_failed_attempts = 0
     
+
     @staticmethod
     def connect():
         #TODO: ogs: i ovo moras maknut na logger od klijenta
