@@ -98,7 +98,8 @@ class Player:
         pass
 
 
-
+DYNAMICS_EMPTY = 0
+DYNAMICS_UNIT = 1
 
 
 
@@ -112,9 +113,6 @@ class Engine( Thread ):
           
     __index_uid = 0
 
-    #TODO: krav: maknut ovo i stavit konstante
-    dynamics = { 'empty' : 0,
-                 'unit' : 1 }
 
     @staticmethod
     def getInstance():
@@ -216,8 +214,6 @@ class Engine( Thread ):
         dic[ 'pickled_units' ] = pickle.dumps( self.units )    
         dic[ 'pickled_level' ] = pickle.dumps( self.level )        
         dic[ 'turn' ] = self.turn     
-        #TODO: krav: vidit kaj cemo s ovim   
-        #dic[ 'pickled_players' ] = pickle.dumps( self.players )
         
         return dic
     
@@ -256,7 +252,7 @@ class Engine( Thread ):
                     continue
                 
                 #check to see if the tile is already occupied
-                if( self.dynamic_obstacles[x][y][0] != Engine.dynamics['empty'] ):
+                if( self.dynamic_obstacles[x][y][0] != DYNAMICS_EMPTY ):
                     print "This tile already occupied, unit cannot deploy here", x, y, unittype
                     continue
                  
@@ -272,7 +268,7 @@ class Engine( Thread ):
                 player.unitlist.append( tmpUnit )
                 self.units[tmpUnit.id] = tmpUnit
                 
-                self.dynamic_obstacles[x][y] = ( Engine.dynamics['unit'], tmpUnit.id )
+                self.dynamic_obstacles[x][y] = ( DYNAMICS_UNIT, tmpUnit.id )
                 
             self.players.append( player )
     
@@ -305,9 +301,7 @@ class Engine( Thread ):
         
         EngMsg.sendNewTurn( self.turn )
         
-        
-        #TODO: krav: napravit da ne dupla provjere
-        
+              
         #go through all units
         for unit_id in self.units:
             
@@ -320,8 +314,6 @@ class Engine( Thread ):
                 unit.current_AP += 1
                 unit.resting = False
                 
-            
-            
             
             #get new move_dict
             unit.move_dict = self.getMoveDict(unit)
@@ -339,12 +331,6 @@ class Engine( Thread ):
             #after updating everything send unit_id data to client        
             EngMsg.sendUnit( pickle.dumps(unit) )
         
-        
-        
-        
-        
-        pass
-
         
 
     def outOfLevelBounds( self, x, y ):
@@ -398,26 +384,25 @@ class Engine( Thread ):
             D = y_x -0.5;
 
             for i in xrange( int( absx0 ) ):
+
+                lastx = x
+                lasty = y
                 
-                #diagonal step
                 if( D > 0 ):
+                    
                     if( sgny0 == -1 ): y -= 1
                     else: y += 1
                     D -= 1
-            
 
                 if( sgnx0 == 1 ): x += 1
                 else: x -= 1
 
                 D += y_x
                 
-                
                 #=========================TEST==========================================
-                list_visible_tiles, visibility = self.testTile(x, y, distance, list_visible_tiles, visibility)
+                list_visible_tiles, visibility = self.testTile( x, y, distance, list_visible_tiles, visibility )
                 
-
                 distance += 1
-                pass
             
         #//(y0 >= x0)            
         else:
@@ -431,19 +416,15 @@ class Engine( Thread ):
                     else: x += 1
                     D -= 1.0
             
-    
                 if( sgny0 == 1 ): y += 1
                 else: y -= 1
     
                 D += x_y
-    
                 
                 #=========================TEST==========================================
                 list_visible_tiles, visibility = self.testTile( x, y, distance, list_visible_tiles, visibility )
                 
-
                 distance += 1
-                pass
                 
                 
         return list_visible_tiles
@@ -580,9 +561,9 @@ class Engine( Thread ):
             return False
         
         #check if there is a dynamic obstacle in the way
-        if( self.dynamic_obstacles[ ptx + dx ][ pty + dy ][0] != Engine.dynamics['empty'] ):
+        if( self.dynamic_obstacles[ ptx + dx ][ pty + dy ][0] != DYNAMICS_EMPTY ):
             #ok if it a unit, it may be the current unit so we need to check that
-            if( self.dynamic_obstacles[ ptx + dx ][ pty + dy ][0] == Engine.dynamics['unit'] ):
+            if( self.dynamic_obstacles[ ptx + dx ][ pty + dy ][0] == DYNAMICS_UNIT ):
                 if( self.dynamic_obstacles[ ptx + dx ][ pty + dy ][1] != unit.id ):
                     return False
 
@@ -596,17 +577,17 @@ class Engine( Thread ):
                 return False
         
             #check if there is a dynamic thing in the way 
-            if( self.dynamic_obstacles[ ptx + dx ][ pty ][0] != Engine.dynamics['empty'] ):
+            if( self.dynamic_obstacles[ ptx + dx ][ pty ][0] != DYNAMICS_EMPTY ):
                 #see if it is a unit
-                if( self.dynamic_obstacles[ ptx + dx ][ pty ][0] == Engine.dynamics['unit'] ):
+                if( self.dynamic_obstacles[ ptx + dx ][ pty ][0] == DYNAMICS_UNIT ):
                     #so its a unit, see if it is friendly
                     unit_id = self.dynamic_obstacles[ ptx + dx ][ pty ][1] 
                     if( self.units[unit_id].owner_id != unit.owner_id ):
                         return False
                     
 
-            if( self.dynamic_obstacles[ ptx ][ pty + dy ][0] != Engine.dynamics['empty'] ):
-                if( self.dynamic_obstacles[ ptx ][ pty + dy ][0] == Engine.dynamics['unit'] ):
+            if( self.dynamic_obstacles[ ptx ][ pty + dy ][0] != DYNAMICS_EMPTY ):
+                if( self.dynamic_obstacles[ ptx ][ pty + dy ][0] == DYNAMICS_UNIT ):
                     unit_id = self.dynamic_obstacles[ ptx ][ pty + dy ][1] 
                     if( self.units[unit_id].owner_id != unit.owner_id ):
                         return False
@@ -689,13 +670,13 @@ class Engine( Thread ):
          about it."""    
         
         #delete from dynamic_obstacles
-        self.dynamic_obstacles[ int( unit.pos.x ) ][ int( unit.pos.y ) ] = ( Engine.dynamics['empty'], 0 )
+        self.dynamic_obstacles[ int( unit.pos.x ) ][ int( unit.pos.y ) ] = ( DYNAMICS_EMPTY, 0 )
         
         #set new position
         unit.pos = new_position
         
         #set new dynamic_obstacles
-        self.dynamic_obstacles[ int( unit.pos.x ) ][ int( unit.pos.y ) ] = ( Engine.dynamics['unit'], unit.id )
+        self.dynamic_obstacles[ int( unit.pos.x ) ][ int( unit.pos.y ) ] = ( DYNAMICS_UNIT, unit.id )
         
         #reduce amount of AP for unit
         unit.current_AP = ap_remaining
