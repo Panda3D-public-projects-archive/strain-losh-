@@ -195,9 +195,7 @@ class EngMsg:
         if EngMsg.getData(s, 3) != 'Strain?':
             EngMsg.handshakedConnections.append( (connection, False, '') )
             return
-        
-        #TODO: krav: stavit neki SSL ovdje i provjerit username/pass
-        
+             
         s.SendData('Send your name')        
         
         #check to see if there is a player with that name
