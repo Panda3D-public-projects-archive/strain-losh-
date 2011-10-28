@@ -318,7 +318,8 @@ class Interface(DirectObject.DirectObject):
         self.selected_unit = unit
         pos = self.selected_unit.node.getPos()
         #self.markSelectedTile(self.ge.tile_np_list[int(pos.getX())][int(pos.getY())])
-        self.selected_unit.marker.show()
+        self.selected_unit.marker.loadAnims({"move":"ripple2"})  
+        self.selected_unit.marker.loop("move")
         u = self.ge.unit_np_dict[int(unit.id)].unit
         self.off_model = UnitModel(u, scale=1, h=0, pos=Point3(0,-8,-1.7), off=True)
         self.off_model.reparentTo(self.ge.alt_render)
@@ -338,9 +339,11 @@ class Interface(DirectObject.DirectObject):
         """
         if self.selected_unit:
             #self.clearSelectedTile(self.selected_unit_tile)
-            self.selected_unit.marker.hide()
+            self.selected_unit.marker.stop()
+            self.selected_unit.marker.unloadAnims({"move":"ripple2"}) 
             if self.off_model:
                 self.ge.destroyUnit(self.off_model)
+            self.ge.clearOutlineShader(self.selected_unit.model)
             self.selected_unit = None
 
         
@@ -456,7 +459,8 @@ class Interface(DirectObject.DirectObject):
             node_type = np.findNetTag("type").getTag("type")
             if node_type == "tile":
                 if self.hovered_unit:
-                    self.changeUnitColor(self.hovered_unit, _UNIT_RESET)
+                    #self.changeUnitColor(self.hovered_unit, _UNIT_RESET)
+                    self.ge.clearOutlineShader(self.hovered_unit)
                     self.hovered_unit = None
                 if self.hovered_tile != np:
                     if self.hovered_tile:
@@ -470,9 +474,11 @@ class Interface(DirectObject.DirectObject):
                     self.hovered_tile = None              
                 if self.hovered_unit != np_unit:
                     if self.hovered_unit:
-                        self.changeUnitColor(self.hovered_unit, _UNIT_RESET)
-                    self.changeUnitColor(np_unit, _UNIT_HOVERED)
-                    self.hovered_unit = np_unit                
+                        #self.changeUnitColor(self.hovered_unit, _UNIT_RESET)
+                        self.ge.clearOutlineShader(self.hovered_unit)
+                    #self.changeUnitColor(np_unit, _UNIT_HOVERED)
+                    self.hovered_unit = np_unit
+                    self.ge.setOutlineShader(np_unit)                
             elif node_type == "unit":
                 np_unit = np.getParent()
                 if self.hovered_tile:
@@ -480,9 +486,11 @@ class Interface(DirectObject.DirectObject):
                     self.hovered_tile = None              
                 if self.hovered_unit != np_unit:
                     if self.hovered_unit:
-                        self.changeUnitColor(self.hovered_unit, _UNIT_RESET)
-                    self.changeUnitColor(np_unit, _UNIT_HOVERED)
+                        #self.changeUnitColor(self.hovered_unit, _UNIT_RESET)
+                        self.ge.clearOutlineShader(self.hovered_unit)
+                    #self.changeUnitColor(np_unit, _UNIT_HOVERED)
                     self.hovered_unit = np_unit
+                    self.ge.setOutlineShader(np_unit)
         else:
             if self.hovered_unit:
                 self.changeUnitColor(self.hovered_unit, _UNIT_RESET)

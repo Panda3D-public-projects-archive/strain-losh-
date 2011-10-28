@@ -53,11 +53,12 @@ class UnitModel:
         else:
             self.team_color = Point4(0, 1, 0, 1)
             
-        self.marker = loader.loadModel("ripple-split")
+        self.marker = Actor("ripple2") 
         self.marker.reparentTo(self.node)
         self.marker.setP(-90)
         self.marker.setScale(0.7, 0.7, 0.7)
         self.marker.setColor(self.team_color)
+        
         plight = PointLight('plight')
         plight.setColor(Point4(0.2, 0.2, 0.2, 1))
         plnp = self.node.attachNewNode(plight)
@@ -69,11 +70,11 @@ class UnitModel:
         
         self.marker.setPos(0, 0, 0.02)
         #self.marker.flattenLight()
-        self.marker.hide()
+        #self.marker.hide()
         
         self.passtime = 0
-        self.setIdleTime()
-        
+        self.setIdleTime()    
+
         if unit.type=="terminator":
             t = loader.loadTexture("terminator2.tga")#@UndefinedVariable
             self.model.setTexture(t, 1)
