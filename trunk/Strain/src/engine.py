@@ -143,7 +143,9 @@ class Engine( Thread ):
         print "Engine started"
         EngMsg.startServer()
         
-        self.level = Level( "level2.txt" )
+        lvl = "level2.txt"
+        self.level = Level( lvl )
+        notify.info("Loaded level:%s", lvl )
 
         #we make this so its size is the same as level 
         self.dynamic_obstacles = [[(0,0)] * self.level.maxY for i in xrange(self.level.maxX)] #@UnusedVariable
