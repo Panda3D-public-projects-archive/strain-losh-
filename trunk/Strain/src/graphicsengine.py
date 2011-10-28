@@ -1,8 +1,9 @@
 from direct.showbase.ShowBase import ShowBase
 from panda3d.core import loadPrcFileData#@UnresolvedImport
-from panda3d.core import NodePath, Point2, Point3, VBase4, GeomNode#@UnresolvedImport
+from panda3d.core import NodePath, Point2, Point3, VBase4, GeomNode, Vec3, Vec4#@UnresolvedImport
 from panda3d.core import ShadeModelAttrib, DirectionalLight, AmbientLight#@UnresolvedImport
 from pandac.PandaModules import CollisionTraverser, CollisionHandlerQueue, CollisionNode, CollisionRay#@UnresolvedImport
+from pandac.PandaModules import Shader, AntialiasAttrib
 from direct.interval.IntervalGlobal import Sequence, ActorInterval, Parallel, Func
 from camera import Camera
 from interface import Interface
@@ -110,6 +111,8 @@ class GraphicsEngine(ShowBase):
         # Initialize graphical user interface elements
         self.interface = Interface(self)  
         
+        self.initOutlineShader()
+        
         # Create unit anim task
         self.taskMgr.add(self.animTask, "anim_task")        
     
@@ -196,6 +199,32 @@ class GraphicsEngine(ShowBase):
         self.coll_ray = CollisionRay()
         self.coll_node.addSolid(self.coll_ray)
         self.coll_trav.addCollider(self.coll_nodepath, self.coll_queue)
+
+    def initOutlineShader(self):  
+        self.light_dummy = NodePath("outline_light_dummy_node")      
+        self.light_input = NodePath("outline_light_input_node")#self.loader.loadModel('misc/sphere') 
+        self.light_input.reparentTo(self.light_dummy) 
+        self.light_input.setPos(5,0,1) 
+        self.light_dummy.setShaderOff(1) 
+        self.light_dummy.hprInterval(1,Vec3(360,0,0)).loop() 
+        self.SHA_outline = Shader.load('./data/shaders/facingRatio1.sha') 
+
+    def setOutlineShader(self, np):
+        facingRatioPower = 1.5
+        envirLightColor = Vec4(1, 0, 0, 0)    
+
+        self.light_dummy.reparentTo(np)
+        self.light_dummy.setPos(np, 0, 0, 1)
+        
+        np.setShader(self.SHA_outline) 
+        np.setShaderInput('cam', self.camera) 
+        np.setShaderInput('light', self.light_input) 
+        np.setShaderInput('envirLightColor', envirLightColor * facingRatioPower) 
+        np.setAntialias(AntialiasAttrib.MMultisample) 
+        
+    def clearOutlineShader(self, np):
+        self.light_dummy.detachNode()
+        np.setShaderOff()
 
     def destroyUnit(self, unit):
         """Removes unit nodepath from scenegraph. It will eventually be collected by reference-counting mechanism and destroyed."""
