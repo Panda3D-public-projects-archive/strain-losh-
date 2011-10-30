@@ -121,7 +121,27 @@ class UnitModel:
                                        ,'idle02': 'daemon_prince-idle2'            
                                        })
             self.anim_count_dict['run'] = 1
-            self.anim_count_dict['idle'] = 2                           
+            self.anim_count_dict['idle'] = 2      
+        elif unit_type == 'terminator2':
+            model = Actor('terminator2', {'run': 'terminator2-run'
+                                        ,'idle01': 'terminator2-idle'
+                                        ,'fire': 'terminator2-fire'
+                                        })
+            self.anim_count_dict['run'] = 1
+            self.anim_count_dict['idle'] = 1   
+            body = model.find("**/body")
+            myTexture = loader.loadTexture("term_armour_com_dif.tga")
+            body.setTexture(myTexture)
+            h = model.find("**/head")
+            myTexture = loader.loadTexture("terminator_head_dif.tga")
+            h.setTexture(myTexture)      
+            b = model.find("**/bolter")
+            myTexture = loader.loadTexture("storm_bolter_dif.tga")
+            b.setTexture(myTexture)   
+            f = model.find("**/powerfist")
+            myTexture = loader.loadTexture("terminator_powerfist_dif.tga")
+            f.setTexture(myTexture)           
+                                           
         return model
     
     def setIdleTime(self):

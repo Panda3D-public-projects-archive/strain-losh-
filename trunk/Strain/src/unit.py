@@ -58,7 +58,11 @@ class Unit():
         elif self.type == 'daemon_prince':
             self.default_AP = 15
             self.default_HP = 8
-            self.soundtype = '01'                                        
+            self.soundtype = '01'
+        elif self.type == 'terminator2':
+            self.default_AP = 8
+            self.default_HP = 10
+            self.soundtype = '02'                                                    
 
         self.pos = Point2( x, y )
         self.current_AP = self.default_AP
