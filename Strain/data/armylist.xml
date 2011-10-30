@@ -11,7 +11,7 @@
 
 	<player name="ultramarines" team = "2" id="2">
 		<unit x="3" y="1" type="terminator"/>
-		<unit x="14" y="14" type="terminator"/>
+		<unit x="14" y="14" type="terminator2"/>
 		<unit x="13" y="14" type="assault"/>
 		<unit x="13" y="15" type="daemon_prince"/>		
 	</player>
