@@ -251,6 +251,12 @@ class Engine( Thread ):
                     print "This unit is out of level bounds", unittype, x, y
                     continue
                 
+                
+                #check to see if there is something in the way on level
+                if self.level._level_data[x][y] != 0:
+                    print "This unit cannot be placed on non empty level tile", unittype, x, y
+                    continue
+                
                 #check to see if the tile is already occupied
                 if( self.dynamic_obstacles[x][y][0] != DYNAMICS_EMPTY ):
                     print "This tile already occupied, unit cannot deploy here", x, y, unittype
