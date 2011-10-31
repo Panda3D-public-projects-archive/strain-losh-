@@ -64,21 +64,45 @@ class Interface(DirectObject.DirectObject):
         plane.flattenLight()
         self.unit_card = GuiCard(0.3, 0.3, 0.01, None, "topleft", Point4(0, 0, 0, 0))
         self.unit_card.setTexture(self.ge.alt_buffer.getTexture())
-        self.deselect_button = GuiButton("topleft", Point3(0.3 + 0.05, 0, 0.95), aspect, plane, "deselect")
-        self.punit_button = GuiButton("topleft", Point3(0.4 + 0.05, 0, 0.95), aspect, plane, "prev_unit")
-        self.nunit_button = GuiButton("topleft", Point3(0.5 + 0.05, 0, 0.95), aspect, plane, "next_unit")
-        self.endturn_button = GuiButton("topleft", Point3(0.6 + 0.05, 0, 0.95), aspect, plane, "end_turn")
+        self.deselect_button = GuiButton("topleft", Point3(0.2, 0, -0.3), aspect, plane, "deselect")
+        self.punit_button = GuiButton("topleft", Point3(0.0, 0, -0.3), aspect, plane, "prev_unit")
+        self.nunit_button = GuiButton("topleft", Point3(0.1, 0, -0.3), aspect, plane, "next_unit")
+        self.endturn_button = GuiButton("topleft", Point3(0.0, 0, -0.5), aspect, plane, "end_turn")
+        self.action_a = GuiButton("topleft", Point3(0.0, 0, -0.6), aspect, plane, "action_a")
+        self.action_b = GuiButton("topleft", Point3(0.0, 0, -0.7), aspect, plane, "action_b")
+        self.action_c = GuiButton("topleft", Point3(0.0, 0, -0.8), aspect, plane, "action_c")
+        self.action_d = GuiButton("topleft", Point3(0.0, 0, -0.9), aspect, plane, "action_d")
         
-        #Mirkova zelja moja zapovijed
+        self.action_1 = GuiButton("topleft", Point3(1.5+0.01, 0, -0.09), aspect, plane, "deselect")
+        self.action_2 = GuiButton("topleft", Point3(1.6+0.02, 0, -0.09), aspect, plane, "deselect")
+        self.action_3 = GuiButton("topleft", Point3(1.7+0.03, 0, -0.09), aspect, plane, "deselect")
+        self.action_4 = GuiButton("topleft", Point3(1.5+0.01, 0, -0.2), aspect, plane, "deselect")
+        self.action_5 = GuiButton("topleft", Point3(1.6+0.02, 0, -0.2), aspect, plane, "deselect")
+        self.action_6 = GuiButton("topleft", Point3(1.7+0.03, 0, -0.2), aspect, plane, "deselect")
+        
         self.buttons["deselect"] = self.deselect_button
         self.buttons["prev_unit"] = self.punit_button
         self.buttons["next_unit"] = self.nunit_button
         self.buttons["end_turn"] = self.endturn_button
+        self.buttons["action_a"] = self.action_a
+        self.buttons["action_b"] = self.action_b
+        self.buttons["action_c"] = self.action_c
+        self.buttons["action_d"] = self.action_d
+        self.buttons["action_1"] = self.action_1
+        self.buttons["action_2"] = self.action_2
+        self.buttons["action_3"] = self.action_3
+        self.buttons["action_4"] = self.action_4
+        self.buttons["action_5"] = self.action_5
+        self.buttons["action_6"] = self.action_6
         
         self.hovered_gui = None
         
         self.console = GuiConsole(self.ge.a2dBottomLeft, 1.5, 0.4, aspect, self.ge)
-        self.stats = GuiTextFrame(Point3(0.3, 0, -0.1), 0.4, 0.2, 3)
+        self.stats = GuiTextFrame(Point3(0.3, 0, 0), 0.4, 0.3, 5)
+        self.stats2 = GuiTextFrame(Point3(0.7, 0, 0), 0.4, 0.3, 5)
+        self.stats3 = GuiTextFrame(Point3(1.1, 0, 0), 0.4, 0.3, 5)
+        self.status_bar = GuiTextFrame(Point3(1.5 + 0.01, 0, 0), 0.85, 0.08, 1)
+        self.status_bar.write(1, "Player: mirko     Server: Online")
         
         self.accept('l', self.switchLos)
         self.accept('m', self.switchUnitMove)
@@ -337,6 +361,7 @@ class Interface(DirectObject.DirectObject):
            Clears unit tile, cleans up off screen models, 
            clears Interface.selected_unit variable.
         """
+        self.clearUnitData()
         if self.selected_unit:
             #self.clearSelectedTile(self.selected_unit_tile)
             self.selected_unit.marker.stop()
@@ -364,9 +389,24 @@ class Interface(DirectObject.DirectObject):
             unit_default_HP = self.ge.getUnitData(unit, "default_HP")
             unit_default_AP = self.ge.getUnitData(unit, "default_AP")
             self.stats.write(1, unit_type)
-            self.stats.write(2, "HP: " + str(unit_HP) + "/" + str(unit_default_HP))
-            self.stats.write(3, "AP: " + str(unit_AP) + "/" + str(unit_default_AP))
-    
+            self.stats.write(5, "oruzje1")
+            self.stats2.write(2, "HP: " + str(unit_HP) + "/" + str(unit_default_HP))
+            self.stats2.write(3, "AP: " + str(unit_AP) + "/" + str(unit_default_AP))
+            self.stats2.write(4, "stat3: XX/YY")
+            self.stats3.write(2, "stat4: XX/YY")
+            self.stats3.write(3, "stat5: XX/YY")
+            self.stats3.write(4, "stat6: XX/YY")
+            
+    def clearUnitData(self):
+        self.stats.write(1, "")
+        self.stats.write(5, "")
+        self.stats2.write(2, "")
+        self.stats2.write(3, "")
+        self.stats2.write(4, "")
+        self.stats3.write(2, "")
+        self.stats3.write(3, "")
+        self.stats3.write(4, "")
+                
     def endTurn(self):
         """Ends the turn"""
         self.ge.createEndTurnMsg() 
@@ -654,8 +694,8 @@ class GuiButton:
     def redraw(self, aspect, flag="wide"):
         if self.hugpos == "topleft":
             p = base.a2dTopLeft.getPos()#@UndefinedVariable
-            p.setX(p.getX() + self.offset.getX())
-            p.setZ(p.getZ() - 0.05)
+            p.setX(p.getX() + self.offset.getX() + 0.05)
+            p.setZ(p.getZ() + self.offset.getZ() - 0.05)
         self.frame.setPos(p)
         if flag == "wide":
             posx, posy = self.frame.getTightBounds()
@@ -690,7 +730,11 @@ class GuiTextFrame:
             print "pandaInteractiveConsole.py :: could not load the defined font %s" % str(self.font)
             fixedWidthFont = DGG.getDefaultFont()
         
-        self.lineHeight = v_size*0.9 / numLines
+        if numLines == 1:
+            self.lineHeight = 0.05
+        else:
+            self.lineHeight = v_size*0.9 / numLines
+            
         # output lines
         self.frameOutputList = list()
         for i in xrange( self.numLines ):
@@ -699,10 +743,10 @@ class GuiTextFrame:
                               , pos = (0.005, -(i+1)*self.lineHeight)
                               , align=TextNode.ALeft
                               , mayChange=1
-                              , scale=0.05
-                              , fg = (100,100,100,1)
+                              , scale=0.04
+                              , fg = (1,1,1,1)
                               , shadow = (0, 0, 0, 1))
-                            # , frame = (200,0,0,1) )
+                              #, frame = (200,0,0,1) )
             label.setFont( fixedWidthFont )
             self.frameOutputList.append( label )
 
