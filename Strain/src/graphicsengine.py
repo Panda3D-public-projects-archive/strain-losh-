@@ -70,7 +70,7 @@ class GraphicsEngine(ShowBase):
         logger.info("---------------------GraphicsEngine Starting------------------------")
         ShowBase.__init__(self)
         #PStatClient.connect()
-        self.win.setClearColor(VBase4(0, 0, 0, 0))
+        #self.win.setClearColor(VBase4(0, 0, 0, 0))
 
         self.engineLoaded = False
 
