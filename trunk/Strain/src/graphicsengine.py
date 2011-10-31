@@ -143,6 +143,24 @@ class GraphicsEngine(ShowBase):
                 c.reparentTo(self.level_node)
                 tile_nodes.append(c)
             self.tile_np_list.append(tile_nodes)
+        for i in xrange(0, level.maxX):
+            t = TextNode('node name')
+            t.setText( "%s" % i)
+            tnp = render.attachNewNode(t)
+            tnp.setColor(1, 1, 1)
+            tnp.setScale(0.5, 0.5, 0.5)
+            tnp.setPos(i+0.3, -0.3, 0.5)
+            tnp.setBillboardPointEye()
+            tnp.setLightOff()
+        for i in xrange(0, level.maxY):
+            t = TextNode('node name')
+            t.setText( "%s" % i)
+            tnp = render.attachNewNode(t)
+            tnp.setColor(1, 1, 1)
+            tnp.setScale(0.5, 0.5, 0.5)
+            tnp.setPos(-0.3, i+0.3, 0.5)
+            tnp.setBillboardPointEye()
+            tnp.setLightOff()            
 
     #TODO: ogs: ovo sam ti zakomentirao
     #def initUnits(self, players, units):
