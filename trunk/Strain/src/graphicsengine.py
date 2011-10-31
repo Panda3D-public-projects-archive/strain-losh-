@@ -228,9 +228,9 @@ class GraphicsEngine(ShowBase):
         self.light_dummy.hprInterval(1,Vec3(360,0,0)).loop() 
         self.SHA_outline = Shader.load('./data/shaders/facingRatio1.sha') 
 
-    def setOutlineShader(self, np):
+    def setOutlineShader(self, np, color=Vec4(1, 0, 0, 0)):
         facingRatioPower = 1.5
-        envirLightColor = Vec4(1, 0, 0, 0)    
+        envirLightColor = color    
 
         self.light_dummy.reparentTo(np)
         self.light_dummy.setPos(np, 0, 0, 1)

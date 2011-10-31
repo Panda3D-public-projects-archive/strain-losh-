@@ -1,5 +1,5 @@
 from direct.actor.Actor import Actor
-from panda3d.core import Point4, Point3, Point2, NodePath#@UnresolvedImport
+from panda3d.core import Vec4, Point4, Point3, Point2, NodePath#@UnresolvedImport
 from panda3d.core import PointLight#@UnresolvedImport
 from pandac.PandaModules import TransparencyAttrib#@UnresolvedImport
 import random
@@ -31,8 +31,8 @@ class UnitModel:
         x = int(unit.pos.getX())
         y = int(unit.pos.getY())
         
-        if pos:
-            self.node.setPos(pos)
+        if off:
+            self.node.setPos(Point3(0,-8,-2))
         else:
             self.node.setPos(self.calcWorldPos(x, y))
 
@@ -47,11 +47,11 @@ class UnitModel:
             self.setHeading(self.unit.heading)
 
         if unit.owner_id == "1":
-            self.team_color = Point4(1, 0, 0, 1)
+            self.team_color = Vec4(1, 0, 0, 1)
         elif unit.owner_id == "2":
-            self.team_color = Point4(0.106, 0.467, 0.878, 1)
+            self.team_color = Vec4(0.106, 0.467, 0.878, 1)
         else:
-            self.team_color = Point4(0, 1, 0, 1)
+            self.team_color = Vec4(0, 1, 0, 1)
             
         self.marker = Actor("ripple2") 
         self.marker.reparentTo(self.node)
@@ -80,18 +80,60 @@ class UnitModel:
             self.model.setTexture(t, 1)
 
     def load(self, unit_type):
-        if unit_type == 'terminator':
-            model = Actor('terminator', {'run': 'terminator-run'
-                                        ,'idle01': 'terminator-run'
-                                        })
+        if unit_type == 'marine_common':
+            model = Actor('marine_melee_axe_range_pistol', {'run': 'marine_melee_axe_range_pistol-run'
+                                                           ,'idle01': 'marine_melee_axe_range_pistol-idle_stand'
+                                                           ,'idle02': 'marine_melee_axe_range_pistol-idle_stand2'
+                                                           ,'idle03': 'marine_melee_axe_range_pistol-idle_stand3'
+                                                           ,'melee01': 'marine_melee_axe_range_pistol-melee'
+                                                           ,'melee02': 'marine_melee_axe_range_pistol-melee2'
+                                                           ,'fire01': 'marine_melee_axe_range_pistol-fire_stand'                                    
+                                                           })
             self.anim_count_dict['run'] = 1
-            self.anim_count_dict['idle'] = 1
-        elif unit_type == 'marine_b':
-            model = Actor('marine_b',   {'run': 'marine-run'
-                                        ,'idle01': 'marine-fire'
-                                        })
+            self.anim_count_dict['idle'] = 3
+            armor = model.find("**/power_armor_common")
+            armor.setTexture(loader.loadTexture("power_armour_common_dif.tga"))
+            armor_hide = model.find("**/power_armor_epic")
+            armor_hide.hide()
+            melee_weapon = model.find("**/power_axe_common")
+            melee_weapon.setTexture(loader.loadTexture("power_axe_common_dif.tga"))
+            melee_weapon_hide = model.find("**/power_axe_epic")
+            melee_weapon_hide.hide()      
+            range_weapon = model.find("**/bolt_pistol_common")
+            range_weapon.setTexture(loader.loadTexture("bolt_pistol_common_dif.tga"))
+            range_weapon_hide = model.find("**/bolt_pistol_epic")
+            range_weapon_hide.hide()  
+            head = model.find("**/space_marine_head")
+            head.setTexture(loader.loadTexture("space_marine_head_dif.tga"))       
+            pack = model.find("**/space_marine_backpack")
+            pack.setTexture(loader.loadTexture("space_marine_backpack_dif.tga"))                       
+        elif unit_type == 'marine_epic':
+            model = Actor('marine_melee_axe_range_pistol', {'run': 'marine_melee_axe_range_pistol-run'
+                                                           ,'idle01': 'marine_melee_axe_range_pistol-idle_stand'
+                                                           ,'idle02': 'marine_melee_axe_range_pistol-idle_stand2'
+                                                           ,'idle03': 'marine_melee_axe_range_pistol-idle_stand3'
+                                                           ,'melee01': 'marine_melee_axe_range_pistol-melee'
+                                                           ,'melee02': 'marine_melee_axe_range_pistol-melee2'
+                                                           ,'fire01': 'marine_melee_axe_range_pistol-fire_stand'                                    
+                                                           })
             self.anim_count_dict['run'] = 1
-            self.anim_count_dict['idle'] = 1
+            self.anim_count_dict['idle'] = 3
+            armor = model.find("**/power_armor_epic")
+            armor.setTexture(loader.loadTexture("power_armour_epic_dif.tga"))
+            armor_hide = model.find("**/power_armor_common")
+            armor_hide.hide()
+            melee_weapon = model.find("**/power_axe_epic")
+            melee_weapon.setTexture(loader.loadTexture("power_axe_epic_dif.tga"))
+            melee_weapon_hide = model.find("**/power_axe_common")
+            melee_weapon_hide.hide()      
+            range_weapon = model.find("**/bolt_pistol_epic")
+            range_weapon.setTexture(loader.loadTexture("bolt_pistol_epic_dif.tga"))
+            range_weapon_hide = model.find("**/bolt_pistol_common")
+            range_weapon_hide.hide()  
+            head = model.find("**/space_marine_head")
+            head.setTexture(loader.loadTexture("space_marine_head_dif.tga"))    
+            pack = model.find("**/space_marine_backpack")
+            pack.setTexture(loader.loadTexture("space_marine_backpack_dif.tga"))                    
         elif unit_type == 'commissar':
             model = Actor('commissar', {'run': 'commissar-run'
                                        ,'idle01': 'commissar-idle1'
@@ -100,48 +142,7 @@ class UnitModel:
                                        ,'fire': 'commissar-fire'
                                        })
             self.anim_count_dict['run'] = 1
-            self.anim_count_dict['idle'] = 3
-        elif unit_type == 'assault':
-            model = Actor('assault', {'run': 'assault-run1'
-                                       ,'run02': 'assault-run2'
-                                       ,'idle01': 'assault-idle1'
-                                       ,'idle02': 'assault-idle2'
-                                       })
-            self.anim_count_dict['run'] = 2
-            self.anim_count_dict['idle'] = 2    
-        elif unit_type == 'librarian':
-            model = Actor('librarian', {'run': 'librarian-run1'
-                                       ,'idle01': 'librarian-idle1'
-                                       })
-            self.anim_count_dict['run'] = 1
-            self.anim_count_dict['idle'] = 1       
-        elif unit_type == 'daemon_prince':
-            model = Actor('daemon_prince', {'run': 'daemon_prince-run1'
-                                       ,'idle01': 'daemon_prince-idle1'
-                                       ,'idle02': 'daemon_prince-idle2'            
-                                       })
-            self.anim_count_dict['run'] = 1
-            self.anim_count_dict['idle'] = 2      
-        elif unit_type == 'terminator2':
-            model = Actor('terminator2', {'run': 'terminator2-run'
-                                        ,'idle01': 'terminator2-idle'
-                                        ,'fire': 'terminator2-fire'
-                                        })
-            self.anim_count_dict['run'] = 1
-            self.anim_count_dict['idle'] = 1   
-            body = model.find("**/body")
-            myTexture = loader.loadTexture("term_armour_com_dif.tga")
-            body.setTexture(myTexture)
-            h = model.find("**/head")
-            myTexture = loader.loadTexture("terminator_head_dif.tga")
-            h.setTexture(myTexture)      
-            b = model.find("**/bolter")
-            myTexture = loader.loadTexture("storm_bolter_dif.tga")
-            b.setTexture(myTexture)   
-            f = model.find("**/powerfist")
-            myTexture = loader.loadTexture("terminator_powerfist_dif.tga")
-            f.setTexture(myTexture)           
-                                           
+            self.anim_count_dict['idle'] = 3                                           
         return model
     
     def setIdleTime(self):

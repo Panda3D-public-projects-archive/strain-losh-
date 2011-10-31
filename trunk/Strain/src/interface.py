@@ -518,7 +518,7 @@ class Interface(DirectObject.DirectObject):
                         self.ge.clearOutlineShader(self.hovered_unit)
                     #self.changeUnitColor(np_unit, _UNIT_HOVERED)
                     self.hovered_unit = np_unit
-                    self.ge.setOutlineShader(np_unit)                
+                    self.ge.setOutlineShader(np_unit, self.ge.unit_np_dict[int(np.findNetTag("id").getTag("id"))].team_color)                
             elif node_type == "unit":
                 np_unit = np.getParent()
                 if self.hovered_tile:
@@ -530,7 +530,7 @@ class Interface(DirectObject.DirectObject):
                         self.ge.clearOutlineShader(self.hovered_unit)
                     #self.changeUnitColor(np_unit, _UNIT_HOVERED)
                     self.hovered_unit = np_unit
-                    self.ge.setOutlineShader(np_unit)
+                    self.ge.setOutlineShader(np_unit, self.ge.unit_np_dict[int(np.findNetTag("id").getTag("id"))].team_color) 
         else:
             if self.hovered_unit:
                 self.changeUnitColor(self.hovered_unit, _UNIT_RESET)
