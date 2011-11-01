@@ -1,7 +1,6 @@
 from xml.dom import minidom
 from unit import Unit
 from level import Level
-from pandac.PandaModules import Point2#@UnresolvedImport
 import math
 from messaging import EngMsg, Msg
 from threading import Thread
@@ -9,6 +8,7 @@ import time
 import logging
 import sys, traceback
 import cPickle as pickle
+import engineMath
 
 
 class Notify():
@@ -38,24 +38,6 @@ class Notify():
 
 notify = Notify()
 
-def signum( num ):
-    if( num < 0 ): 
-        return -1
-    elif( num >= 0 ):
-        return 1
-
-_PI = math.pi
-_PI_2 = _PI / 2
-_3_PI_2 = 3 * _PI / 2
-_PI_4 = _PI / 4
-_3_PI_4 = 3 * _PI / 4 
-_5_PI_4 = 5 * _PI / 4
-_2_PI = 2 * _PI
-_PI_8 = _PI / 8
-_3_PI_8 = 3 * _PI / 8
-_5_PI_8 = 5 * _PI / 8
-_7_PI_8 = 7 * _PI / 8
-
 
 def getHeading( myPosition, lookAtPoint ):
     
@@ -63,23 +45,23 @@ def getHeading( myPosition, lookAtPoint ):
     if myPosition == lookAtPoint:
         return Unit.HEADING_NONE
     
-    angle = math.atan2( lookAtPoint.y - myPosition.y , lookAtPoint.x - myPosition.x )
+    angle = math.atan2( lookAtPoint[1] - myPosition[1] , lookAtPoint[0] - myPosition[0] )
 
-    if angle < -_7_PI_8:
+    if angle < -engineMath._7_PI_8:
         return Unit.HEADING_W
-    elif angle < -_5_PI_8:
+    elif angle < -engineMath._5_PI_8:
         return Unit.HEADING_SW
-    elif angle < -_3_PI_8:
+    elif angle < -engineMath._3_PI_8:
         return Unit.HEADING_S
-    elif angle < -_PI_8:
+    elif angle < -engineMath._PI_8:
         return Unit.HEADING_SE
-    elif angle < _PI_8:
+    elif angle < engineMath._PI_8:
         return Unit.HEADING_E
-    elif angle < _3_PI_8:
+    elif angle < engineMath._3_PI_8:
         return Unit.HEADING_NE
-    elif angle < _5_PI_8:
+    elif angle < engineMath._5_PI_8:
         return Unit.HEADING_N
-    elif angle < _7_PI_8:
+    elif angle < engineMath._7_PI_8:
         return Unit.HEADING_NW
     
     return Unit.HEADING_W
@@ -328,14 +310,14 @@ class Engine( Thread ):
             return False
         
     
-    #this method returns list of tuples( Point2D, visibility ); visibility = {0:clear, 1:partial, 2:not visible}
+
     def getLOS(self, origin, target ):
+        """this method returns list of tuples( (x,y, visibility ); visibility = {0:clear, 1:partial, 2:not visible}"""    
+        x1 = origin[0]
+        y1 = origin[1]
         
-        x1 = origin.x
-        y1 = origin.y
-        
-        x2 = target.x
-        y2 = target.y
+        x2 = target[0]
+        y2 = target[1]
         
         
         #we can't look at ourselves
@@ -347,8 +329,8 @@ class Engine( Thread ):
         absy0 = math.fabs(y2 - y1);
         
 
-        sgnx0 = signum( x2 - x1 );
-        sgny0 = signum( y2 - y1 );
+        sgnx0 = engineMath.signum( x2 - x1 );
+        sgny0 = engineMath.signum( y2 - y1 );
 
         
         x = int( x1 );
@@ -427,7 +409,7 @@ class Engine( Thread ):
         #if we can't see here, set visibility to 2, and return
         if( self.level._level_data[x][y] > 1 ):
             visibility = 2
-            list_visible_tiles.append( (Point2(x,y), visibility) )                    
+            list_visible_tiles.append( ( (x,y), visibility) )                    
             return( list_visible_tiles, visibility )
         
         #partial view, increase visibility by one 
@@ -466,7 +448,7 @@ class Engine( Thread ):
                 
         
         
-        list_visible_tiles.append( (Point2(x,y), visibility) )                    
+        list_visible_tiles.append( ( (x,y), visibility) )                    
         return( list_visible_tiles, visibility )
 
 
@@ -478,7 +460,7 @@ class Engine( Thread ):
         
         for i in xrange( self.level.maxX ):
             for j in xrange( self.level.maxY ):
-                for a in self.getLOS(position, Point2(i,j)):
+                for a in self.getLOS(position, (i,j) ):
                     if( a[1] != 2 ):
                         
                         if a[0] in losh_dict:
@@ -510,12 +492,12 @@ class Engine( Thread ):
                     
                     
                     #we can't check our starting position
-                    if( tile.x + dx == unit.pos.x and tile.y + dy == unit.pos.y ):
+                    if( tile[0] + dx == unit.pos[0] and tile[1] + dy == unit.pos[1] ):
                         continue
                     
                     
-                    x = int( tile.x + dx )
-                    y = int( tile.y + dy )
+                    x = int( tile[0] + dx )
+                    y = int( tile[1] + dy )
                     
                     
                     if( self.outOfLevelBounds(x, y) ):
@@ -536,7 +518,7 @@ class Engine( Thread ):
                         continue
                     
                     
-                    pt = Point2(x,y) 
+                    pt = (x,y) 
                     
                     
                     if pt in final_dict:
@@ -567,8 +549,8 @@ class Engine( Thread ):
             notify.critical( "Exception: %s... %s", sys.exc_info()[1], traceback.extract_stack() )
             raise Exception( "Invalid dx (%d) or dy (%d)" %(dy ,dy) )
         
-        ptx = int( position.x )
-        pty = int( position.y )
+        ptx = int( position[0] )
+        pty = int( position[1] )
 
 
         #check if the level is clear at that tile
@@ -631,8 +613,8 @@ class Engine( Thread ):
             
         
         
-        x = target_tile.x
-        y = target_tile.y
+        x = target_tile[0]
+        y = target_tile[1]
         
         
         path_list = [ (target_tile, moveDict[target_tile]) ]
@@ -649,7 +631,7 @@ class Engine( Thread ):
                     if( dx == 0 and dy == 0 ):
                         continue
                     
-                    pt = Point2( x+dx, y+dy )
+                    pt = ( x+dx, y+dy )
                     
                     #check if the point is even in the list
                     if (pt in moveDict) == False:
@@ -657,11 +639,11 @@ class Engine( Thread ):
                     
                     
                     #if we can't move here just skip
-                    if( self.canIMoveHere( unit, Point2(x,y), dx, dy) == False ):
+                    if( self.canIMoveHere( unit, (x,y), dx, dy) == False ):
                         continue
                     
                     #if we are looking at the origin, and we can move there, we just checked that, stop
-                    if( x + dx == unit.pos.x and y + dy == unit.pos.y ):
+                    if( x + dx == unit.pos[0] and y + dy == unit.pos[1] ):
                         path_list.reverse()
                         return path_list
                     
@@ -671,8 +653,8 @@ class Engine( Thread ):
                     
             
             path_list.append( biggest_ap )
-            x = biggest_ap[0].x
-            y = biggest_ap[0].y
+            x = biggest_ap[0][0]
+            y = biggest_ap[0][1]
         
       
         raise Exception( "hahahah how did you get to this part of code?" )
@@ -685,13 +667,13 @@ class Engine( Thread ):
          about it."""    
         
         #delete from dynamic_obstacles
-        self.dynamic_obstacles[ int( unit.pos.x ) ][ int( unit.pos.y ) ] = ( DYNAMICS_EMPTY, 0 )
+        self.dynamic_obstacles[ int( unit.pos[0] ) ][ int( unit.pos[1] ) ] = ( DYNAMICS_EMPTY, 0 )
         
         #set new position
         unit.pos = new_position
         
         #set new dynamic_obstacles
-        self.dynamic_obstacles[ int( unit.pos.x ) ][ int( unit.pos.y ) ] = ( DYNAMICS_UNIT, unit.id )
+        self.dynamic_obstacles[ int( unit.pos[0] ) ][ int( unit.pos[1] ) ] = ( DYNAMICS_UNIT, unit.id )
         
         #reduce amount of AP for unit
         unit.current_AP = ap_remaining

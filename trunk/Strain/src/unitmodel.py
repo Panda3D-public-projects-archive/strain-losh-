@@ -28,8 +28,8 @@ class UnitModel:
         self.model.setH(h)
         self.model.flattenLight() 
         
-        x = int(unit.pos.getX())
-        y = int(unit.pos.getY())
+        x = int(unit.pos[0])
+        y = int(unit.pos[1])
         
         if off:
             self.node.setPos(Point3(0,-8,-2))
@@ -162,8 +162,8 @@ class UnitModel:
         self.node.setPos(pos)   
         
     def getHeadingTile(self, heading):
-        x = int(self.unit.pos.getX())
-        y = int(self.unit.pos.getY())        
+        x = int(self.unit.pos[0])
+        y = int(self.unit.pos[1])        
         
         if heading == Unit.HEADING_NW:
             o = Point2(x-1, y+1)

@@ -1,7 +1,4 @@
-from pandac.PandaModules import Point2 #@UnresolvedImport
 from random import randint
-
-
 
 
 
@@ -48,7 +45,7 @@ class Unit():
             self.default_HP = 5
             self.soundtype = '01'                                                   
 
-        self.pos = Point2( x, y )
+        self.pos = ( x, y )
         self.current_AP = self.default_AP
         self.health = self.default_HP
         
