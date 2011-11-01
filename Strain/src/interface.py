@@ -484,7 +484,8 @@ class Interface(DirectObject.DirectObject):
                 o = Point2(x, y-1)
             elif self.unit_move_orientation == Unit.HEADING_SE:
                 o = Point2(x+1, y-1)
-            self.ge.createMoveMsg(self.selected_unit, self.unit_move_destination, o)
+            self.ge.createMoveMsg(self.selected_unit, (self.unit_move_destination.x, self.unit_move_destination.y), 
+                                                            (o.x, o.y))
         self.unit_move_destination = None
         self.move_timer = 0
         self.removeTurnArrows()

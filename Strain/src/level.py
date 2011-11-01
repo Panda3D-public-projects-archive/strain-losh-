@@ -1,4 +1,4 @@
-from pandac.PandaModules import Point2#@UnresolvedImport
+
 
 LEVELS_ROOT = "./data/levels/"
 
@@ -12,7 +12,7 @@ class Level:
         
         self.load(self.name)        
 
-        self.center = Point2( self.maxX / 2, self.maxY / 2 )
+        self.center = ( self.maxX / 2, self.maxY / 2 )
 
     def load(self, name):
         line_count = 0
