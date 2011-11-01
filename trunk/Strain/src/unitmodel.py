@@ -3,7 +3,7 @@ from panda3d.core import Vec4, Point4, Point3, Point2, NodePath#@UnresolvedImpor
 from panda3d.core import PointLight#@UnresolvedImport
 from pandac.PandaModules import TransparencyAttrib#@UnresolvedImport
 import random
-from unit import Unit
+from engine.unit import Unit
 
 #===============================================================================
 # CLASS UnitModel --- DEFINITION

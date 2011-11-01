@@ -1,4 +1,4 @@
-from engine import Engine
+from engine.engineCore import Engine
 from graphicsengine import GraphicsEngine
 import sys
         

@@ -8,7 +8,7 @@ import cPickle as pickle
 from pandac.PandaModules import QueuedConnectionManager, QueuedConnectionListener, QueuedConnectionReader, ConnectionWriter #@UnresolvedImport
 from pandac.PandaModules import NetAddress, NetDatagram, PointerToConnection #@UnresolvedImport
 from direct.distributed.PyDatagramIterator import PyDatagramIterator
-import engine
+import engine.engineCore 
 import time
 import threading
 import collections
@@ -73,14 +73,16 @@ class EngMsg:
     
     handshakedConnections = collections.deque()
     
+    log = None
     
     @staticmethod
-    def startServer():
+    def startServer( lgr ):
         EngMsg.cManager = QueuedConnectionManager()
         EngMsg.cListener = QueuedConnectionListener(EngMsg.cManager, 0)
         EngMsg.cReader = QueuedConnectionReader(EngMsg.cManager, 0)
         EngMsg.cWriter = ConnectionWriter(EngMsg.cManager, 0)
-        
+
+        EngMsg.log = lgr
   
         backlog = 5
         EngMsg.tcpSocket = EngMsg.cManager.openTCPServerRendezvous(TCP_PORT , backlog)        
@@ -91,7 +93,7 @@ class EngMsg:
     def stopServer():
         for client, address, name in EngMsg.activeConnections[:]:
             EngMsg.disconnect(client, address, name)
-            engine.notify.info("Closing connection with: %s @ %s", name, address)
+            EngMsg.logger.notify.info("Closing connection with: %s @ %s", name, address)
     
         EngMsg.activeConnections = []
         
@@ -118,7 +120,7 @@ class EngMsg:
                 newConnection.setNoDelay(1)
                               
                 #try handshaking
-                threading.Thread(target=EngMsg.handshake, args=( [newConnection, engine.Engine.getInstance().players[:]] ) ).start()
+                threading.Thread(target=EngMsg.handshake, args=( [newConnection, engine.engineCore.Engine.getInstance().players[:]] ) ).start()
 
                 
                  
@@ -128,26 +130,26 @@ class EngMsg:
             if success:
                 
                 #go through all players
-                for player in engine.Engine.getInstance().players:
+                for player in engine.engineCore.Engine.getInstance().players:
                     if player.name == player_name:
                         
                         #see if there is already a connection for this player, if yes than disconnect it
                         if player.connection != None:
                             EngMsg.sendErrorMsg("Disconnecting because this player is connecting from other connection", player.connection )
                             EngMsg.disconnect( player.connection, player.connection.getAddress(), player.name )
-                            engine.notify.info("Player %s disconnected because he was logging in from other connection", player.name)
+                            EngMsg.log.info("Player %s disconnected because he was logging in from other connection", player.name)
                             
                         #remember this connection
                         player.connection = conn
                 
                 EngMsg.cReader.addConnection(conn)
-                engine.notify.info("Client connected: %s @ %s", player_name, conn.getAddress() )
+                EngMsg.log.info("Client connected: %s @ %s", player_name, conn.getAddress() )
                 EngMsg.activeConnections.append( ( conn, conn.getAddress(), player_name ) )
                 
             else:
                 #in this case, address and name parameter don't matter, cause there is nothing in activeConnections yet
                 EngMsg.disconnect( conn, conn.getAddress(),'' )
-                engine.notify.info("Client didn't pass handshaking.")                
+                EngMsg.log.info("Client didn't pass handshaking.")                
         except IndexError:
             pass
                    
@@ -155,7 +157,7 @@ class EngMsg:
         #check for disconnects
         for connection, address, name in EngMsg.activeConnections[:]:   
             if not connection.getSocket().Active():
-                engine.notify.info("Client disconnected: %s @ %s", name, address)
+                EngMsg.log.info("Client disconnected: %s @ %s", name, address)
                 EngMsg.disconnect(connection, address, name)
     
     
@@ -224,7 +226,7 @@ class EngMsg:
             netDatagram = NetDatagram()
             netDatagram.addString(pickle.dumps(msg))
             if EngMsg.cWriter.send(netDatagram, client):
-                engine.notify.debug( "Sent client: %s @ %s\tmessage:%s" , name, address, msg )
+                EngMsg.log.debug( "Sent client: %s @ %s\tmessage:%s" , name, address, msg )
         
     
     @staticmethod
@@ -235,7 +237,7 @@ class EngMsg:
             if EngMsg.cReader.getData(datagram):
                 dgi = PyDatagramIterator(datagram)
                 msg = pickle.loads(dgi.getString())
-                engine.notify.info("Engine received a message:%s, from:%s", msg, str(datagram.getConnection().getAddress()))
+                EngMsg.log.info("Engine received a message:%s, from:%s", msg, str(datagram.getConnection().getAddress()))
                 return (msg, datagram.getConnection() )
 
           
@@ -250,14 +252,14 @@ class EngMsg:
                         netDatagram = NetDatagram()
                         netDatagram.addString(pickle.dumps(msg))
                         if EngMsg.cWriter.send(netDatagram, conn):
-                            engine.notify.debug( "Sent client: %s @ %s\tmessage:%s" , name, address, msg )
+                            EngMsg.log.debug( "Sent client: %s @ %s\tmessage:%s" , name, address, msg )
             else:
                 EngMsg.broadcastMsg(msg)
         except:
-            engine.notify.critical("Could not send message to clients, reason : %s", sys.exc_info()[1])
+            EngMsg.log.critical("Could not send message to clients, reason : %s", sys.exc_info()[1])
             return
         
-        engine.notify.info("Engine posted a message: %s" , msg )
+        EngMsg.log.info("Engine posted a message: %s" , msg )
     
     @staticmethod
     def move(unit_id, move_actions):
@@ -297,12 +299,12 @@ class ClientMsg:
     myConnection = None
     
     num_failed_attempts = 0
-    
+
+    log = None
 
     @staticmethod
     def connect():
-        #TODO: ogs: i ovo moras maknut na logger od klijenta
-        engine.notify.info( "Trying to connect to server: %s:%s", IP_ADDRESS, TCP_PORT )
+        ClientMsg.log.info( "Trying to connect to server: %s:%s", IP_ADDRESS, TCP_PORT )
         
         ClientMsg.cManager = QueuedConnectionManager()
         ClientMsg.cReader = QueuedConnectionReader(ClientMsg.cManager, 0)
@@ -318,14 +320,12 @@ class ClientMsg:
             #try handshaking
             if not ClientMsg.handshake():
                 ClientMsg.disconnect()
-                #TODO: ogs: i ovo moras maknut na logger od klijenta
-                engine.notify.error( "Did not pass handshake.")
+                ClientMsg.log.error( "Did not pass handshake.")
                 return False
             
             ClientMsg.cReader.addConnection(ClientMsg.myConnection)
             
-            #TODO: ogs: i ovo moras maknut na logger od klijenta
-            engine.notify.info( "Connected to server: %s", ClientMsg.myConnection.getAddress() )
+            ClientMsg.log.info( "Connected to server: %s", ClientMsg.myConnection.getAddress() )
             return True
             
         return False
@@ -352,7 +352,7 @@ class ClientMsg:
             
             #if we already tried 5 times, don't even bother
             if ClientMsg.num_failed_attempts == 5:
-                engine.notify.error("Failed to connect %d times, giving up.", ClientMsg.num_failed_attempts)
+                ClientMsg.log.error("Failed to connect %d times, giving up.", ClientMsg.num_failed_attempts)
                 ClientMsg.num_failed_attempts += 1
                 return False
             
@@ -368,8 +368,7 @@ class ClientMsg:
         
         #check the connection, if there is none, disconnect everything and return false
         if not ClientMsg.myConnection.getSocket().Active():
-            #TODO: ogs: prebacit i ovo na klijentov logger
-            engine.notify.error( "Lost connection to server: %s", IP_ADDRESS )
+            ClientMsg.log.error( "Lost connection to server: %s", IP_ADDRESS )
             ClientMsg.disconnect()
             return False
 
@@ -411,8 +410,7 @@ class ClientMsg:
             if ClientMsg.cReader.getData(datagram):
                 dgi = PyDatagramIterator(datagram)                
                 msg = pickle.loads(dgi.getString())                
-                #TODO: ogs: sredit da ti ovdje pise u GraphicsEngine, nemres stavit import jer je onda ciklicki povezano
-                engine.notify.info("Client received a message:%s", msg)
+                ClientMsg.log.info("Client received a message:%s", msg)
                           
                 return msg
                                             
@@ -428,11 +426,7 @@ class ClientMsg:
         datagram = NetDatagram()        
         datagram.addString(pickle.dumps(msg, pickle.HIGHEST_PROTOCOL))   
         ClientMsg.cWriter.send(datagram, ClientMsg.myConnection)
-
-                 
-        #TODO: ogs: sredit da ti ovdje pise u GraphicsEngine, nemres stavit import jer je onda ciklicki povezano
-        #GraphicsEngine.logger.debug("Client posted a message: %s", msg)
-        engine.notify.debug("Client posted a message: %s", msg)
+        ClientMsg.log.debug("Client posted a message: %s", msg)
 
     
     @staticmethod
