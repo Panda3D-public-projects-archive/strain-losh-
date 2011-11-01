@@ -39,34 +39,6 @@ class Notify():
 notify = Notify()
 
 
-def getHeading( myPosition, lookAtPoint ):
-    
-    #trivial check if this is the same position, if it is, return none
-    if myPosition == lookAtPoint:
-        return Unit.HEADING_NONE
-    
-    angle = math.atan2( lookAtPoint[1] - myPosition[1] , lookAtPoint[0] - myPosition[0] )
-
-    if angle < -engineMath._7_PI_8:
-        return Unit.HEADING_W
-    elif angle < -engineMath._5_PI_8:
-        return Unit.HEADING_SW
-    elif angle < -engineMath._3_PI_8:
-        return Unit.HEADING_S
-    elif angle < -engineMath._PI_8:
-        return Unit.HEADING_SE
-    elif angle < engineMath._PI_8:
-        return Unit.HEADING_E
-    elif angle < engineMath._3_PI_8:
-        return Unit.HEADING_NE
-    elif angle < engineMath._5_PI_8:
-        return Unit.HEADING_N
-    elif angle < engineMath._7_PI_8:
-        return Unit.HEADING_NW
-    
-    return Unit.HEADING_W
-    
-
 
 class Player:
     
@@ -123,7 +95,7 @@ class Engine( Thread ):
 
     def run(self):
         print "Engine started"
-        EngMsg.startServer()
+        EngMsg.startServer( notify )
         
         lvl = "level2.txt"
         self.level = Level( lvl )
@@ -251,7 +223,7 @@ class Engine( Thread ):
                                 x,
                                 y )
                 
-                tmpUnit.heading = getHeading(tmpUnit.pos, self.level.center)
+                tmpUnit.heading = engineMath.getHeading(tmpUnit.pos, self.level.center)
                 
                 player.unitlist.append( tmpUnit )
                 self.units[tmpUnit.id] = tmpUnit
@@ -681,7 +653,7 @@ class Engine( Thread ):
 
     
     def _rotateUnit(self, unit, look_at_tile ):
-        tmp_heading = getHeading(unit.pos, look_at_tile)
+        tmp_heading = engineMath.getHeading(unit.pos, look_at_tile)
         if unit.heading != tmp_heading:
             unit.heading = tmp_heading
             return True

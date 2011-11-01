@@ -4,7 +4,7 @@ from pandac.PandaModules import GeomNode, CardMaker, TextNode#@UnresolvedImport
 from pandac.PandaModules import TextureStage, TransparencyAttrib#@UnresolvedImport
 from direct.gui.DirectGui import DirectFrame, DGG
 from direct.gui.OnscreenText import OnscreenText
-from unit import Unit
+from engine.unit import Unit
 from unitmodel import UnitModel
 from console import GuiConsole
 
@@ -290,7 +290,7 @@ class Interface(DirectObject.DirectObject):
         if self.selected_unit:
             losh_dict = self.selected_unit.unit.losh_dict
             for tile in losh_dict:
-                tile_node = self.ge.tile_np_list[int(tile.x)][int(tile.y)]
+                tile_node = self.ge.tile_np_list[int(tile[0])][int(tile[1])]
                 if losh_dict[tile] == 0:
                     self.changeTileColor(tile_node, _TILE_FULL_LOS)
                 elif losh_dict[tile] == 1:
@@ -318,8 +318,8 @@ class Interface(DirectObject.DirectObject):
                 textNodePath = self.movetext_np.attachNewNode(text)
                 textNodePath.setColor(0, 0, 0)
                 textNodePath.setScale(0.5, 0.5, 0.5)
-                textNodePath.setPos(tile.x+0.2, tile.y+0.2, 0.5)
-                textNodePath.lookAt(tile.x+0.2, tile.y+0.2, -100)
+                textNodePath.setPos(tile[0]+0.2, tile[1]+0.2, 0.5)
+                textNodePath.lookAt(tile[0]+0.2, tile[1]+0.2, -100)
             self.movetext_np.reparentTo(self.ge.node)
             
     def switchUnitMove(self):

@@ -1,5 +1,6 @@
 import random
 import math
+from engine.unit import Unit
 
 
 
@@ -14,6 +15,36 @@ _PI_8 = _PI / 8
 _3_PI_8 = 3 * _PI / 8
 _5_PI_8 = 5 * _PI / 8
 _7_PI_8 = 7 * _PI / 8
+
+
+
+def getHeading( myPosition, lookAtPoint ):
+    
+    #trivial check if this is the same position, if it is, return none
+    if myPosition == lookAtPoint:
+        return Unit.HEADING_NONE
+    
+    angle = math.atan2( lookAtPoint[1] - myPosition[1] , lookAtPoint[0] - myPosition[0] )
+
+    if angle < -_7_PI_8:
+        return Unit.HEADING_W
+    elif angle < -_5_PI_8:
+        return Unit.HEADING_SW
+    elif angle < -_3_PI_8:
+        return Unit.HEADING_S
+    elif angle < -_PI_8:
+        return Unit.HEADING_SE
+    elif angle < _PI_8:
+        return Unit.HEADING_E
+    elif angle < _3_PI_8:
+        return Unit.HEADING_NE
+    elif angle < _5_PI_8:
+        return Unit.HEADING_N
+    elif angle < _7_PI_8:
+        return Unit.HEADING_NW
+    
+    return Unit.HEADING_W
+    
 
 
 
