@@ -18,13 +18,13 @@ from console import *
 # Panda3D parameter file handling
 #===============================================================================
 
-loadPrcFileData("", "model-path "+"./data/models")
-loadPrcFileData("", "model-path "+"./data/sounds")
-loadPrcFileData("", "model-path "+"./data/textures")
+loadPrcFileData("", "model-path "+"./models")
+loadPrcFileData("", "model-path "+"./sounds")
+loadPrcFileData("", "model-path "+"./textures")
 
 # config dictionary variable
 config = {} 
-cfile = open("data/config/user.cfg", "r")
+cfile = open("config/user.cfg", "r")
 while 1:
     string = cfile.readline()
     if (string == ""):
@@ -226,7 +226,7 @@ class GraphicsEngine(ShowBase):
         self.light_input.setPos(5,0,1) 
         self.light_dummy.setShaderOff(1) 
         self.light_dummy.hprInterval(1,Vec3(360,0,0)).loop() 
-        self.SHA_outline = Shader.load('./data/shaders/facingRatio1.sha') 
+        self.SHA_outline = Shader.load('shaders/facingRatio1.sha') 
 
     def setOutlineShader(self, np, color=Vec4(1, 0, 0, 0)):
         facingRatioPower = 1.5

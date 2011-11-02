@@ -182,7 +182,7 @@ class Engine( Thread ):
         
         notify.debug( "Army lists loading" )
         
-        xmldoc = minidom.parse('data/armylist.xml')
+        xmldoc = minidom.parse('armylist.xml')
         #print xmldoc.firstChild.toxml()
         
         self.players = []

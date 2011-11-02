@@ -1,6 +1,6 @@
 
 
-LEVELS_ROOT = "./data/levels/"
+LEVELS_ROOT = "levels/"
 
 class Level:
         
