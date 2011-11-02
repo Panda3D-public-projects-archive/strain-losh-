@@ -1,0 +1,1 @@
+packp3d -o Strain.p3d -d d:\b\dev\workspace\Strain\client\ -n cfg
