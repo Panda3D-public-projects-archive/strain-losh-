@@ -3,7 +3,7 @@ from panda3d.core import Vec4, Point4, Point3, Point2, NodePath#@UnresolvedImpor
 from panda3d.core import PointLight#@UnresolvedImport
 from pandac.PandaModules import TransparencyAttrib#@UnresolvedImport
 import random
-import globals
+from engine.unit import Unit
 
 #===============================================================================
 # CLASS UnitModel --- DEFINITION
@@ -165,21 +165,21 @@ class UnitModel:
         x = int(self.unit.pos[0])
         y = int(self.unit.pos[1])        
         
-        if heading == globals.HEADING_NW:
+        if heading == Unit.HEADING_NW:
             o = Point2(x-1, y+1)
-        elif heading == globals.HEADING_N:
+        elif heading == Unit.HEADING_N:
             o = Point2(x, y+1)
-        elif heading == globals.HEADING_NE:
+        elif heading == Unit.HEADING_NE:
             o = Point2(x+1, y+1)
-        elif heading == globals.HEADING_W:
+        elif heading == Unit.HEADING_W:
             o = Point2(x-1, y)
-        elif heading == globals.HEADING_E:
+        elif heading == Unit.HEADING_E:
             o = Point2(x+1, y)
-        elif heading == globals.HEADING_SW:
+        elif heading == Unit.HEADING_SW:
             o = Point2(x-1, y-1)
-        elif heading == globals.HEADING_S:
+        elif heading == Unit.HEADING_S:
             o = Point2(x, y-1)
-        elif heading == globals.HEADING_SE:
+        elif heading == Unit.HEADING_SE:
             o = Point2(x+1, y-1)
         return o
     
