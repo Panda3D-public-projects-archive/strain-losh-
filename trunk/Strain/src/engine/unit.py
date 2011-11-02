@@ -1,7 +1,3 @@
-from random import randint
-
-
-
 class Unit():
     
     
@@ -48,15 +44,4 @@ class Unit():
         self.pos = ( x, y )
         self.current_AP = self.default_AP
         self.health = self.default_HP
-        
-    def get_sound(self, action):
-        if action == 'select':
-            s = randint(1, 4)
-            return base.sound_manager.sounds['select'+self.soundtype+'0'+str(s)] #@UndefinedVariable
-        elif action == 'movend':
-            s = randint(1, 3)
-            return base.sound_manager.sounds['movend'+self.soundtype+'0'+str(s)] #@UndefinedVariable
-                
-    def talk(self, action):
-        self.get_sound(action).play()
         
