@@ -153,28 +153,24 @@ class Engine( Thread ):
         
         return dic
     
-    def compileUnit(self, unit):
-        attr_dict ={}
-        banned_attr = []
-        for attr in unit.__dict__:
-            if attr in banned_attr:
-                continue
-            attr_dict[attr] = unit.__dict__[attr]
-        return attr_dict
-    
     def compileAllUnits(self):
-        lst = {}
+        dct = {}
         for u in self.units.itervalues():
-            lst[u.id] = self.compileUnit(u)
-        return lst
+            dct[u.id] = self.compileUnit(u)
+        return dct
     
     def compileLevel(self):
+        return self.compileTarget( self.level )
+    
+    def compileUnit(self, unit):
+        return self.compileTarget( unit )
+    
+    def compileTarget(self, target, banned_list = [] ):
         attr_dict ={}
-        banned_attr = []
-        for attr in self.level.__dict__:
-            if attr in banned_attr:
+        for attr in target.__dict__:
+            if attr in banned_list:
                 continue
-            attr_dict[attr] = self.level.__dict__[attr]
+            attr_dict[attr] = target.__dict__[attr]
         return attr_dict
         
         
