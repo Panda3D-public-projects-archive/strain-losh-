@@ -33,7 +33,7 @@ class Notify():
             
     def error(self, msg,*args ):
         self.logger.critical(msg, *args)
-        print msg%args
+        #print msg%args
     
 
 notify = Notify()
@@ -56,34 +56,19 @@ DYNAMICS_EMPTY = 0
 DYNAMICS_UNIT = 1
 
 
-
 class Engine( Thread ):
     
     players = []
     units = {}
         
-    __shared_state = {}
-    __instance = None
-          
     __index_uid = 0
 
 
-    @staticmethod
-    def getInstance():
-        """Singleton implementation"""
-        if not Engine.__instance:
-            Engine.__instance = Engine()
-        return Engine.__instance
-        
         
     #====================================init======================================0
     def __init__(self):
-        notify.info("------------------------Engine Starting------------------------")
-        self.__dict__ = self.__shared_state
-        Engine.__instance = self
-
         Thread.__init__(self)
-        
+        notify.info("------------------------Engine Starting------------------------")
 
         self.stop = False
         self.level = None 
@@ -94,6 +79,7 @@ class Engine( Thread ):
 
 
     def run(self):
+        engine._instance = self
         print "Engine started"
         EngMsg.startServer( notify )
         
@@ -109,8 +95,6 @@ class Engine( Thread ):
         
         self.turn = 0        
         self.beginTurn()
-
-        self.compileUnit( self.units[0])
 
         #+++++++++++++++++++++++++++++++++++++++++++++MAIN LOOP+++++++++++++++++++++++++++++++++++++++++++++
         #+++++++++++++++++++++++++++++++++++++++++++++MAIN LOOP+++++++++++++++++++++++++++++++++++++++++++++
@@ -203,7 +187,7 @@ class Engine( Thread ):
         
         notify.debug( "Army lists loading" )
         
-        xmldoc = minidom.parse('data/armylist.xml')
+        xmldoc = minidom.parse('data/base/armylist.xml')
         #print xmldoc.firstChild.toxml()
         
         self.players = []
@@ -751,5 +735,6 @@ class Engine( Thread ):
     
 
 
-
-    
+if __name__ == "__main__":
+    me = Engine()
+    me.start()
