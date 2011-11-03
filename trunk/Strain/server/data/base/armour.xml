@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<armour name="terminator" 	front="2" side_rear="2" head="2"/>
+<armour name="power_armour" front="3" side_rear="3" head="3"/>
+<armour name="flak" 		front="5" side_rear="5" head="4"/>
+<armour name="ork_body" 	front="6" side_rear="6" head="6"/>
+<armour name="ork_eavy" 	front="4" side_rear="4" head="4"/>
