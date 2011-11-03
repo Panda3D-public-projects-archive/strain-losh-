@@ -16,14 +16,13 @@ TYPE_MELEE = 'melee'
 
 SPECIAL_FLAMER = 'flamer'
 
+
+
 class WeaponLoader():
 
     @staticmethod
     def loadWeapon( name ):     
-        if __debug__:
-            xmldoc = minidom.parse('../../Strain/data/base/weapons.xml')
-        else:
-            xmldoc = minidom.parse('data/base/weapons.xml')
+        xmldoc = minidom.parse('data/base/weapons.xml')
         
         wpn = None
         
@@ -52,7 +51,8 @@ class WeaponLoader():
             
 
         xmldoc.unlink()
-
+        if not wpn:
+            raise Exception("Weapon:%s not found in database." % name)
         return wpn
 
 

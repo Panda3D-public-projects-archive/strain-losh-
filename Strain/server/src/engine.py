@@ -1,5 +1,5 @@
 from xml.dom import minidom
-from unit import Unit
+from unit import Unit, unitLoader
 from level import Level
 import math
 from server_messaging import *
@@ -200,12 +200,10 @@ class Engine( Thread ):
                 
                 unittype = u.attributes['type'].value
                 
-                
                 #check to see level boundaries
                 if( self.outOfLevelBounds(x, y) ):
                     print "This unit is out of level bounds", unittype, x, y
                     continue
-                
                 
                 #check to see if there is something in the way on level
                 if self.level._level_data[x][y] != 0:
@@ -217,12 +215,9 @@ class Engine( Thread ):
                     print "This tile already occupied, unit cannot deploy here", x, y, unittype
                     continue
                  
+                tmpUnit = unitLoader.loadUnit(unittype)
                 
-                tmpUnit = Unit( self.getUID(),
-                                player.id, 
-                                unittype, 
-                                x,
-                                y )
+                tmpUnit.init( self.getUID(), player.id, x, y )
                 
                 tmpUnit.heading = engineMath.getHeading(tmpUnit.pos, self.level.center)
                 
