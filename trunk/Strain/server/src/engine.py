@@ -6,6 +6,7 @@ from server_messaging import *
 from threading import Thread
 import time
 import logging
+import logging.handlers
 import sys, traceback
 import cPickle as pickle
 import engineMath
@@ -16,7 +17,7 @@ class Notify():
     def __init__(self):
         #=============================SET UP LOGGING===================================
         self.logger = logging.getLogger('EngineLog')
-        self.hdlr = logging.FileHandler('Engine.log')
+        self.hdlr = logging.handlers.RotatingFileHandler('Engine.log', maxBytes = 1024*1024*3 )
         self.formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
         self.hdlr.setFormatter(self.formatter)
         self.logger.addHandler(self.hdlr) 
@@ -217,8 +218,7 @@ class Engine( Thread ):
                  
                 tmpUnit = unitLoader.loadUnit(unittype)
                 
-                tmpUnit.init( self.getUID(), player.id, x, y )
-                
+                tmpUnit.init( self.getUID(), player.id, x, y )                
                 tmpUnit.heading = engineMath.getHeading(tmpUnit.pos, self.level.center)
                 
                 player.unitlist.append( tmpUnit )

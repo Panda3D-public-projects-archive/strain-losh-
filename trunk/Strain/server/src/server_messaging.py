@@ -31,6 +31,7 @@ ENGINE_STATE = 5        #value - dictionary of values
 LEVEL = 6               #value - pickled level
 END_TURN = 7            #no values
 UNIT = 8                #value - pickled unit
+SHOOT = 9               #value - target unit
 
 
 
