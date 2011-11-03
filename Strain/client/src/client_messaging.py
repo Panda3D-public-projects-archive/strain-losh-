@@ -205,7 +205,7 @@ class ClientMsg:
     
     @staticmethod
     def getLevel():
-        ClientMsg._sendMsg((LEVEL))
+        ClientMsg._sendMsg((LEVEL,0))
     
     @staticmethod
     def move(unit_id, new_position, orientation):
@@ -215,10 +215,10 @@ class ClientMsg:
 
     @staticmethod
     def shutdownEngine():
-        ClientMsg._sendMsg((ENGINE_SHUTDOWN)) 
+        ClientMsg._sendMsg((ENGINE_SHUTDOWN,0)) 
         
     @staticmethod
     def endTurn():
-        ClientMsg._sendMsg((END_TURN))
+        ClientMsg._sendMsg((END_TURN,0))
         
         

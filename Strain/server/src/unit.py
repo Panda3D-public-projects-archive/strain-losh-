@@ -1,6 +1,6 @@
 from xml.dom import minidom
 from weapon import WeaponLoader
-
+import weapon
 
 
 class unitLoader():
@@ -20,8 +20,13 @@ class unitLoader():
                          
             wpns = p.attributes['weapons'].value.split(',')
             for wname in wpns:
-                unit.weapons.append( WeaponLoader.loadWeapon(wname))  
-
+                wpn = WeaponLoader.loadWeapon(wname)
+                unit.weapons.append( wpn )  
+                if wpn.type != weapon.TYPE_MELEE:
+                    unit.active_weapon = wpn
+            if not unit.active_weapon:
+                unit.weapons[0]
+            
             unit.m = p.attributes['m'].value
             unit.ws = p.attributes['ws'].value
             unit.bs = p.attributes['bs'].value
@@ -66,7 +71,8 @@ class Unit():
         self.resting = False
         self.bs = -1
         self.weapons = []
-    
+        self.active_weapon = None
+        
         self.m = -1
         self.ws = -1
         self.bs = -1

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <weaponList>
+	<weapon name="None"/>
 	<weapon name="Bolt Pistol" 		range="12" 	Str="4"	AP="5" 	type="pistol"/>
 	<weapon name="Bolter" 			range="24" 	Str="4"	AP="5" 	type="rifle"/>
 	<weapon name="Storm Bolter" 	range="24" 	Str="4"	AP="5" 	type="assault" 	shots="2"/>
