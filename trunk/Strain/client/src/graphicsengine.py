@@ -277,7 +277,7 @@ class GraphicsEngine(ShowBase):
             
     def getUnitData(self, unit, type):
         if type == "type":
-            return unit.unit['type']
+            return unit.unit['name']
         elif type == "HP":
             return unit.unit['health']
         elif type == "AP":

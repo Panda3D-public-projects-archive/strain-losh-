@@ -36,6 +36,7 @@
 	<weapon name="Power Sword" 					Str="6"	AP="3" 	type="melee"				special="power"/>
 	<weapon name="Power Axe" 					Str="6"	AP="3" 	type="melee"				special="power"/>
 	<weapon name="Power Glove" 					Str="10" AP="3"	type="melee"				special="power"/>
+	<weapon name="Lightning Claw" 				Str="10" AP="3"	type="melee"				special="power"/>	
 	<weapon name="Thunder Hammer"						AP="3" 	type="melee"				special="thunder_hammer"/>
 	
 	

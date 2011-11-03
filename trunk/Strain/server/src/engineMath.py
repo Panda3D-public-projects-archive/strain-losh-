@@ -1,6 +1,6 @@
 import random
 import math
-from unit import Unit
+from unit import *
 
 
 
@@ -22,28 +22,28 @@ def getHeading( myPosition, lookAtPoint ):
     
     #trivial check if this is the same position, if it is, return none
     if myPosition == lookAtPoint:
-        return Unit.HEADING_NONE
+        return HEADING_NONE
     
     angle = math.atan2( lookAtPoint[1] - myPosition[1] , lookAtPoint[0] - myPosition[0] )
 
     if angle < -_7_PI_8:
-        return Unit.HEADING_W
+        return HEADING_W
     elif angle < -_5_PI_8:
-        return Unit.HEADING_SW
+        return HEADING_SW
     elif angle < -_3_PI_8:
-        return Unit.HEADING_S
+        return HEADING_S
     elif angle < -_PI_8:
-        return Unit.HEADING_SE
+        return HEADING_SE
     elif angle < _PI_8:
-        return Unit.HEADING_E
+        return HEADING_E
     elif angle < _3_PI_8:
-        return Unit.HEADING_NE
+        return HEADING_NE
     elif angle < _5_PI_8:
-        return Unit.HEADING_N
+        return HEADING_N
     elif angle < _7_PI_8:
-        return Unit.HEADING_NW
+        return HEADING_NW
     
-    return Unit.HEADING_W
+    return HEADING_W
     
 
 

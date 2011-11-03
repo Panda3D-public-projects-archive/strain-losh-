@@ -12,7 +12,7 @@ import interface
 class UnitModel:
     def __init__(self, unit, scale=0.25, h=180, pos=None, off=False):
         self.anim_count_dict = {}
-        self.model = self.load(unit['type'])
+        self.model = self.load(unit['name'])
         self.id = str(unit['id'])
         self.unit = unit
         
@@ -76,7 +76,7 @@ class UnitModel:
         self.passtime = 0
         self.setIdleTime()    
 
-        if unit['type']=="terminator":
+        if unit['name']=="terminator":
             t = loader.loadTexture("terminator2.tga")#@UndefinedVariable
             self.model.setTexture(t, 1)
 
