@@ -7,5 +7,6 @@
 <pydev_pathproperty name="org.python.pydev.PROJECT_SOURCE_PATH">
 <path>/Strain/client</path>
 <path>/Strain/client/src</path>
+<path>/Strain/server</path>
 </pydev_pathproperty>
 </pydev_project>
