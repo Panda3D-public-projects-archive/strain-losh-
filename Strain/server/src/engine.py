@@ -10,7 +10,7 @@ import logging.handlers
 import sys, traceback
 import cPickle as pickle
 import engineMath
-
+from player import Player
 
 class Notify():
     
@@ -41,17 +41,6 @@ notify = Notify()
 
 
 
-class Player:
-    
-    def __init__(self, in_id, name, team):
-        self.id = in_id
-        self.name = name 
-        self.team = team
-        self.unitlist = []
-        self.list_visible_enemies = []
-        self.connection = None
-        pass
-
 
 DYNAMICS_EMPTY = 0
 DYNAMICS_UNIT = 1
@@ -59,11 +48,13 @@ DYNAMICS_UNIT = 1
 
 class Engine( Thread ):
     
-    players = []
-    units = {}
         
     __index_uid = 0
 
+    def getUID(self):
+        Engine.__index_uid += 1
+        return Engine.__index_uid -1
+    
 
         
     #====================================init======================================0
@@ -75,6 +66,8 @@ class Engine( Thread ):
         self.level = None 
         self.dynamic_obstacles = []
         self.turn = 0        
+        self.players = {}
+        self.units = {}
         
         self.name = "EngineThread"
 
@@ -164,7 +157,21 @@ class Engine( Thread ):
         return self.compileTarget( self.level )
     
     def compileUnit(self, unit):
-        return self.compileTarget( unit )
+        ret = self.compileTarget( unit, ['owner', 'weapons', 'active_weapon'] )
+         
+        ret['owner_id'] = unit.owner.id             
+        ret['weapons'] = self.compileWeaponList( unit.weapons )
+        ret['active_weapon'] = self.compileWeapon( unit.active_weapon )
+        return ret
+    
+    def compileWeapon(self, wpn ):
+        return self.compileTarget( wpn )
+        
+    def compileWeaponList(self, weapons ):
+        wpn_list = []
+        for weapon in weapons:
+            wpn_list.append( self.compileTarget( weapon ) )
+        return wpn_list
     
     def compileTarget(self, target, banned_list = [] ):
         attr_dict ={}
@@ -174,12 +181,7 @@ class Engine( Thread ):
             attr_dict[attr] = target.__dict__[attr]
         return attr_dict
         
-        
-    def getUID(self):
-        self.__index_uid += 1
-        return self.__index_uid -1
-    
-        
+                
     def loadArmyList(self):
         
         notify.debug( "Army lists loading" )
@@ -187,7 +189,7 @@ class Engine( Thread ):
         xmldoc = minidom.parse('data/base/armylist.xml')
         #print xmldoc.firstChild.toxml()
         
-        self.players = []
+        self.players = {}
         self.units = {}
         
         
@@ -218,7 +220,7 @@ class Engine( Thread ):
                  
                 tmpUnit = unitLoader.loadUnit(unittype)
                 
-                tmpUnit.init( self.getUID(), player.id, x, y )                
+                tmpUnit.init( self.getUID(), player, x, y )                
                 tmpUnit.heading = engineMath.getHeading(tmpUnit.pos, self.level.center)
                 
                 player.unitlist.append( tmpUnit )
@@ -226,7 +228,7 @@ class Engine( Thread ):
                 
                 self.dynamic_obstacles[x][y] = ( DYNAMICS_UNIT, tmpUnit.id )
                 
-            self.players.append( player )
+            self.players[player.id] = player
     
         xmldoc.unlink()   
 
@@ -256,6 +258,7 @@ class Engine( Thread ):
             #replenish AP
             unit.current_AP = unit.default_AP
             
+            #if unit rested last turn
             if unit.resting:
                 unit.current_AP += 1
                 unit.resting = False
@@ -269,7 +272,24 @@ class Engine( Thread ):
             #after updating everything send unit_id data to client        
             EngMsg.sendUnit( self.compileUnit(unit) )
         
+        #check visibility
+        self.checkVisibility()
         
+        
+    def checkVisibility(self):
+        #TODO: krav: mozda stavit da se ide prvo po playerima?
+        for player in self.players.itervalues():
+            player.list_visible_enemies = []
+            for myunit in player.unitlist:
+                for enemy in self.units.itervalues():
+                    if enemy.owner == player:
+                        continue
+                    if enemy.pos in myunit.losh_dict:
+                        if enemy not in player.list_visible_enemies: 
+                            player.list_visible_enemies.append( enemy )
+                            print player.name,"\tvidim:", enemy.name, "\t@:", enemy.pos
+        
+        pass
 
     def outOfLevelBounds( self, x, y ):
         if( x < 0 or y < 0 or x >= self.level.maxX or y >= self.level.maxY ):
@@ -547,14 +567,14 @@ class Engine( Thread ):
                 if( self.dynamic_obstacles[ ptx + dx ][ pty ][0] == DYNAMICS_UNIT ):
                     #so its a unit, see if it is friendly
                     unit_id = self.dynamic_obstacles[ ptx + dx ][ pty ][1] 
-                    if( self.units[unit_id].owner_id != unit.owner_id ):
+                    if( self.units[unit_id].owner != unit.owner ):
                         return False
                     
 
             if( self.dynamic_obstacles[ ptx ][ pty + dy ][0] != DYNAMICS_EMPTY ):
                 if( self.dynamic_obstacles[ ptx ][ pty + dy ][0] == DYNAMICS_UNIT ):
                     unit_id = self.dynamic_obstacles[ ptx ][ pty + dy ][1] 
-                    if( self.units[unit_id].owner_id != unit.owner_id ):
+                    if( self.units[unit_id].owner != unit.owner ):
                         return False
 
             
@@ -692,7 +712,15 @@ class Engine( Thread ):
                 self._moveUnit( unit, tile, ap_remaining )
                 move_actions.append( ('move', tile ) )
                 
-                if self.isMovementInterrupted( unit ):
+                #TODO: krav: ovo nebi trebalo bas svaki korak rucant?!, losh_dict bi trebalo :(
+                #we moved a unit so update its move_dict and losh_dict
+                unit.move_dict = self.getMoveDict(unit)
+                unit.losh_dict = self.getLOSHDict(unit.pos)
+                
+                
+                res = self.checkMovementInterrupt( unit ) 
+                if res:
+                    move_actions.extend( res )
                     break
                 
                 #if this is the last tile than apply last orientation change
@@ -701,9 +729,6 @@ class Engine( Thread ):
                         move_actions.append( ('rotate', new_heading) )
                     
                     
-        #we moved a unit so update its move_dict and losh_dict
-        unit.move_dict = self.getMoveDict(unit)
-        unit.losh_dict = self.getLOSHDict(unit.pos)
                     
             
         EngMsg.move( unit.id, move_actions )
@@ -713,16 +738,55 @@ class Engine( Thread ):
         pass
     
     
-    def isMovementInterrupted(self, unit):
-        """Returns True if movement needs to stop"""
+    def checkMovementInterrupt(self, unit ):
+        overwatch,detected = self.isMovementInterrupted( unit )        
+        ret_actions = []
         
-        return False
-        pass
+        if overwatch:
+            for enemy in overwatch:
+                res = enemy.doOverwatch( unit )
+                if res:
+                    ret_actions.append( ('overwatch', res ) )
+                if not unit.alive:
+                    break
+                
+        if detected:
+            for enemy in detected:
+                unit.owner.list_visible_enemies.append( enemy )
+                ret_actions.append( ('detect', self.compileUnit(enemy)) )
+
+            
+        return ret_actions
     
     
-    #we calculate visibility when (unit) has moved
-    def calculateVisibility(self, unit ):
-        pass
+    def isMovementInterrupted(self, unit):
+        
+        #we moved this unit, so we need visibilit to every enemy unit, and stop movement if this unit
+        #sees anything or if an enemy unit on overwatch sees this unit
+        detected = []
+        overwatch = []
+        
+        for player in self.players.itervalues():
+            #if this is owning player, skip
+            if player == unit.owner:
+                continue
+        
+            #if this is a teammate, skip
+            if player.team == unit.owner.team:
+                continue
+        
+            for enemy in player.unitlist:
+                if unit.pos in enemy.losh_dict:
+                    if enemy.overwatch:
+                        overwatch.append( enemy )
+                    
+                if enemy.pos in unit.losh_dict and enemy not in unit.owner.list_visible_enemies:
+                    detected.append( enemy )
+                            
+        return (overwatch, detected)
+            
+
+    
     
 
 

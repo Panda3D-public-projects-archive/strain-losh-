@@ -31,7 +31,10 @@ ENGINE_STATE = 5        #value - dictionary of values
 LEVEL = 6               #value - pickled level
 END_TURN = 7            #no values
 UNIT = 8                #value - pickled unit
-SHOOT = 9               #value - target unit
+SHOOT = 9               #value - (which unit, weapon, target unit)
+SET_OVERWATCH = 10      #value - (unit which is going on overwatch,1/0 for setting/removing) 
+
+ACTIONS = 11            #value - list of actions ('move',tile) ('rotate',tile) ('overwatch',overwatchresult) ('detected',enemy)
 
 
 
@@ -94,7 +97,7 @@ class EngMsg:
                 newConnection.setNoDelay(1)
                               
                 #try handshaking
-                threading.Thread(target=EngMsg.handshake, args=( [newConnection, engine._instance.players[:]] ) ).start()
+                threading.Thread(target=EngMsg.handshake, args=( [newConnection, engine._instance.players.values()] ) ).start()
 
                 
                  
@@ -104,7 +107,7 @@ class EngMsg:
             if success:
                 
                 #go through all players
-                for player in engine._instance.players:
+                for player in engine._instance.players.itervalues():
                     if player.name == player_name:
                         
                         #see if there is already a connection for this player, if yes than disconnect it

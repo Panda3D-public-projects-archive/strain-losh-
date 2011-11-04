@@ -1,10 +1,7 @@
-'''
-Created on 1.11.2011.
-
-@author: krav
-'''
 from xml.dom import minidom
 import math
+import engineMath
+
 
 
 
@@ -117,5 +114,34 @@ class Weapon():
         return res
         
         
+    def shoot(self, shooter, target):
+        #('result', unit_id, damage)
+        #result = [('bounce',target.id),('miss',target.id)]
+        #result = [('damage',target.id,2)]                       #damage caused
+        #result = [('kill',target.id,5),('miss',target.id)]      #damage caused
+        #TODO: krav: tu dodavat headshovote i critove i to...
+        
+
+        
+        #when we are here, we are certain that the target is in los
+        distance = engineMath.distanceTupple(shooter.pos, target.pos)
+        
+        to_hit = self.givePercent(distance, shooter.bs)       
+        
+        #check partial cover
+        if shooter.losh_dict[target.pos] == 1:
+            to_hit * 0.66
+         
+        if engineMath.d100() <= to_hit:
+            result = self.hit( target )
+        else:
+            result= [('miss', target.id)]
+            
+        return result
+    
+    
+    def hit(self, target):        
+        return target.hit( self )
+
         
         

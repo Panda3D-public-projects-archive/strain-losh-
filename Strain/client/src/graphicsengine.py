@@ -311,8 +311,8 @@ class GraphicsEngine(ShowBase):
                 curr_pos = dest_pos
                 curr_h = dest_h
                 
-            dest_pos = Point3(action[1][0] + 0.5, action[1][1] + 0.5, 0.3)
             if type == "move":
+                dest_pos = Point3(action[1][0] + 0.5, action[1][1] + 0.5, 0.3)
                 unit.dummy_node.setPos(self.render, curr_pos)
                 unit.dest_node.setPos(self.render, dest_pos)
                 unit.dummy_node.lookAt(unit.dest_node)
@@ -330,6 +330,7 @@ class GraphicsEngine(ShowBase):
                     p = i
                 intervals.append(p)
             elif type == "rotate":
+                dest_pos = Point3(action[1][0] + 0.5, action[1][1] + 0.5, 0.3)
                 unit.dummy_node.setPos(self.render, curr_pos)
                 unit.dest_node.setPos(self.render, dest_pos)
                 unit.dummy_node.lookAt(unit.dest_node)
@@ -371,6 +372,7 @@ class GraphicsEngine(ShowBase):
             if not self.engineLoaded:
                 self.engineLoaded = True
         elif msg[0] == MOVE:
+            print msg[1]
             unit_id = msg[1][0]
             tile_list = msg[1][1]
             unit = self.unit_np_dict[unit_id]
