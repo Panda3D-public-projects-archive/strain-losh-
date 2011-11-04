@@ -1,7 +1,7 @@
 from xml.dom import minidom
 from weapon import WeaponLoader
 import weapon
-import engineMath
+import util
 
 
 class unitLoader():
@@ -136,7 +136,7 @@ class Unit():
     def doOverwatch(self, target):
         
         #TODO: krav: check range
-        if engineMath.distanceTupple(self.pos, target.pos) > self.active_weapon.range:
+        if util.distanceTupple(self.pos, target.pos) > self.active_weapon.range:
             return None
         
         #TODO: krav: check if there is enough ap to fire
