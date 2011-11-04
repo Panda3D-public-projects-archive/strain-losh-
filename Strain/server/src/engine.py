@@ -9,35 +9,11 @@ import logging
 import logging.handlers
 import sys, traceback
 import cPickle as pickle
-import engineMath
+import util
 from player import Player
 
-class Notify():
-    
-    def __init__(self):
-        #=============================SET UP LOGGING===================================
-        self.logger = logging.getLogger('EngineLog')
-        self.hdlr = logging.handlers.RotatingFileHandler('Engine.log', maxBytes = 1024*1024*3 )
-        self.formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
-        self.hdlr.setFormatter(self.formatter)
-        self.logger.addHandler(self.hdlr) 
-        self.logger.setLevel(logging.DEBUG)
-        
 
-    def critical(self,msg, *args):
-        self.error(msg, *args)        
-    def debug(self, msg,*args ):
-        self.error(msg,*args)
-        
-    def info(self, msg,*args ):
-        self.error(msg,*args)
-            
-    def error(self, msg,*args ):
-        self.logger.critical(msg, *args)
-        #print msg%args
-    
-
-notify = Notify()
+notify = util.Notify()
 
 
 
@@ -126,10 +102,10 @@ class Engine( Thread ):
             self.moveUnit( msg[1]['unit_id'], msg[1]['new_position'], msg[1]['orientation'], source )
             
         elif( msg[0] == LEVEL ):                
-            EngMsg.sendLevel( self.compileLevel() )
+            EngMsg.sendLevel( util.compileLevel( self.level ) )
                         
         elif( msg[0] == ENGINE_STATE ):                
-            EngMsg.sendState( self.compileState(), source )
+            EngMsg.sendState( util.compileState( self ), source )
             
         elif( msg[0] == END_TURN ):
             self.endTurn()
@@ -137,49 +113,6 @@ class Engine( Thread ):
         else:
             notify.error( "Unknown message Type: %s", msg )
         
-        
-    def compileState(self):        
-        dic = {}
-
-        dic[ 'units' ] = pickle.dumps( self.compileAllUnits() )    
-        dic[ 'level' ] = pickle.dumps( self.compileLevel() )        
-        dic[ 'turn' ] = self.turn     
-        
-        return dic
-    
-    def compileAllUnits(self):
-        dct = {}
-        for u in self.units.itervalues():
-            dct[u.id] = self.compileUnit(u)
-        return dct
-    
-    def compileLevel(self):
-        return self.compileTarget( self.level )
-    
-    def compileUnit(self, unit):
-        ret = self.compileTarget( unit, ['owner', 'weapons', 'active_weapon'] )
-         
-        ret['owner_id'] = unit.owner.id             
-        ret['weapons'] = self.compileWeaponList( unit.weapons )
-        ret['active_weapon'] = self.compileWeapon( unit.active_weapon )
-        return ret
-    
-    def compileWeapon(self, wpn ):
-        return self.compileTarget( wpn )
-        
-    def compileWeaponList(self, weapons ):
-        wpn_list = []
-        for weapon in weapons:
-            wpn_list.append( self.compileTarget( weapon ) )
-        return wpn_list
-    
-    def compileTarget(self, target, banned_list = [] ):
-        attr_dict ={}
-        for attr in target.__dict__:
-            if attr in banned_list:
-                continue
-            attr_dict[attr] = target.__dict__[attr]
-        return attr_dict
         
                 
     def loadArmyList(self):
@@ -221,7 +154,7 @@ class Engine( Thread ):
                 tmpUnit = unitLoader.loadUnit(unittype)
                 
                 tmpUnit.init( self.getUID(), player, x, y )                
-                tmpUnit.heading = engineMath.getHeading(tmpUnit.pos, self.level.center)
+                tmpUnit.heading = util.getHeading(tmpUnit.pos, self.level.center)
                 
                 player.unitlist.append( tmpUnit )
                 self.units[tmpUnit.id] = tmpUnit
@@ -270,7 +203,7 @@ class Engine( Thread ):
             
 
             #after updating everything send unit_id data to client        
-            EngMsg.sendUnit( self.compileUnit(unit) )
+            EngMsg.sendUnit( util.compileUnit(unit) )
         
         #check visibility
         self.checkVisibility()
@@ -317,8 +250,8 @@ class Engine( Thread ):
         absy0 = math.fabs(y2 - y1);
         
 
-        sgnx0 = engineMath.signum( x2 - x1 );
-        sgny0 = engineMath.signum( y2 - y1 );
+        sgnx0 = util.signum( x2 - x1 );
+        sgny0 = util.signum( y2 - y1 );
 
         
         x = int( x1 );
@@ -669,7 +602,7 @@ class Engine( Thread ):
 
     
     def _rotateUnit(self, unit, look_at_tile ):
-        tmp_heading = engineMath.getHeading(unit.pos, look_at_tile)
+        tmp_heading = util.getHeading(unit.pos, look_at_tile)
         if unit.heading != tmp_heading:
             unit.heading = tmp_heading
             return True
@@ -732,7 +665,7 @@ class Engine( Thread ):
                     
             
         EngMsg.move( unit.id, move_actions )
-        EngMsg.sendUnit( self.compileUnit(unit) )
+        EngMsg.sendUnit( util.compileUnit(unit) )
             
             
         pass
@@ -753,7 +686,7 @@ class Engine( Thread ):
         if detected:
             for enemy in detected:
                 unit.owner.list_visible_enemies.append( enemy )
-                ret_actions.append( ('detect', self.compileUnit(enemy)) )
+                ret_actions.append( ('detect', util.compileUnit(enemy)) )
 
             
         return ret_actions

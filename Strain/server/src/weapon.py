@@ -1,6 +1,6 @@
 from xml.dom import minidom
 import math
-import engineMath
+import util
 
 
 
@@ -124,7 +124,7 @@ class Weapon():
 
         
         #when we are here, we are certain that the target is in los
-        distance = engineMath.distanceTupple(shooter.pos, target.pos)
+        distance = util.distanceTupple(shooter.pos, target.pos)
         
         to_hit = self.givePercent(distance, shooter.bs)       
         
@@ -132,7 +132,7 @@ class Weapon():
         if shooter.losh_dict[target.pos] == 1:
             to_hit * 0.66
          
-        if engineMath.d100() <= to_hit:
+        if util.d100() <= to_hit:
             result = self.hit( target )
         else:
             result= [('miss', target.id)]
