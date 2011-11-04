@@ -1,6 +1,7 @@
 from xml.dom import minidom
 from weapon import WeaponLoader
 import weapon
+import engineMath
 
 
 class unitLoader():
@@ -18,6 +19,7 @@ class unitLoader():
             
             unit = Unit( p.attributes['name'].value )            
                          
+            #add all weapons, and try to set first ranged weapon as active
             wpns = p.attributes['weapons'].value.split(',')
             for wname in wpns:
                 wpn = WeaponLoader.loadWeapon(wname)
@@ -27,15 +29,15 @@ class unitLoader():
             if not unit.active_weapon:
                 unit.weapons[0]
             
-            unit.m = p.attributes['m'].value
-            unit.ws = p.attributes['ws'].value
-            unit.bs = p.attributes['bs'].value
-            unit.s = p.attributes['s'].value
-            unit.t = p.attributes['t'].value
-            unit.w = p.attributes['w'].value
-            unit.i = p.attributes['i'].value
-            unit.a = p.attributes['a'].value
-            unit.ld = p.attributes['ld'].value
+            unit.m = int( p.attributes['m'].value )
+            unit.ws = int( p.attributes['ws'].value )
+            unit.bs = int( p.attributes['bs'].value )
+            unit.s = int( p.attributes['s'].value )
+            unit.t = int( p.attributes['t'].value )
+            unit.w = int( p.attributes['w'].value )
+            unit.i = int( p.attributes['i'].value )
+            unit.a = int( p.attributes['a'].value )
+            unit.ld = int( p.attributes['ld'].value )
 
         xmldoc.unlink()
         
@@ -43,9 +45,6 @@ class unitLoader():
             raise Exception("Unit:%s not found in database." % name)
         return unit
         
-
-
-
 HEADING_NONE      = 0
 HEADING_NW        = 1
 HEADING_N         = 2
@@ -63,7 +62,7 @@ class Unit():
     
     def __init__( self, name ):        
         self.id = -1
-        self.owner_id = -1
+        self.owner = None
         self.name = name     
         self.heading = HEADING_N      
         self.losh_dict = {}        
@@ -72,6 +71,9 @@ class Unit():
         self.bs = -1
         self.weapons = []
         self.active_weapon = None
+        self.overwatch = True
+        self.alive = True
+        
         
         self.m = -1
         self.ws = -1
@@ -82,10 +84,10 @@ class Unit():
         self.i = -1
         self.ld = -1 
         
-    def init(self, in_id, owner_id, x, y ):
+    def init(self, in_id, owner, x, y ):
         
         self.id = in_id
-        self.owner_id = owner_id
+        self.owner = owner
         
         self.pos = ( x, y )
            
@@ -105,4 +107,47 @@ class Unit():
 
         self.current_AP = self.default_AP
         self.health = self.default_HP
+        
+        
+        
+    def shoot(self, weapon, target):
+        #TODO: krav: stavit da se moze gadjat i tile?
+        result = weapon.shoot( self, target )        
+        return ('shoot', self.id, self.active_weapon.name, result )
+
+
+
+    def hit(self, weapon):
+        
+        #TODO: krav: ovdje ufurat oklope
+        self.health -= weapon.str
+        if self.health <= 0:
+            self.die( weapon )
+            return ('kill', self.id, weapon.str )
+        return('damage',self.id, weapon.str)
+
+
+    def die(self, weapon ):
+        self.alive = False
+
+       
+    #mora vratit rezultat koji ce ic u actions u movementu
+    #lista akcija koja se dogodila na overatchu
+    def doOverwatch(self, target):
+        
+        #TODO: krav: check range
+        if engineMath.distanceTupple(self.pos, target.pos) > self.active_weapon.range:
+            return None
+        
+        #TODO: krav: check if there is enough ap to fire
+        if self.current_AP < 1:
+            return None
+
+        self.current_AP -= 1
+        return self.shoot(self.active_weapon, target)
+        
+        
+        
+        
+        
         
