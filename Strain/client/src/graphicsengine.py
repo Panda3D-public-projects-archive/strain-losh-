@@ -349,6 +349,18 @@ class GraphicsEngine(ShowBase):
                         )
         move.start()
 
+    def getTilesNotInLos(self):
+        in_los = {}
+        not_in_los = []
+        for u in self.unit_np_dict.itervalues():
+            for d in u.unit['losh_dict']:
+                in_los[d] = 1
+        for x, tile_list in enumerate(self.tile_np_list):
+            for y, t in enumerate(tile_list):
+                if not in_los.has_key((x,y)):
+                    not_in_los.append(t)
+        return not_in_los
+    
     # TODO: ogs: maknuti ove pozive i zvati direktno messaging.py
     def createMoveMsg(self, unit, pos, orientation):
         ClientMsg.move(int(unit.id), pos, orientation)
