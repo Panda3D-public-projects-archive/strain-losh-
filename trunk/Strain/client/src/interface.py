@@ -16,6 +16,7 @@ _TILE_HOVERED           = "_tile_hovered"
 _TILE_FULL_LOS          = "_tile_full_los"
 _TILE_PARTIAL_LOS       = "_tile_partial_los"
 _TILE_UNIT_POS          = "_tile_unit_pos"
+_TILE_NOT_IN_LOS        = "_tile_not_in_los"
 _TILE_MOVE              = "_tile_move"
 _TILE_RESET             = "_tile_reset"
 
@@ -45,6 +46,7 @@ class Interface(DirectObject.DirectObject):
         self.los_visible = False
         self.unit_los_visible = False
         self.move_visible = False
+        self.not_in_los_visible = False
         
         self.hovered_tile = None
         self.hovered_unit = None
@@ -113,6 +115,7 @@ class Interface(DirectObject.DirectObject):
         
         self.accept('l', self.switchLos)
         self.accept('m', self.switchUnitMove)
+        self.accept('n', self.switchNotInLos)
         self.accept('escape', self.escapeEvent)
         self.accept("mouse1", self.mouseLeftClick)
         self.accept("mouse1-up", self.mouseLeftClickUp)
@@ -192,6 +195,8 @@ class Interface(DirectObject.DirectObject):
             self.setTileColorScale(tile, 2, 0.6, 0.6, 1)
         elif event == _TILE_PARTIAL_LOS:
             self.setTileColorScale(tile, 1, 0.6, 0.6, 1)
+        elif event == _TILE_NOT_IN_LOS:
+            self.setTileColorScale(tile, 0.1, 0.1, 0.1, 1)            
         elif event == _TILE_MOVE:
             print flag
             self.setTileColorScale(tile, 0.6, 0.6, 2, 1)
@@ -313,6 +318,21 @@ class Interface(DirectObject.DirectObject):
         else:
             self.displayLos()
             self.los_visible = True       
+
+    def displayNotInLos(self):
+        """Displays visual indicator of tiles which are not in line of sight of any unit.
+        """
+        for tile in self.ge.getTilesNotInLos():
+            self.changeTileColor(tile, _TILE_NOT_IN_LOS)
+            
+    def switchNotInLos(self):
+        """Switches the display of line of sight for the selected unit on or off."""
+        if self.not_in_los_visible == True:
+            self.resetAllTileColor()
+            self.not_in_los_visible = False
+        else:
+            self.displayNotInLos()
+            self.not_in_los_visible = True
     
     def displayUnitMove(self):
         """Displays visual indicator of tiles which are in movement range of the selected unit."""
