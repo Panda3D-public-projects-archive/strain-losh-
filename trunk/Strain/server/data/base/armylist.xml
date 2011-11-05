@@ -11,7 +11,7 @@
 
 	<player name="ultramarines" team = "2" id="2">
 		<unit x="12" y="19" type="commissar"/>
-		<unit x="14" y="15" type="marine_common"/>
+		<unit x="5" y="2" type="marine_common"/>
 		<unit x="13" y="15" type="marine_common"/>
 		<unit x="13" y="16" type="marine_epic"/>		
 	</player>

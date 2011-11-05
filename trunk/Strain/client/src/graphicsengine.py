@@ -279,13 +279,13 @@ class GraphicsEngine(ShowBase):
         if type == "type":
             return unit.unit['name']
         elif type == "HP":
-            return unit.unit['health']
+            return unit.unit['hp']
         elif type == "AP":
-            return unit.unit['current_AP']
+            return unit.unit['ap']
         elif type == "default_HP":
-            return unit.unit['default_HP']
+            return unit.unit['default_hp']
         elif type == "default_AP":
-            return unit.unit['default_AP']
+            return unit.unit['default_ap']
     
     def setUnitNpList(self, unit, old_pos):
         pos = unit.node.getPos()

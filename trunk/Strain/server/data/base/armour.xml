@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<armour name="terminator" 	front="50" head="50"/>
-<armour name="power_armour" front="40" head="40"/>
-<armour name="scout_armour" front="30" head="30"/>
-<armour name="flak" 		front="10" head="20"/>
-<armour name="ork_body" 	front="7" head="10"/>
-<armour name="ork_eavy" 	front="30" head="30"/>
+<armours>
+<armour name="None" 		front="0" 	head="0"/>
+<armour name="Terminator" 	front="6" 	head="6"/>
+<armour name="Power" 		front="4" 	head="4"/>
+<armour name="Scout" 		front="3" 	head="3"/>
+<armour name="Flak" 		front="1" 	head="2"/>
+<armour name="Body" 		front="0.7"	head="1"/>			<!-- orkish -->
+<armour name="Eavy" 		front="3" 	head="3"/>			<!-- orkish -->
+</armours>

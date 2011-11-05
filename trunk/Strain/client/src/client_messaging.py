@@ -6,8 +6,8 @@ import time
 
 IP_ADDRESS = 'localhost'
 #IP_ADDRESS = 'krav.servebeer.com'
-#NAME = 'blood angels'
-NAME = 'ultramarines'
+NAME = 'blood angels'
+#NAME = 'ultramarines'
 TCP_PORT = 56005
 
 MOVE = 1                #values - list of move actions ('move',tile) followed by ('rotate',tile)
@@ -18,6 +18,8 @@ ENGINE_STATE = 5        #value - dictionary of values
 LEVEL = 6               #value - pickled level
 END_TURN = 7            #no values
 UNIT = 8                #value - pickled unit
+SHOOT = 9               #value - (which unit, target unit)
+
 
 class Msg:
     def __init__(self, in_type, value=None):
