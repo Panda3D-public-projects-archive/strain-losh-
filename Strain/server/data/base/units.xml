@@ -1,6 +1,13 @@
 <units>
-	<unit name="marine_common" 	m="4" ws="4" bs="4" s="4" t="4" w="1" i="8" a="1" ld="8" weapons="Bolt Pistol,Power Axe"/>
-	<unit name="marine_epic" 	m="4" ws="4" bs="4" s="4" t="4" w="1" i="8" a="1" ld="8" weapons="Bolt Pistol,Power Axe"/>
-	<unit name="commissar" 		m="4" ws="4" bs="4" s="3" t="3" w="1" i="7" a="1" ld="9" weapons="Bolt Pistol,Sword"/>
-	<unit name="terminator" 	m="4" ws="5" bs="5" s="4" t="4" w="1" i="9" a="1" ld="9" weapons="Storm Bolter,Power Glove"/>
+	<unit name="marine_common" 	m="4" ws="4" bs="4" s="4" t="4" w="5" i="8" a="1" ld="8" ap="5" 
+					armour="Power" weapons="Bolt Pistol,Power Axe"/>
+					
+	<unit name="marine_epic" 	m="4" ws="4" bs="4" s="4" t="4" w="6" i="8" a="1" ld="8" ap="6"
+					armour="Power" weapons="Bolt Pistol,Power Axe"/>
+					
+	<unit name="commissar" 		m="4" ws="4" bs="4" s="3" t="3" w="5" i="7" a="1" ld="9" ap="5"
+					armour="Flak" weapons="Bolt Pistol,Sword"/>
+					
+	<unit name="terminator" 	m="4" ws="5" bs="5" s="4" t="4" w="6" i="9" a="1" ld="9" ap="6" 
+					armour="Terminator"	weapons="Storm Bolter,Power Glove"/>
 </units>

@@ -1,5 +1,5 @@
 from xml.dom import minidom
-from unit import Unit, unitLoader
+import unit
 from level import Level
 import math
 from server_messaging import *
@@ -66,6 +66,7 @@ class Engine( Thread ):
         self.turn = 0        
         self.beginTurn()
 
+
         #+++++++++++++++++++++++++++++++++++++++++++++MAIN LOOP+++++++++++++++++++++++++++++++++++++++++++++
         #+++++++++++++++++++++++++++++++++++++++++++++MAIN LOOP+++++++++++++++++++++++++++++++++++++++++++++
         while( self.stop == False ):
@@ -110,6 +111,9 @@ class Engine( Thread ):
         elif( msg[0] == END_TURN ):
             self.endTurn()
                         
+        elif( msg[0] == SHOOT ):
+            self.shoot( msg[1]['shooter_id'], msg[1]['target_id'], source )
+                        
         else:
             notify.error( "Unknown message Type: %s", msg )
         
@@ -151,7 +155,7 @@ class Engine( Thread ):
                     print "This tile already occupied, unit cannot deploy here", x, y, unittype
                     continue
                  
-                tmpUnit = unitLoader.loadUnit(unittype)
+                tmpUnit = unit.loadUnit(unittype)
                 
                 tmpUnit.init( self.getUID(), player, x, y )                
                 tmpUnit.heading = util.getHeading(tmpUnit.pos, self.level.center)
@@ -189,11 +193,11 @@ class Engine( Thread ):
             unit = self.units[unit_id]
             
             #replenish AP
-            unit.current_AP = unit.default_AP
+            unit.ap = unit.default_ap
             
             #if unit rested last turn
             if unit.resting:
-                unit.current_AP += 1
+                unit.ap += 1
                 unit.resting = False
                 
             
@@ -400,8 +404,7 @@ class Engine( Thread ):
                 
         final_dict = {}
 
-        open_list = [(unit.pos,unit.current_AP)]
-
+        open_list = [(unit.pos,unit.ap)]
         
         for tile, actionpoints in open_list:
 
@@ -438,9 +441,7 @@ class Engine( Thread ):
                     if( ap < 0 ):
                         continue
                     
-                    
                     pt = (x,y) 
-                    
                     
                     if pt in final_dict:
                         if( final_dict[pt] < ap ):
@@ -452,7 +453,7 @@ class Engine( Thread ):
                         
                     
         if( returnOrigin ):
-            final_dict[unit.pos] = unit.current_AP
+            final_dict[unit.pos] = unit.ap
             return final_dict
         
         return final_dict
@@ -580,51 +581,38 @@ class Engine( Thread ):
       
         raise Exception( "hahahah how did you get to this part of code?" )
         
-        
-        
-    def _moveUnit(self, unit, new_position, ap_remaining ):
-        """This method will change the position of the unit without any checks, so call it AFTER you have checked that 
-         this move is legal. Does everything needed when moving an unit, moving it in dynamic_obstalces, and posting a message 
-         about it."""    
-        
-        #delete from dynamic_obstacles
-        self.dynamic_obstacles[ int( unit.pos[0] ) ][ int( unit.pos[1] ) ] = ( DYNAMICS_EMPTY, 0 )
-        
-        #set new position
-        unit.pos = new_position
-        
-        #set new dynamic_obstacles
-        self.dynamic_obstacles[ int( unit.pos[0] ) ][ int( unit.pos[1] ) ] = ( DYNAMICS_UNIT, unit.id )
-        
-        #reduce amount of AP for unit
-        unit.current_AP = ap_remaining
-
-
-    
-    def _rotateUnit(self, unit, look_at_tile ):
-        tmp_heading = util.getHeading(unit.pos, look_at_tile)
-        if unit.heading != tmp_heading:
-            unit.heading = tmp_heading
-            return True
-        return False
-        
-        
-    def moveUnit(self, unit_id, new_position, new_heading, source ):
-        
+                
+    def findUnit(self, unit_id, source):
         if( unit_id in self.units ) == False:
             notify.critical( "Got wrong unit id:%s", unit_id )
             EngMsg.sendErrorMsg( "Wrong unit id.", source )
-            return
+            return None
 
         unit = self.units[unit_id]
 
+        #check to see if the owner is trying to move, or someone else
+        if unit.owner.connection != source:
+            notify.critical( "Client:%s\ttried to do an action with unit that he does not own" % source.getAddress() )
+            EngMsg.sendErrorMsg( "You cannot do this to a unit you do not own." )
+            return None
+
+        return unit
+        
+        
+    def moveUnit(self, unit_id, new_position, new_heading, source ):
+
+        unit = self.findUnit( unit_id, source )
+                
+        if not unit:
+            return
+                
         move_actions = []
         
         #special case if we just need to rotate the unit
         if unit.pos == new_position:
             
             #see if we actually need to rotate the unit
-            if self._rotateUnit( unit, new_heading ):
+            if unit.rotate( new_heading ):
                 move_actions.append( ('rotate', new_heading) )
             #if not, than do nothing
             else:
@@ -641,8 +629,10 @@ class Engine( Thread ):
             
             #everything checks out, do the actual moving
             for tile, ap_remaining in path:
-                self._rotateUnit( unit, tile )
-                self._moveUnit( unit, tile, ap_remaining )
+                self.dynamic_obstacles[ int( unit.pos[0] ) ][ int( unit.pos[1] ) ] = ( DYNAMICS_EMPTY, 0 )
+                unit.rotate( tile )                
+                unit.move( tile, ap_remaining )                
+                self.dynamic_obstacles[ int( unit.pos[0] ) ][ int( unit.pos[1] ) ] = ( DYNAMICS_UNIT, unit.id )                
                 move_actions.append( ('move', tile ) )
                 
                 #TODO: krav: ovo nebi trebalo bas svaki korak rucant?!, losh_dict bi trebalo :(
@@ -658,7 +648,7 @@ class Engine( Thread ):
                 
                 #if this is the last tile than apply last orientation change
                 if( tile == path[-1][0] ):
-                    if self._rotateUnit(unit, new_heading):
+                    if unit.rotate( new_heading ):
                         move_actions.append( ('rotate', new_heading) )
                     
                     
@@ -667,14 +657,17 @@ class Engine( Thread ):
         EngMsg.move( unit.id, move_actions )
         EngMsg.sendUnit( util.compileUnit(unit) )
             
-            
-        pass
-    
+
     
     def checkMovementInterrupt(self, unit ):
         overwatch,detected = self.isMovementInterrupted( unit )        
         ret_actions = []
         
+        if detected:
+            for enemy in detected:
+                unit.owner.list_visible_enemies.append( enemy )
+                ret_actions.append( ('detect', util.compileUnit(enemy)) )
+                
         if overwatch:
             for enemy in overwatch:
                 res = enemy.doOverwatch( unit )
@@ -682,12 +675,6 @@ class Engine( Thread ):
                     ret_actions.append( ('overwatch', res ) )
                 if not unit.alive:
                     break
-                
-        if detected:
-            for enemy in detected:
-                unit.owner.list_visible_enemies.append( enemy )
-                ret_actions.append( ('detect', util.compileUnit(enemy)) )
-
             
         return ret_actions
     
@@ -719,8 +706,29 @@ class Engine( Thread ):
         return (overwatch, detected)
             
 
-    
-    
+    def shoot(self, shooter_id, target_id, source ):
+        
+        return self.units[shooter_id].shoot( self.units[target_id])
+        
+        shooter = self.findUnit( shooter_id, source )
+        
+        if not shooter:
+            return
+        
+        if( target_id in self.units ) == False:
+            notify.critical( "Got wrong unit id:%s", target_id )
+            EngMsg.sendErrorMsg( "Wrong unit id.", source )
+            return None
+
+        target = self.units[target_id]
+
+        #check to see if the owner is trying to shoot his own units
+        if target.owner.connection == source:
+            notify.critical( "Client:%s\ttried to shoot his own unit." % source.getAddress() )
+            EngMsg.sendErrorMsg( "You cannot shoot you own units." )
+            return None
+            
+        return shooter.shoot( target )
 
 
 if __name__ == "__main__":

@@ -15,42 +15,39 @@ SPECIAL_FLAMER = 'flamer'
 
 
 
-class WeaponLoader():
-
-    @staticmethod
-    def loadWeapon( name ):     
-        xmldoc = minidom.parse('data/base/weapons.xml')
+def loadWeapon( name ):     
+    xmldoc = minidom.parse('data/base/weapons.xml')
+    
+    wpn = None
+    
+    for p in xmldoc.getElementsByTagName( 'weapon' ):
+                
+        if p.attributes['name'].value != name:
+            continue
         
-        wpn = None
+        wpn = Weapon()            
+        wpn.name = p.attributes['name'].value
         
-        for p in xmldoc.getElementsByTagName( 'weapon' ):
-                    
-            if p.attributes['name'].value != name:
-                continue
-            
-            wpn = Weapon()            
-            wpn.name = p.attributes['name'].value
-            
-            try:wpn.type = p.attributes['type'].value 
-            except:pass
-            try:wpn.str = int(p.attributes['Str'].value)
-            except:pass
-            try:wpn.ap = int(p.attributes['AP'].value)
-            except:pass
-            try:wpn.range = int(p.attributes['range'].value)
-            except:pass
-            try:wpn.shots = int(p.attributes['shots'].value)
-            except:pass
-            try:wpn.special = p.attributes['special'].value
-            except:pass
-            try:wpn.blast = int(p.attributes['blast'].value)
-            except:pass
-            
+        try:wpn.type = p.attributes['type'].value 
+        except:pass
+        try:wpn.str = int(p.attributes['Str'].value)
+        except:pass
+        try:wpn.ap = int(p.attributes['AP'].value)
+        except:pass
+        try:wpn.range = int(p.attributes['range'].value)
+        except:pass
+        try:wpn.sustained = int(p.attributes['sustained'].value)
+        except:pass
+        try:wpn.special = p.attributes['special'].value
+        except:pass
+        try:wpn.blast = int(p.attributes['blast'].value)
+        except:pass
+        
 
-        xmldoc.unlink()
-        if not wpn:
-            raise Exception("Weapon:%s not found in database." % name)
-        return wpn
+    xmldoc.unlink()
+    if not wpn:
+        raise Exception("Weapon:%s not found in database." % name)
+    return wpn
 
 
 
@@ -66,10 +63,10 @@ class Weapon():
         self.str = None
         self.ap = None
         self.type = None
-        self.shots = None
+        self.sustained = None
         self.special = None
         self.blast = None
-        
+        self.parry = None
     
     def givePercent( self, distance, bs ):
         
@@ -124,6 +121,7 @@ class Weapon():
 
         
         #when we are here, we are certain that the target is in los
+        #check range
         distance = util.distanceTupple(shooter.pos, target.pos)
         
         to_hit = self.givePercent(distance, shooter.bs)       
@@ -140,8 +138,27 @@ class Weapon():
         return result
     
     
-    def hit(self, target):        
+    def hit(self, target):
+        if target.save( self ):
+            return [('bounce', target.id)]
         return target.hit( self )
+
+        
+    def hitInMelee(self, attacker, target):
+        if target.save( self ):
+            return [('bounce', target.id)]
+        
+        res = None
+        
+        if attacker.s > self.str:
+            orig_str = self.str
+            self.str = attacker.s
+            res = target.hit( self )
+            self.str = orig_str
+        else:
+            res = target.hit( self )
+            
+        return res
 
         
         

@@ -137,7 +137,7 @@ def d( num, dice ):
 
 
 def d100():
-    return d(1,100)
+    return random.randint( 1, 100 )
 
 
 
