@@ -8,6 +8,7 @@ from direct.interval.IntervalGlobal import Sequence, ActorInterval, Parallel, Fu
 from camera import Camera
 from interface import Interface
 from unitmodel import UnitModel
+from miniengine import MiniEngine
 import sys
 import logging
 import cPickle as pickle
@@ -100,6 +101,7 @@ class GraphicsEngine(ShowBase):
     #def initAll(self, level, players, units):
         """Initializes all the components of scene graph."""
         # TODO: ogs: Napraviti proceduru i za deinicijalizaciju svega i testirati kroz pstats
+        self.me = MiniEngine(self)
         self.initLevel(level)
         #TODO: ogs: ovo sam ti zakomentirao        
         #self.initUnits(players, units)
@@ -118,6 +120,8 @@ class GraphicsEngine(ShowBase):
         self.taskMgr.add(self.animTask, "anim_task")        
     
     def initLevel(self, level):
+        # Store level data in MiniEngine class
+        self.me.level = level
         # Main level node in a scene graph
         self.level_node = self.node.attachNewNode("levelnode")
         # List to store nodepaths of all tiles in a level
@@ -126,7 +130,7 @@ class GraphicsEngine(ShowBase):
         # List indices equal level coordinates
         # Empty coordinates are stored as None values
         # Here we just allocate the list and fill it with None values
-        self.unit_np_list = [[None] * level['maxX'] for i in xrange(level['maxY'])]
+        self.unit_np_list = [[None] * level['maxY'] for i in xrange(level['maxX'])]
         for x in xrange(0, level['maxX']): 
             tile_nodes = []
             for y in xrange(0, level['maxY']): 
@@ -262,7 +266,8 @@ class GraphicsEngine(ShowBase):
         
     def info(self):
         #print render.ls()
-        print self.render.analyze()
+        #print self.render.analyze()
+        print self.me.getMoveDict(self.interface.selected_unit.unit)
         
     def shutdownClient(self):
         #ClientMsg.shutdownEngine()
@@ -286,6 +291,14 @@ class GraphicsEngine(ShowBase):
             return unit.unit['default_hp']
         elif type == "default_AP":
             return unit.unit['default_ap']
+    
+    def beforeUnitAnimHook(self):
+        self.interface.switchUnitMove("hide")
+        
+    def afterUnitAnimHook(self):
+        for u in self.unit_np_dict.itervalues():
+            u.unit['move_dict'] = self.me.getMoveDict(u.unit)
+        self.interface.switchUnitMove("show")
     
     def setUnitNpList(self, unit, old_pos):
         pos = unit.node.getPos()
@@ -343,8 +356,10 @@ class GraphicsEngine(ShowBase):
             seq.append(i)
         #return
         anim = ActorInterval(unit.model, 'run', loop = 1, duration = duration)
-        move = Sequence(Parallel(anim, seq), 
-                        Func(self.setUnitNpList, self.unit_np_dict[int(unit.id)], start_pos)
+        move = Sequence(Func(self.beforeUnitAnimHook),
+                        Parallel(anim, seq), 
+                        Func(self.setUnitNpList, self.unit_np_dict[int(unit.id)], start_pos),
+                        Func(self.afterUnitAnimHook)
                         #Func(self.interface.printUnitData, unit)
                         )
         move.start()
@@ -363,6 +378,7 @@ class GraphicsEngine(ShowBase):
     
     # TODO: ogs: maknuti ove pozive i zvati direktno messaging.py
     def createMoveMsg(self, unit, pos, orientation):
+
         ClientMsg.move(int(unit.id), pos, orientation)
         
     def createEndTurnMsg(self):
