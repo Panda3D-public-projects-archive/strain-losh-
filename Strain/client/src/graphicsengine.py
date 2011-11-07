@@ -3,7 +3,7 @@ from panda3d.core import loadPrcFileData#@UnresolvedImport
 from panda3d.core import NodePath, Point2, Point3, VBase4, GeomNode, Vec3, Vec4#@UnresolvedImport
 from panda3d.core import ShadeModelAttrib, DirectionalLight, AmbientLight#@UnresolvedImport
 from pandac.PandaModules import CollisionTraverser, CollisionHandlerQueue, CollisionNode, CollisionRay#@UnresolvedImport
-from pandac.PandaModules import Shader, AntialiasAttrib
+from pandac.PandaModules import Shader, AntialiasAttrib#@UnresolvedImport
 from direct.interval.IntervalGlobal import Sequence, ActorInterval, Parallel, Func
 from camera import Camera
 from interface import Interface
@@ -11,7 +11,6 @@ from unitmodel import UnitModel
 from miniengine import MiniEngine
 import sys
 import logging
-import cPickle as pickle
 from client_messaging import *
 from console import *
 
@@ -398,7 +397,6 @@ class GraphicsEngine(ShowBase):
             if not self.engineLoaded:
                 self.engineLoaded = True
         elif msg[0] == MOVE:
-            print msg[1]
             unit_id = msg[1][0]
             tile_list = msg[1][1]
             unit = self.unit_np_dict[unit_id]

@@ -1,5 +1,5 @@
 from direct.showbase import DirectObject
-from panda3d.core import Plane, Vec4, Vec3, Point4, Point3, Point2, NodePath#@UnresolvedImport
+from panda3d.core import Plane, Vec3, Point4, Point3, Point2, NodePath#@UnresolvedImport
 from pandac.PandaModules import GeomNode, CardMaker, TextNode#@UnresolvedImport
 from pandac.PandaModules import TextureStage, TransparencyAttrib#@UnresolvedImport
 from direct.gui.DirectGui import DirectFrame, DGG
