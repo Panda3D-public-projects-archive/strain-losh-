@@ -134,6 +134,7 @@ class Unit():
         if util.d100() > base:
             return ('melee', self.id, wpn.name, [('miss', target.id)] )        
             
+        self.last_action = 'melee'
         return ('melee', self.id, wpn.name, wpn.hitInMelee( self, target ) )
         
 
@@ -199,8 +200,7 @@ class Unit():
                 return None
             self.ap -= 1        
                         
-        self.last_action = 'shoot'
-                        
+        self.last_action = 'shoot'                        
         return ('shoot', self.id, self.active_weapon.name, self.active_weapon.shoot( self, target ) )
 
 
