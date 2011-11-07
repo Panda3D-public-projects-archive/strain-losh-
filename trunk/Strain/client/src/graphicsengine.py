@@ -86,7 +86,6 @@ class GraphicsEngine(ShowBase):
         self.disableMouse()
 
         self.accept("window-event", self.windowEvent)
-        self.accept('aspectRatioChanged', self.redraw)
         self.accept("shutdown-event", self.shutdownClient)        
         
         # global flag to disable user interface (when animations are playing etc)
@@ -260,9 +259,8 @@ class GraphicsEngine(ShowBase):
     def windowEvent(self, win):
         if win.isClosed():
             self.shutdownClient()
-
-    def redraw(self):
-        pass
+        else:
+            ShowBase.windowEvent(self, win)
         
     def info(self):
         #print render.ls()
