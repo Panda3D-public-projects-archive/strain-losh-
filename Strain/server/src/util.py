@@ -65,11 +65,16 @@ def compileLevel(level):
     return compileTarget( level )
 
 def compileUnit(unit):
-    ret = compileTarget( unit, ['owner', 'weapons', 'active_weapon'] )
+    ret = compileTarget( unit, ['owner', 'weapons', 'active_weapon', 'armour'] )
      
     ret['owner_id'] = unit.owner.id             
     ret['weapons'] = compileWeaponList( unit.weapons )
+    ret['armour'] = compileArmour( unit.armour )
     ret['active_weapon'] = compileWeapon( unit.active_weapon )
+    return ret
+
+def compileArmour(armr):
+    ret = compileTarget( armr, ['owner'] )
     return ret
 
 def compileWeapon( wpn ):
@@ -140,10 +145,9 @@ def d100():
     return random.randint( 1, 100 )
 
 
-
-
 def distanceTupple( t1, t2  ):
     return distance( t1[0], t1[1], t2[0], t2[1] )
+
 
 def distance( x1, y1, x2, y2 ):    
     return math.sqrt( math.pow( (x2-x1) , 2) +  math.pow( (y2-y1) , 2) )

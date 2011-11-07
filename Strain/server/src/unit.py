@@ -27,6 +27,7 @@ def loadUnit( name ):
             unit.weapons[0]
 
         unit.armour =  armour.loadArmour( p.attributes['armour'].value )
+        unit.armour.owner = unit
         
         unit.default_ap = int( p.attributes['ap'].value )
         unit.default_hp = int( p.attributes['w'].value )
@@ -78,6 +79,7 @@ class Unit():
         self.alive = True
         self.last_action = 'spawn'
         self.set_up = False #for heavy weapons
+        self.height = 2
         
         self.m = -1
         self.ws = -1
@@ -117,6 +119,10 @@ class Unit():
             return None
         
         base = 90
+        
+        #charge
+        if self.last_action == 'move':
+            base += 10        
         
         base -= 10 * target.numberOfMeleeWeapons() 
         base += 10 * (self.numberOfMeleeWeapons() - 1)        
