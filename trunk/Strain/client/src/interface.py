@@ -381,6 +381,9 @@ class Interface(DirectObject.DirectObject):
            Clears previous selection, sets global Interface.selected_unit variable, marks selected unit tile,
            loads and renders selected unit model in an off screen buffer for portrait display.
         """
+        if self.ge.interface_disabled:
+            return
+        
         self.deselectUnit()
         self.selected_unit = unit
         self.selected_unit.marker.loadAnims({"move":"ripple2"})  
@@ -397,6 +400,9 @@ class Interface(DirectObject.DirectObject):
            Clears unit tile, cleans up off screen models, 
            clears Interface.selected_unit variable.
         """
+        if self.ge.interface_disabled:
+            return
+        
         self.clearUnitData()
         if self.selected_unit:
             #self.clearSelectedTile(self.selected_unit_tile)
@@ -411,10 +417,14 @@ class Interface(DirectObject.DirectObject):
         
     def selectPrevUnit(self):
         """Selects previous unit in the same team with unspent action points."""
+        if self.ge.interface_disabled:
+            return
         None
         
     def selectNextUnit(self):
         """Selects next unit in the same team with unspent action points."""
+        if self.ge.interface_disabled:
+            return
         None
         
     def printUnitData(self):
@@ -446,12 +456,16 @@ class Interface(DirectObject.DirectObject):
                 
     def endTurn(self):
         """Ends the turn"""
-        self.ge.createEndTurnMsg() 
+        if not self.ge.interface_disabled:
+            self.ge.createEndTurnMsg() 
 
     def mouseLeftClick(self):
         """Handles left mouse click actions.
            Procedure first checks for gui clicks, if there are none then it checks 3d collision.
         """
+        if self.ge.interface_disabled:
+            return
+        
         self.destination = None
         if self.hovered_gui == self.deselect_button:
             self.deselectUnit()
@@ -501,6 +515,9 @@ class Interface(DirectObject.DirectObject):
         """Handles left mouse click actions when mouse button is depressed.
            Used for unit movement.
         """
+        if self.ge.interface_disabled:
+            return
+        
         if self.selected_unit and self.unit_move_destination and self.unit_move_orientation != HEADING_NONE:   
             # Send movement message to engine
             x = self.unit_move_destination.getX()

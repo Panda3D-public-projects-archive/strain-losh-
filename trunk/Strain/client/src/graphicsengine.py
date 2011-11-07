@@ -270,12 +270,6 @@ class GraphicsEngine(ShowBase):
         #ClientMsg.shutdownEngine()
         ClientMsg.disconnect()
         sys.exit()
-
-    def setInterfaceEnable(self):
-        self.interface_disabled = False
-        
-    def setInterfaceDisable(self):
-        self.interface_disabled = True
             
     def getUnitData(self, unit, type):
         if type == "type":
@@ -290,12 +284,14 @@ class GraphicsEngine(ShowBase):
             return unit.unit['default_ap']
     
     def beforeUnitAnimHook(self):
+        self.interface_disabled = True
         self.interface.switchUnitMove("hide")
         
     def afterUnitAnimHook(self):
         for u in self.unit_np_dict.itervalues():
             u.unit['move_dict'] = self.me.getMoveDict(u.unit)
         self.interface.switchUnitMove("show")
+        self.interface_disabled = False
     
     def setUnitNpList(self, unit, old_pos):
         pos = unit.node.getPos()
