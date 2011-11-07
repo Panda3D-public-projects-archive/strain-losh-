@@ -6,8 +6,8 @@ import time
 
 IP_ADDRESS = 'localhost'
 #IP_ADDRESS = 'krav.servebeer.com'
-NAME = 'blood angels'
-#NAME = 'ultramarines'
+#NAME = 'blood angels'
+NAME = 'ultramarines'
 TCP_PORT = 56005
 
 MOVE = 'move'                   #values - list of actions ('move',tile) ('rotate',tile) ('overwatch',overwatchresult) ('detected',enemy)

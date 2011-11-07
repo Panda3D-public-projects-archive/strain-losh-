@@ -349,16 +349,32 @@ class Interface(DirectObject.DirectObject):
                 textNodePath.lookAt(tile[0]+0.2, tile[1]+0.2, -100)
             self.movetext_np.reparentTo(self.ge.node)
             
-    def switchUnitMove(self):
-        """Switched the display of tiles available for movement for the selected unit."""
-        if self.move_visible == True:
-            self.movetext_np.removeNode()
-            self.move_visible = False
+    def switchUnitMove(self, flag=None):
+        """Switched the display of tiles available for movement for the selected unit.
+           If flag=="show" tiles will be displayed.
+           If flag=="hide" tiles will be hidden.
+           If flag==None method functions as a switch (on/off)
+        """
+
+        if flag == "show" or (not flag and not self.move_visible):
+            display = True
+        elif flag == "hide" or (not flag and self.move_visible):
+            display = False
         else:
-            pass
+            return
+        
+        if display:
             self.displayUnitMove()
             self.move_visible = True
+        else:
+            self.movetext_np.removeNode()
+            self.move_visible = False
 
+    def escapeEvent(self):
+        if self.selected_unit:
+            self.deselectUnit()
+        else:
+            messenger.send("shutdown-event")
 
     def selectUnit(self, unit):
         """Performs actions for unit selection.
@@ -367,8 +383,6 @@ class Interface(DirectObject.DirectObject):
         """
         self.deselectUnit()
         self.selected_unit = unit
-        pos = self.selected_unit.node.getPos()
-        #self.markSelectedTile(self.ge.tile_np_list[int(pos.getX())][int(pos.getY())])
         self.selected_unit.marker.loadAnims({"move":"ripple2"})  
         self.selected_unit.marker.loop("move")
         u = self.ge.unit_np_dict[int(unit.id)].unit
@@ -376,12 +390,7 @@ class Interface(DirectObject.DirectObject):
         self.off_model.reparentTo(self.ge.alt_render)
         self.off_model.play(self.off_model.getAnimName("idle"))
         self.printUnitData()
-
-    def escapeEvent(self):
-        if self.selected_unit:
-            self.deselectUnit()
-        else:
-            messenger.send("shutdown-event")
+        self.switchUnitMove(flag="show")
 
     def deselectUnit(self):
         """Performs actions for unit deselection.
@@ -396,6 +405,7 @@ class Interface(DirectObject.DirectObject):
             if self.off_model:
                 self.ge.destroyUnit(self.off_model)
             self.ge.clearOutlineShader(self.selected_unit.model)
+            self.switchUnitMove(flag="hide")
             self.selected_unit = None
 
         
