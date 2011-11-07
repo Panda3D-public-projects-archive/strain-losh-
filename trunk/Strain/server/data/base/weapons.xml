@@ -38,12 +38,13 @@
 	<weapon name="Axe" 									AP="2"	type="melee"/>
 	<weapon name="Chain Sword" 					Str="4"	AP="2" 	type="melee"										parry="1"/>
 	<weapon name="Chain Axe"					Str="4"	AP="3"	type="melee"/>
-	<weapon name="Power Sword" 					Str="6"	AP="4" 	type="melee"				special="power"			parry="1"/>
-	<weapon name="Power Axe" 					Str="6"	AP="5" 	type="melee"				special="power"/>
-	<weapon name="Power Glove" 					Str="10" AP="4"	type="melee"				special="power"/>
-	<weapon name="Lightning Claw" 				Str="10" AP="4"	type="melee"				special="power"			parry="1"/>	
-	<weapon name="Storm Shield" 								type="melee"										parry="1"/>	
-	<weapon name="Thunder Hammer"				Str="10" AP="5"	type="melee"				special="thunder_hammer"/>
+	<weapon name="Power Sword" 					Str="5"	AP="3" 	type="melee"				special="power"			parry="1"/>
+	<weapon name="Power Axe" 					Str="5"	AP="4" 	type="melee"				special="power"/>
+	<weapon name="Power Glove" 					Str="8" AP="5"	type="melee"				special="power"/>
+	<weapon name="Chain Fist" 					Str="10" AP="5"	type="melee"				special="chain_fist"/>
+	<weapon name="Lightning Claw" 				Str="10" AP="5"	type="melee"				special="power"			parry="2"/>	
+	<weapon name="Storm Shield" 								type="melee"				special="storm_shield"	parry="1"/>	
+	<weapon name="Thunder Hammer"				Str="10" AP="6"	type="melee"				special="thunder_hammer"/>
 	
 	
 </weaponList>

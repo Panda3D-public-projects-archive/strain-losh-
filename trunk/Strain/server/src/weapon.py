@@ -12,7 +12,7 @@ TYPE_HEAVY = 'heavy'
 TYPE_MELEE = 'melee'
 
 SPECIAL_FLAMER = 'flamer'
-
+SPECIAL_STORM_SHIELD = 'storm_shield'
 
 
 def loadWeapon( name ):     
@@ -126,6 +126,7 @@ class Weapon():
         
         to_hit = self.givePercent(distance, shooter.bs)       
         
+        #TODO: krav: nema vise LOSHdict
         #check partial cover
         if shooter.losh_dict[target.pos] == 1:
             to_hit * 0.66

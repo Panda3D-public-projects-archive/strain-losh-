@@ -38,3 +38,14 @@ class Level:
                 tmp[i][j] = self._level_data[j][i]
         self._level_data = tmp 
 
+
+    def tuppleGet(self, pos ):
+        return self._level_data[pos[0]][pos[1]]
+
+    def test3D(self, x, y, z):
+        if self._level_data[x][y] < z: 
+            return False
+        return True
+    
+    
+    

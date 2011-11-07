@@ -67,6 +67,7 @@ class Engine( Thread ):
         self.beginTurn()
 
 
+
         #+++++++++++++++++++++++++++++++++++++++++++++MAIN LOOP+++++++++++++++++++++++++++++++++++++++++++++
         #+++++++++++++++++++++++++++++++++++++++++++++MAIN LOOP+++++++++++++++++++++++++++++++++++++++++++++
         while( self.stop == False ):
@@ -90,6 +91,53 @@ class Engine( Thread ):
         notify.info( "++++++++++++++++++++++++Engine stopped!++++++++++++++++++++++++" ) 
 
         return 0
+
+
+    def testLevelLOS(self):
+        dic = {}
+        
+        self.getLOS( self.units[0], self.units[1] )
+        return
+        
+        
+        print "poceo test"
+        for x1 in xrange(self.level.maxX):
+            for y1 in xrange( self.level.maxY ):
+                for x2 in xrange(self.level.maxX):
+                    for y2 in xrange( self.level.maxY ):
+                        t1 = (x1,y1)
+                        t2 = (x2,y2)
+                        dic[ (t1,t2) ] = self.getTiles2D( t1 , t2 )
+                        try:dic[ (t1,t2) ].pop()
+                        except:pass
+        
+        print "zavrsio filanje"
+        
+        total = 0
+        drukcijih = 0
+        for t1, t2 in dic:
+            lista = []
+            listb = []
+            
+            for a,b in dic[ (t1,t2)]:
+                lista.append(a)
+            for a,b in dic[ (t2,t1)]:
+                listb.append(a)
+            
+            #listb.reverse()
+            
+            for idx,a in enumerate(lista):
+                if a != listb[idx]:
+                    if drukcijih < 7:
+                        print "--------nije jednako:", lista, listb 
+                    drukcijih += 1
+                    break
+            total += 1
+            
+                
+        print "zavrsio test, total:",total,"\tdrukcijih:", drukcijih
+        pass
+        
 
 
     def handleMsg(self, msg, source):
@@ -203,7 +251,6 @@ class Engine( Thread ):
             
             #get new move_dict
             unit.move_dict = self.getMoveDict(unit)
-            unit.losh_dict = self.getLOSHDict(unit.pos)
             
 
             #after updating everything send unit_id data to client        
@@ -215,6 +262,7 @@ class Engine( Thread ):
         
     def checkVisibility(self):
         #TODO: krav: mozda stavit da se ide prvo po playerima?
+        #TODO: krav: ----nema vise losh dicta----
         for player in self.players.itervalues():
             player.list_visible_enemies = []
             for myunit in player.unitlist:
@@ -235,34 +283,168 @@ class Engine( Thread ):
             return False
         
     
-
-    def getLOS(self, origin, target ):
+    def getLOS(self, beholder, target ):
+        """0-cant see, 1-partial, 2-full"""
+        b_pos = beholder.pos + ( ( self.level.tuppleGet( beholder.pos ) + beholder.height ) , )
+    
+        seen = 0        
+        #check if we see target's head
+        t1 = target.pos + ( ( self.level.tuppleGet( target.pos ) + target.height ) , )        
+        if not self.getTiles3D( b_pos, t1 ):
+            return seen
+        
+        seen += 1
+        #check if we see target's feet
+        t2 = target.pos + ( ( self.level.tuppleGet( target.pos ) + target.height ) , )
+        if not self.getTiles3D( b_pos, t2 ):
+            return seen
+ 
+        seen += 1
+        return seen
+    
+    
+    def getTiles3D(self, t1, t2 ):
         """this method returns list of tuples( (x,y, visibility ); visibility = {0:clear, 1:partial, 2:not visible}"""    
-        x1 = origin[0]
-        y1 = origin[1]
-        
-        x2 = target[0]
-        y2 = target[1]
-        
-        
         #we can't look at ourselves
-        if( x1 == x2 and y1 == y2 ):
+        if( t1 == t2 ):
             return []
         
+        x1, y1, z1 = t1
+        x2, y2, z2 = t2
+        
+        #if one of our end points is not empty space, return false
+        if self.level.test3D( x1, y1, z1 ) or self.level.test3D( x2, y2, z2 ):
+            return False
+        
+        absx0 = math.fabs(x2 - x1);
+        absy0 = math.fabs(y2 - y1);
+        absz0 = math.fabs(z2 - z1);
+        
+        dist = int( util.distance(x1, y1, x2, y2) )
+
+        list_visible_tiles = [ t1 ]
+        rev = False
+        
+        if( absx0 > absy0 ):
+            if x2 < x1:
+                x1, y1, z1 = t2
+                x2, y2, z2 = t1
+                list_visible_tiles[0] = t2
+                rev = True
+        else:
+            if y2 < y1:
+                x1, y1, z1 = t2
+                x2, y2, z2 = t1
+                list_visible_tiles[0] = t2
+                rev = True
+        
+        
+        x = int( x1 );
+        y = int( y1 );
+        z = int( z1 )
+
+        
+        sgnz0 = util.signum(z2 - z1)
+        z_d = absz0/dist
+        
+        if( absx0 > absy0 ):
+            sgny0 = util.signum( y2 - y1 );
+            y_x = absy0/absx0            
+            D = y_x -0.5
+
+            if dist > absz0:
+                Dz = z_d - 0.5
+            
+            for i in xrange( int( absx0 ) ): #@UnusedVariable
+                lastx, lasty, lastz = x, y, z
+                
+                if( D > 0 ):
+                    y += sgny0
+                    D -= 1
+
+                if dist > absz0:
+                    if Dz > 0:
+                        z += sgnz0
+                        Dz -= 1
+                    Dz += z_d
+                else: 
+                    z = z + z_d * sgnz0
+
+                x += 1
+                D += y_x
+                
+                #=========================TEST==========================================
+                if self.testTile3D( (x, y, int(z)), (lastx, lasty, int(lastz)) ):
+                    list_visible_tiles.append( (x, y, int(z)) )
+                else:
+                    return False
+                    break
+                
+        #//(y0 >= x0)            
+        else:
+            sgnx0 = util.signum( x2 - x1 );
+            x_y = absx0/absy0
+            D = x_y -0.5;
+            
+            if( dist > absz0 ):
+                Dz = z_d - 0.5
+
+            for i in xrange( int( absy0 ) ): #@UnusedVariable
+                lastx, lasty, lastz = x, y, z
+        
+                if( D > 0 ):
+                    x += sgnx0
+                    D -= 1.0
+
+                if dist > absz0:
+                    if Dz > 0:
+                        z += sgnz0
+                        Dz -= 1
+                    Dz += z_d 
+                else:
+                    z = z + z_d * sgnz0
+                    
+                y += 1
+                D += x_y
+                
+                #=========================TEST==========================================
+                if self.testTile3D( (x, y, int(z)), (lastx, lasty, int(lastz)) ):
+                    list_visible_tiles.append( (x, y, int(z)) )
+                else:
+                    return False
+                    break
+
+        if rev:
+            list_visible_tiles.reverse()
+        return list_visible_tiles
+
+                
+    def getTiles2D(self, t1, t2 ):
+        """this method returns list of tuples( (x,y, visibility ); visibility = {0:clear, 1:partial, 2:not visible}"""    
+        #we can't look at ourselves
+        if( t1 == t2 ):
+            return []
+        
+        x1, y1 = t1
+        x2, y2 = t2
         
         absx0 = math.fabs(x2 - x1);
         absy0 = math.fabs(y2 - y1);
         
-
-        sgnx0 = util.signum( x2 - x1 );
-        sgny0 = util.signum( y2 - y1 );
-
+        if( absx0 > absy0 ):
+            if x2 < x1:
+                x1, y1 = t2
+                x2, y2 = t1
+        else:
+            if y2 < y1:
+                x1, y1 = t2
+                x2, y2 = t1
+        
         
         x = int( x1 );
         y = int( y1 );
 
-
-        #distance, in tiles, between origin and currently tested tile
+        #distance, in tiles, between t1 and currently tested tile
         distance = 1
 
         #this is the list we are going to return at the end
@@ -273,22 +455,18 @@ class Engine( Thread ):
         visibility = 0
         
         if( absx0 > absy0 ):
-            y_x = absy0/absx0;
+            sgny0 = util.signum( y2 - y1 );
+            y_x = absy0/absx0
             D = y_x -0.5;
 
             for i in xrange( int( absx0 ) ): #@UnusedVariable
-                lastx = x
-                lasty = y
+                lastx, lasty = x, y
                 
                 if( D > 0 ):
-                    
-                    if( sgny0 == -1 ): y -= 1
-                    else: y += 1
+                    y += sgny0
                     D -= 1
 
-                if( sgnx0 == 1 ): x += 1
-                else: x -= 1
-
+                x += 1
                 D += y_x
                 
                 #=========================TEST==========================================
@@ -298,21 +476,18 @@ class Engine( Thread ):
             
         #//(y0 >= x0)            
         else:
-            x_y = absx0/absy0;
+            sgnx0 = util.signum( x2 - x1 );
+            x_y = absx0/absy0
             D = x_y -0.5;
 
             for i in xrange( int( absy0 ) ): #@UnusedVariable
-                lastx = x
-                lasty = y
+                lastx, lasty = x, y
         
                 if( D > 0 ):
-                    if( sgnx0 == -1 ): x -= 1
-                    else: x += 1
+                    x += sgnx0
                     D -= 1.0
             
-                if( sgny0 == 1 ): y += 1
-                else: y -= 1
-    
+                y += 1
                 D += x_y
                 
                 #=========================TEST==========================================
@@ -323,6 +498,68 @@ class Engine( Thread ):
                 
         return list_visible_tiles
                 
+
+    #tests the tile for visibility
+    def testTile3D(self, pos, lastpos ):
+        
+        #level bounds
+        if( self.outOfLevelBounds( pos[0], pos[1] ) ):
+            return False
+        if( self.outOfLevelBounds( lastpos[0], lastpos[1] ) ):
+            return False
+        
+        #if we can't see here
+        if self.level.test3D( pos[0], pos[1], pos[2] ):
+            return False
+        
+        #moved along x
+        if pos[0] != lastpos[0]:
+            #moved along y
+            if pos[1] != lastpos[1]:
+                
+                #moved along z - diagonal x-y-z
+                if pos[2] != lastpos[2]:
+                        if( self.level.test3D( lastpos[0], lastpos[1], pos[2] ) and
+                            self.level.test3D( lastpos[0], pos[1], lastpos[2] ) and
+                            self.level.test3D( pos[0], lastpos[1], lastpos[2] ) ):                             
+                                return False
+                         
+                        if ( self.level.test3D( lastpos[0], pos[1], lastpos[2] ) and
+                              self.level.test3D( lastpos[0], pos[1], pos[2] ) and
+                              self.level.test3D( pos[0], lastpos[1], lastpos[2] ) and
+                              self.level.test3D( pos[0], lastpos[1], pos[2] ) ): 
+                            return False
+                
+                        return True
+                #diagonal x-y
+                if ( self.level.test3D( pos[0], lastpos[1], pos[2] ) and
+                     self.level.test3D( lastpos[0], pos[1], pos[2] ) ):  
+                            return False
+                else:
+                    return True
+
+            #moved along z - diagonal x-z
+            if pos[2] != lastpos[2]:
+                if ( self.level.test3D( pos[0], pos[1], lastpos[2] ) and
+                     self.level.test3D( lastpos[0], pos[1], pos[2] ) ):  
+                            return False
+                else:
+                    return True
+                    
+        #moved along y 
+        if pos[1] != lastpos[1]:
+            #moved along z - diagonal y-z
+            if pos[2] != lastpos[2]:
+                if ( self.level.test3D( pos[0], pos[1], lastpos[2] ) and
+                     self.level.test3D( pos[0], lastpos[1], pos[2] ) ):  
+                            return False
+                else:
+                    return True
+
+            
+                
+        return True
+        
 
     #tests the tile for visibility
     def testTile(self, x, y, distance, list_visible_tiles, visibility, lastx, lasty ):
@@ -378,27 +615,6 @@ class Engine( Thread ):
 
 
 
-    
-    def getLOSHDict(self, position ):
-        
-        losh_dict = {}
-        
-        for i in xrange( self.level.maxX ):
-            for j in xrange( self.level.maxY ):
-                for a in self.getLOS(position, (i,j) ):
-                    if( a[1] != 2 ):
-                        
-                        if a[0] in losh_dict:
-                            if( losh_dict[a[0]] > a[1]):
-                                losh_dict[a[0]] = a[1]
-                        else:
-                            losh_dict[a[0]] = a[1]
-                            
-
-        return losh_dict
-        
-               
-                
 
     def getMoveDict(self, unit, returnOrigin = False ):    
                 
@@ -635,10 +851,10 @@ class Engine( Thread ):
                 self.dynamic_obstacles[ int( unit.pos[0] ) ][ int( unit.pos[1] ) ] = ( DYNAMICS_UNIT, unit.id )                
                 move_actions.append( ('move', tile ) )
                 
-                #TODO: krav: ovo nebi trebalo bas svaki korak rucant?!, losh_dict bi trebalo :(
+                #TODO: krav: ---- nema vise LOSHdict ovo nebi trebalo bas svaki korak rucant?!, losh_dict bi trebalo :(
                 #we moved a unit so update its move_dict and losh_dict
                 unit.move_dict = self.getMoveDict(unit)
-                unit.losh_dict = self.getLOSHDict(unit.pos)
+                #unit.losh_dict = self.getLOSHDict(unit.pos)
                 
                 
                 res = self.checkMovementInterrupt( unit ) 
@@ -695,11 +911,12 @@ class Engine( Thread ):
             if player.team == unit.owner.team:
                 continue
         
+            #TODO: krav: nema vise LOSHdict
             for enemy in player.unitlist:
                 if unit.pos in enemy.losh_dict:
                     if enemy.overwatch:
                         overwatch.append( enemy )
-                    
+                #TODO: krav: nema vise LOSHdict                    
                 if enemy.pos in unit.losh_dict and enemy not in unit.owner.list_visible_enemies:
                     detected.append( enemy )
                             
