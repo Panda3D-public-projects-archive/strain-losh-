@@ -10,15 +10,15 @@ NAME = 'blood angels'
 #NAME = 'ultramarines'
 TCP_PORT = 56005
 
-MOVE = 1                #values - list of move actions ('move',tile) followed by ('rotate',tile)
-NEW_TURN = 2            #value - turn number
-ENGINE_SHUTDOWN = 3     #no values
-ERROR = 4               #value - error message
-ENGINE_STATE = 5        #value - dictionary of values
-LEVEL = 6               #value - pickled level
-END_TURN = 7            #no values
-UNIT = 8                #value - pickled unit
-SHOOT = 9               #value - (which unit, target unit)
+MOVE = 'move'                   #values - list of actions ('move',tile) ('rotate',tile) ('overwatch',overwatchresult) ('detected',enemy)
+NEW_TURN = 'new_turn'           #value - turn number
+ENGINE_SHUTDOWN = 'shutdown'    #no values
+ERROR = 'error'                 #value - error message
+ENGINE_STATE = 'engine_state'   #value - dictionary of values
+LEVEL = 'level'                 #value - pickled level
+END_TURN = 'end_turn'           #no values
+UNIT = 'unit'                   #value - pickled unit
+SHOOT = 'shoot'                 #value - (which unit, target unit)
 
 
 class Msg:
