@@ -46,10 +46,27 @@ class Notify():
     
 
 
-def compileState(engine):        
+
+
+def compileState(engine, player):        
     dic = {}
 
-    dic[ 'units' ] = pickle.dumps( compileAllUnits( engine.units ) )    
+    units = {}
+
+    #compile all my units
+    for unt in player.units:
+        units[unt.id] = compileUnit(unt)
+    
+    #compile all visible units
+    for unt in player.visible_enemies:
+        #TODO: krav: ovo maknut kad ogi sredi da nema ap-a kod enmeija
+        units[unt.id] = compileUnit(unt)
+        #units[unt.id] = compileEnemyUnit(unt)
+    
+    #compile all detected units
+    
+    #dic[ 'units' ] = pickle.dumps( compileAllUnits( engine.units ) )    
+    dic[ 'units' ] = pickle.dumps( units )    
     dic[ 'level' ] = pickle.dumps( compileLevel( engine.level ) )        
     dic[ 'turn' ] = engine.turn     
     
@@ -71,6 +88,17 @@ def compileUnit(unit):
     ret['weapons'] = compileWeaponList( unit.weapons )
     ret['armour'] = compileArmour( unit.armour )
     ret['active_weapon'] = compileWeapon( unit.active_weapon )
+    return ret
+
+def compileEnemyUnit(unit):
+    ret = compileUnit(unit)
+     
+    del ret['resting']
+    del ret['last_action']
+    del ret['m']
+    del ret['hp']
+    del ret['ap']
+    
     return ret
 
 def compileArmour(armr):
