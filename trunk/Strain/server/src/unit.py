@@ -69,13 +69,11 @@ class Unit():
         self.owner = None
         self.name = name     
         self.heading = HEADING_N      
-        self.losh_dict = {}        
-        self.move_dict = {}
         self.resting = False
         self.bs = -1
         self.weapons = []
         self.active_weapon = None
-        self.overwatch = True
+        self.overwatch = False
         self.alive = True
         self.last_action = 'spawn'
         self.set_up = False #for heavy weapons
@@ -215,8 +213,8 @@ class Unit():
         return('damage',self.id, weapon.str)
 
 
-    def save(self, weapon):
-        return self.armour.save( weapon )
+    def save(self, enemy_weapon):
+        return self.armour.save( enemy_weapon )
 
 
     def die(self, weapon ):
@@ -261,4 +259,5 @@ class Unit():
         self.heading = tmp_heading        
         return True
 
+        
         

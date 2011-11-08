@@ -126,10 +126,10 @@ class Weapon():
         
         to_hit = self.givePercent(distance, shooter.bs)       
         
-        #TODO: krav: nema vise LOSHdict
         #check partial cover
-        if shooter.losh_dict[target.pos] == 1:
-            to_hit * 0.66
+        #TODO: krav: ovdje stavit provjeru dal ovaj lik vidi metu i kolko
+        #if shooter.losh_dict[target.pos] == 1:
+        #    to_hit * 0.66
          
         if util.d100() <= to_hit:
             result = self.hit( target )

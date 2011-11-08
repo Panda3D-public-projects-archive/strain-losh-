@@ -1,6 +1,6 @@
 from xml.dom import minidom
 import util
-
+import weapon
 
 
 def loadArmour( name ):     
@@ -35,9 +35,11 @@ class Armour():
         self.owner = None
         
     
-    def save( self, weapon ):
+    def save( self, enemy_weapon ):
         
         effective_armour = self.front
+        
+        #TODO: krav: stavit da je ovo samo od napred!
         
         #see if i have a storm shield, if so raise my effective armour by 1
         for wpn in self.owner.weapons:
@@ -46,17 +48,17 @@ class Armour():
         
         percent = 0
         
-        if weapon.ap >= effective_armour:
+        if enemy_weapon.ap >= effective_armour:
             return False        
-        elif effective_armour == weapon.ap + 1:
+        elif effective_armour == enemy_weapon.ap + 1:
             percent = 66
-        elif effective_armour == weapon.ap + 2:
+        elif effective_armour == enemy_weapon.ap + 2:
             percent = 33
-        elif effective_armour == weapon.ap + 3:
+        elif effective_armour == enemy_weapon.ap + 3:
             percent = 10
-        elif effective_armour == weapon.ap + 4:
+        elif effective_armour == enemy_weapon.ap + 4:
             percent = 5
-        elif effective_armour == weapon.ap + 4:
+        elif effective_armour == enemy_weapon.ap + 4:
             return True
   
         if util.d100() > percent:

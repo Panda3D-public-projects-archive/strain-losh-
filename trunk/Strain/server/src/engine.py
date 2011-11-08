@@ -1,6 +1,7 @@
 from xml.dom import minidom
 import unit
 from level import Level
+import level
 import math
 from server_messaging import *
 from threading import Thread
@@ -16,10 +17,6 @@ from player import Player
 notify = util.Notify()
 
 
-
-
-DYNAMICS_EMPTY = 0
-DYNAMICS_UNIT = 1
 
 
 class Engine( Thread ):
@@ -40,7 +37,6 @@ class Engine( Thread ):
 
         self.stop = False
         self.level = None 
-        self.dynamic_obstacles = []
         self.turn = 0        
         self.players = {}
         self.units = {}
@@ -56,10 +52,7 @@ class Engine( Thread ):
         lvl = "level2.txt"
         self.level = Level( lvl )
         notify.info("Loaded level:%s", lvl )
-
-        #we make this so its size is the same as level 
-        self.dynamic_obstacles = [[(0,0)] * self.level.maxY for i in xrange(self.level.maxX)] #@UnusedVariable
-        
+      
         self.loadArmyList()
 
         
@@ -154,7 +147,7 @@ class Engine( Thread ):
             EngMsg.sendLevel( util.compileLevel( self.level ) )
                         
         elif( msg[0] == ENGINE_STATE ):                
-            EngMsg.sendState( util.compileState( self ), source )
+            EngMsg.sendState( util.compileState( self, self.findPlayer( source ) ), source )
             
         elif( msg[0] == END_TURN ):
             self.endTurn()
@@ -189,29 +182,22 @@ class Engine( Thread ):
                 unittype = u.attributes['type'].value
                 
                 #check to see level boundaries
-                if( self.outOfLevelBounds(x, y) ):
+                if( self.level.outOfBounds(x, y) ):
                     print "This unit is out of level bounds", unittype, x, y
                     continue
                 
-                #check to see if there is something in the way on level
-                if self.level._level_data[x][y] != 0:
-                    print "This unit cannot be placed on non empty level tile", unittype, x, y
-                    continue
                 
-                #check to see if the tile is already occupied
-                if( self.dynamic_obstacles[x][y][0] != DYNAMICS_EMPTY ):
-                    print "This tile already occupied, unit cannot deploy here", x, y, unittype
-                    continue
-                 
                 tmpUnit = unit.loadUnit(unittype)
-                
                 tmpUnit.init( self.getUID(), player, x, y )                
                 tmpUnit.heading = util.getHeading(tmpUnit.pos, self.level.center)
+
                 
-                player.unitlist.append( tmpUnit )
+                if not self.level.putUnit( tmpUnit ):
+                    continue                            
+                
+                player.units.append( tmpUnit )                
                 self.units[tmpUnit.id] = tmpUnit
                 
-                self.dynamic_obstacles[x][y] = ( DYNAMICS_UNIT, tmpUnit.id )
                 
             self.players[player.id] = player
     
@@ -232,6 +218,7 @@ class Engine( Thread ):
         
         #increment turn by one
         self.turn += 1
+        print "turn:", self.turn
 
         EngMsg.sendNewTurn( self.turn )
         
@@ -249,10 +236,6 @@ class Engine( Thread ):
                 unit.resting = False
                 
             
-            #get new move_dict
-            unit.move_dict = self.getMoveDict(unit)
-            
-
             #after updating everything send unit_id data to client        
             EngMsg.sendUnit( util.compileUnit(unit) )
         
@@ -262,26 +245,19 @@ class Engine( Thread ):
         
     def checkVisibility(self):
         #TODO: krav: mozda stavit da se ide prvo po playerima?
-        #TODO: krav: ----nema vise losh dicta----
         for player in self.players.itervalues():
-            player.list_visible_enemies = []
-            for myunit in player.unitlist:
+            player.visible_enemies = []
+            for myunit in player.units:
                 for enemy in self.units.itervalues():
                     if enemy.owner == player:
                         continue
-                    if enemy.pos in myunit.losh_dict:
-                        if enemy not in player.list_visible_enemies: 
-                            player.list_visible_enemies.append( enemy )
+                    if self.getLOS( myunit, enemy ):
+                        if enemy not in player.visible_enemies: 
+                            player.visible_enemies.append( enemy )
                             print player.name,"\tvidim:", enemy.name, "\t@:", enemy.pos
         
         pass
 
-    def outOfLevelBounds( self, x, y ):
-        if( x < 0 or y < 0 or x >= self.level.maxX or y >= self.level.maxY ):
-            return True
-        else: 
-            return False
-        
     
     def getLOS(self, beholder, target ):
         """0-cant see, 1-partial, 2-full"""
@@ -503,9 +479,9 @@ class Engine( Thread ):
     def testTile3D(self, pos, lastpos ):
         
         #level bounds
-        if( self.outOfLevelBounds( pos[0], pos[1] ) ):
+        if( self.level.outOfBounds( pos[0], pos[1] ) ):
             return False
-        if( self.outOfLevelBounds( lastpos[0], lastpos[1] ) ):
+        if( self.level.outOfBounds( lastpos[0], lastpos[1] ) ):
             return False
         
         #if we can't see here
@@ -565,7 +541,7 @@ class Engine( Thread ):
     def testTile(self, x, y, distance, list_visible_tiles, visibility, lastx, lasty ):
         
         #level bounds
-        if( self.outOfLevelBounds(x, y) ):
+        if( self.level.outOfBounds(x, y) ):
             return( list_visible_tiles, visibility )
         
         #if we can't see here, set visibility to 2, and return
@@ -640,7 +616,7 @@ class Engine( Thread ):
                     y = int( tile[1] + dy )
                     
                     
-                    if( self.outOfLevelBounds(x, y) ):
+                    if( self.level.outOfBounds(x, y) ):
                         continue
                     
                     
@@ -691,39 +667,29 @@ class Engine( Thread ):
         pty = int( position[1] )
 
 
-        #check if the level is clear at that tile
-        if( self.level._level_data[ ptx + dx ][ pty + dy ] != 0 ):
+        if not self.level.tileClearForMoving( unit, ptx + dx, pty + dy ):
             return False
-        
-        #check if there is a dynamic obstacle in the way
-        if( self.dynamic_obstacles[ ptx + dx ][ pty + dy ][0] != DYNAMICS_EMPTY ):
-            #ok if it a unit, it may be the current unit so we need to check that
-            if( self.dynamic_obstacles[ ptx + dx ][ pty + dy ][0] == DYNAMICS_UNIT ):
-                if( self.dynamic_obstacles[ ptx + dx ][ pty + dy ][1] != unit.id ):
-                    return False
 
-        
+      
         #check diagonal if it is clear
         if( dx != 0 and dy != 0 ):
-            
-            #if there is something in level in the way
-            if( self.level._level_data[ ptx + dx ][ pty ] != 0 or 
-                self.level._level_data[ ptx ][ pty + dy ] != 0 ):
+
+            if self.level.tuppleGet( (ptx + dx, pty) ) or self.level.tuppleGet( (ptx, pty + dy) ):
                 return False
-        
+                
             #check if there is a dynamic thing in the way 
-            if( self.dynamic_obstacles[ ptx + dx ][ pty ][0] != DYNAMICS_EMPTY ):
+            if( self.level._dynamics[ ptx + dx ][ pty ][0] != level.DYNAMICS_EMPTY ):
                 #see if it is a unit
-                if( self.dynamic_obstacles[ ptx + dx ][ pty ][0] == DYNAMICS_UNIT ):
+                if( self.level._dynamics[ ptx + dx ][ pty ][0] == level.DYNAMICS_UNIT ):
                     #so its a unit, see if it is friendly
-                    unit_id = self.dynamic_obstacles[ ptx + dx ][ pty ][1] 
+                    unit_id = self.level._dynamics[ ptx + dx ][ pty ][1] 
                     if( self.units[unit_id].owner != unit.owner ):
                         return False
                     
 
-            if( self.dynamic_obstacles[ ptx ][ pty + dy ][0] != DYNAMICS_EMPTY ):
-                if( self.dynamic_obstacles[ ptx ][ pty + dy ][0] == DYNAMICS_UNIT ):
-                    unit_id = self.dynamic_obstacles[ ptx ][ pty + dy ][1] 
+            if( self.level._dynamics[ ptx ][ pty + dy ][0] != level.DYNAMICS_EMPTY ):
+                if( self.level._dynamics[ ptx ][ pty + dy ][0] == level.DYNAMICS_UNIT ):
+                    unit_id = self.level._dynamics[ ptx ][ pty + dy ][1] 
                     if( self.units[unit_id].owner != unit.owner ):
                         return False
 
@@ -845,17 +811,11 @@ class Engine( Thread ):
             
             #everything checks out, do the actual moving
             for tile, ap_remaining in path:
-                self.dynamic_obstacles[ int( unit.pos[0] ) ][ int( unit.pos[1] ) ] = ( DYNAMICS_EMPTY, 0 )
+                self.level.removeUnit( unit )
                 unit.rotate( tile )                
-                unit.move( tile, ap_remaining )                
-                self.dynamic_obstacles[ int( unit.pos[0] ) ][ int( unit.pos[1] ) ] = ( DYNAMICS_UNIT, unit.id )                
+                unit.move( tile, ap_remaining )
+                self.level.putUnit( unit )                                
                 move_actions.append( ('move', tile ) )
-                
-                #TODO: krav: ---- nema vise LOSHdict ovo nebi trebalo bas svaki korak rucant?!, losh_dict bi trebalo :(
-                #we moved a unit so update its move_dict and losh_dict
-                unit.move_dict = self.getMoveDict(unit)
-                #unit.losh_dict = self.getLOSHDict(unit.pos)
-                
                 
                 res = self.checkMovementInterrupt( unit ) 
                 if res:
@@ -881,7 +841,7 @@ class Engine( Thread ):
         
         if detected:
             for enemy in detected:
-                unit.owner.list_visible_enemies.append( enemy )
+                unit.owner.visible_enemies.append( enemy )
                 ret_actions.append( ('detect', util.compileUnit(enemy)) )
                 
         if overwatch:
@@ -911,13 +871,12 @@ class Engine( Thread ):
             if player.team == unit.owner.team:
                 continue
         
-            #TODO: krav: nema vise LOSHdict
-            for enemy in player.unitlist:
-                if unit.pos in enemy.losh_dict:
+            for enemy in player.units:
+                #TODO: krav: ovdje se skoro ista stvr racuna 2 put?! mozda optimizacija?
+                if self.getLOS( enemy, unit ):
                     if enemy.overwatch:
-                        overwatch.append( enemy )
-                #TODO: krav: nema vise LOSHdict                    
-                if enemy.pos in unit.losh_dict and enemy not in unit.owner.list_visible_enemies:
+                        overwatch.append( enemy )                    
+                if self.getLOS( unit, enemy ) and enemy not in unit.owner.visible_enemies:
                     detected.append( enemy )
                             
         return (overwatch, detected)
@@ -946,6 +905,11 @@ class Engine( Thread ):
             return None
             
         return shooter.shoot( target )
+
+    def findPlayer( self, source ):
+        for p in self.players.itervalues():
+            if p.connection == source:
+                return p
 
 
 if __name__ == "__main__":

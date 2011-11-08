@@ -42,7 +42,7 @@
 	<weapon name="Power Axe" 					Str="5"	AP="4" 	type="melee"				special="power"/>
 	<weapon name="Power Glove" 					Str="8" AP="5"	type="melee"				special="power"/>
 	<weapon name="Chain Fist" 					Str="10" AP="5"	type="melee"				special="chain_fist"/>
-	<weapon name="Lightning Claw" 				Str="10" AP="5"	type="melee"				special="power"			parry="2"/>	
+	<weapon name="Lightning Claw" 				Str="9" AP="5"	type="melee"				special="power"			parry="2"/>	
 	<weapon name="Storm Shield" 								type="melee"				special="storm_shield"	parry="1"/>	
 	<weapon name="Thunder Hammer"				Str="10" AP="6"	type="melee"				special="thunder_hammer"/>
 	
