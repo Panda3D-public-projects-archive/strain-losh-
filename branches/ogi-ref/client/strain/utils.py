@@ -5,11 +5,24 @@
 # python imports
 
 # panda3D imports
-from strain.camera import Camera
 from pandac.PandaModules import GeomNode, NodePath
 
 # strain related imports
 
+
+#############################################################################
+# GLOBALS
+#############################################################################
+
+HEADING_NONE      = 0
+HEADING_NW        = 1
+HEADING_N         = 2
+HEADING_NE        = 3
+HEADING_W         = 4
+HEADING_E         = 5
+HEADING_SW        = 6
+HEADING_S         = 7
+HEADING_SE        = 8
 
 #############################################################################
 # METHODS
@@ -58,3 +71,8 @@ def flattenReallyStrong(n):
     # merge geoms
     nn.flattenStrong()
     return nn
+  
+def normalize(myVec):
+    myVec.normalize()  
+    return myVec
+

@@ -23,15 +23,6 @@ _TILE_RESET             = "_tile_reset"
 _UNIT_HOVERED           = "_unit_hovered"
 _UNIT_RESET             = "_unit_reset"    
 
-HEADING_NONE      = 0
-HEADING_NW        = 1
-HEADING_N         = 2
-HEADING_NE        = 3
-HEADING_W         = 4
-HEADING_E         = 5
-HEADING_SW        = 6
-HEADING_S         = 7
-HEADING_SE        = 8
 #===============================================================================
 # CLASS Interface --- DEFINITION
 #===============================================================================

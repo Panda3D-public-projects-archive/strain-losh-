@@ -6,7 +6,7 @@
 
 # panda3D imports
 from direct.showbase.DirectObject import DirectObject
-from pandac.PandaModules import Point3,Vec4,VBase3
+from pandac.PandaModules import Point3, Vec4, VBase3
 
 # strain related imports
 

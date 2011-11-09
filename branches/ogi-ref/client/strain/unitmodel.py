@@ -3,39 +3,42 @@ from panda3d.core import Vec4, Point4, Point3, Point2, NodePath#@UnresolvedImpor
 from panda3d.core import PointLight#@UnresolvedImport
 from pandac.PandaModules import TransparencyAttrib#@UnresolvedImport
 import random
-import interface
-
+import utils
 
 #===============================================================================
 # CLASS UnitModel --- DEFINITION
 #===============================================================================
 class UnitModel:
-    def __init__(self, unit, scale=0.25, h=180, pos=None, off=False):
+    def __init__(self, parent, unit, off=False):
+        self.parent = parent
+        
         self.anim_count_dict = {}
         self.model = self.load(unit['name'])
         self.id = str(unit['id'])
-        self.unit = unit
         
-        self.node = NodePath(self.id)
-        self.dummy_node = NodePath("dummy_"+self.id)
-        self.dest_node = NodePath("dest_"+self.id)
+        self.node = NodePath("unit_"+self.id)
+        self.dummy_node = NodePath("dummy_unit_"+self.id)
+        self.dest_node = NodePath("dest_unit_"+self.id)
         
         self.model.reparentTo(self.node)
         self.dummy_node.reparentTo(self.node)
         self.dest_node.reparentTo(self.node)        
         
+        if not off:
+            scale = 0.25
+            h = 180
+            pos = Point3(int(unit['pos'][0]), int(unit['pos'][1]), 0)
+            pos = self.calculateWorldPos(pos)
+        else:
+            scale = 0.25
+            h = 180
+            pos = Point3(0, -8, -2)
+        
         # Bake in rotation transform because model is created facing towards screen (h=180)
         self.model.setScale(scale)
         self.model.setH(h)
         self.model.flattenLight() 
-        
-        x = int(unit['pos'][0])
-        y = int(unit['pos'][1])
-        
-        if off:
-            self.node.setPos(Point3(0,-8,-2))
-        else:
-            self.node.setPos(self.calcWorldPos(x, y))
+        self.node.setPos(pos)
 
         self.model.setLightOff()
         self.node.setTag("type", "unit")
@@ -153,8 +156,8 @@ class UnitModel:
         num = random.randint(1, self.anim_count_dict[anim_type])
         return anim_type + str(num).zfill(2)    
     
-    def calcWorldPos(self, x, y):
-        return Point3(x + 0.5, y + 0.5, 0.3)
+    def calcWorldPos(self, pos):
+        return pos + Point3(0.5, 0.5, 0.3)
     
     def reparentTo(self, node):
         self.node.reparentTo(node)
@@ -166,21 +169,21 @@ class UnitModel:
         x = int(self.unit['pos'][0])
         y = int(self.unit['pos'][1])        
         
-        if heading == interface.HEADING_NW:
+        if heading == utils.HEADING_NW:
             o = Point2(x-1, y+1)
-        elif heading == interface.HEADING_N:
+        elif heading == utils.HEADING_N:
             o = Point2(x, y+1)
-        elif heading == interface.HEADING_NE:
+        elif heading == utils.HEADING_NE:
             o = Point2(x+1, y+1)
-        elif heading == interface.HEADING_W:
+        elif heading == utils.HEADING_W:
             o = Point2(x-1, y)
-        elif heading == interface.HEADING_E:
+        elif heading == utils.HEADING_E:
             o = Point2(x+1, y)
-        elif heading == interface.HEADING_SW:
+        elif heading == utils.HEADING_SW:
             o = Point2(x-1, y-1)
-        elif heading == interface.HEADING_S:
+        elif heading == utils.HEADING_S:
             o = Point2(x, y-1)
-        elif heading == interface.HEADING_SE:
+        elif heading == utils.HEADING_SE:
             o = Point2(x+1, y-1)
         return o
     

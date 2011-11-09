@@ -6,10 +6,13 @@
 import os
 import logging
 import cPickle as pickle
+from random import randint
 
 # panda3D imports
 from direct.showbase.ShowBase import ShowBase
 from pandac.PandaModules import loadPrcFile, WindowProperties
+from panda3d.core import NodePath, Point2, Point3, VBase4, GeomNode, Vec3, Vec4#@UnresolvedImport
+from panda3d.core import ShadeModelAttrib, DirectionalLight, AmbientLight#@UnresolvedImport
 from direct.showbase.DirectObject import DirectObject
 from direct.fsm import FSM
 
@@ -17,6 +20,7 @@ from direct.fsm import FSM
 from strain.client_messaging import *
 from strain.camera import Camera
 import strain.utils as utils
+from strain.voxelgen import VoxelGenerator
 
 #############################################################################
 # GLOBALS
@@ -55,41 +59,24 @@ class SceneGraph():
         # Main node in a scene graph. Everything should be reparented to this node or another node under this node
         # This node is reparented to render
         self.node = render.attachNewNode("master")
-
-        # Main level node in a scene graph
-        self.level_node = self.node.attachNewNode("levelnode")
-        # Disable default Panda3d camera implementation
-        #base.disableMouse()
     
     def loadLevel(self, level):
-        # List to store nodepaths of all tiles in a level
-        self.tile_np_list = []
-        # List to store nodepaths of all units
-        # List indices equal level coordinates
-        # Empty coordinates are stored as None values
-        # Here we just allocate the list and fill it with None values
-        self.unit_np_list = [[None] * level['maxY'] for i in xrange(level['maxX'])]
-        for x in xrange(0, level['maxX']): 
-            tile_nodes = []
-            for y in xrange(0, level['maxY']): 
-                tag = level['_level_data'][x][y]
-                c = loader.loadModel("tile")
-                if tag != 0:
-                    c.setScale(1, 1, tag + 1)
-                    #TODO: ogs: Srediti ovaj colorScale, izgleda da ne radi dobro s ovom teksturom
-                    coef = 1 + 0.05 * tag
-                    c.setColorScale(coef, coef, coef, 1)
-                    c.flattenLight()
-                c.setPos(x, y, 0)
-                c.setTag("pos", "%(X)s-%(Y)s" % {"X":x, "Y":y})
-                c.setTag("type", "tile")                     
-                c.reparentTo(self.level_node)
-                tile_nodes.append(c)
-            self.tile_np_list.append(tile_nodes)
-        self.level2_node = utils.flattenReallyStrong(self.level_node)
-        self.level_node.removeNode()
-        self.level2_node.reparentTo(self.node)
+        levelMesh = VoxelGenerator('level', 1, 0.3)
+        for x in xrange(0, level['maxX']):
+            for y in xrange(0, level['maxY']):
+                for i in xrange(0, level['_level_data'][x][y]+1):
+                    id = randint(1, 2) 
+                    levelMesh.makeLeftFace(x, y, i, id)
+                    levelMesh.makeRightFace(x, y, i, id)
+                    levelMesh.makeBackFace(x, y, i, id)
+                    levelMesh.makeFrontFace(x, y, i, id)
+                    levelMesh.makeBottomFace(x, y, i, id) 
+                    levelMesh.makeTopFace(x, y, i, id)
+
+        self.level_node = self.node.attachNewNode(levelMesh.getGeomNode())
+        self.level_node.setTexture(loader.loadTexture("tex.png"))
         """
+        
         for i in xrange(0, level['maxX']):
             t = TextNode('node name')
             t.setText( "%s" % i)
@@ -109,6 +96,23 @@ class SceneGraph():
             tnp.setBillboardPointEye()
             tnp.setLightOff()         
         """
+        
+    def initLights(self):
+        shade = ShadeModelAttrib.make(ShadeModelAttrib.MSmooth)
+        render.setAttrib(shade)
+        dlight1 = DirectionalLight("dlight1")
+        dlight1.setColor(VBase4(1.0, 1.0, 1.0, 1.0))
+        dlnp1 = render.attachNewNode(dlight1)
+        dlnp1.setPos(10, 10, 2)
+        dlnp1.setHpr(-10, -30, 0)
+        a = loader.loadModel("zup-axis")
+        a.reparentTo(dlnp1)
+        render.setLight(dlnp1)
+        alight = AmbientLight("alight")
+        alight.setColor(VBase4(0.3, 0.3, 0.3, 1.0))
+        alnp = render.attachNewNode(alight)
+        alnp.setPos(10, 10, 2)
+        render.setLight(alnp)        
 #========================================================================
 #
 class Client(DirectObject):
@@ -203,6 +207,7 @@ class ClientFSM(FSM.FSM):
 
     def enterGraphicsInit(self):
         self.parent.sgm.loadLevel(self.parent.level)
+        #self.parent.sgm.initLights()
     
     def exitGraphicsInit(self):
         None
