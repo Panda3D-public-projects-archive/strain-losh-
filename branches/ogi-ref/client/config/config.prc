@@ -86,7 +86,7 @@ hardware-animated-vertices #f
 
 # Enable the model-cache, but only for models, not textures.
 
-model-cache-dir $THIS_PRC_DIR/../modelcache
+model-cache-dir $MAIN_DIR/tmp
 model-cache-textures #f
 
 # This option specifies the default profiles for Cg shaders.

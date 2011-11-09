@@ -1,157 +1,172 @@
-from direct.showbase import DirectObject
-from panda3d.core import Point2, Vec3#@UnresolvedImport
-import math
+#############################################################################
+# IMPORTS
+#############################################################################
 
-#===============================================================================
-# CLASS Camera --- DEFINITION
-#===============================================================================
-class Camera(DirectObject.DirectObject):    
-    
-    def __init__(self, camera, mwn, maxX, maxY, taskMgr):
-        self.camera = camera
-        self.mwn = mwn
-        
-        self.mx = 0
-        self.my = 0
-        self.is_orbiting = False
-        self.target = Vec3(0, 0, 0)
-        self.cam_dist = 40
-        self.pan_rate_div = 20
-        self.pan_limits_x = Point2(-5, maxX + 5) 
-        self.pan_limits_y = Point2(-5, maxY + 5)
-        self.camera.setPos(10, 10, 20)
-        self.camera.lookAt(10, 10, 0)
-        self.orbit(0, 0)
-    
-        self.accept('w', self.setKey, ['up', 1])
-        self.accept('w-up', self.setKey, ['up', 0])
-        self.accept('s', self.setKey, ['down', 1])
-        self.accept('s-up', self.setKey, ['down', 0])                   
-        self.accept('a', self.setKey, ['left', 1])
-        self.accept('a-up', self.setKey, ['left', 0])
-        self.accept('d', self.setKey, ['right', 1])
-        self.accept('d-up', self.setKey, ['right', 0])
-        self.accept("mouse3", self.startOrbit)
-        self.accept("mouse3-up", self.stopOrbit)
-        self.accept("wheel_up", lambda : self.adjustCamDist(0.9))
-        self.accept("wheel_down", lambda : self.adjustCamDist(1.1))
-        
-        self.keys = {}
-        self.keys['up'] = 0
-        self.keys['down'] = 0        
-        self.keys['left'] = 0
-        self.keys['right'] = 0
-        self.keys['middle'] = 0
-        self.keys['wheel_up'] = 0
-        self.keys['wheel_down'] = 0
-        
-        taskMgr.add(self.updateCamera, 'updateCamera_task')
+# python imports
 
-    def setKey(self, button, value):
-        """Sets the state of keyboard.
-           1 = pressed
-           0 = depressed
+# panda3D imports
+from direct.showbase.DirectObject import DirectObject
+from pandac.PandaModules import Point3,Vec4,VBase3
+
+# strain related imports
+
+#############################################################################
+# CLASSES
+#############################################################################
+
+#========================================================================
+#
+class Camera(DirectObject):
+    def __init__(self,parent):
+        #disable mouse
+        base.disableMouse()
+        #init vars
+        self.parent=parent
+        self.collisionMode=False
+        self.target=None
+        #positioning
+        self.elevation=.4
+        self.pos=Point3(3,3,4)*1.5
+        #rotation and translation
+        self.middleMouseIsDown=False
+        self.isRotating=False
+        self.rotvel=.05
+        self.rotinter=.6
+        #zoom
+        self.distmax=64
+        self.distmin=1
+        self.zoomvel=0.75
+        self.zoominter=.25
+        self.dist=0
+        #mouse
+        self.mPos=[0,0]
+        self.mInc=[0,0]
+        #create camera node (target)
+        self.node = render.attachNewNode("cameraNode")
+        self.node.setPos(0,0,0)
+        #self.node=utils.loadNode(render,"cameraNode",(0,0,0))
+        #self.cube = utils.loadModel(self.node,"cameraCube","cube/cube",(0,0,-.1))
+        #self.parent.picker.makePickable(self,self.cube,'camera')
+        #self.cube.hide()
+        #init camera lens
+        #lens = OrthographicLens()
+        #lens.setFilmSize(20*.5, 15*.5) # or whatever is appropriate for your scene
+        #base.cam.node().setLens(lens)
+        #base.cam.node().getLens().setNear(0.1)
+        #base.cam.node().getLens().setFar(32*1.5)
+        #base.camLens.setFov(50)
+        #locate camera
+        base.camera.setPos(self.node.getPos()+self.pos)
+        base.camera.lookAt(self.node.getPos())
+        #get initial dist (vector?)
+        self.dist=base.camera.getDistance(self.node)
+        #initialize camera controls (mouse)
+        self.setupKeys()
+
+    def destroy(self):
+        self.node.removeNode()
+  
+    def update(self,task=None):
+    #-----------------
+    # Mouse increments
+    #-----------------
+        if self.middleMouseIsDown:
+            #update mouse increments depending on the mouse pos
+            newPos=[base.win.getPointer(0).getX(),base.win.getPointer(0).getY()]
+            self.mInc=[newPos[0]-self.mPos[0],newPos[1]-self.mPos[1]]
+        else:
+            #deaccelerate mouse increments
+            self.mInc=[self.mInc[0]*.4,self.mInc[1]*.4]
+        #-----------------
+        # Rotation
+        #-----------------
+        #interpolate mouse last pos to new pos
+        self.mPos[0]+=self.mInc[0]*self.rotinter
+        self.mPos[1]+=self.mInc[1]*self.rotinter
+        #get new pos
+        camup=VBase3(0,0,0)
+        camright = base.camera.getNetTransform().getMat().getRow3(0)
+        camright.normalize()
+        self.pos -= camright*self.mInc[0]*self.rotvel
+        camup = base.camera.getNetTransform().getMat().getRow3(2)
+        camup.normalize()
+        self.pos += camup*self.mInc[1]*self.rotvel*1
+        #-----------------
+        # Zoom
+        #-----------------
+        camvec = self.node.getPos() - base.camera.getPos()
+        camdist = camvec.length()
+        camvec.normalize()
+        self.pos+=camvec*(camdist-self.dist)*self.zoominter
+        #-------------------
+        # Locate Camera
+        #-------------------
+        #node follows target
+        if self.target!=None:
+            if self.target.type=="@":
+                self.node.setPos(self.target.node.getPos()+(0,0,self.elevation))
+            else:
+                self.node.setPos(self.target.pos[0],self.target.pos[1],self.elevation)
+        else:
+            None
+        #    self.node.setPos(self.parent.grid.mapper.xsize/2,self.parent.grid.mapper.ysize/2,self.elevation)
+        #camera follows node
+        base.camera.setPos(self.node.getPos()+self.pos)
+        #camera look at node
+        base.camera.lookAt(self.node)
+        #-------------------
+        # Collisions
+        #-------------------
+        if self.collisionMode==True:
+            #check collisions from camera in forward direction
+            self.parent.picker.resetCameraCollisions()
+            ray,rayNP=self.parent.picker.initRay(base.camera,0,1,0)
+            pickedObj,pickedPoint=self.parent.picker.initTraverser(ray,rayNP,"camera")
+
+    #-----------------------------------------------------------------
+    # Mouse and Key Routines
+    #-----------------------------------------------------------------
+    #
+    def setupKeys(self):
+        #setup keys
+        self.accept('v', self.toggleCollisionMode, [])
+        #setup mouse
+        self.mPos=[base.win.getPointer(0).getX(),base.win.getPointer(0).getY()]
+        self.accept('mouse2', self.middleMouseDown, [])
+        self.accept('mouse2-up', self.middleMouseUp, [])
+        self.accept('wheel_down', self.wheelMouseDown, [])
+        self.accept('wheel_up', self.wheelMouseUp, [])
         """
-        self.keys[button] = value
-    
-    def setTarget(self, x, y, z):
-        """Sets the target point which will be the center of camera view.""" 
-        x = self.clamp(x, self.pan_limits_x.getX(), self.pan_limits_x.getY())
-        self.target.setX(x)
-        y = self.clamp(y, self.pan_limits_y.getX(), self.pan_limits_y.getY())
-        self.target.setY(y)
-        self.target.setZ(z)
-        
-    def clamp(self, val, min_val, max_val):
-        """If val > min_val and val < max_val returns val
-           If val <= min_val returns min_val
-           If val >= max_val returns max_val
+        self.accept('w', self.camNDown, [])
+        self.accept('w-up', self.camNUp, [])
+        self.accept('s', self.camSDown, [])
+        self.accept('s-up', self.camSUp, [])
+        self.accept('a', self.camWDown, [])
+        self.accept('a-up', self.camWUp, [])
+        self.accept('d', self.camEDown, [])
+        self.accept('d-up', self.camEUp, [])        
         """
-        return min(max(val, min_val), max_val)
+    def toggleCollisionMode(self):
+        if self.collisionMode==False:
+            self.collisionMode=True
+            self.parent.gui.consoleMsg("Camera collisions are now ON.")
+        else:
+            self.collisionMode=False
+            self.parent.picker.resetCameraCollisions()
+            self.parent.gui.consoleMsg("Camera collisions are now OFF.")
 
-    def adjustCamDist(self, factor):
-        """Adjusts distance from the camera to the level. Used for zooming of the camera."""
-        self.cam_dist = self.cam_dist * factor
-        self.orbit(0, 0)
-    
-    def startOrbit(self): 
-        """Sets camera is orbiting flag.
-           Fires when right mouse button is pressed.
-        """
-        self.is_orbiting = True
-            
-    def stopOrbit(self):
-        """Clears camera is orbiting flag.
-           Fires when right mouse button is depressed.
-        """
-        self.is_orbiting = False 
-    
-    def orbit(self, delta_x, delta_y):
-        """Handles camera orbiting (turning around camera target)."""
-        new_cam_hpr = Vec3() 
-        new_cam_pos = Vec3()
-        cam_hpr = self.camera.getHpr()  
-          
-        new_cam_hpr.setX(cam_hpr.getX() + delta_x) 
-        new_cam_hpr.setY(self.clamp(cam_hpr.getY() - delta_y, -85, -10)) 
-        new_cam_hpr.setZ(cam_hpr.getZ())
-          
-        self.camera.setHpr(new_cam_hpr)  
-          
-        radian_x = new_cam_hpr.getX() * (math.pi / 180.0) 
-        radian_y = new_cam_hpr.getY() * (math.pi / 180.0)  
-          
-        new_cam_pos.setX(self.cam_dist * math.sin(radian_x) * math.cos(radian_y) + self.target.getX())
-        new_cam_pos.setY(-self.cam_dist * math.cos(radian_x) * math.cos(radian_y) + self.target.getY()) 
-        new_cam_pos.setZ(-self.cam_dist * math.sin(radian_y) + self.target.getZ()) 
-        self.camera.setPos(new_cam_pos.getX(), new_cam_pos.getY(), new_cam_pos.getZ())                     
-        self.camera.lookAt(self.target.getX(), self.target.getY(), self.target.getZ()) 
-        
-    def updateCamera(self, task):
-        """Task to update position of camera.""" 
-        if self.mwn.hasMouse(): 
-            mpos = self.mwn.getMouse()
-            if self.is_orbiting:
-                self.orbit((self.mx - mpos.getX()) * 100, (self.my - mpos.getY()) * 100)
 
-            move_x = False
-            move_y = False
-            if self.keys['down']: 
-                rad_x1 = self.camera.getH() * (math.pi / 180.0) 
-                pan_rate1 = 0.2 * self.cam_dist / self.pan_rate_div 
-                move_y = True 
-            if self.keys['up']: 
-                rad_x1 = self.camera.getH() * (math.pi / 180.0) + math.pi 
-                pan_rate1 = 0.2 * self.cam_dist / self.pan_rate_div 
-                move_y = True 
-            if self.keys['left']: 
-                rad_x2 = self.camera.getH() * (math.pi / 180.0) + math.pi * 0.5 
-                pan_rate2 = 0.2 * self.cam_dist / self.pan_rate_div 
-                move_x = True
-            if self.keys['right']: 
-                rad_x2 = self.camera.getH() * (math.pi / 180.0) - math.pi*0.5 
-                pan_rate2 = 0.2 * self.cam_dist / self.pan_rate_div 
-                move_x = True 
-            
-            if move_y: 
-                temp_x = self.target.getX() + math.sin(rad_x1) * pan_rate1 
-                temp_x = self.clamp(temp_x, self.pan_limits_x.getX(), self.pan_limits_x.getY()) 
-                self.target.setX(temp_x) 
-                temp_y = self.target.getY() - math.cos(rad_x1) * pan_rate1 
-                temp_y = self.clamp(temp_y, self.pan_limits_y.getX(), self.pan_limits_y.getY()) 
-                self.target.setY(temp_y) 
-                self.orbit(0, 0) 
-            if move_x: 
-                temp_x = self.target.getX() - math.sin(rad_x2) * pan_rate2 
-                temp_x = self.clamp(temp_x, self.pan_limits_x.getX(), self.pan_limits_x.getY()) 
-                self.target.setX(temp_x) 
-                temp_y = self.target.getY() + math.cos(rad_x2) * pan_rate2 
-                temp_y = self.clamp(temp_y, self.pan_limits_y.getX(), self.pan_limits_y.getY()) 
-                self.target.setY(temp_y) 
-                self.orbit(0, 0)
-                
-            self.mx = mpos.getX()
-            self.my = mpos.getY()
-        return task.cont                       
+    def middleMouseDown(self):
+        self.middleMouseIsDown=True
+        self.mPos=[base.win.getPointer(0).getX(),base.win.getPointer(0).getY()]
 
-        
+    def middleMouseUp(self):
+        self.middleMouseIsDown=False
+
+    def wheelMouseDown(self):
+        self.dist+=self.zoomvel
+        if self.dist>self.distmax: self.dist=self.distmax
+
+    def wheelMouseUp(self):
+        self.dist-=self.zoomvel
+        if self.dist<self.distmin: self.dist=self.distmin

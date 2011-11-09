@@ -10,12 +10,13 @@ import cPickle as pickle
 # panda3D imports
 from direct.showbase.ShowBase import ShowBase
 from pandac.PandaModules import loadPrcFile, WindowProperties
-from pandac.PandaModules import GeomNode, NodePath
 from direct.showbase.DirectObject import DirectObject
 from direct.fsm import FSM
 
 # strain related imports
 from strain.client_messaging import *
+from strain.camera import Camera
+import strain.utils as utils
 
 #############################################################################
 # GLOBALS
@@ -32,18 +33,18 @@ loadPrcFile(os.path.join("config","config.prc"))
 class App():
     def __init__(self):
         #setup logger
-        logger = logging.getLogger('GraphicsLog')
+        self.logger = logging.getLogger('GraphicsLog')
         hdlr = logging.FileHandler('Graphics.log')
         formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
         hdlr.setFormatter(formatter)
-        logger.addHandler(hdlr) 
-        logger.setLevel(logging.DEBUG)
+        self.logger.addHandler(hdlr) 
+        self.logger.setLevel(logging.DEBUG)
         
         #setup screen
         self.screen = Screen(self, (1024,768))
         
         #initialize world
-        self.client = Client(self, logger)
+        self.client = Client(self)
 
 #========================================================================
 #
@@ -59,45 +60,6 @@ class SceneGraph():
         self.level_node = self.node.attachNewNode("levelnode")
         # Disable default Panda3d camera implementation
         #base.disableMouse()
-        
-    def flattenReallyStrong(self, n):
-        """
-        force the passed nodepath into a single geomNode, then flattens the
-        geomNode to minimize geomCount.
-    
-        In many cases, flattenStrong is not enough, and for good reason.
-        This code ignores all potential issues and forces it into one node.
-        It will alwayse do so.
-    
-        RenderStates are preserved, transformes are applied, but tags,
-        special node classes and any other such data is all lost.
-    
-        This modifies the passed NodePath as a side effect and returns the
-        new NodePath.
-        """
-        # make sure all the transforms are applied to the geoms
-        n.flattenLight()
-        # make GeomNode to store results in.
-        g=GeomNode("flat_"+n.getName())
-        g.setState(n.getState())
-       
-        # a little helper to process GeomNodes since we need it in 2 places
-        def f(c):
-            rs=c.getState(n)
-            gg=c.node()
-            for i in xrange(gg.getNumGeoms()):
-                g.addGeom(gg.modifyGeom(i),rs.compose(gg.getGeomState(i)))
-       
-        # special case this node being a GeomNode so we don't skips its geoms.
-        if n.node().isGeomNode(): f(n)
-        # proccess all GeomNodes
-        for c in n.findAllMatches('**/+GeomNode'): f(c)
-           
-        nn=NodePath(g)
-        nn.setMat(n.getMat())
-        # merge geoms
-        nn.flattenStrong()
-        return nn
     
     def loadLevel(self, level):
         # List to store nodepaths of all tiles in a level
@@ -124,7 +86,7 @@ class SceneGraph():
                 c.reparentTo(self.level_node)
                 tile_nodes.append(c)
             self.tile_np_list.append(tile_nodes)
-        self.level2_node = self.flattenReallyStrong(self.level_node)
+        self.level2_node = utils.flattenReallyStrong(self.level_node)
         self.level_node.removeNode()
         self.level2_node.reparentTo(self.node)
         """
@@ -150,7 +112,7 @@ class SceneGraph():
 #========================================================================
 #
 class Client(DirectObject):
-    def __init__(self, parent, logger):
+    def __init__(self, parent):
         self.parent = parent
         
         # Set up important game logic variables
@@ -159,8 +121,8 @@ class Client(DirectObject):
         self.enemy_units = {}
         
         # Set logging through our global logger
-        self.log = logger
-        ClientMsg.log = logger
+        self.log = self.parent.logger
+        ClientMsg.log = self.parent.logger
         
         # Init Client FSM
         self.fsm = ClientFSM(self, 'ClientFSM')
@@ -168,8 +130,14 @@ class Client(DirectObject):
         # Init SceneGraph manager
         self.sgm = SceneGraph(self)
         
+        # Init Camera
+        self.camera = Camera(self)
+        
         # Create main network messaging task which initiates connection
         taskMgr.add(self.msgTask, "msg_task")
+        
+        # Create main update task
+        taskMgr.add(self.updateTask, "update_task")
         
         
     def handleMsg(self, msg):
@@ -181,7 +149,7 @@ class Client(DirectObject):
             self.level = pickle.loads(msg[1]['level'])
             self.turn = msg[1]['turn']
             units = pickle.loads(msg[1]['units'])
-            self.fsm.request('ClientInit')
+            self.fsm.request('GraphicsInit')
         #========================================================================
         #
         elif msg[0] == MOVE:
@@ -219,6 +187,11 @@ class Client(DirectObject):
         if msg:
             self.handleMsg(msg)            
         return task.cont
+    
+    def updateTask(self, task):
+        """Main update Client task."""
+        self.camera.update()
+        return task.cont
 
 
 #========================================================================
@@ -228,10 +201,10 @@ class ClientFSM(FSM.FSM):
         FSM.FSM.__init__(self, name)
         self.parent = parent
 
-    def enterClientInit(self):
+    def enterGraphicsInit(self):
         self.parent.sgm.loadLevel(self.parent.level)
     
-    def exitClientInit(self):
+    def exitGraphicsInit(self):
         None
 
 #========================================================================
