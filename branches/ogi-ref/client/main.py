@@ -10,7 +10,7 @@ from random import randint
 
 # panda3D imports
 from direct.showbase.ShowBase import ShowBase
-from pandac.PandaModules import loadPrcFile, WindowProperties
+from pandac.PandaModules import loadPrcFile, WindowProperties, Texture
 from panda3d.core import NodePath, Point2, Point3, VBase4, GeomNode, Vec3, Vec4#@UnresolvedImport
 from panda3d.core import ShadeModelAttrib, DirectionalLight, AmbientLight#@UnresolvedImport
 from direct.showbase.DirectObject import DirectObject
@@ -19,7 +19,6 @@ from direct.fsm import FSM
 # strain related imports
 from strain.client_messaging import *
 from strain.camera import Camera
-import strain.utils as utils
 from strain.voxelgen import VoxelGenerator
 
 #############################################################################
@@ -74,6 +73,9 @@ class SceneGraph():
                     levelMesh.makeTopFace(x, y, i, id)
 
         self.level_node = self.node.attachNewNode(levelMesh.getGeomNode())
+        t = loader.loadTexture('tex2.png')
+        t.setMagfilter(Texture.FTLinearMipmapLinear)
+        t.setMinfilter(Texture.FTLinearMipmapLinear)
         self.level_node.setTexture(loader.loadTexture("tex.png"))
         """
         
