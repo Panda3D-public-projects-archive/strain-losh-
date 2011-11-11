@@ -67,13 +67,14 @@ class VoxelGenerator():
             
             # Populate normal array
             e1 = Vec3(Point3(x2, y2, z1) - Point3(x1, y1, z1))
-            e2 = Vec3(Point3(x2, y2, z2) - Point3(x2, y2, z1))
+            e2 = Vec3(Point3(x2, y2, z2) - Point3(x2, y1, z1))
             n = e1.cross(e2)
             n = utils.normalize(n)      
             self.normal.addData3f(n.getX(), n.getY(), n.getZ())
             self.normal.addData3f(n.getX(), n.getY(), n.getZ())
             self.normal.addData3f(n.getX(), n.getY(), n.getZ())
-            self.normal.addData3f(n.getX(), n.getY(), n.getZ())          
+            self.normal.addData3f(n.getX(), n.getY(), n.getZ())   
+            print x1, y1, z1 ,"-", x2, y2, z2, n       
 
 
         # Populate color array
