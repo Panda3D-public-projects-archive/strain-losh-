@@ -50,27 +50,40 @@ class Notify():
 
 def compileState(engine, player):        
     dic = {}
-
     units = {}
 
     #compile all my units
     for unt in player.units:
         units[unt.id] = compileUnit(unt)
-    
     #compile all visible units
     for unt in player.visible_enemies:
         #TODO: krav: ovo maknut kad ogi sredi da nema ap-a kod enmeija
         units[unt.id] = compileUnit(unt)
         #units[unt.id] = compileEnemyUnit(unt)
-    
-    #compile all detected units
+    for unt in player.detected_enemies:
+        units[unt.id] = compileUnit(unt)
+        #units[unt.id] = compileDetectedEnemyUnit(unt)
     
     #dic[ 'units' ] = pickle.dumps( compileAllUnits( engine.units ) )    
     dic[ 'units' ] = pickle.dumps( units )    
     dic[ 'level' ] = pickle.dumps( compileLevel( engine.level ) )        
     dic[ 'turn' ] = engine.turn     
+    dic[ 'players' ] = pickle.dumps( compilePlayers( engine.players, player ) )     
     
     return dic
+
+
+def compilePlayers(players, active_player):
+    ret = []
+    
+    for p in players.itervalues():
+        if p == active_player:
+            ret.append( compileTarget(p, ['units', 'connection']) )
+        else:
+            ret.append( compileTarget(p, ['units', 'connection', 'visible_enemies', 'detected_enemies']) )
+    
+    return ret
+
     
 def compileAllUnits(units):
     dct = {}
@@ -78,8 +91,10 @@ def compileAllUnits(units):
         dct[u.id] = compileUnit(u)
     return dct
 
+
 def compileLevel(level):
-    return compileTarget( level )
+    return compileTarget( level,['_dynamics'] )
+
 
 def compileUnit(unit):
     ret = compileTarget( unit, ['owner', 'weapons', 'active_weapon', 'armour'] )
@@ -89,6 +104,7 @@ def compileUnit(unit):
     ret['armour'] = compileArmour( unit.armour )
     ret['active_weapon'] = compileWeapon( unit.active_weapon )
     return ret
+
 
 def compileEnemyUnit(unit):
     ret = compileUnit(unit)
@@ -101,18 +117,26 @@ def compileEnemyUnit(unit):
     
     return ret
 
+
+def compileDetectedEnemyUnit(unit):
+    return { 'pos': unit.pos }
+
+
 def compileArmour(armr):
     ret = compileTarget( armr, ['owner'] )
     return ret
 
+
 def compileWeapon( wpn ):
     return compileTarget( wpn )
+
     
 def compileWeaponList( weapons ):
     wpn_list = []
     for weapon in weapons:
         wpn_list.append( compileTarget( weapon ) )
     return wpn_list
+
 
 def compileTarget( target, banned_list = [] ):
     attr_dict ={}
