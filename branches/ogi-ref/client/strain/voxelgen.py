@@ -26,15 +26,12 @@ class VoxelGenerator():
         self.size = size
         self.height = height
 
-        self.format = GeomVertexFormat.getV3c4t2()
-        #print self.format
+        self.format = GeomVertexFormat.getV3n3c4t2()
         self.vertexData = GeomVertexData(name, self.format, Geom.UHStatic)
-        #self.vertexData.setNumRows(26136)
         
         self.mesh = Geom(self.vertexData)
         self.triangles = GeomTriangles(Geom.UHStatic)
         self.triangleData = self.triangles.modifyVertices()
-        #self.triangleData.setNumRows(26136)
         
         self.vertex = GeomVertexWriter(self.vertexData, 'vertex')
         self.normal = GeomVertexWriter(self.vertexData, 'normal')
@@ -45,28 +42,39 @@ class VoxelGenerator():
     
     def makeFace(self, x1, y1, z1, x2, y2, z2, id, color):
         
-        # Populate vertex and normal array
+        # Populate vertex array
         if x1 != x2:
             self.vertex.addData3f(x1, y1, z1)
             self.vertex.addData3f(x2, y1, z1)
             self.vertex.addData3f(x2, y2, z2)
             self.vertex.addData3f(x1, y2, z2)
             
-            #self.normal.addData3f(utils.normalize(Vec3(2*x1-1, 2*y1-1, 2*z1-1)))  
-            #self.normal.addData3f(utils.normalize(Vec3(2*x2-1, 2*y1-1, 2*z1-1)))  
-            #self.normal.addData3f(utils.normalize(Vec3(2*x2-1, 2*y2-1, 2*z2-1)))  
-            #self.normal.addData3f(utils.normalize(Vec3(2*x1-1, 2*y2-1, 2*z2-1)))              
+            # Populate normal array
+            e1 = Vec3(Point3(x2, y1, z1) - Point3(x1, y1, z1))
+            e2 = Vec3(Point3(x2, y2, z2) - Point3(x2, y1, z1))
+            n = e1.cross(e2)
+            n = utils.normalize(n)      
+            self.normal.addData3f(n.getX(), n.getY(), n.getZ())
+            self.normal.addData3f(n.getX(), n.getY(), n.getZ())
+            self.normal.addData3f(n.getX(), n.getY(), n.getZ())
+            self.normal.addData3f(n.getX(), n.getY(), n.getZ())
+                  
         else:
             self.vertex.addData3f(x1, y1, z1)
             self.vertex.addData3f(x2, y2, z1)
             self.vertex.addData3f(x2, y2, z2)
             self.vertex.addData3f(x1, y1, z2)
             
-            #self.normal.addData3f(utils.normalize(Vec3(2*x1-1, 2*y1-1, 2*z1-1)))  
-            #self.normal.addData3f(utils.normalize(Vec3(2*x2-1, 2*y2-1, 2*z1-1)))  
-            #self.normal.addData3f(utils.normalize(Vec3(2*x2-1, 2*y2-1, 2*z2-1)))  
-            #self.normal.addData3f(utils.normalize(Vec3(2*x1-1, 2*y1-1, 2*z2-1)))              
- 
+            # Populate normal array
+            e1 = Vec3(Point3(x2, y2, z1) - Point3(x1, y1, z1))
+            e2 = Vec3(Point3(x2, y2, z2) - Point3(x2, y2, z1))
+            n = e1.cross(e2)
+            n = utils.normalize(n)      
+            self.normal.addData3f(n.getX(), n.getY(), n.getZ())
+            self.normal.addData3f(n.getX(), n.getY(), n.getZ())
+            self.normal.addData3f(n.getX(), n.getY(), n.getZ())
+            self.normal.addData3f(n.getX(), n.getY(), n.getZ())          
+
 
         # Populate color array
         self.color.addData4f(color, color, color, 1.0)

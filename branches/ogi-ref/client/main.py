@@ -73,7 +73,7 @@ class SceneGraph():
                     levelMesh.makeTopFace(x, y, i, id)
 
         self.level_node = self.node.attachNewNode(levelMesh.getGeomNode())
-        t = loader.loadTexture('tex2.png')
+        t = loader.loadTexture('tex.png')
         t.setMagfilter(Texture.FTLinearMipmapLinear)
         t.setMinfilter(Texture.FTLinearMipmapLinear)
         self.level_node.setTexture(loader.loadTexture("tex.png"))
@@ -111,7 +111,7 @@ class SceneGraph():
         a.reparentTo(dlnp1)
         render.setLight(dlnp1)
         alight = AmbientLight("alight")
-        alight.setColor(VBase4(0.3, 0.3, 0.3, 1.0))
+        alight.setColor(VBase4(0.7, 0.7, 0.7, 1.0))
         alnp = render.attachNewNode(alight)
         alnp.setPos(10, 10, 2)
         render.setLight(alnp)        
@@ -209,7 +209,7 @@ class ClientFSM(FSM.FSM):
 
     def enterGraphicsInit(self):
         self.parent.sgm.loadLevel(self.parent.level)
-        #self.parent.sgm.initLights()
+        self.parent.sgm.initLights()
     
     def exitGraphicsInit(self):
         None
