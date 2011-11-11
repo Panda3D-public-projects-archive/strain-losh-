@@ -67,6 +67,7 @@ class Unit():
     def __init__( self, name ):        
         self.id = -1
         self.owner = None
+        self.pos = ( -1, -1 )
         self.name = name     
         self.heading = HEADING_N      
         self.resting = False
@@ -78,6 +79,9 @@ class Unit():
         self.last_action = 'spawn'
         self.set_up = False #for heavy weapons
         self.height = 2
+        
+        self.ap, self.default_ap = 0, 0
+        self.hp, self.default_hp = 0, 0
         
         self.m = -1
         self.ws = -1
