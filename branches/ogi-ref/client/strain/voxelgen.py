@@ -73,8 +73,7 @@ class VoxelGenerator():
             self.normal.addData3f(n.getX(), n.getY(), n.getZ())
             self.normal.addData3f(n.getX(), n.getY(), n.getZ())
             self.normal.addData3f(n.getX(), n.getY(), n.getZ())
-            self.normal.addData3f(n.getX(), n.getY(), n.getZ())   
-            print x1, y1, z1 ,"-", x2, y2, z2, n       
+            self.normal.addData3f(n.getX(), n.getY(), n.getZ())        
 
 
         # Populate color array

@@ -44,7 +44,7 @@ class App():
         self.logger.setLevel(logging.DEBUG)
         
         #setup screen
-        self.screen = Screen(self, (1024,768))
+        self.screen = Screen(self, (800,600))
         
         #initialize world
         self.client = Client(self)
@@ -219,7 +219,7 @@ class ClientFSM(FSM.FSM):
 #
 class Screen(DirectObject):
     """The Screen Class manages window."""
-    def __init__(self, parent, res=(1024,768)):
+    def __init__(self, parent, res=(800,600)):
         #record vars
         self.parent = parent
         #init pipe

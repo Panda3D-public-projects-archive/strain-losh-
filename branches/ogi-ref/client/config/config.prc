@@ -17,7 +17,7 @@ window-title Strain
 # These control the placement and size of the default rendering window.
 
 win-origin 50 50
-win-size 1024 768
+win-size 800 600
 
 # Uncomment this line if you want to run Panda fullscreen instead of
 # in a window.
