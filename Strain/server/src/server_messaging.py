@@ -99,7 +99,7 @@ class EngMsg:
                 newConnection.setNoDelay(1)
                               
                 #try handshaking
-                threading.Thread(target=EngMsg.handshake, args=( [newConnection, engine._instance.players.values()] ) ).start()
+                threading.Thread(target=EngMsg.handshake, args=( [newConnection, engine._instance.players] ) ).start()
 
                 
                  
@@ -109,7 +109,7 @@ class EngMsg:
             if success:
                 
                 #go through all players
-                for player in engine._instance.players.itervalues():
+                for player in engine._instance.players:
                     if player.name == player_name:
                         
                         #see if there is already a connection for this player, if yes than disconnect it

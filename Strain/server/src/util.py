@@ -76,19 +76,39 @@ def compileState(engine, player):
 def compilePlayers(players, active_player):
     ret = []
     
-    for p in players.itervalues():
+    for p in players:
         if p == active_player:
-            ret.append( compileTarget(p, ['units', 'connection']) )
+            plyr = compileTarget(p, ['units', 'connection'] )
+            plyr['units'] = compileAllUnits( p.units )
+            plyr['visible_enemies'] = compileAllEnemyUnits( p.visible_enemies ) 
+            plyr['detected_enemies'] = compileAllDetectedUnits( p.detected_enemies ) 
+            ret.append( plyr )
+            
         else:
-            ret.append( compileTarget(p, ['units', 'connection', 'visible_enemies', 'detected_enemies']) )
+            plyr = compileTarget(p, ['units', 'connection', 'visible_enemies', 'detected_enemies']) 
+            ret.append( plyr )
     
     return ret
 
     
 def compileAllUnits(units):
     dct = {}
-    for u in units.itervalues():
+    for u in units:
         dct[u.id] = compileUnit(u)
+    return dct
+
+
+def compileAllEnemyUnits(units):
+    dct = {}
+    for u in units:
+        dct[u.id] = compileEnemyUnit(u)
+    return dct
+
+
+def compileAllDetectedUnits(units):
+    dct = {}
+    for u in units:
+        dct[u.id] = compileDetectedEnemyUnit(u)
     return dct
 
 

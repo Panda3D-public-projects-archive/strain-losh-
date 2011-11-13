@@ -38,9 +38,12 @@ class Engine( Thread ):
         self.stop = False
         self.level = None 
         self.turn = 0        
-        self.players = {}
+        self.players = []
         self.units = {}
         
+        self.turn = 0
+        self.active_player = None
+                
         self.name = "EngineThread"
 
 
@@ -55,8 +58,7 @@ class Engine( Thread ):
       
         self.loadArmyList()
 
-        
-        self.turn = 0        
+        self.active_player = self.players[0]        
         self.beginTurn()
 
 
@@ -167,7 +169,7 @@ class Engine( Thread ):
         xmldoc = minidom.parse('data/base/armylist.xml')
         #print xmldoc.firstChild.toxml()
         
-        self.players = {}
+        self.players = []
         self.units = {}
         
         
@@ -199,7 +201,7 @@ class Engine( Thread ):
                 self.units[tmpUnit.id] = tmpUnit
                 
                 
-            self.players[player.id] = player
+            self.players.append( player )
     
         xmldoc.unlink()   
 
@@ -208,17 +210,26 @@ class Engine( Thread ):
 
     def endTurn(self):
         
+        if self.active_player == self.players[-1]:
+            self.active_player = None          
+        
+        
         self.beginTurn()
         
         pass
 
 
     def beginTurn(self):
+
         
-        
-        #increment turn by one
-        self.turn += 1
-        print "turn:", self.turn
+        if not self.active_player:
+            self.active_player = self.players[0]
+            self.turn += 1
+        else:
+            i = self.players.index(self.active_player)
+            self.active_player = self.players[i+1]
+
+        print "turn:", self.turn, "\tplayer:", self.active_player.name
 
         EngMsg.sendNewTurn( self.turn )
         
@@ -245,7 +256,7 @@ class Engine( Thread ):
         
     def checkVisibility(self):
         #TODO: krav: mozda stavit da se ide prvo po playerima?
-        for player in self.players.itervalues():
+        for player in self.players:
             player.visible_enemies = []
             for myunit in player.units:
                 for enemy in self.units.itervalues():
@@ -280,7 +291,7 @@ class Engine( Thread ):
     
     
     def getTiles3D(self, t1, t2 ):
-        """this method returns list of tuples( (x,y, visibility ); visibility = {0:clear, 1:partial, 2:not visible}"""    
+
         #we can't look at ourselves
         if( t1 == t2 ):
             return []
@@ -764,7 +775,7 @@ class Engine( Thread ):
         raise Exception( "hahahah how did you get to this part of code?" )
         
                 
-    def findUnit(self, unit_id, source):
+    def findAndValidateUnit(self, unit_id, source):
         if( unit_id in self.units ) == False:
             notify.critical( "Got wrong unit id:%s", unit_id )
             EngMsg.sendErrorMsg( "Wrong unit id.", source )
@@ -772,7 +783,7 @@ class Engine( Thread ):
 
         unit = self.units[unit_id]
 
-        #check to see if the owner is trying to move, or someone else
+        #check to see if this is the owner
         if unit.owner.connection != source:
             notify.critical( "Client:%s\ttried to do an action with unit that he does not own" % source.getAddress() )
             EngMsg.sendErrorMsg( "You cannot do this to a unit you do not own." )
@@ -781,9 +792,22 @@ class Engine( Thread ):
         return unit
         
         
+    def validatePlayer(self, source):
+        if self.active_player.connection == source:
+            return True
+        
+        EngMsg.sendErrorMsg( 'It is not your turn.', source )
+        return False
+        
+        
     def moveUnit(self, unit_id, new_position, new_heading, source ):
 
-        unit = self.findUnit( unit_id, source )
+        if not self.validatePlayer( source ):
+            return
+
+        unit = self.findAndValidateUnit( unit_id, source )
+                
+        
                 
         if not unit:
             return
@@ -862,7 +886,7 @@ class Engine( Thread ):
         detected = []
         overwatch = []
         
-        for player in self.players.itervalues():
+        for player in self.players:
             #if this is owning player, skip
             if player == unit.owner:
                 continue
@@ -886,7 +910,10 @@ class Engine( Thread ):
         
         return self.units[shooter_id].shoot( self.units[target_id])
         
-        shooter = self.findUnit( shooter_id, source )
+        if not self.validatePlayer( source ):
+            return
+        
+        shooter = self.findAndValidateUnit( shooter_id, source )
         
         if not shooter:
             return
@@ -907,7 +934,7 @@ class Engine( Thread ):
         return shooter.shoot( target )
 
     def findPlayer( self, source ):
-        for p in self.players.itervalues():
+        for p in self.players:
             if p.connection == source:
                 return p
 
