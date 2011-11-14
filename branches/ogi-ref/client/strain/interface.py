@@ -87,8 +87,6 @@ class Interface(DirectObject.DirectObject):
         
         self.accept('m', self.switchUnitMove)
         self.accept('escape', self.escapeEvent)
-        self.accept("mouse1", self.mouseLeftClick)
-        self.accept("mouse1-up", self.mouseLeftClickUp)
         
         taskMgr.add(self.processGui, 'processGui_task')
         taskMgr.add(self.turnUnit, 'turnUnit_task')       
@@ -218,56 +216,6 @@ class Interface(DirectObject.DirectObject):
         else:
             messenger.send("shutdown-event")
 
-    def selectUnit(self, unit):
-        """Performs actions for unit selection.
-           Clears previous selection, sets global Interface.selected_unit variable, marks selected unit tile,
-           loads and renders selected unit model in an off screen buffer for portrait display.
-        """
-        if self.ge.interface_disabled:
-            return
-        
-        self.deselectUnit()
-        self.selected_unit = unit
-        self.selected_unit.marker.loadAnims({"move":"ripple2"})  
-        self.selected_unit.marker.loop("move")
-        u = self.ge.unit_np_dict[int(unit.id)].unit
-        self.off_model = UnitModel(u, scale=1, h=0, pos=Point3(0,-8,-1.7), off=True)
-        self.off_model.reparentTo(self.ge.alt_render)
-        self.off_model.play(self.off_model.getAnimName("idle"))
-        self.printUnitData()
-        self.switchUnitMove(flag="show")
-
-    def deselectUnit(self):
-        """Performs actions for unit deselection.
-           Clears unit tile, cleans up off screen models, 
-           clears Interface.selected_unit variable.
-        """
-        if self.ge.interface_disabled:
-            return
-        
-        self.clearUnitData()
-        if self.selected_unit:
-            #self.clearSelectedTile(self.selected_unit_tile)
-            self.selected_unit.marker.stop()
-            self.selected_unit.marker.unloadAnims({"move":"ripple2"}) 
-            if self.off_model:
-                self.ge.destroyUnit(self.off_model)
-            self.ge.clearOutlineShader(self.selected_unit.model)
-            self.switchUnitMove(flag="hide")
-            self.selected_unit = None
-
-        
-    def selectPrevUnit(self):
-        """Selects previous unit in the same team with unspent action points."""
-        if self.ge.interface_disabled:
-            return
-        None
-        
-    def selectNextUnit(self):
-        """Selects next unit in the same team with unspent action points."""
-        if self.ge.interface_disabled:
-            return
-        None
         
     def printUnitData(self):
         unit = self.selected_unit
@@ -301,84 +249,7 @@ class Interface(DirectObject.DirectObject):
         if not self.ge.interface_disabled:
             self.ge.createEndTurnMsg() 
 
-    def mouseLeftClick(self):
-        """Handles left mouse click actions.
-           Procedure first checks for gui clicks, if there are none then it checks 3d collision.
-        """        
-        self.destination = None
-        if self.hovered_gui == self.deselect_button:
-            self.deselectUnit()
-            self.console.unfocus()
-        elif self.hovered_gui == self.punit_button:
-            self.selectPrevUnit()
-            self.console.unfocus()
-        elif self.hovered_gui == self.nunit_button:
-            self.selectNextUnit()
-            self.console.unfocus() 
-        elif self.hovered_gui == self.endturn_button:
-            self.endTurn()
-            self.console.unfocus()
-        elif self.hovered_gui == self.console:
-            self.console.focus()
-        else:
-            self.console.unfocus()    
-            selected = self.getMouseHoveredObject()
-            if selected:
-                node_type = selected.findNetTag("type").getTag("type")
-                if node_type == "unit" or node_type == "unit_marker":
-                    unit_id = int(selected.findNetTag("id").getTag("id"))
-                    unit = self.ge.unit_np_dict[unit_id] 
-                    if self.selected_unit != unit:
-                        self.selectUnit(unit)
-                    else:
-                        # Remember movement tile so we can send orientation message when mouse is depressed
-                        self.unit_move_destination = Point2(int(unit.node.getX()), int(unit.node.getY()))
-                elif node_type == "tile":
-                    p = selected.getParent().getPos()
-                    u = self.ge.unit_np_list[int(p.x)][int(p.y)]
-                    if u:
-                        unit = u
-                        if self.selected_unit == unit:
-                            # Remember movement tile so we can send orientation message when mouse is depressed
-                            self.unit_move_destination = Point2(p.x, p.y)
-                    else:
-                        unit = None
-                        if self.selected_unit:
-                            # Remember movement tile so we can send movement message when mouse is depressed
-                            self.unit_move_destination = Point2(p.x, p.y)
-                    if unit:
-                        if self.selected_unit != unit:
-                            self.selectUnit(unit)
-                            
-    def mouseLeftClickUp(self):
-        """Handles left mouse click actions when mouse button is depressed.
-           Used for unit movement.
-        """        
-        if self.selected_unit and self.unit_move_destination and self.unit_move_orientation != utils.HEADING_NONE:   
-            # Send movement message to engine
-            x = self.unit_move_destination.getX()
-            y = self.unit_move_destination.getY()
-            if self.unit_move_orientation == utils.HEADING_NW:
-                o = Point2(x-1, y+1)
-            elif self.unit_move_orientation == utils.HEADING_N:
-                o = Point2(x, y+1)
-            elif self.unit_move_orientation == utils.HEADING_NE:
-                o = Point2(x+1, y+1)
-            elif self.unit_move_orientation == utils.HEADING_W:
-                o = Point2(x-1, y)
-            elif self.unit_move_orientation == utils.HEADING_E:
-                o = Point2(x+1, y)
-            elif self.unit_move_orientation == utils.HEADING_SW:
-                o = Point2(x-1, y-1)
-            elif self.unit_move_orientation == utils.HEADING_S:
-                o = Point2(x, y-1)
-            elif self.unit_move_orientation == utils.HEADING_SE:
-                o = Point2(x+1, y-1)
-            self.ge.createMoveMsg(self.selected_unit, (self.unit_move_destination.x, self.unit_move_destination.y), 
-                                                            (o.x, o.y))
-        self.unit_move_destination = None
-        self.move_timer = 0
-        self.removeTurnArrows()
+    
 
 #===============================================================================
 # CLASS Interface --- TASKS

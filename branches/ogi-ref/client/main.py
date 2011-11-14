@@ -166,7 +166,23 @@ class SceneGraph():
         self.alt_cam.setPos(0,-10,0)
         self.alt_render.setLightOff()
         self.alt_render.setFogOff() 
-        self.parent.interface.unit_card.setTexture(self.alt_buffer.getTexture())       
+        self.parent.interface.unit_card.setTexture(self.alt_buffer.getTexture())  
+    
+    def clearAltRenderModel(self):
+        if not self.comp_inited['alt_render']:
+            return
+        
+        if self.off_model:
+            self.off_model.cleanup()
+            self.off_model.remove()
+        
+        
+    def loadAltRenderModel(self, unit_id):
+        if not self.comp_inited['alt_render']:
+            return
+        self.off_model = UnitModel(self, unit_id, off=True)
+        self.off_model.reparentTo(self.alt_render)
+        #self.off_model.play(self.off_model.getAnimName("idle"))     
             
 #========================================================================
 #
@@ -178,6 +194,7 @@ class Client(DirectObject):
         self.level = None
         self.units = {}
         self.enemy_units = {}
+        self.sel_unit_id = None
         
         # Init Client FSM
         self.fsm = ClientFSM(self, 'ClientFSM')
@@ -205,7 +222,17 @@ class Client(DirectObject):
         # Create main update task
         taskMgr.add(self.updateTask, "update_task")
         
+    def deselectUnit(self):
+        self.sgm.clearAltRenderModel()
         
+    def selectUnit(self, unit_id):
+        self.sel_unit_id = unit_id
+        #self.selected_unit.marker.loadAnims({"move":"ripple2"})  
+        #self.selected_unit.marker.loop("move")
+        #u = self.ge.unit_np_dict[int(unit.id)].unit
+        self.sgm.loadAltRenderModel(unit_id)
+        self.interface.printUnitData()        
+    
     def updateTask(self, task):
         """Main update Client task."""
         #self.camera.update()

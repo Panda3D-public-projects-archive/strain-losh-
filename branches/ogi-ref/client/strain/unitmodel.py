@@ -50,8 +50,6 @@ class UnitModel:
         # If unit model is not rendered for portrait, set its heading as received from server
         if not off:
             self.setHeading(unit)
-            self.parent.parent.picker.makePickable(self.node, 'unit')
-
 
         if unit['owner_id'] == "1":
             self.team_color = Vec4(1, 0, 0, 1)

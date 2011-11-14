@@ -10,97 +10,107 @@ from direct.showbase.DirectObject import DirectObject
 from pandac.PandaModules import CollisionTraverser, CollisionRay, CollisionHandlerQueue, CollisionNode, GeomNode
 
 # strain related imports
+import utils
 
 class Picker(DirectObject):
     def __init__(self,parent):
         self.parent = parent
-        self.lastPicked = []
+        
+        self.coll_trav = CollisionTraverser()
+        self.coll_queue = CollisionHandlerQueue()
+        self.coll_node = CollisionNode("mouse_ray")
+        self.coll_nodepath = base.camera.attachNewNode(self.coll_node)
+        self.coll_node.setFromCollideMask(GeomNode.getDefaultCollideMask())
+        self.coll_ray = CollisionRay()
+        self.coll_node.addSolid(self.coll_ray)
+        self.coll_trav.addCollider(self.coll_nodepath, self.coll_queue)
+
         # Mouse handler
-        self.accept('mouse1-up', self.mousePick, [1])
+        self.accept('mouse1', self.mouseLeftClick)
+        self.accept("mouse1-up", self.mouseLeftClickUp)
 
-    def makePickable(self, model, tag='true'):
-        # Sets nodepath pickable state
-        model.setTag('pickable', tag)
+    def getMousePos(self):
+        """Returns mouse coordinates if mouse pointer is inside Panda window."""
+        if base.mouseWatcherNode.hasMouse(): 
+            return base.mouseWatcherNode.getMouse() 
+        return None
+    
+    def getMouseHoveredObject(self):
+        """Returns the closest object in the scene graph over which we hover mouse pointer.
+           Returns None if no objects found.
+        """
+        pos = self.getMousePos()
+        if pos:
+            self.coll_ray.setFromLens(base.camNode, pos.getX(), pos.getY())
+            self.coll_trav.traverse(render)
+            if self.coll_queue.getNumEntries() > 0:
+                self.coll_queue.sortEntries()
+                np = self.coll_queue.getEntry(0).getIntoNodePath()
+                return np
+        return None
 
-    def mousePick(self, but):
-        mode = "mouse" + str(but)
-        if not base.mouseWatcherNode.hasMouse(): 
+    def mouseLeftClick(self):
+        """Handles left mouse click actions.
+           Procedure first checks for gui clicks, if there are none then it checks 3d collision.
+        """
+        if self.parent.interface.hovered_gui == self.parent.interface.deselect_button:
+            self.parent.deselectUnit()
+            self.parent.interface.console.unfocus()
+        elif self.parent.interface.hovered_gui == self.parent.interface.punit_button:
+            self.parent.selectPrevUnit()
+            self.parent.interface.console.unfocus()
+        elif self.parent.interface.hovered_gui == self.parent.interface.nunit_button:
+            self.parent.selectNextUnit()
+            self.parent.interface.console.unfocus() 
+        elif self.parent.interface.hovered_gui == self.parent.interface.endturn_button:
+            self.parent.endTurn()
+            self.parent.interface.console.unfocus()
+        elif self.parent.interface.hovered_gui == self.parent.interface.console:
+            self.parent.interface.console.focus()
+        else:
+            self.parent.interface.console.unfocus()  
+            print self.getMouseHoveredObject()
+            #print pickedObj, pickedPoint
             return
-        mpos = base.mouseWatcherNode.getMouse()
-        # Check collisions from camera to mpos
-        ray, rayNP = self.initRay(base.camera, 0, 0, -1)
-        ray.setFromLens(base.camNode, mpos.getX(), mpos.getY())
-        pickedObj, pickedPoint = self.initTraverser(ray, rayNP, mode)
-        # Call mouse function (left or right)
-        if pickedPoint:
-            if but == 1: 
-                self.mouseLeft(pickedObj, pickedPoint)
-
-    def initRay(self, node, dx=0, dy=0, dz=-1):
-        rayNP = node.attachNewNode(CollisionNode("ray"))
-        ray = CollisionRay(0, 0, 0, dx, dy, dz)
-        rayNP.node().addSolid(ray)
-        rayNP.node().setFromCollideMask(GeomNode.getDefaultCollideMask())
-        #rayNP.show()
-        return ray, rayNP
-
-    def initTraverser(self, ray, rayNP, mode):
-        cTrav = CollisionTraverser()
-        #setting up a collision handler queue which will collect the collisions in a list
-        queue = CollisionHandlerQueue()
-        #add the from object to the queue so its collisions will get listed in it.
-        cTrav.addCollider(rayNP, queue)
-        #finally.. we perform the collisiontest using the .traversre call
-        cTrav.traverse(render)
-        #get collisions
-        pickedObj, pickedPoint = self.getCollisions(queue, mode)
-        #remove the collider
-        cTrav.removeCollider(rayNP)
-        cTrav.clearColliders()
-        rayNP.removeNode()
-        #print cTrav.getNumColliders()
-        #return the collision data
-        return pickedObj, pickedPoint
-
-    def getCollisions(self, queue, mode):
-        pickedObj = None
-        pickedPoint = None
-        #check for first collision
-        if queue.getNumEntries() > 0:
-            queue.sortEntries()
-            for i in range(queue.getNumEntries()):
-                entry = queue.getEntry(i)
-                pickedObj = entry.getIntoNodePath()
-                parent = pickedObj.getParent()
-                for n in range(4):
-                    if parent.getTag('pickable') != "" or parent == render: 
-                        break
-                    parent = parent.getParent()
-                #return appropiate picked object
-                ok = False
-                if mode == "mouse1" or mode == "mouse3": 
-                    ok = self.mouseCollisions(entry, parent)
-                if mode == "shoot": 
-                    ok = self.shootCollisions(entry, parent)
-                if ok == True:
-                    pickedObj = parent
-                    pickedPoint = entry.getSurfacePoint(pickedObj)
-                    break
-        return pickedObj, pickedPoint
-
-    def mouseCollisions(self, entry, parent):
-        #if pickable terrain, chest or avatar
-        tag = parent.getTag('pickable')
-        if tag == "unit":
-            return True
-        return False
-
-    def shootCollisions(self, entry, parent):
-        tag = parent.getTag('pickable')
-        if tag == "utem":
-            return True
-        return False
-
-    def mouseLeft(self, pickedObj, pickedPoint):
-        if not pickedObj: 
-            return
+            if pickedObj:
+                node_type = selected.findNetTag("type").getTag("type")
+                if node_type == "unit" or node_type == "unit_marker":
+                    unit_id = int(pickedObj.findNetTag("id").getTag("id"))
+                    unit = self.ge.unit_np_dict[unit_id] 
+                    if self.selected_unit != unit:
+                        self.selectUnit(unit)
+                    else:
+                        # Remember movement tile so we can send orientation message when mouse is depressed
+                        self.unit_move_destination = Point2(int(unit.node.getX()), int(unit.node.getY()))
+                
+                            
+    def mouseLeftClickUp(self):
+        """Handles left mouse click actions when mouse button is depressed.
+           Used for unit movement.
+        """  
+        return      
+        if self.selected_unit and self.unit_move_destination and self.unit_move_orientation != utils.HEADING_NONE:   
+            # Send movement message to engine
+            x = self.unit_move_destination.getX()
+            y = self.unit_move_destination.getY()
+            if self.unit_move_orientation == utils.HEADING_NW:
+                o = Point2(x-1, y+1)
+            elif self.unit_move_orientation == utils.HEADING_N:
+                o = Point2(x, y+1)
+            elif self.unit_move_orientation == utils.HEADING_NE:
+                o = Point2(x+1, y+1)
+            elif self.unit_move_orientation == utils.HEADING_W:
+                o = Point2(x-1, y)
+            elif self.unit_move_orientation == utils.HEADING_E:
+                o = Point2(x+1, y)
+            elif self.unit_move_orientation == utils.HEADING_SW:
+                o = Point2(x-1, y-1)
+            elif self.unit_move_orientation == utils.HEADING_S:
+                o = Point2(x, y-1)
+            elif self.unit_move_orientation == utils.HEADING_SE:
+                o = Point2(x+1, y-1)
+            self.ge.createMoveMsg(self.selected_unit, (self.unit_move_destination.x, self.unit_move_destination.y), 
+                                                            (o.x, o.y))
+        self.unit_move_destination = None
+        self.move_timer = 0
+        self.removeTurnArrows()
