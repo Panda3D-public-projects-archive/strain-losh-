@@ -86,7 +86,7 @@ class UnitModel:
         return self.parent.parent.units[unit_id]
     
     def load(self, unit_type):
-        if unit_type == 'marine_common':
+        if unit_type == 'marine_common' or unit_type == 'marine_epic':
             model = Actor('marine') 
             model.node_dict = {}
             for gear in utils.gear_list:
@@ -94,20 +94,23 @@ class UnitModel:
                     for node in item:
                         if isinstance(node, tuple):
                             model.node_dict[node[0]] = model.find("**/"+node[0])
+                            model.node_dict[node[0]].setTag("node", node[0])
                             if node[1]:
                                 tex = loader.loadTexture(node[1]+"_dif.tga")
                                 model.node_dict[node[0]].setTexture(tex)
                         else:
                             model.node_dict[node] = model.find("**/"+node)
+                            model.node_dict[node].setTag("node", node)
                             tex = loader.loadTexture(node+"_dif.tga")
                             model.node_dict[node].setTexture(tex)
                             
-            for node in  model.node_dict.itervalues():
-                node.hide()
+            # Remove unneeded nodes from model
+            for node in model.node_dict.itervalues():
+                if node.getTag("node") not in (for n in utils.unit_types[unit_type]):
+                    node.detachNode()
+                    #node.remove()
+                    
                 
-            for node in utils.unit_types[unit_type]:
-                if node:
-                    model.node_dict[node].show()
             model.loadAnims(utils.anim_dict)
             return model
     

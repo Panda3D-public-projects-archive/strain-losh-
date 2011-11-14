@@ -326,9 +326,8 @@ class ClientFSM(FSM.FSM):
 class Screen(DirectObject):
     """The Screen Class manages window."""
     def __init__(self, parent, res=(800,600)):
-        #record vars
         self.parent = parent
-        #init pipe
+        # Init pipe
         ShowBase()
         base.makeDefaultPipe()
         screen = (base.pipe.getDisplayWidth(), base.pipe.getDisplayHeight())
@@ -339,14 +338,14 @@ class Screen(DirectObject):
         base.openDefaultWindow(win)        
         #base.setBackgroundColor(.05,.05,.05)
         render.setShaderAuto()
-        #setup keys
         self.setupKeys()
 
     def setupKeys(self):
         self.accept('f2', base.toggleWireframe)
         self.accept('f3', base.toggleTexture)
         self.accept('f12', base.screenshot, ["Snapshot"])
-        self.accept('i', render.analyze)
+        self.accept('i', render.ls)
+        self.accept('u', render.analyze)
 
 #############################################################################
 # MAIN

@@ -134,6 +134,7 @@ anim_dict['idle_stand01'] = "idle_stand01"
 
 unit_types = {}
 unit_types['marine_common'] = ['space_marine_head', 'power_armour_common', 'space_marine_backpack', 'power_axe_common', 'bolt_pistol_common', None, None]
+unit_types['marine_epic'] = ['gabe_head', 'power_armour_gabriel', 'gabriel_backpack', None, None, 'doublehand_hammer_epic']
 
 #############################################################################
 # METHODS
