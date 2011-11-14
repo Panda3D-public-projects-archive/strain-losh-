@@ -7,21 +7,7 @@ from direct.gui.OnscreenText import OnscreenText
 from unitmodel import UnitModel
 from console import GuiConsole
 
-#===============================================================================
-# GLOBAL DEFINITIONS
-#===============================================================================
-
-_TILE_AVAILABLE_MOVE    = "_tile_available_move"
-_TILE_HOVERED           = "_tile_hovered"
-_TILE_FULL_LOS          = "_tile_full_los"
-_TILE_PARTIAL_LOS       = "_tile_partial_los"
-_TILE_UNIT_POS          = "_tile_unit_pos"
-_TILE_NOT_IN_LOS        = "_tile_not_in_los"
-_TILE_MOVE              = "_tile_move"
-_TILE_RESET             = "_tile_reset"
-
-_UNIT_HOVERED           = "_unit_hovered"
-_UNIT_RESET             = "_unit_reset"    
+import utils
 
 #===============================================================================
 # CLASS Interface --- DEFINITION
@@ -29,9 +15,9 @@ _UNIT_RESET             = "_unit_reset"
 
 class Interface(DirectObject.DirectObject):
     buttons = {}
-    def __init__(self, ge):
+    def __init__(self, parent):
         # Keep pointer to the GraphicsEngine parent class
-        self.ge = ge
+        self.parent = parent
         
         # Initialize variables
         self.los_visible = False
@@ -39,31 +25,26 @@ class Interface(DirectObject.DirectObject):
         self.move_visible = False
         self.not_in_los_visible = False
         
-        self.hovered_tile = None
-        self.hovered_unit = None
         self.selected_unit = None
         self.off_model = None
-        self.selected_unit_tex = self.ge.loader.loadTexture("sel.png")
-        self.selected_unit_tile = None
         
         self.movetext_np = None       
         
         self.move_timer = 0
         self.unit_move_destination = None
-        self.unit_move_orientation = HEADING_NONE
+        self.unit_move_orientation = utils.HEADING_NONE
         self.turn_np = NodePath("turn_arrows_np")
-        self.turn_np.reparentTo(self.ge.render)
+        self.turn_np.reparentTo(render)
         self.plane = Plane(Vec3(0, 0, 1), Point3(0, 0, 0.3))  
         self.dummy_turn_pos_node = NodePath("dummy_turn_pos_node")
         self.dummy_turn_dest_node = NodePath("dummy_turn_dest_node")
         
-        wp = self.ge.win.getProperties() 
+        wp = base.win.getProperties() 
         aspect = float(wp.getXSize()) / wp.getYSize()
-        plane = self.ge.loader.loadModel('plane')
+        plane = loader.loadModel('plane')
         plane.setScale(2)
         plane.flattenLight()
         self.unit_card = GuiCard(0.3, 0.3, 0.01, None, "topleft", Point4(0, 0, 0, 0))
-        self.unit_card.setTexture(self.ge.alt_buffer.getTexture())
         self.deselect_button = GuiButton("topleft", Point3(0.2, 0, -0.3), aspect, plane, "deselect_unit")
         self.punit_button = GuiButton("topleft", Point3(0.0, 0, -0.3), aspect, plane, "prev_unit")
         self.nunit_button = GuiButton("topleft", Point3(0.1, 0, -0.3), aspect, plane, "next_unit")
@@ -97,26 +78,23 @@ class Interface(DirectObject.DirectObject):
         
         self.hovered_gui = None
         
-        self.console = GuiConsole(self.ge.a2dBottomLeft, 1.5, 0.4, aspect, self.ge)
+        self.console = GuiConsole(base.a2dBottomLeft, 1.5, 0.4, aspect)
         self.stats = GuiTextFrame(Point3(0.3, 0, 0), 0.4, 0.3, 5)
         self.stats2 = GuiTextFrame(Point3(0.7, 0, 0), 0.4, 0.3, 5)
         self.stats3 = GuiTextFrame(Point3(1.1, 0, 0), 0.4, 0.3, 5)
         self.status_bar = GuiTextFrame(Point3(1.5 + 0.01, 0, 0), 0.85, 0.08, 1)
         self.status_bar.write(1, "Player: mirko     Server: Online")
         
-        self.accept('l', self.switchLos)
         self.accept('m', self.switchUnitMove)
-        self.accept('n', self.switchNotInLos)
         self.accept('escape', self.escapeEvent)
         self.accept("mouse1", self.mouseLeftClick)
         self.accept("mouse1-up", self.mouseLeftClickUp)
         
-        self.ge.taskMgr.add(self.processGui, 'processGui_task')
-        self.ge.taskMgr.add(self.hover, 'hover_task') 
-        self.ge.taskMgr.add(self.turnUnit, 'turnUnit_task')       
+        taskMgr.add(self.processGui, 'processGui_task')
+        taskMgr.add(self.turnUnit, 'turnUnit_task')       
     
     def redraw(self):
-        wp = self.ge.win.getProperties() 
+        wp = base.win.getProperties() 
         aspect = float(wp.getXSize()) / wp.getYSize()
         if aspect >= 1:
             flag = "wide"
@@ -132,99 +110,11 @@ class Interface(DirectObject.DirectObject):
 
         self.hovered_gui = None
 
-    def getMousePos(self):
-        """Returns mouse coordinates if mouse pointer is inside Panda window."""
-        if self.ge.mouseWatcherNode.hasMouse(): 
-            return self.ge.mouseWatcherNode.getMouse() 
-        return None
-
-    def getMouseHoveredObject(self):
-        """Returns the closest object in the scene graph over which we hover mouse pointer.
-           Returns None if no objects found.
-        """
-        pos = self.getMousePos()
-        if pos:
-            self.ge.coll_ray.setFromLens(self.ge.camNode, pos.getX(), pos.getY())
-            self.ge.coll_trav.traverse(self.ge.render)
-            if self.ge.coll_queue.getNumEntries() > 0:
-                self.ge.coll_queue.sortEntries()
-                np = self.ge.coll_queue.getEntry(0).getIntoNodePath()
-                return np
-        return None
-
-    def setUnitColorScale(self, unit, r, g, b, alpha):
-        """Sets color scale of unit nodepath.
-           r, g, b, a = 1, 1, 1, 1 resets the color scale
-        """
-        unit.setColorScale(r, g, b, alpha)
-        
-    def setTileColorScale(self, tile, r, g, b, alpha):
-        """Sets color scale of tile nodepath.
-        """
-        tile.setColorScale(r, g, b, alpha)
-
-    def changeUnitColor(self, unit, event, rgba=None):
-        """Changes color of the unit nodepath according to event.
-           Event defines the reason and scale for color change.
-        """
-        if   event == _UNIT_HOVERED:
-            self.setUnitColorScale(unit, 0.1, 0.1, 0.1, 1)            
-        elif event == _UNIT_RESET:
-            unit.clearColorScale()
-        else:
-            unit.clearColorScale()
-
-    def changeTileColor(self, tile, event, rgba=None, flag=None):
-        """Changes color of the tile nodepath according to event.
-           Event defines the reason and scale for color change.
-        """
-        if   event == _TILE_AVAILABLE_MOVE:
-            self.setTileColorScale(tile, 2, 2, 2, 1)
-        elif event == _TILE_HOVERED:
-            self.setTileColorScale(tile, 2, 2, 2, 1)
-        elif event == _TILE_FULL_LOS:
-            self.setTileColorScale(tile, 2, 0.6, 0.6, 1)
-        elif event == _TILE_PARTIAL_LOS:
-            self.setTileColorScale(tile, 1, 0.6, 0.6, 1)
-        elif event == _TILE_NOT_IN_LOS:
-            self.setTileColorScale(tile, 0.1, 0.1, 0.1, 1)            
-        elif event == _TILE_MOVE:
-            print flag
-            self.setTileColorScale(tile, 0.6, 0.6, 2, 1)
-        elif event == _TILE_UNIT_POS:
-            r = rgba.getX()
-            g = rgba.getY()
-            b = rgba.getZ()
-            a = rgba.getW()
-            self.setTileColorScale(tile, r, g, b, a)
-        elif event == _TILE_RESET:
-            tile.clearColorScale()
-            #self.setTileColorScale(tile, 1, 1, 1, 1)
-        else:
-            tile.clearColorScale()
-            #self.setTileColorScale(tile, 1, 1, 1, 1)
-            
-    def resetAllTileColor(self):
-        """Resets the color of all tiles in the level."""
-        for tile_list in self.ge.tile_np_list:
-            for tile in tile_list:
-                self.changeTileColor(tile, _TILE_RESET)   
-
-    def setTileBlendTexture(self, tile, texture, color):
-        """Sets texture and its color to be blended with the original tile texture."""
-        ts = TextureStage("ts")
-        ts.setMode(TextureStage.MBlend)
-        ts.setColor(color)
-        tile.setTexture(ts, texture)
-        
-    def clearTileBlendTexture(self, tile):
-        """Clears all blended textures from a tile."""
-        tile.setTextureOff()
 
     def loadTurnArrows(self, dest):
         self.turn_arrow_dict = {}        
         for i in xrange(9):
-            m = self.ge.loader.loadModel("sphere")
+            m = loader.loadModel("sphere")
             m.setScale(0.07, 0.07, 0.07)
             x = dest.getX()+0.5
             y = dest.getY()+0.5   
@@ -233,39 +123,39 @@ class Interface(DirectObject.DirectObject):
             if i == 0:
                 pos = Point3(x-delta, y+delta, height)
                 h = 45
-                key = HEADING_NW
+                key = utils.HEADING_NW
             elif i == 1:
                 pos = Point3(x, y+delta, height)
                 h = 0
-                key = HEADING_N                
+                key = utils.HEADING_N                
             elif i ==2:
                 pos = Point3(x+delta, y+delta, height)
                 h = -45
-                key = HEADING_NE                
+                key = utils.HEADING_NE                
             elif i ==3:
                 pos = Point3(x-delta, y, height)
                 h = 90
-                key = HEADING_W                
+                key = utils.HEADING_W                
             elif i ==4:
                 pos = Point3(x+delta, y, height)
                 h = -90
-                key = HEADING_E                
+                key = utils.HEADING_E                
             if i == 5:
                 pos = Point3(x-delta, y-delta, height)
                 h = 135
-                key = HEADING_SW                
+                key = utils.HEADING_SW                
             elif i == 6:
                 pos = Point3(x, y-delta, height)
                 h = 180
-                key = HEADING_S                
+                key = utils.HEADING_S                
             elif i ==7:
                 pos = Point3(x+delta, y-delta, height)
                 h = 225               
-                key = HEADING_SE
+                key = utils.HEADING_SE
             elif i == 8:
                 pos = Point3(x, y, height)
                 h = 0
-                key = HEADING_NONE
+                key = utils.HEADING_NONE
             m.setPos(pos)
             m.setH(h)
             m.reparentTo(self.turn_np)
@@ -279,51 +169,12 @@ class Interface(DirectObject.DirectObject):
     def markTurnArrow(self, key):
         for i in self.turn_arrow_dict.itervalues():
             i.setColor(1,1,1)
-        if key == HEADING_NONE:
+        if key == utils.HEADING_NONE:
             self.turn_arrow_dict[key].setColor(0,0,1)
         else:
             self.turn_arrow_dict[key].setColor(1,0,0)
         self.unit_move_orientation = key
-        
-    def displayLos(self):
-        """Displays visual indicator of tiles which are in line of sight of the selected unit.
-           Tiles in full view are marked with brighter red color.
-           Tiles in partial view are marked with darker red color.
-        """
-        if self.selected_unit:
-            losh_dict = self.selected_unit.unit['losh_dict']
-            for tile in losh_dict:
-                tile_node = self.ge.tile_np_list[int(tile[0])][int(tile[1])]
-                if losh_dict[tile] == 0:
-                    self.changeTileColor(tile_node, _TILE_FULL_LOS)
-                elif losh_dict[tile] == 1:
-                    self.changeTileColor(tile_node, _TILE_PARTIAL_LOS)
-                else:
-                    self.changeTileColor(tile_node, _TILE_RESET)
-            
-    def switchLos(self):
-        """Switches the display of line of sight for the selected unit on or off."""
-        if self.los_visible == True:
-            self.resetAllTileColor()
-            self.los_visible = False
-        else:
-            self.displayLos()
-            self.los_visible = True       
 
-    def displayNotInLos(self):
-        """Displays visual indicator of tiles which are not in line of sight of any unit.
-        """
-        for tile in self.ge.getTilesNotInLos():
-            self.changeTileColor(tile, _TILE_NOT_IN_LOS)
-            
-    def switchNotInLos(self):
-        """Switches the display of line of sight for the selected unit on or off."""
-        if self.not_in_los_visible == True:
-            self.resetAllTileColor()
-            self.not_in_los_visible = False
-        else:
-            self.displayNotInLos()
-            self.not_in_los_visible = True
     
     def displayUnitMove(self):
         """Displays visual indicator of tiles which are in movement range of the selected unit."""
@@ -453,10 +304,7 @@ class Interface(DirectObject.DirectObject):
     def mouseLeftClick(self):
         """Handles left mouse click actions.
            Procedure first checks for gui clicks, if there are none then it checks 3d collision.
-        """
-        if self.ge.interface_disabled:
-            return
-        
+        """        
         self.destination = None
         if self.hovered_gui == self.deselect_button:
             self.deselectUnit()
@@ -505,29 +353,26 @@ class Interface(DirectObject.DirectObject):
     def mouseLeftClickUp(self):
         """Handles left mouse click actions when mouse button is depressed.
            Used for unit movement.
-        """
-        if self.ge.interface_disabled:
-            return
-        
-        if self.selected_unit and self.unit_move_destination and self.unit_move_orientation != HEADING_NONE:   
+        """        
+        if self.selected_unit and self.unit_move_destination and self.unit_move_orientation != utils.HEADING_NONE:   
             # Send movement message to engine
             x = self.unit_move_destination.getX()
             y = self.unit_move_destination.getY()
-            if self.unit_move_orientation == HEADING_NW:
+            if self.unit_move_orientation == utils.HEADING_NW:
                 o = Point2(x-1, y+1)
-            elif self.unit_move_orientation == HEADING_N:
+            elif self.unit_move_orientation == utils.HEADING_N:
                 o = Point2(x, y+1)
-            elif self.unit_move_orientation == HEADING_NE:
+            elif self.unit_move_orientation == utils.HEADING_NE:
                 o = Point2(x+1, y+1)
-            elif self.unit_move_orientation == HEADING_W:
+            elif self.unit_move_orientation == utils.HEADING_W:
                 o = Point2(x-1, y)
-            elif self.unit_move_orientation == HEADING_E:
+            elif self.unit_move_orientation == utils.HEADING_E:
                 o = Point2(x+1, y)
-            elif self.unit_move_orientation == HEADING_SW:
+            elif self.unit_move_orientation == utils.HEADING_SW:
                 o = Point2(x-1, y-1)
-            elif self.unit_move_orientation == HEADING_S:
+            elif self.unit_move_orientation == utils.HEADING_S:
                 o = Point2(x, y-1)
-            elif self.unit_move_orientation == HEADING_SE:
+            elif self.unit_move_orientation == utils.HEADING_SE:
                 o = Point2(x+1, y-1)
             self.ge.createMoveMsg(self.selected_unit, (self.unit_move_destination.x, self.unit_move_destination.y), 
                                                             (o.x, o.y))
@@ -538,56 +383,12 @@ class Interface(DirectObject.DirectObject):
 #===============================================================================
 # CLASS Interface --- TASKS
 #===============================================================================
-    def hover(self, task):
-        """Visually marks and selects tiles or units over which mouse cursor hovers."""
-        np = self.getMouseHoveredObject()
-        if np:
-            node_type = np.findNetTag("type").getTag("type")
-            if node_type == "tile":
-                if self.hovered_unit:
-                    #self.changeUnitColor(self.hovered_unit, _UNIT_RESET)
-                    self.ge.clearOutlineShader(self.hovered_unit)
-                    self.hovered_unit = None
-                if self.hovered_tile != np:
-                    if self.hovered_tile:
-                        self.changeTileColor(self.hovered_tile, _TILE_RESET)
-                    self.changeTileColor(np, _TILE_HOVERED)
-                    self.hovered_tile = np
-            elif node_type == "unit_marker":
-                np_unit = self.ge.unit_np_dict[int(np.findNetTag("id").getTag("id"))].model
-                if self.hovered_tile:
-                    self.changeTileColor(self.hovered_tile, _TILE_RESET)  
-                    self.hovered_tile = None              
-                if self.hovered_unit != np_unit:
-                    if self.hovered_unit:
-                        #self.changeUnitColor(self.hovered_unit, _UNIT_RESET)
-                        self.ge.clearOutlineShader(self.hovered_unit)
-                    #self.changeUnitColor(np_unit, _UNIT_HOVERED)
-                    self.hovered_unit = np_unit
-                    self.ge.setOutlineShader(np_unit, self.ge.unit_np_dict[int(np.findNetTag("id").getTag("id"))].team_color)                
-            elif node_type == "unit":
-                np_unit = np.getParent()
-                if self.hovered_tile:
-                    self.changeTileColor(self.hovered_tile, _TILE_RESET)  
-                    self.hovered_tile = None              
-                if self.hovered_unit != np_unit:
-                    if self.hovered_unit:
-                        #self.changeUnitColor(self.hovered_unit, _UNIT_RESET)
-                        self.ge.clearOutlineShader(self.hovered_unit)
-                    #self.changeUnitColor(np_unit, _UNIT_HOVERED)
-                    self.hovered_unit = np_unit
-                    self.ge.setOutlineShader(np_unit, self.ge.unit_np_dict[int(np.findNetTag("id").getTag("id"))].team_color) 
-        else:
-            if self.hovered_unit:
-                self.changeUnitColor(self.hovered_unit, _UNIT_RESET)
-            if self.hovered_tile:
-                self.changeTileColor(self.hovered_tile, _TILE_RESET)                
-        return task.cont 
+
     
     def processGui(self, task):
         """Visually marks and selects GUI element over which mouse cursor hovers."""
-        if self.ge.mouseWatcherNode.hasMouse(): 
-            mpos = self.ge.mouseWatcherNode.getMouse()
+        if base.mouseWatcherNode.hasMouse(): 
+            mpos = base.mouseWatcherNode.getMouse()
             hovering_over_something = False
             
             #Vidi me kako iteriram kroz dictionary
@@ -642,23 +443,23 @@ class Interface(DirectObject.DirectObject):
                         dest_node_pos = Point2(x, y)
                         pos_node_pos = Point2(int(self.dummy_turn_pos_node.getX()), int(self.dummy_turn_pos_node.getY()))
                         if dest_node_pos == pos_node_pos:
-                            key = HEADING_NONE
+                            key = utils.HEADING_NONE
                         elif h >= -22.5 and h < 22.5:
-                            key = HEADING_N
+                            key = utils.HEADING_N
                         elif h >= 22.5 and h < 67.5:
-                            key = HEADING_NW
+                            key = utils.HEADING_NW
                         elif h >= 67.5 and h < 112.5:
-                            key = HEADING_W
+                            key = utils.HEADING_W
                         elif h >= 112.5 and h < 157.5:
-                            key = HEADING_SW
+                            key = utils.HEADING_SW
                         elif (h >= 157.5 and h <= 180) or (h >= -180 and h < -157.5):
-                            key = HEADING_S
+                            key = utils.HEADING_S
                         elif h >= -157.5 and h < -112.5:
-                            key = HEADING_SE
+                            key = utils.HEADING_SE
                         elif h >= -112.5 and h < -67.5:
-                            key = HEADING_E
+                            key = utils.HEADING_E
                         elif h >= -67.5 and h < -22.5:
-                            key = HEADING_NE
+                            key = utils.HEADING_NE
                         self.markTurnArrow(key)
         return task.cont
 
@@ -771,7 +572,7 @@ class GuiTextFrame:
         self.offset = offset
         self.frame.setPos(self.offset.getX(), 0, self.offset.getZ())
 
-        fixedWidthFont = loader.loadFont("data/config/monoMMM_5.ttf")#@UndefinedVariable
+        fixedWidthFont = loader.loadFont("monoMMM_5.ttf")#@UndefinedVariable
         if not fixedWidthFont.isValid():
             print "pandaInteractiveConsole.py :: could not load the defined font %s" % str(self.font)
             fixedWidthFont = DGG.getDefaultFont()

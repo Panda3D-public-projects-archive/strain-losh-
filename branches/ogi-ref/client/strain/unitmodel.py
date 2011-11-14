@@ -9,16 +9,17 @@ import utils
 # CLASS UnitModel --- DEFINITION
 #===============================================================================
 class UnitModel:
-    def __init__(self, parent, unit, off=False):
+    def __init__(self, parent, unit_id, off=False):
         self.parent = parent
-        
-        self.anim_count_dict = {}
-        self.model = self.load(unit['name'])
-        self.id = str(unit['id'])
-        
+        self.id = str(unit_id)
+
         self.node = NodePath("unit_"+self.id)
         self.dummy_node = NodePath("dummy_unit_"+self.id)
         self.dest_node = NodePath("dest_unit_"+self.id)
+        
+        # Get unit data from the Client
+        unit = self.getUnitData(unit_id)
+        self.model = self.load(unit['name'])
         
         self.model.reparentTo(self.node)
         self.dummy_node.reparentTo(self.node)
@@ -28,7 +29,7 @@ class UnitModel:
             scale = 0.25
             h = 180
             pos = Point3(int(unit['pos'][0]), int(unit['pos'][1]), 0)
-            pos = self.calculateWorldPos(pos)
+            pos = self.calcWorldPos(pos)
         else:
             scale = 0.25
             h = 180
@@ -48,7 +49,9 @@ class UnitModel:
 
         # If unit model is not rendered for portrait, set its heading as received from server
         if not off:
-            self.setHeading(self.unit['heading'])
+            self.setHeading(unit)
+            self.parent.parent.picker.makePickable(self.node, 'unit')
+
 
         if unit['owner_id'] == "1":
             self.team_color = Vec4(1, 0, 0, 1)
@@ -63,10 +66,12 @@ class UnitModel:
         self.marker.setScale(0.7, 0.7, 0.7)
         self.marker.setColor(self.team_color)
         
+        
         plight = PointLight('plight')
         plight.setColor(Point4(0.2, 0.2, 0.2, 1))
         plnp = self.node.attachNewNode(plight)
         plnp.setPos(0, 0, 0)
+        
         self.marker.setLight(plnp)
         self.marker.setTransparency(TransparencyAttrib.MAlpha)
         self.marker.setAlphaScale(0.5) 
@@ -77,77 +82,36 @@ class UnitModel:
         #self.marker.hide()
         
         self.passtime = 0
-        self.setIdleTime()    
+        self.setIdleTime()            
 
-        if unit['name']=="terminator":
-            t = loader.loadTexture("terminator2.tga")#@UndefinedVariable
-            self.model.setTexture(t, 1)
-
+    def getUnitData(self, unit_id):
+        return self.parent.parent.units[unit_id]
+    
     def load(self, unit_type):
         if unit_type == 'marine_common':
-            model = Actor('marine_melee_axe_range_pistol', {'run': 'marine_melee_axe_range_pistol-run'
-                                                           ,'idle01': 'marine_melee_axe_range_pistol-idle_stand'
-                                                           ,'idle02': 'marine_melee_axe_range_pistol-idle_stand2'
-                                                           ,'idle03': 'marine_melee_axe_range_pistol-idle_stand3'
-                                                           ,'melee01': 'marine_melee_axe_range_pistol-melee'
-                                                           ,'melee02': 'marine_melee_axe_range_pistol-melee2'
-                                                           ,'fire01': 'marine_melee_axe_range_pistol-fire_stand'                                    
-                                                           })
-            self.anim_count_dict['run'] = 1
-            self.anim_count_dict['idle'] = 3
-            armor = model.find("**/power_armor_common")
-            armor.setTexture(loader.loadTexture("power_armour_common_dif.tga"))
-            armor_hide = model.find("**/power_armor_epic")
-            armor_hide.hide()
-            melee_weapon = model.find("**/power_axe_common")
-            melee_weapon.setTexture(loader.loadTexture("power_axe_common_dif.tga"))
-            melee_weapon_hide = model.find("**/power_axe_epic")
-            melee_weapon_hide.hide()      
-            range_weapon = model.find("**/bolt_pistol_common")
-            range_weapon.setTexture(loader.loadTexture("bolt_pistol_common_dif.tga"))
-            range_weapon_hide = model.find("**/bolt_pistol_epic")
-            range_weapon_hide.hide()  
-            head = model.find("**/space_marine_head")
-            head.setTexture(loader.loadTexture("space_marine_head_dif.tga"))       
-            pack = model.find("**/space_marine_backpack")
-            pack.setTexture(loader.loadTexture("space_marine_backpack_dif.tga"))                       
-        elif unit_type == 'marine_epic':
-            model = Actor('marine_melee_axe_range_pistol', {'run': 'marine_melee_axe_range_pistol-run'
-                                                           ,'idle01': 'marine_melee_axe_range_pistol-idle_stand'
-                                                           ,'idle02': 'marine_melee_axe_range_pistol-idle_stand2'
-                                                           ,'idle03': 'marine_melee_axe_range_pistol-idle_stand3'
-                                                           ,'melee01': 'marine_melee_axe_range_pistol-melee'
-                                                           ,'melee02': 'marine_melee_axe_range_pistol-melee2'
-                                                           ,'fire01': 'marine_melee_axe_range_pistol-fire_stand'                                    
-                                                           })
-            self.anim_count_dict['run'] = 1
-            self.anim_count_dict['idle'] = 3
-            armor = model.find("**/power_armor_epic")
-            armor.setTexture(loader.loadTexture("power_armour_epic_dif.tga"))
-            armor_hide = model.find("**/power_armor_common")
-            armor_hide.hide()
-            melee_weapon = model.find("**/power_axe_epic")
-            melee_weapon.setTexture(loader.loadTexture("power_axe_epic_dif.tga"))
-            melee_weapon_hide = model.find("**/power_axe_common")
-            melee_weapon_hide.hide()      
-            range_weapon = model.find("**/bolt_pistol_epic")
-            range_weapon.setTexture(loader.loadTexture("bolt_pistol_epic_dif.tga"))
-            range_weapon_hide = model.find("**/bolt_pistol_common")
-            range_weapon_hide.hide()  
-            head = model.find("**/space_marine_head")
-            head.setTexture(loader.loadTexture("space_marine_head_dif.tga"))    
-            pack = model.find("**/space_marine_backpack")
-            pack.setTexture(loader.loadTexture("space_marine_backpack_dif.tga"))                    
-        elif unit_type == 'commissar':
-            model = Actor('commissar', {'run': 'commissar-run'
-                                       ,'idle01': 'commissar-idle1'
-                                       ,'idle02': 'commissar-idle2'
-                                       ,'idle03': 'commissar-idle3'
-                                       ,'fire': 'commissar-fire'
-                                       })
-            self.anim_count_dict['run'] = 1
-            self.anim_count_dict['idle'] = 3                                           
-        return model
+            model = Actor('marine') 
+            model.node_dict = {}
+            for gear in utils.gear_list:
+                for item in gear.itervalues():
+                    for node in item:
+                        if isinstance(node, tuple):
+                            model.node_dict[node[0]] = model.find("**/"+node[0])
+                            if node[1]:
+                                tex = loader.loadTexture(node[1]+"_dif.tga")
+                                model.node_dict[node[0]].setTexture(tex)
+                        else:
+                            model.node_dict[node] = model.find("**/"+node)
+                            tex = loader.loadTexture(node+"_dif.tga")
+                            model.node_dict[node].setTexture(tex)
+                            
+            for node in  model.node_dict.itervalues():
+                node.hide()
+                
+            for node in utils.unit_types[unit_type]:
+                if node:
+                    model.node_dict[node].show()
+            model.loadAnims(utils.anim_dict)
+            return model
     
     def setIdleTime(self):
         self.idletime = random.randint(10, 20)
@@ -157,17 +121,12 @@ class UnitModel:
         return anim_type + str(num).zfill(2)    
     
     def calcWorldPos(self, pos):
-        return pos + Point3(0.5, 0.5, 0.3)
-    
-    def reparentTo(self, node):
-        self.node.reparentTo(node)
+        return pos + Point3(0.5, 0.5, 0.3)  
         
-    def setPos(self, pos):
-        self.node.setPos(pos)   
-        
-    def getHeadingTile(self, heading):
-        x = int(self.unit['pos'][0])
-        y = int(self.unit['pos'][1])        
+    def getHeadingTile(self, unit):
+        x = int(unit['pos'][0])
+        y = int(unit['pos'][1])  
+        heading = unit['heading']  
         
         if heading == utils.HEADING_NW:
             o = Point2(x-1, y+1)
@@ -192,8 +151,6 @@ class UnitModel:
         self.dest_node.setPos(render, tile_pos.getX()+0.5, tile_pos.getY()+0.5, 0.3)
         self.model.lookAt(self.dest_node)
         
-    def play(self, anim):
-        self.model.play(anim)
         
     def cleanup(self):
         self.model.cleanup()

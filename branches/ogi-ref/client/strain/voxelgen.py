@@ -5,12 +5,8 @@
 # python imports
 
 # panda3D imports
-from pandac.PandaModules import GeomNode, NodePath, GeomVertexFormat, GeomVertexData, Geom, GeomVertexWriter, GeomTristrips, Vec3
-from panda3d.core import Texture, GeomNode
-from panda3d.core import GeomVertexFormat, GeomVertexData
-from panda3d.core import Geom, GeomTriangles, GeomVertexWriter
-from panda3d.core import Vec3, Vec4, Point3
-import time
+from panda3d.core import Texture, GeomNode, GeomVertexFormat, GeomVertexData, Geom, GeomTriangles, GeomVertexWriter
+from panda3d.core import Vec3, Point3
 
 # strain related imports
 import strain.utils as utils

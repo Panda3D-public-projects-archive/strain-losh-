@@ -5,21 +5,13 @@ from panda3d.core import Point3#@UnresolvedImport
 from pandac.PandaModules import TextNode#@UnresolvedImport
 import textwrap, re, string
 
-CONSOLE_SYSTEM_ERROR = 1
-CONSOLE_SYSTEM_MESSAGE = 2
-CONSOLE_PLAYER1_TEXT = 3
-CONSOLE_PLAYER2_TEXT = 4
-
-CONSOLE_SYSTEM_ERROR_TEXT_COLOR = (255, 0, 0, 1)
-CONSOLE_SYSTEM_MESSAGE_TEXT_COLOR = (255, 255, 255, 1)
-CONSOLE_PLAYER1_TEXT_COLOR = (0, 150, 0, 0.8)
-CONSOLE_PLAYER2_TEXT_COLOR = (0, 100, 0, 0.8)
+import utils
 
 
 
 class GuiConsole(DirectObject.DirectObject):
     
-    def __init__(self, parent, h_size, v_size, aspect, ge):
+    def __init__(self, parent, h_size, v_size, aspect):
         self.h_size = h_size
         self.v_size = v_size
         self.scale = 0.04
@@ -40,13 +32,13 @@ class GuiConsole(DirectObject.DirectObject):
                                          , scale = self.scale
                                          , frameSize = (0, self.h_size / self.scale, 0, self.v_size / self.scale) )
         
-        if parent == ge.a2dBottomLeft:
+        if parent == base.a2dBottomLeft:
             self.pos_min_x -= 1
             self.pos_min_y -= 1
             self.pos_max_x -= 1 
             self.pos_max_y -= 1
       
-        fixedWidthFont = ge.loader.loadFont("data/config/monoMMM_5.ttf")
+        fixedWidthFont = loader.loadFont("monoMMM_5.ttf")
         if not fixedWidthFont.isValid():
             print "pandaInteractiveConsole.py :: could not load the defined font %s" % str(self.font)
             fixedWidthFont = DGG.getDefaultFont()
@@ -161,7 +153,7 @@ class GuiConsole(DirectObject.DirectObject):
         self.textBufferPos = self.textBufferLength-self.numlines
         # clear line
         self.consoleEntry.enterText('')
-        self.consoleOutput(textEntered, CONSOLE_PLAYER1_TEXT)
+        self.consoleOutput(textEntered, utils.CONSOLE_PLAYER1_TEXT)
         self.focus()
 
     def manageFocus(self):
@@ -172,14 +164,14 @@ class GuiConsole(DirectObject.DirectObject):
             self.focus()
             
     def consoleOutput(self, printString, msgType):
-        if msgType == CONSOLE_SYSTEM_ERROR:
-            self.write(printString, CONSOLE_SYSTEM_ERROR_TEXT_COLOR)
-        elif msgType == CONSOLE_SYSTEM_MESSAGE:
-            self.write(printString, CONSOLE_SYSTEM_MESSAGE_TEXT_COLOR)
-        elif msgType == CONSOLE_PLAYER1_TEXT:
-            self.write(printString, CONSOLE_PLAYER1_TEXT_COLOR)
+        if msgType == utils.CONSOLE_SYSTEM_ERROR:
+            self.write(printString, utils.CONSOLE_SYSTEM_ERROR_TEXT_COLOR)
+        elif msgType == utils.CONSOLE_SYSTEM_MESSAGE:
+            self.write(printString, utils.CONSOLE_SYSTEM_MESSAGE_TEXT_COLOR)
+        elif msgType == utils.CONSOLE_PLAYER1_TEXT:
+            self.write(printString, utils.CONSOLE_PLAYER1_TEXT_COLOR)
         else:
-            self.write(printString, CONSOLE_PLAYER2_TEXT_COLOR)
+            self.write(printString, utils.CONSOLE_PLAYER2_TEXT_COLOR)
                 
         
     def write( self, printString, color=(100,100,100,0.5) ):
