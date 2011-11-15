@@ -129,7 +129,7 @@ weapon_dict['plasma_gun_purifier_of_tombs'] = ["plasma_gun_purifier_of_tombs", "
 gear_list = [head_dict, armour_dict, backpack_dict, melee_weapon_dict, pistol_dict, melee_2h_weapon_dict, weapon_dict]     
 
 anim_dict = {}
-anim_dict['run'] = "run"
+anim_dict['run'] = "m_marp_run"
 anim_dict['idle_stand01'] = "idle_stand01"
 
 unit_types = {}

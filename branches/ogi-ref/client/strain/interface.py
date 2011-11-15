@@ -6,9 +6,32 @@ from direct.gui.DirectGui import DirectFrame, DGG
 from direct.gui.OnscreenText import OnscreenText
 from unitmodel import UnitModel
 from console import GuiConsole
+from client_messaging import *
+#===============================================================================
+# GLOBAL DEFINITIONS
+#===============================================================================
 
-import utils
+_TILE_AVAILABLE_MOVE    = "_tile_available_move"
+_TILE_HOVERED           = "_tile_hovered"
+_TILE_FULL_LOS          = "_tile_full_los"
+_TILE_PARTIAL_LOS       = "_tile_partial_los"
+_TILE_UNIT_POS          = "_tile_unit_pos"
+_TILE_NOT_IN_LOS        = "_tile_not_in_los"
+_TILE_MOVE              = "_tile_move"
+_TILE_RESET             = "_tile_reset"
 
+_UNIT_HOVERED           = "_unit_hovered"
+_UNIT_RESET             = "_unit_reset"    
+
+HEADING_NONE      = 0
+HEADING_NW        = 1
+HEADING_N         = 2
+HEADING_NE        = 3
+HEADING_W         = 4
+HEADING_E         = 5
+HEADING_SW        = 6
+HEADING_S         = 7
+HEADING_SE        = 8
 #===============================================================================
 # CLASS Interface --- DEFINITION
 #===============================================================================
@@ -25,8 +48,23 @@ class Interface(DirectObject.DirectObject):
         self.move_visible = False
         self.not_in_los_visible = False
         
+        self.hovered_tile = None
+        self.hovered_unit = None
+        self.selected_unit = None
+        self.off_model = None
+        self.selected_unit_tile = None
+        
         self.movetext_np = None       
-          
+        
+        self.move_timer = 0
+        self.unit_move_destination = None
+        self.unit_move_orientation = HEADING_NONE
+        self.turn_np = NodePath("turn_arrows_np")
+        self.turn_np.reparentTo(render)
+        self.plane = Plane(Vec3(0, 0, 1), Point3(0, 0, 0.3))  
+        self.dummy_turn_pos_node = NodePath("dummy_turn_pos_node")
+        self.dummy_turn_dest_node = NodePath("dummy_turn_dest_node")
+        
         wp = base.win.getProperties() 
         aspect = float(wp.getXSize()) / wp.getYSize()
         plane = loader.loadModel('plane')
@@ -73,10 +111,18 @@ class Interface(DirectObject.DirectObject):
         self.status_bar = GuiTextFrame(Point3(1.5 + 0.01, 0, 0), 0.85, 0.08, 1)
         player = self.parent.player
         self.status_bar.write(1, "Player: "+player+"     Server: Online")
+
         
+        self.accept('l', self.switchLos)
         self.accept('m', self.switchUnitMove)
+        self.accept('n', self.switchNotInLos)
+        self.accept('escape', self.escapeEvent)
+        self.accept("mouse1", self.mouseLeftClick)
+        self.accept("mouse1-up", self.mouseLeftClickUp)
         
-        taskMgr.add(self.processGui, 'processGui_task')       
+        taskMgr.add(self.processGui, 'processGui_task')
+        taskMgr.add(self.hover, 'hover_task') 
+        taskMgr.add(self.turnUnit, 'turnUnit_task')       
     
     def redraw(self):
         wp = base.win.getProperties() 
@@ -95,8 +141,131 @@ class Interface(DirectObject.DirectObject):
 
         self.hovered_gui = None
 
+    def getMousePos(self):
+        """Returns mouse coordinates if mouse pointer is inside Panda window."""
+        if base.mouseWatcherNode.hasMouse(): 
+            return base.mouseWatcherNode.getMouse() 
+        return None
 
-    
+    def getMouseHoveredObject(self):
+        """Returns the closest object in the scene graph over which we hover mouse pointer.
+           Returns None if no objects found.
+        """
+        pos = self.getMousePos()
+        if pos:
+            self.parent.sgm.coll_ray.setFromLens(base.camNode, pos.getX(), pos.getY())
+            self.parent.sgm.coll_trav.traverse(render)
+            if self.parent.sgm.coll_queue.getNumEntries() > 0:
+                self.parent.sgm.coll_queue.sortEntries()
+                entry = self.parent.sgm.coll_queue.getEntry(0)
+                pickedObj = entry.getIntoNodePath()
+                pickedPoint = entry.getSurfacePoint(pickedObj)
+                return pickedObj, pickedPoint
+        return None, None
+
+    def loadTurnArrows(self, dest):
+        self.turn_arrow_dict = {}        
+        for i in xrange(9):
+            m = loader.loadModel("sphere")
+            m.setScale(0.07, 0.07, 0.07)
+            x = dest.getX()+0.5
+            y = dest.getY()+0.5   
+            delta = 0.4   
+            height = 0.8     
+            if i == 0:
+                pos = Point3(x-delta, y+delta, height)
+                h = 45
+                key = HEADING_NW
+            elif i == 1:
+                pos = Point3(x, y+delta, height)
+                h = 0
+                key = HEADING_N                
+            elif i ==2:
+                pos = Point3(x+delta, y+delta, height)
+                h = -45
+                key = HEADING_NE                
+            elif i ==3:
+                pos = Point3(x-delta, y, height)
+                h = 90
+                key = HEADING_W                
+            elif i ==4:
+                pos = Point3(x+delta, y, height)
+                h = -90
+                key = HEADING_E                
+            if i == 5:
+                pos = Point3(x-delta, y-delta, height)
+                h = 135
+                key = HEADING_SW                
+            elif i == 6:
+                pos = Point3(x, y-delta, height)
+                h = 180
+                key = HEADING_S                
+            elif i ==7:
+                pos = Point3(x+delta, y-delta, height)
+                h = 225               
+                key = HEADING_SE
+            elif i == 8:
+                pos = Point3(x, y, height)
+                h = 0
+                key = HEADING_NONE
+            m.setPos(pos)
+            m.setH(h)
+            m.reparentTo(self.turn_np)
+            self.turn_arrow_dict[key] = m
+        
+    def removeTurnArrows(self):
+        for child in self.turn_np.getChildren():
+            child.remove()
+        self.turn_arrow_dict = {}
+            
+    def markTurnArrow(self, key):
+        for i in self.turn_arrow_dict.itervalues():
+            i.setColor(1,1,1)
+        if key == HEADING_NONE:
+            self.turn_arrow_dict[key].setColor(0,0,1)
+        else:
+            self.turn_arrow_dict[key].setColor(1,0,0)
+        self.unit_move_orientation = key
+        
+    def displayLos(self):
+        """Displays visual indicator of tiles which are in line of sight of the selected unit.
+           Tiles in full view are marked with brighter red color.
+           Tiles in partial view are marked with darker red color.
+        """
+        if self.selected_unit:
+            losh_dict = self.selected_unit.unit['losh_dict']
+            for tile in losh_dict:
+                tile_node = self.ge.tile_np_list[int(tile[0])][int(tile[1])]
+                if losh_dict[tile] == 0:
+                    self.changeTileColor(tile_node, _TILE_FULL_LOS)
+                elif losh_dict[tile] == 1:
+                    self.changeTileColor(tile_node, _TILE_PARTIAL_LOS)
+                else:
+                    self.changeTileColor(tile_node, _TILE_RESET)
+            
+    def switchLos(self):
+        """Switches the display of line of sight for the selected unit on or off."""
+        if self.los_visible == True:
+            self.resetAllTileColor()
+            self.los_visible = False
+        else:
+            self.displayLos()
+            self.los_visible = True       
+
+    def displayNotInLos(self):
+        """Displays visual indicator of tiles which are not in line of sight of any unit.
+        """
+        for tile in self.ge.getTilesNotInLos():
+            self.changeTileColor(tile, _TILE_NOT_IN_LOS)
+            
+    def switchNotInLos(self):
+        """Switches the display of line of sight for the selected unit on or off."""
+        if self.not_in_los_visible == True:
+            self.resetAllTileColor()
+            self.not_in_los_visible = False
+        else:
+            self.displayNotInLos()
+            self.not_in_los_visible = True
     
     def displayUnitMove(self):
         """Displays visual indicator of tiles which are in movement range of the selected unit."""
@@ -134,10 +303,17 @@ class Interface(DirectObject.DirectObject):
             self.movetext_np.removeNode()
             self.move_visible = False
 
+    def escapeEvent(self):
+        if self.selected_unit:
+            self.deselectUnit()
+        else:
+            messenger.send("shutdown-event")
+      
+
     def refreshUnitData(self):
         if self.parent.sel_unit_id:
             self.printUnitData(self.parent.sel_unit_id)
-    
+        
     def printUnitData(self, unit_id):
         unit = self.parent.getUnitData(unit_id)
         unit_type = unit['name']
@@ -166,13 +342,150 @@ class Interface(DirectObject.DirectObject):
         self.stats3.write(2, "")
         self.stats3.write(3, "")
         self.stats3.write(4, "")
+                
+    def endTurn(self):
+        """Ends the turn"""
+        if not self.ge.interface_disabled:
+            self.ge.createEndTurnMsg() 
 
+    def mouseLeftClick(self):
+        """Handles left mouse click actions.
+           Procedure first checks for gui clicks, if there are none then it checks 3d collision.
+        """
+        self.destination = None
+        if self.hovered_gui == self.deselect_button:
+            self.parent.deselectUnit()
+            self.console.unfocus()
+        elif self.hovered_gui == self.punit_button:
+            self.parent.selectPrevUnit()
+            self.console.unfocus()
+        elif self.hovered_gui == self.nunit_button:
+            self.parent.selectNextUnit()
+            self.console.unfocus() 
+        elif self.hovered_gui == self.endturn_button:
+            self.parent.endTurn()
+            self.console.unfocus()
+        elif self.hovered_gui == self.console:
+            self.console.focus()
+        else:
+            self.console.unfocus()    
+            pickedObj, pickedPoint = self.getMouseHoveredObject() 
+            if pickedObj:
+                node_type = pickedObj.findNetTag("type").getTag("type")
+                if node_type == "unit" or node_type == "unit_marker":
+                    unit_id = int(pickedObj.findNetTag("id").getTag("id"))
+                    pickedCoord = self.parent.getCoordsByUnit(unit_id) 
+                    # Player can only select his own units
+                    print unit_id
+                    print self.parent.isThisMyUnit(unit_id)
+                    if self.parent.isThisMyUnit(unit_id):
+                        if unit_id != self.parent.sel_unit_id:
+                            self.parent.selectUnit(unit_id)
+                        else:
+                            # Remember movement tile so we can send orientation message when mouse is depressed
+                            self.unit_move_destination = pickedCoord                          
+                else:
+                    # We clicked on the grid, find if unit is placed on those coords
+                    pickedCoord = Point2(int(pickedPoint.getX()), int(pickedPoint.getY()))
+                    unit_id = self.parent.getUnitByCoords(pickedCoord)
+                    
+                    # If unit is there, check if it is our unit. If it is, select it.
+                    # If enemy unit is there, we are trying to attack.
+                    # If unit is not there, check if we have unit selected. If we do, we are trying to move it.
+                    if unit_id:
+                        if self.parent.isThisMyUnit(unit_id):
+                            if unit_id != self.parent.sel_unit_id:
+                                self.parent.selectUnit(unit_id)
+                            else:
+                                # Remember movement tile so we can send orientation message when mouse is depressed
+                                self.unit_move_destination = pickedCoord
+                        else:
+                            None
+                    else:
+                        if self.parent.sel_unit_id != None:
+                            # Remember movement tile so we can send movement message when mouse is depressed
+                            self.unit_move_destination = pickedCoord
+                            
+    def mouseLeftClickUp(self):
+        """Handles left mouse click actions when mouse button is depressed.
+           Used for unit movement.
+        """
+        if self.parent.sel_unit_id and self.unit_move_destination and self.unit_move_orientation != HEADING_NONE:   
+            # Send movement message to engine
+            x = self.unit_move_destination.getX()
+            y = self.unit_move_destination.getY()
+            if self.unit_move_orientation == HEADING_NW:
+                o = Point2(x-1, y+1)
+            elif self.unit_move_orientation == HEADING_N:
+                o = Point2(x, y+1)
+            elif self.unit_move_orientation == HEADING_NE:
+                o = Point2(x+1, y+1)
+            elif self.unit_move_orientation == HEADING_W:
+                o = Point2(x-1, y)
+            elif self.unit_move_orientation == HEADING_E:
+                o = Point2(x+1, y)
+            elif self.unit_move_orientation == HEADING_SW:
+                o = Point2(x-1, y-1)
+            elif self.unit_move_orientation == HEADING_S:
+                o = Point2(x, y-1)
+            elif self.unit_move_orientation == HEADING_SE:
+                o = Point2(x+1, y-1)
+            ClientMsg.move(self.parent.sel_unit_id, (x, y), (o.x, o.y))
+        self.unit_move_destination = None
+        self.move_timer = 0
+        self.removeTurnArrows()
 
 #===============================================================================
 # CLASS Interface --- TASKS
 #===============================================================================
-
-    
+    def hover(self, task):
+        """Visually marks and selects tiles or units over which mouse cursor hovers."""
+        return task.cont
+        """
+        pickedObj, pickedPos = self.getMouseHoveredObject()
+        if pickedObj:
+            node_type = pickedObj.findNetTag("type").getTag("type")
+            if node_type == "tile":
+                if self.hovered_unit:
+                    #self.changeUnitColor(self.hovered_unit, _UNIT_RESET)
+                    self.ge.clearOutlineShader(self.hovered_unit)
+                    self.hovered_unit = None
+                if self.hovered_tile != np:
+                    if self.hovered_tile:
+                        self.changeTileColor(self.hovered_tile, _TILE_RESET)
+                    self.changeTileColor(np, _TILE_HOVERED)
+                    self.hovered_tile = np
+            elif node_type == "unit_marker":
+                np_unit = self.ge.unit_np_dict[int(np.findNetTag("id").getTag("id"))].model
+                if self.hovered_tile:
+                    self.changeTileColor(self.hovered_tile, _TILE_RESET)  
+                    self.hovered_tile = None              
+                if self.hovered_unit != np_unit:
+                    if self.hovered_unit:
+                        #self.changeUnitColor(self.hovered_unit, _UNIT_RESET)
+                        self.ge.clearOutlineShader(self.hovered_unit)
+                    #self.changeUnitColor(np_unit, _UNIT_HOVERED)
+                    self.hovered_unit = np_unit
+                    self.ge.setOutlineShader(np_unit, self.ge.unit_np_dict[int(np.findNetTag("id").getTag("id"))].team_color)                
+            elif node_type == "unit":
+                np_unit = np.getParent()
+                if self.hovered_tile:
+                    self.changeTileColor(self.hovered_tile, _TILE_RESET)  
+                    self.hovered_tile = None              
+                if self.hovered_unit != np_unit:
+                    if self.hovered_unit:
+                        #self.changeUnitColor(self.hovered_unit, _UNIT_RESET)
+                        self.ge.clearOutlineShader(self.hovered_unit)
+                    #self.changeUnitColor(np_unit, _UNIT_HOVERED)
+                    self.hovered_unit = np_unit
+                    self.ge.setOutlineShader(np_unit, self.ge.unit_np_dict[int(np.findNetTag("id").getTag("id"))].team_color) 
+        else:
+            if self.hovered_unit:
+                self.changeUnitColor(self.hovered_unit, _UNIT_RESET)
+            if self.hovered_tile:
+                self.changeTileColor(self.hovered_tile, _TILE_RESET)                
+        return task.cont 
+        """
     def processGui(self, task):
         """Visually marks and selects GUI element over which mouse cursor hovers."""
         if base.mouseWatcherNode.hasMouse(): 
@@ -200,7 +513,57 @@ class Interface(DirectObject.DirectObject):
   
         return task.cont    
 
-    
+    def turnUnit(self, task):
+        if self.unit_move_destination: 
+            #print self.unit_move_destination
+            if self.move_timer < 0.1:
+                dt = globalClock.getDt()
+                self.move_timer += dt
+                if self.move_timer > 0.1:
+                    self.loadTurnArrows(self.unit_move_destination)
+                    pos = Point3(self.unit_move_destination.getX()+0.5, self.unit_move_destination.getY()+0.5, 0.3)
+                    self.dummy_turn_pos_node.setPos(pos)
+            else: 
+                if base.mouseWatcherNode.hasMouse(): 
+                    mpos = base.mouseWatcherNode.getMouse() 
+                    pos3d = Point3() 
+                    nearPoint = Point3() 
+                    farPoint = Point3() 
+                    base.camLens.extrude(mpos, nearPoint, farPoint) 
+                    if self.plane.intersectsLine(pos3d, render.getRelativePoint(base.camera, nearPoint), render.getRelativePoint(base.camera, farPoint)): 
+                        self.dummy_turn_dest_node.setPos(pos3d)
+                        self.dummy_turn_pos_node.lookAt(self.dummy_turn_dest_node)
+                        h = self.dummy_turn_pos_node.getH()
+                        if self.dummy_turn_dest_node.getX() >= 0:
+                            x = int(self.dummy_turn_dest_node.getX())
+                        else:
+                            x = int(self.dummy_turn_dest_node.getX()-1)
+                        if self.dummy_turn_dest_node.getY() >= 0:
+                            y = int(self.dummy_turn_dest_node.getY())
+                        else:
+                            y = int(self.dummy_turn_dest_node.getY()-1)    
+                        dest_node_pos = Point2(x, y)
+                        pos_node_pos = Point2(int(self.dummy_turn_pos_node.getX()), int(self.dummy_turn_pos_node.getY()))
+                        if dest_node_pos == pos_node_pos:
+                            key = HEADING_NONE
+                        elif h >= -22.5 and h < 22.5:
+                            key = HEADING_N
+                        elif h >= 22.5 and h < 67.5:
+                            key = HEADING_NW
+                        elif h >= 67.5 and h < 112.5:
+                            key = HEADING_W
+                        elif h >= 112.5 and h < 157.5:
+                            key = HEADING_SW
+                        elif (h >= 157.5 and h <= 180) or (h >= -180 and h < -157.5):
+                            key = HEADING_S
+                        elif h >= -157.5 and h < -112.5:
+                            key = HEADING_SE
+                        elif h >= -112.5 and h < -67.5:
+                            key = HEADING_E
+                        elif h >= -67.5 and h < -22.5:
+                            key = HEADING_NE
+                        self.markTurnArrow(key)
+        return task.cont
 
 
 #===============================================================================

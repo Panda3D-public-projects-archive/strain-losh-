@@ -1,7 +1,8 @@
 from direct.actor.Actor import Actor
 from panda3d.core import Vec4, Point4, Point3, Point2, NodePath#@UnresolvedImport
 from panda3d.core import PointLight#@UnresolvedImport
-from pandac.PandaModules import TransparencyAttrib#@UnresolvedImport
+from panda3d.core import TransparencyAttrib#@UnresolvedImport
+from direct.interval.IntervalGlobal import Sequence, ActorInterval, Parallel, Func
 import random
 import utils
 
@@ -110,6 +111,65 @@ class UnitModel:
                 
             model.loadAnims(utils.anim_dict)
             return model
+    
+    def moveUnitModel(self, action_list):
+        intervals = []
+        duration = 0.0
+        start_pos = self.node.getPos()
+        # if legth of action list is greater than 1, we have movement and rotation information
+        if len(action_list) > 1:
+            end_pos = action_list[-2][1]
+        # otherwise, we are just rotating the unit so end_pos is the same as unit pos
+        else:
+            end_pos = Point2(int(self.node.getX()), int(self.node.getY()))
+        for idx, action in enumerate(action_list):
+            type = action[0]
+            if idx == 0:
+                curr_pos = start_pos
+                curr_h = self.model.getH()
+            else:
+                curr_pos = dest_pos
+                curr_h = dest_h
+                
+            if type == "move":
+                dest_pos = Point3(action[1][0] + 0.5, action[1][1] + 0.5, 0.3)
+                self.dummy_node.setPos(render, curr_pos)
+                self.dest_node.setPos(render, dest_pos)
+                self.dummy_node.lookAt(self.dest_node)
+                dest_h = self.dummy_node.getH()
+                # Model heading is different than movement heading, first create animation that turns model to his destination
+                i_h = None
+                if dest_h != curr_h:
+                    i_h = self.model.quatInterval(0.2, hpr = Point3(dest_h, 0, 0), startHpr = Point3(curr_h, 0, 0))
+                    curr_h = dest_h
+                i = self.node.posInterval(0.5, dest_pos, curr_pos)
+                duration = duration + 0.5
+                if i_h:
+                    p = Parallel(i, i_h)
+                else:
+                    p = i
+                intervals.append(p)
+            elif type == "rotate":
+                dest_pos = Point3(action[1][0] + 0.5, action[1][1] + 0.5, 0.3)
+                self.dummy_node.setPos(render, curr_pos)
+                self.dest_node.setPos(render, dest_pos)
+                self.dummy_node.lookAt(self.dest_node)
+                dest_h = self.dummy_node.getH() 
+                i_h = self.model.quatInterval(0.2, hpr = Point3(dest_h, 0, 0), startHpr = Point3(curr_h, 0, 0))
+                duration = duration + 0.2
+                intervals.append(i_h)                 
+        seq = Sequence()
+        for i in intervals:
+            seq.append(i)
+        #return
+        anim = ActorInterval(self.model, 'run', loop = 1, duration = duration)
+        move = Sequence(#Func(self.beforeUnitAnimHook),
+                        Parallel(anim, seq), 
+                        #Func(self.setUnitNpList, self.unit_np_dict[int(unit.id)], start_pos),
+                        #Func(self.afterUnitAnimHook)
+                        )
+        move.start()
+
     
     def setIdleTime(self):
         self.idletime = random.randint(10, 20)

@@ -10,9 +10,10 @@ from random import randint
 
 # panda3D imports
 from direct.showbase.ShowBase import ShowBase
-from pandac.PandaModules import loadPrcFile, WindowProperties, Texture, OrthographicLens, PerspectiveLens
+from panda3d.core import loadPrcFile, WindowProperties, Texture, OrthographicLens, PerspectiveLens
 from panda3d.core import NodePath, Point2, Point3, VBase4, GeomNode, Vec3, Vec4#@UnresolvedImport
 from panda3d.core import ShadeModelAttrib, DirectionalLight, AmbientLight#@UnresolvedImport
+from panda3d.core import CollisionTraverser, CollisionRay, CollisionHandlerQueue, CollisionNode
 from direct.showbase.DirectObject import DirectObject
 from direct.fsm import FSM
 
@@ -21,7 +22,6 @@ from strain.client_messaging import *
 #from strain.camera import Camera
 from strain.cam2 import Camera
 from strain.voxelgen import VoxelGenerator
-from strain.picker import Picker
 from strain.unitmodel import UnitModel
 from strain.interface import Interface
 import strain.utils as utils
@@ -52,7 +52,7 @@ class App():
         self.screen = Screen(self, (800,600))
         
         #initialize world
-        self.client = Client(self, 'blood angels')
+        self.client = Client(self, 'ultramarines')
 
 #========================================================================
 #
@@ -102,10 +102,11 @@ class SceneGraph():
                     levelMesh.makeTopFace(x, y, i, id)
 
         self.level_node = self.node.attachNewNode(levelMesh.getGeomNode())
-        t = loader.loadTexture('tex.png')
+        self.level_node.setTag('type', 'level')
+        t = loader.loadTexture('tex2.png')
         t.setMagfilter(Texture.FTLinearMipmapLinear)
         t.setMinfilter(Texture.FTLinearMipmapLinear)
-        self.level_node.setTexture(loader.loadTexture("tex.png"))
+        self.level_node.setTexture(t)
         self.comp_inited['level'] = True
         """
         
@@ -151,6 +152,16 @@ class SceneGraph():
         render.setLight(alnp) 
         self.comp_inited['lights'] = True
         
+    def initCollisions(self):
+        self.coll_trav = CollisionTraverser()
+        self.coll_queue = CollisionHandlerQueue()
+        self.coll_node = CollisionNode("mouse_ray")
+        self.coll_nodepath = base.camera.attachNewNode(self.coll_node)
+        self.coll_node.setFromCollideMask(GeomNode.getDefaultCollideMask())
+        self.coll_ray = CollisionRay()
+        self.coll_node.addSolid(self.coll_ray)
+        self.coll_trav.addCollider(self.coll_nodepath, self.coll_queue)
+    
     def loadUnits(self):
         if self.comp_inited['units']:
             return
@@ -165,6 +176,16 @@ class SceneGraph():
             # Keep unit nodepath in list corresponding to level size
             # This will be dinamically altered when units change position
             self.unit_np_list[int(unit['pos'][0])][int(unit['pos'][1])] = um
+            
+        for unit in self.parent.enemy_units.itervalues():
+            um = UnitModel(self, unit['id'])
+            um.node.reparentTo(self.node)
+            # Keep unit nodepath in dictionary of all unit nodepaths
+            self.unit_np_dict[unit['id']] = um
+            # Keep unit nodepath in list corresponding to level size
+            # This will be dinamically altered when units change position
+            self.unit_np_list[int(unit['pos'][0])][int(unit['pos'][1])] = um
+                        
         self.comp_inited['units'] = True
     
     def initAltRender(self):
@@ -202,123 +223,7 @@ class SceneGraph():
             return
         self.off_model = UnitModel(self, unit_id, off=True)
         self.off_model.reparentTo(self.alt_render)
-        #self.off_model.play(self.off_model.getAnimName("idle"))     
-
-    def loadTurnArrows(self, dest):
-        self.turn_arrow_dict = {}        
-        pos = Point3(dest.getX()+0.5, dest.getY()+0.5, 0.3)
-        self.dummy_turn_pos_node.setPos(pos)
-        for i in xrange(9):
-            m = loader.loadModel("sphere")
-            m.setScale(0.07, 0.07, 0.07)
-            x = dest.getX()+0.5
-            y = dest.getY()+0.5   
-            delta = 0.4   
-            height = 0.8     
-            if i == 0:
-                pos = Point3(x-delta, y+delta, height)
-                h = 45
-                key = utils.HEADING_NW
-            elif i == 1:
-                pos = Point3(x, y+delta, height)
-                h = 0
-                key = utils.HEADING_N                
-            elif i ==2:
-                pos = Point3(x+delta, y+delta, height)
-                h = -45
-                key = utils.HEADING_NE                
-            elif i ==3:
-                pos = Point3(x-delta, y, height)
-                h = 90
-                key = utils.HEADING_W                
-            elif i ==4:
-                pos = Point3(x+delta, y, height)
-                h = -90
-                key = utils.HEADING_E                
-            if i == 5:
-                pos = Point3(x-delta, y-delta, height)
-                h = 135
-                key = utils.HEADING_SW                
-            elif i == 6:
-                pos = Point3(x, y-delta, height)
-                h = 180
-                key = utils.HEADING_S                
-            elif i ==7:
-                pos = Point3(x+delta, y-delta, height)
-                h = 225               
-                key = utils.HEADING_SE
-            elif i == 8:
-                pos = Point3(x, y, height)
-                h = 0
-                key = utils.HEADING_NONE
-            m.setPos(pos)
-            m.setH(h)
-            m.reparentTo(self.turn_np)
-            self.turn_arrow_dict[key] = m
-        
-    def removeTurnArrows(self):
-        for child in self.turn_np.getChildren():
-            child.remove()
-        self.turn_arrow_dict = {}
-            
-    def markTurnArrow(self, key):
-        for i in self.turn_arrow_dict.itervalues():
-            i.setColor(1,1,1)
-        if key == utils.HEADING_NONE:
-            self.turn_arrow_dict[key].setColor(0,0,1)
-        else:
-            self.turn_arrow_dict[key].setColor(1,0,0)
-        self.unit_move_orientation = key
-
-    def unitTurnTask(self, task):
-        # If we have pressed mouse somewhere on the level grid and we have selected unit
-        if self.parent.sel_unit_id and self.parent.interface.map_pos: 
-            if self.move_timer < 0.1:
-                dt = globalClock.getDt()
-                self.move_timer += dt
-                if self.move_timer > 0.1:
-                    self.loadTurnArrows(self.parent.interface.map_pos)
-            else: 
-                if base.mouseWatcherNode.hasMouse(): 
-                    mpos = base.mouseWatcherNode.getMouse() 
-                    pos3d = Point3() 
-                    nearPoint = Point3() 
-                    farPoint = Point3() 
-                    base.camLens.extrude(mpos, nearPoint, farPoint) 
-                    if self.plane.intersectsLine(pos3d, render.getRelativePoint(base.camera, nearPoint), render.getRelativePoint(base.camera, farPoint)): 
-                        self.dummy_turn_dest_node.setPos(pos3d)
-                        self.dummy_turn_pos_node.lookAt(self.dummy_turn_dest_node)
-                        h = self.dummy_turn_pos_node.getH()
-                        if self.dummy_turn_dest_node.getX() >= 0:
-                            x = int(self.dummy_turn_dest_node.getX())
-                        else:
-                            x = int(self.dummy_turn_dest_node.getX()-1)
-                        if self.dummy_turn_dest_node.getY() >= 0:
-                            y = int(self.dummy_turn_dest_node.getY())
-                        else:
-                            y = int(self.dummy_turn_dest_node.getY()-1)    
-                        dest_node_pos = Point2(x, y)
-                        pos_node_pos = Point2(int(self.dummy_turn_pos_node.getX()), int(self.dummy_turn_pos_node.getY()))
-                        if dest_node_pos == pos_node_pos:
-                            key = utils.HEADING_NONE
-                        elif h >= -22.5 and h < 22.5:
-                            key = utils.HEADING_N
-                        elif h >= 22.5 and h < 67.5:
-                            key = utils.HEADING_NW
-                        elif h >= 67.5 and h < 112.5:
-                            key = utils.HEADING_W
-                        elif h >= 112.5 and h < 157.5:
-                            key = utils.HEADING_SW
-                        elif (h >= 157.5 and h <= 180) or (h >= -180 and h < -157.5):
-                            key = utils.HEADING_S
-                        elif h >= -157.5 and h < -112.5:
-                            key = utils.HEADING_SE
-                        elif h >= -112.5 and h < -67.5:
-                            key = utils.HEADING_E
-                        elif h >= -67.5 and h < -22.5:
-                            key = utils.HEADING_NE
-                        self.markTurnArrow(key)
-        return task.cont
+        #self.off_model.play(self.off_model.getAnimName("idle"))
             
 #========================================================================
 #
@@ -337,9 +242,6 @@ class Client(DirectObject):
         
         # Init Client FSM
         self.fsm = ClientFSM(self, 'ClientFSM')
-
-        # Init Picker
-        self.picker = Picker(self)
         
         # Init SceneGraph manager
         self.sgm = SceneGraph(self)
@@ -374,13 +276,79 @@ class Client(DirectObject):
             #self.selected_unit.marker.loop("move")
             #u = self.ge.unit_np_dict[int(unit.id)].unit
             self.sgm.loadAltRenderModel(unit_id)
-            self.interface.printUnitData(unit_id)        
+            self.interface.printUnitData(unit_id)   
+            
+    def selectNextUnit(self):
+        if self.sel_unit_id == None:
+            last = 0
+        else:
+            last = self.sel_unit_id
+        
+        l = sorted(self.units.iterkeys())
+        if len(l) <= 1:
+            return
+        else:
+            if l[-1] == last:
+                new_unit_id = l[0]
+            else:
+                for i in l:
+                    if i > last:
+                        new_unit_id = i
+                        break
+            self.selectUnit(new_unit_id)
+        
+    def selectPrevUnit(self):
+        if self.sel_unit_id == None:
+            # TODO: ogs: Kaj fakat?
+            last = 9999999
+        else:
+            last = self.sel_unit_id
+        
+        l = sorted(self.units.iterkeys())
+        l.reverse()
+        if len(l) <= 1:
+            return
+        else:
+            if l[-1] == last:
+                new_unit_id = l[0]
+            else:
+                for i in l:
+                    if i < last:
+                        new_unit_id = i
+                        break
+            self.selectUnit(new_unit_id)
     
     def refreshUnit(self, unit):
         self.units[unit['id']] = unit 
     
+    def setupUnitLists(self, units):
+        for u in units.itervalues():
+            if u['owner_id'] == self.player_id:
+                self.units[u['id']] = u
+            else:
+                self.enemy_units[u['id']] = u
+    
     def getUnitData(self, unit_id):
-        return self.units[unit_id]
+        if self.units.has_key(unit_id):
+            return self.units[unit_id]
+        elif self.enemy_units.has_key(unit_id):
+            return self.enemy_units[unit_id]
+    
+    def isThisMyUnit(self, unit_id):
+        return self.units.has_key(unit_id)
+    
+    def getCoordsByUnit(self, unit_id):
+        if self.units.has_key(unit_id):
+            unit = self.units[unit_id]
+        elif self.enemy_units.has_key(unit_id):
+            unit = self.enemy_units[unit_id]
+        return Point2(unit['pos'][0], unit['pos'][1])
+    
+    def getUnitByCoords(self, pos):
+        for u in self.units.itervalues():
+            if u['pos'][0] == pos.getX() and u['pos'][1] == pos.getY():
+                return u['id']
+        return None
     
     def endTurn(self):
         ClientMsg.endTurn()
@@ -416,15 +384,15 @@ class Net():
             for p in self.parent.players:
                 if p['name'] == self.parent.player:
                     self.parent.player_id = p['id']
-            self.parent.units = pickle.loads(msg[1]['units'])
+            self.parent.setupUnitLists(pickle.loads(msg[1]['units']))
             self.parent.fsm.request('EngineState')
         #========================================================================
         #
         elif msg[0] == MOVE:
             unit_id = msg[1][0]
             tile_list = msg[1][1]
-            unit = self.unit_np_dict[unit_id]
-            self.playUnitAnim(self.unit_np_dict[unit_id], tile_list)
+            unit = self.parent.sgm.unit_np_dict[unit_id]
+            unit.moveUnitModel(tile_list)
         #========================================================================
         #
         elif msg[0] == NEW_TURN:
@@ -467,6 +435,7 @@ class ClientFSM(FSM.FSM):
     def enterGraphicsInit(self):
         self.parent.sgm.initLights()
         self.parent.sgm.initAltRender()
+        self.parent.sgm.initCollisions()
     
     def exitGraphicsInit(self):
         None
