@@ -7,10 +7,12 @@
 
 # panda3D imports
 from direct.showbase.DirectObject import DirectObject
-from pandac.PandaModules import CollisionTraverser, CollisionRay, CollisionHandlerQueue, CollisionNode, GeomNode
+from panda3d.core import Point2, CollisionTraverser, CollisionRay, CollisionHandlerQueue, CollisionNode, GeomNode
+#from pandac.PandaModules import CollisionTraverser, CollisionRay, CollisionHandlerQueue, CollisionNode, GeomNode
 
 # strain related imports
 import utils
+import client_messaging
 
 class Picker(DirectObject):
     def __init__(self,parent):
@@ -28,6 +30,8 @@ class Picker(DirectObject):
         # Mouse handler
         self.accept('mouse1', self.mouseLeftClick)
         self.accept("mouse1-up", self.mouseLeftClickUp)
+        
+        self.map_pos = None
 
     def getMousePos(self):
         """Returns mouse coordinates if mouse pointer is inside Panda window."""
@@ -45,9 +49,12 @@ class Picker(DirectObject):
             self.coll_trav.traverse(render)
             if self.coll_queue.getNumEntries() > 0:
                 self.coll_queue.sortEntries()
-                np = self.coll_queue.getEntry(0).getIntoNodePath()
-                return np
-        return None
+                entry = self.coll_queue.getEntry(0)
+                pickedObj = entry.getIntoNodePath()
+                pickedPoint = entry.getSurfacePoint(pickedObj)
+                return pickedObj, pickedPoint
+        return None, None
+
 
     def mouseLeftClick(self):
         """Handles left mouse click actions.
@@ -69,30 +76,34 @@ class Picker(DirectObject):
             self.parent.interface.console.focus()
         else:
             self.parent.interface.console.unfocus()  
-            print self.getMouseHoveredObject()
-            #print pickedObj, pickedPoint
-            return
+            pickedObj, pickedPoint = self.getMouseHoveredObject()
             if pickedObj:
-                node_type = selected.findNetTag("type").getTag("type")
+                node_type = pickedObj.findNetTag("type").getTag("type")
                 if node_type == "unit" or node_type == "unit_marker":
-                    unit_id = int(pickedObj.findNetTag("id").getTag("id"))
-                    unit = self.ge.unit_np_dict[unit_id] 
-                    if self.selected_unit != unit:
-                        self.selectUnit(unit)
+                    player_id = pickedObj.findNetTag("player_id").getTag("player_id")
+                    # Player can only select his own units
+                    if player_id == self.parent.player_id:
+                        unit_id = int(pickedObj.findNetTag("id").getTag("id"))
+                        self.parent.selectUnit(unit_id)
+                else:
+                    # Remember picked coordinates so we can send orientation message when mouse is depressed
+                    if self.parent.sel_unit_id:
+                        unit = self.parent.units[self.parent.sel_unit_id]
+                        unit_pos = Point2(unit['pos'][0], unit['pos'][1])
                     else:
-                        # Remember movement tile so we can send orientation message when mouse is depressed
-                        self.unit_move_destination = Point2(int(unit.node.getX()), int(unit.node.getY()))
+                        unit_pos = None
+                    if unit_pos != Point2(int(pickedPoint.getX()), int(pickedPoint.getY())):
+                        self.map_pos = Point2(int(pickedPoint.getX()), int(pickedPoint.getY()))
                 
                             
     def mouseLeftClickUp(self):
         """Handles left mouse click actions when mouse button is depressed.
            Used for unit movement.
-        """  
-        return      
-        if self.selected_unit and self.unit_move_destination and self.unit_move_orientation != utils.HEADING_NONE:   
+        """    
+        if self.parent.sel_unit_id and self.map_pos and self.unit_move_orientation != utils.HEADING_NONE:   
             # Send movement message to engine
-            x = self.unit_move_destination.getX()
-            y = self.unit_move_destination.getY()
+            x = self.map_pos.getX()
+            y = self.map_pos.getY()
             if self.unit_move_orientation == utils.HEADING_NW:
                 o = Point2(x-1, y+1)
             elif self.unit_move_orientation == utils.HEADING_N:
@@ -109,8 +120,7 @@ class Picker(DirectObject):
                 o = Point2(x, y-1)
             elif self.unit_move_orientation == utils.HEADING_SE:
                 o = Point2(x+1, y-1)
-            self.ge.createMoveMsg(self.selected_unit, (self.unit_move_destination.x, self.unit_move_destination.y), 
-                                                            (o.x, o.y))
-        self.unit_move_destination = None
+            ClientMsg.move(self.parent.sel_unit_id, (self.map_pos.x, self.map_pos.y), (o.x, o.y))
+        self.map_pos = None
         self.move_timer = 0
-        self.removeTurnArrows()
+        self.parent.sgm.removeTurnArrows()

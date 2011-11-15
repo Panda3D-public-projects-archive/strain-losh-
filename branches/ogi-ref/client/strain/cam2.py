@@ -9,7 +9,7 @@ class Camera(DirectObject.DirectObject):
     
     def __init__(self, maxX, maxY):
         base.disableMouse()
-        self.camera = base.cam
+        self.camera = base.camera
         self.mwn = base.mouseWatcherNode
         
         self.mx = 0

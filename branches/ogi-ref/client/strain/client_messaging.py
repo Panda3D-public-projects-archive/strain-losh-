@@ -6,8 +6,6 @@ import time
 
 IP_ADDRESS = 'localhost'
 #IP_ADDRESS = 'krav.servebeer.com'
-NAME = 'blood angels'
-#NAME = 'ultramarines'
 TCP_PORT = 56005
 
 MOVE = 'move'                   #values - list of actions ('move',tile) ('rotate',tile) ('overwatch',overwatchresult) ('detected',enemy)
@@ -61,7 +59,7 @@ class ClientMsg:
     log = None
 
     @staticmethod
-    def connect():
+    def connect(player):
         ClientMsg.log.info( "Trying to connect to server: %s:%s", IP_ADDRESS, TCP_PORT )
         
         ClientMsg.cManager = QueuedConnectionManager()
@@ -76,7 +74,7 @@ class ClientMsg:
             ClientMsg.myConnection.setNoDelay(1)
             
             #try handshaking
-            if not ClientMsg.handshake():
+            if not ClientMsg.handshake(player):
                 ClientMsg.disconnect()
                 ClientMsg.log.error( "Did not pass handshake.")
                 return False
@@ -99,7 +97,7 @@ class ClientMsg:
             
             
     @staticmethod
-    def handleConnection():
+    def handleConnection(player):
         """Return True if connection is ok, returns False if there is no connection."""
         
         #if we are not connected, try to connect
@@ -114,7 +112,7 @@ class ClientMsg:
                 ClientMsg.num_failed_attempts += 1
                 return False
             
-            if ClientMsg.connect():
+            if ClientMsg.connect(player):
                 #every time we reconnect to server, get the engine state 
                 ClientMsg.getEngineState()
                 ClientMsg.num_failed_attempts = 0             
@@ -148,7 +146,7 @@ class ClientMsg:
 
             
     @staticmethod
-    def handshake():
+    def handshake(player):
         s = ClientMsg.myConnection.getSocket()
 
         s.SendData('LOSH?')        
@@ -161,7 +159,7 @@ class ClientMsg:
         if ClientMsg.getData(s, 2) != 'Send your name':
             return False
 
-        s.SendData(NAME)
+        s.SendData(player)
 
         welcomeMsg = ClientMsg.getData(s, 2)
         

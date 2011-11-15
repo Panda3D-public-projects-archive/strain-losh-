@@ -25,20 +25,8 @@ class Interface(DirectObject.DirectObject):
         self.move_visible = False
         self.not_in_los_visible = False
         
-        self.selected_unit = None
-        self.off_model = None
-        
         self.movetext_np = None       
-        
-        self.move_timer = 0
-        self.unit_move_destination = None
-        self.unit_move_orientation = utils.HEADING_NONE
-        self.turn_np = NodePath("turn_arrows_np")
-        self.turn_np.reparentTo(render)
-        self.plane = Plane(Vec3(0, 0, 1), Point3(0, 0, 0.3))  
-        self.dummy_turn_pos_node = NodePath("dummy_turn_pos_node")
-        self.dummy_turn_dest_node = NodePath("dummy_turn_dest_node")
-        
+          
         wp = base.win.getProperties() 
         aspect = float(wp.getXSize()) / wp.getYSize()
         plane = loader.loadModel('plane')
@@ -83,13 +71,12 @@ class Interface(DirectObject.DirectObject):
         self.stats2 = GuiTextFrame(Point3(0.7, 0, 0), 0.4, 0.3, 5)
         self.stats3 = GuiTextFrame(Point3(1.1, 0, 0), 0.4, 0.3, 5)
         self.status_bar = GuiTextFrame(Point3(1.5 + 0.01, 0, 0), 0.85, 0.08, 1)
-        self.status_bar.write(1, "Player: mirko     Server: Online")
+        player = self.parent.player
+        self.status_bar.write(1, "Player: "+player+"     Server: Online")
         
         self.accept('m', self.switchUnitMove)
-        self.accept('escape', self.escapeEvent)
         
-        taskMgr.add(self.processGui, 'processGui_task')
-        taskMgr.add(self.turnUnit, 'turnUnit_task')       
+        taskMgr.add(self.processGui, 'processGui_task')       
     
     def redraw(self):
         wp = base.win.getProperties() 
@@ -109,70 +96,7 @@ class Interface(DirectObject.DirectObject):
         self.hovered_gui = None
 
 
-    def loadTurnArrows(self, dest):
-        self.turn_arrow_dict = {}        
-        for i in xrange(9):
-            m = loader.loadModel("sphere")
-            m.setScale(0.07, 0.07, 0.07)
-            x = dest.getX()+0.5
-            y = dest.getY()+0.5   
-            delta = 0.4   
-            height = 0.8     
-            if i == 0:
-                pos = Point3(x-delta, y+delta, height)
-                h = 45
-                key = utils.HEADING_NW
-            elif i == 1:
-                pos = Point3(x, y+delta, height)
-                h = 0
-                key = utils.HEADING_N                
-            elif i ==2:
-                pos = Point3(x+delta, y+delta, height)
-                h = -45
-                key = utils.HEADING_NE                
-            elif i ==3:
-                pos = Point3(x-delta, y, height)
-                h = 90
-                key = utils.HEADING_W                
-            elif i ==4:
-                pos = Point3(x+delta, y, height)
-                h = -90
-                key = utils.HEADING_E                
-            if i == 5:
-                pos = Point3(x-delta, y-delta, height)
-                h = 135
-                key = utils.HEADING_SW                
-            elif i == 6:
-                pos = Point3(x, y-delta, height)
-                h = 180
-                key = utils.HEADING_S                
-            elif i ==7:
-                pos = Point3(x+delta, y-delta, height)
-                h = 225               
-                key = utils.HEADING_SE
-            elif i == 8:
-                pos = Point3(x, y, height)
-                h = 0
-                key = utils.HEADING_NONE
-            m.setPos(pos)
-            m.setH(h)
-            m.reparentTo(self.turn_np)
-            self.turn_arrow_dict[key] = m
-        
-    def removeTurnArrows(self):
-        for child in self.turn_np.getChildren():
-            child.remove()
-        self.turn_arrow_dict = {}
-            
-    def markTurnArrow(self, key):
-        for i in self.turn_arrow_dict.itervalues():
-            i.setColor(1,1,1)
-        if key == utils.HEADING_NONE:
-            self.turn_arrow_dict[key].setColor(0,0,1)
-        else:
-            self.turn_arrow_dict[key].setColor(1,0,0)
-        self.unit_move_orientation = key
-
+    
     
     def displayUnitMove(self):
         """Displays visual indicator of tiles which are in movement range of the selected unit."""
@@ -210,29 +134,28 @@ class Interface(DirectObject.DirectObject):
             self.movetext_np.removeNode()
             self.move_visible = False
 
-    def escapeEvent(self):
-        if self.selected_unit:
-            self.deselectUnit()
-        else:
-            messenger.send("shutdown-event")
-
-        
-    def printUnitData(self):
-        unit = self.selected_unit
-        if unit:
-            unit_type = self.ge.getUnitData(unit, "type")
-            unit_HP = self.ge.getUnitData(unit, "HP")
-            unit_AP = self.ge.getUnitData(unit, "AP")
-            unit_default_HP = self.ge.getUnitData(unit, "default_HP")
-            unit_default_AP = self.ge.getUnitData(unit, "default_AP")
-            self.stats.write(1, unit_type)
-            self.stats.write(5, "oruzje1")
-            self.stats2.write(2, "HP: " + str(unit_HP) + "/" + str(unit_default_HP))
-            self.stats2.write(3, "AP: " + str(unit_AP) + "/" + str(unit_default_AP))
-            self.stats2.write(4, "stat3: XX/YY")
-            self.stats3.write(2, "stat4: XX/YY")
-            self.stats3.write(3, "stat5: XX/YY")
-            self.stats3.write(4, "stat6: XX/YY")
+    def refreshUnitData(self):
+        if self.parent.sel_unit_id:
+            self.printUnitData(self.parent.sel_unit_id)
+    
+    def printUnitData(self, unit_id):
+        unit = self.parent.getUnitData(unit_id)
+        unit_type = unit['name']
+        unit_HP = unit['hp']
+        unit_AP = unit['ap']
+        unit_default_HP = unit['default_hp']
+        unit_default_AP = unit['default_ap']
+        unit_weapon = ''
+        for w in unit['weapons']:
+            unit_weapon = unit_weapon+'/'+w['name']
+        self.stats.write(1, unit_type)
+        self.stats.write(5, unit_weapon)
+        self.stats2.write(2, "HP: " + str(unit_HP) + "/" + str(unit_default_HP))
+        self.stats2.write(3, "AP: " + str(unit_AP) + "/" + str(unit_default_AP))
+        self.stats2.write(4, "stat3: XX/YY")
+        self.stats3.write(2, "stat4: XX/YY")
+        self.stats3.write(3, "stat5: XX/YY")
+        self.stats3.write(4, "stat6: XX/YY")
             
     def clearUnitData(self):
         self.stats.write(1, "")
@@ -243,13 +166,7 @@ class Interface(DirectObject.DirectObject):
         self.stats3.write(2, "")
         self.stats3.write(3, "")
         self.stats3.write(4, "")
-                
-    def endTurn(self):
-        """Ends the turn"""
-        if not self.ge.interface_disabled:
-            self.ge.createEndTurnMsg() 
 
-    
 
 #===============================================================================
 # CLASS Interface --- TASKS
@@ -283,56 +200,7 @@ class Interface(DirectObject.DirectObject):
   
         return task.cont    
 
-    def turnUnit(self, task):
-        if self.unit_move_destination: 
-            if self.move_timer < 0.1:
-                dt = globalClock.getDt()
-                self.move_timer += dt
-                if self.move_timer > 0.1:
-                    self.loadTurnArrows(self.unit_move_destination)
-                    pos = Point3(self.unit_move_destination.getX()+0.5, self.unit_move_destination.getY()+0.5, 0.3)
-                    self.dummy_turn_pos_node.setPos(pos)
-            else: 
-                if self.ge.mouseWatcherNode.hasMouse(): 
-                    mpos = self.ge.mouseWatcherNode.getMouse() 
-                    pos3d = Point3() 
-                    nearPoint = Point3() 
-                    farPoint = Point3() 
-                    self.ge.camLens.extrude(mpos, nearPoint, farPoint) 
-                    if self.plane.intersectsLine(pos3d, self.ge.render.getRelativePoint(self.ge.camera, nearPoint), self.ge.render.getRelativePoint(self.ge.camera, farPoint)): 
-                        self.dummy_turn_dest_node.setPos(pos3d)
-                        self.dummy_turn_pos_node.lookAt(self.dummy_turn_dest_node)
-                        h = self.dummy_turn_pos_node.getH()
-                        if self.dummy_turn_dest_node.getX() >= 0:
-                            x = int(self.dummy_turn_dest_node.getX())
-                        else:
-                            x = int(self.dummy_turn_dest_node.getX()-1)
-                        if self.dummy_turn_dest_node.getY() >= 0:
-                            y = int(self.dummy_turn_dest_node.getY())
-                        else:
-                            y = int(self.dummy_turn_dest_node.getY()-1)    
-                        dest_node_pos = Point2(x, y)
-                        pos_node_pos = Point2(int(self.dummy_turn_pos_node.getX()), int(self.dummy_turn_pos_node.getY()))
-                        if dest_node_pos == pos_node_pos:
-                            key = utils.HEADING_NONE
-                        elif h >= -22.5 and h < 22.5:
-                            key = utils.HEADING_N
-                        elif h >= 22.5 and h < 67.5:
-                            key = utils.HEADING_NW
-                        elif h >= 67.5 and h < 112.5:
-                            key = utils.HEADING_W
-                        elif h >= 112.5 and h < 157.5:
-                            key = utils.HEADING_SW
-                        elif (h >= 157.5 and h <= 180) or (h >= -180 and h < -157.5):
-                            key = utils.HEADING_S
-                        elif h >= -157.5 and h < -112.5:
-                            key = utils.HEADING_SE
-                        elif h >= -112.5 and h < -67.5:
-                            key = utils.HEADING_E
-                        elif h >= -67.5 and h < -22.5:
-                            key = utils.HEADING_NE
-                        self.markTurnArrow(key)
-        return task.cont
+    
 
 
 #===============================================================================

@@ -18,7 +18,7 @@ class UnitModel:
         self.dest_node = NodePath("dest_unit_"+self.id)
         
         # Get unit data from the Client
-        unit = self.getUnitData(unit_id)
+        unit = self.parent.parent.getUnitData(unit_id)
         self.model = self.load(unit['name'])
         
         self.model.reparentTo(self.node)
@@ -31,9 +31,9 @@ class UnitModel:
             pos = Point3(int(unit['pos'][0]), int(unit['pos'][1]), 0)
             pos = self.calcWorldPos(pos)
         else:
-            scale = 0.25
-            h = 180
-            pos = Point3(0, -8, -2)
+            scale = 1
+            h = 0
+            pos = Point3(0, 1.7, -2.4)
         
         # Bake in rotation transform because model is created facing towards screen (h=180)
         self.model.setScale(scale)
@@ -80,10 +80,7 @@ class UnitModel:
         #self.marker.hide()
         
         self.passtime = 0
-        self.setIdleTime()            
-
-    def getUnitData(self, unit_id):
-        return self.parent.parent.units[unit_id]
+        self.setIdleTime()
     
     def load(self, unit_type):
         if unit_type == 'marine_common' or unit_type == 'marine_epic':
@@ -106,7 +103,7 @@ class UnitModel:
                             
             # Remove unneeded nodes from model
             for node in model.node_dict.itervalues():
-                if node.getTag("node") not in (for n in utils.unit_types[unit_type]):
+                if node.getTag("node") not in utils.unit_types[unit_type]:
                     node.detachNode()
                     #node.remove()
                     
@@ -116,6 +113,9 @@ class UnitModel:
     
     def setIdleTime(self):
         self.idletime = random.randint(10, 20)
+    
+    def reparentTo(self, node):
+        self.node.reparentTo(node)
     
     def getAnimName(self, anim_type):
         num = random.randint(1, self.anim_count_dict[anim_type])
