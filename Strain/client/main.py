@@ -224,7 +224,7 @@ class SceneGraph():
             return
         self.off_model = UnitModel(self, unit_id, off=True)
         self.off_model.reparentTo(self.alt_render)
-        #self.off_model.play(self.off_model.getAnimName("idle"))
+        self.off_model.model.play('idle_stand01')
         
     def showUnitAvailMove(self, unit_id):
         """Displays visual indicator of tiles which are in movement range of the selected unit."""
