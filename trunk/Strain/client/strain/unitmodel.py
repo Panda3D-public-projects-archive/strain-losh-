@@ -34,7 +34,7 @@ class UnitModel:
         else:
             scale = 1
             h = 0
-            pos = Point3(0, 1.7, -2.4)
+            pos = Point3(0, 1.7, -2.1)
         
         # Bake in rotation transform because model is created facing towards screen (h=180)
         self.model.setScale(scale)
