@@ -45,7 +45,6 @@ class Interface(DirectObject.DirectObject):
         # Initialize variables
         self.los_visible = False
         self.unit_los_visible = False
-        self.move_visible = False
         self.not_in_los_visible = False
         
         self.hovered_tile = None
@@ -112,10 +111,6 @@ class Interface(DirectObject.DirectObject):
         player = self.parent.player
         self.status_bar.write(1, "Player: "+player+"     Server: Online")
 
-        
-        self.accept('l', self.switchLos)
-        self.accept('m', self.switchUnitMove)
-        self.accept('n', self.switchNotInLos)
         self.accept('escape', self.escapeEvent)
         self.accept("mouse1", self.mouseLeftClick)
         self.accept("mouse1-up", self.mouseLeftClickUp)
@@ -226,82 +221,6 @@ class Interface(DirectObject.DirectObject):
         else:
             self.turn_arrow_dict[key].setColor(1,0,0)
         self.unit_move_orientation = key
-        
-    def displayLos(self):
-        """Displays visual indicator of tiles which are in line of sight of the selected unit.
-           Tiles in full view are marked with brighter red color.
-           Tiles in partial view are marked with darker red color.
-        """
-        if self.selected_unit:
-            losh_dict = self.selected_unit.unit['losh_dict']
-            for tile in losh_dict:
-                tile_node = self.ge.tile_np_list[int(tile[0])][int(tile[1])]
-                if losh_dict[tile] == 0:
-                    self.changeTileColor(tile_node, _TILE_FULL_LOS)
-                elif losh_dict[tile] == 1:
-                    self.changeTileColor(tile_node, _TILE_PARTIAL_LOS)
-                else:
-                    self.changeTileColor(tile_node, _TILE_RESET)
-            
-    def switchLos(self):
-        """Switches the display of line of sight for the selected unit on or off."""
-        if self.los_visible == True:
-            self.resetAllTileColor()
-            self.los_visible = False
-        else:
-            self.displayLos()
-            self.los_visible = True       
-
-    def displayNotInLos(self):
-        """Displays visual indicator of tiles which are not in line of sight of any unit.
-        """
-        for tile in self.ge.getTilesNotInLos():
-            self.changeTileColor(tile, _TILE_NOT_IN_LOS)
-            
-    def switchNotInLos(self):
-        """Switches the display of line of sight for the selected unit on or off."""
-        if self.not_in_los_visible == True:
-            self.resetAllTileColor()
-            self.not_in_los_visible = False
-        else:
-            self.displayNotInLos()
-            self.not_in_los_visible = True
-    
-    def displayUnitMove(self):
-        """Displays visual indicator of tiles which are in movement range of the selected unit."""
-        if self.selected_unit:
-            move_dict = self.selected_unit.unit['move_dict']
-            self.movetext_np = NodePath("movetext_np")
-            for tile in move_dict:
-                text = TextNode('node name')
-                text.setText( "%s" % move_dict[tile])
-                textNodePath = self.movetext_np.attachNewNode(text)
-                textNodePath.setColor(0, 0, 0)
-                textNodePath.setScale(0.5, 0.5, 0.5)
-                textNodePath.setPos(tile[0]+0.2, tile[1]+0.2, 0.5)
-                textNodePath.lookAt(tile[0]+0.2, tile[1]+0.2, -100)
-            self.movetext_np.reparentTo(self.ge.node)
-            
-    def switchUnitMove(self, flag=None):
-        """Switched the display of tiles available for movement for the selected unit.
-           If flag=="show" tiles will be displayed.
-           If flag=="hide" tiles will be hidden.
-           If flag==None method functions as a switch (on/off)
-        """
-
-        if flag == "show" or (not flag and not self.move_visible):
-            display = True
-        elif flag == "hide" or (not flag and self.move_visible):
-            display = False
-        else:
-            return
-        
-        if display:
-            self.displayUnitMove()
-            self.move_visible = True
-        else:
-            self.movetext_np.removeNode()
-            self.move_visible = False
 
     def escapeEvent(self):
         if self.selected_unit:
@@ -376,8 +295,6 @@ class Interface(DirectObject.DirectObject):
                     unit_id = int(pickedObj.findNetTag("id").getTag("id"))
                     pickedCoord = self.parent.getCoordsByUnit(unit_id) 
                     # Player can only select his own units
-                    print unit_id
-                    print self.parent.isThisMyUnit(unit_id)
                     if self.parent.isThisMyUnit(unit_id):
                         if unit_id != self.parent.sel_unit_id:
                             self.parent.selectUnit(unit_id)

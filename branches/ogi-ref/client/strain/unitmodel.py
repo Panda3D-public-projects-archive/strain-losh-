@@ -163,10 +163,10 @@ class UnitModel:
             seq.append(i)
         #return
         anim = ActorInterval(self.model, 'run', loop = 1, duration = duration)
-        move = Sequence(#Func(self.beforeUnitAnimHook),
+        move = Sequence(Func(self.parent.parent.beforeUnitAnimHook, int(self.id)),
                         Parallel(anim, seq), 
                         #Func(self.setUnitNpList, self.unit_np_dict[int(unit.id)], start_pos),
-                        #Func(self.afterUnitAnimHook)
+                        Func(self.parent.parent.afterUnitAnimHook, int(self.id))
                         )
         move.start()
 

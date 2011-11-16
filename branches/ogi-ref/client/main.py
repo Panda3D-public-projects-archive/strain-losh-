@@ -11,7 +11,7 @@ from random import randint
 # panda3D imports
 from direct.showbase.ShowBase import ShowBase
 from panda3d.core import loadPrcFile, WindowProperties, Texture, OrthographicLens, PerspectiveLens
-from panda3d.core import NodePath, Point2, Point3, VBase4, GeomNode, Vec3, Vec4#@UnresolvedImport
+from panda3d.core import TextNode, NodePath, Point2, Point3, VBase4, GeomNode, Vec3, Vec4#@UnresolvedImport
 from panda3d.core import ShadeModelAttrib, DirectionalLight, AmbientLight#@UnresolvedImport
 from panda3d.core import CollisionTraverser, CollisionRay, CollisionHandlerQueue, CollisionNode
 from direct.showbase.DirectObject import DirectObject
@@ -84,6 +84,7 @@ class SceneGraph():
         self.unit_move_destination = None
         self.unit_move_orientation = utils.HEADING_NONE
         self.move_timer = 0
+        self.movetext_np = None
     
     def loadLevel(self, level):
         if self.comp_inited['level']:
@@ -224,6 +225,28 @@ class SceneGraph():
         self.off_model = UnitModel(self, unit_id, off=True)
         self.off_model.reparentTo(self.alt_render)
         #self.off_model.play(self.off_model.getAnimName("idle"))
+        
+    def showUnitAvailMove(self, unit_id):
+        """Displays visual indicator of tiles which are in movement range of the selected unit."""
+        unit = self.parent.units[unit_id]
+        if unit:
+            self.parent.units[unit_id]['move_dict'] = self.parent.getMoveDict(unit_id)
+            move_dict = unit['move_dict']
+            self.movetext_np = NodePath("movetext_np")
+            for tile in move_dict:
+                text = TextNode('node name')
+                text.setText( "%s" % move_dict[tile])
+                textNodePath = self.movetext_np.attachNewNode(text)
+                textNodePath.setColor(0, 0, 0)
+                textNodePath.setScale(0.5, 0.5, 0.5)
+                textNodePath.setPos(tile[0]+0.2, tile[1]+0.2, 0.5)
+                textNodePath.lookAt(tile[0]+0.2, tile[1]+0.2, -100)
+            self.movetext_np.flattenStrong()
+            self.movetext_np.reparentTo(self.node)  
+    
+    def hideUnitAvailMove(self):
+        if self.movetext_np:
+            self.movetext_np.removeNode()      
             
 #========================================================================
 #
@@ -260,15 +283,22 @@ class Client(DirectObject):
         self.net = Net(self)
         self.net.startNet()
         
+        # Flags
+        self.unit_move_playing = False
+        
         # Create main update task
         taskMgr.add(self.updateTask, "update_task")
         
     def deselectUnit(self):
         self.sgm.clearAltRenderModel()
+        self.sgm.hideUnitAvailMove()
         self.interface.clearUnitData()
         self.sel_unit_id = None
         
     def selectUnit(self, unit_id):
+        if self.unit_move_playing == True:
+            return
+        
         if self.sel_unit_id != unit_id:
             self.deselectUnit()
             self.sel_unit_id = unit_id
@@ -276,7 +306,8 @@ class Client(DirectObject):
             #self.selected_unit.marker.loop("move")
             #u = self.ge.unit_np_dict[int(unit.id)].unit
             self.sgm.loadAltRenderModel(unit_id)
-            self.interface.printUnitData(unit_id)   
+            self.sgm.showUnitAvailMove(unit_id)
+            self.interface.printUnitData(unit_id) 
             
     def selectNextUnit(self):
         if self.sel_unit_id == None:
@@ -349,6 +380,118 @@ class Client(DirectObject):
             if u['pos'][0] == pos.getX() and u['pos'][1] == pos.getY():
                 return u['id']
         return None
+
+    def outOfLevelBounds(self, x, y):
+        if(x < 0 or y < 0 or x >= self.level['maxX'] or y >= self.level['maxY']):
+            return True
+        else:
+            return False
+
+    def canIMoveHere(self, unit, position, dx, dy):
+        dx = int(dx)
+        dy = int(dy)
+              
+        if( (dx != 1 and dx != 0 and dx != -1) and 
+            (dy != 1 and dy != 0 and dy != -1) ):
+            print ( "Invalid dx (%d) or dy (%d)" %(dy ,dy) )
+        
+        ptx = int(position[0])
+        pty = int(position[1])
+        
+        if self.outOfLevelBounds(ptx+dx, pty+dy):
+            return False
+
+        #check if the level is clear at that tile
+        if(self.level['_level_data'][ptx + dx][pty + dy] != 0):
+            return False
+        
+        #check if there is a dynamic obstacle in the way
+        if self.sgm.unit_np_list[ptx+dx][pty+dy]:
+            return False
+        """
+        if( self.dynamic_obstacles[ ptx + dx ][ pty + dy ][0] != DYNAMICS_EMPTY ):
+            #ok if it a unit, it may be the current unit so we need to check that
+            if( self.dynamic_obstacles[ ptx + dx ][ pty + dy ][0] == DYNAMICS_UNIT ):
+                if( self.dynamic_obstacles[ ptx + dx ][ pty + dy ][1] != unit.id ):
+                    return False
+        """
+        
+        #check diagonal if it is clear
+        if( dx != 0 and dy != 0 ):
+            
+            #if there is something in level in the way
+            if( self.level['_level_data'][ ptx + dx ][ pty ] != 0 or 
+                self.level['_level_data'][ ptx ][ pty + dy ] != 0 ):
+                return False
+        
+            #check if there is a dynamic thing in the way 
+            """
+            if( self.dynamic_obstacles[ ptx + dx ][ pty ][0] != DYNAMICS_EMPTY ):
+                #see if it is a unit
+                if( self.dynamic_obstacles[ ptx + dx ][ pty ][0] == DYNAMICS_UNIT ):
+                    #so its a unit, see if it is friendly
+                    unit_id = self.dynamic_obstacles[ ptx + dx ][ pty ][1] 
+                    if( self.units[unit_id].owner != unit.owner ):
+                        return False
+                    
+            if( self.dynamic_obstacles[ ptx ][ pty + dy ][0] != DYNAMICS_EMPTY ):
+                if( self.dynamic_obstacles[ ptx ][ pty + dy ][0] == DYNAMICS_UNIT ):
+                    unit_id = self.dynamic_obstacles[ ptx ][ pty + dy ][1] 
+                    if( self.units[unit_id].owner != unit.owner ):
+                        return False
+            """
+            
+        return True
+        
+    def getMoveDict(self, unit_id, returnOrigin=False):    
+        unit = self.units[unit_id]
+        final_dict = {}
+        open_list = [(unit['pos'], unit['ap'])]
+        for tile, actionpoints in open_list:
+            for dx in xrange(-1,2):
+                for dy in xrange( -1,2 ):            
+                    if( dx == 0 and dy == 0):
+                        continue
+                    #we can't check our starting position
+                    if( tile[0] + dx == unit['pos'][0] and tile[1] + dy == unit['pos'][1] ):
+                        continue
+                    x = int( tile[0] + dx )
+                    y = int( tile[1] + dy )
+                    if self.outOfLevelBounds(x, y):
+                        continue
+                    if not self.canIMoveHere(unit, tile, dx, dy):
+                        continue                   
+                    #if we are checking diagonally
+                    if( dx == dy or dx == -dy ):
+                        ap = actionpoints - 1.5
+                    else:
+                        ap = actionpoints - 1
+                    
+                    if( ap < 0 ):
+                        continue
+                    
+                    pt = (x,y) 
+                    
+                    if pt in final_dict:
+                        if( final_dict[pt] < ap ):
+                            final_dict[pt] = ap
+                            open_list.append( ( pt, ap ) )
+                    else: 
+                            final_dict[pt] = ap
+                            open_list.append( ( pt, ap ) )
+        if( returnOrigin ):
+            final_dict[unit.pos] = unit.ap
+            return final_dict
+        
+        return final_dict
+    
+    def beforeUnitAnimHook(self, unit_id):
+        self.unit_move_playing = True
+        self.sgm.hideUnitAvailMove()
+    
+    def afterUnitAnimHook(self, unit_id):
+        self.sgm.showUnitAvailMove(unit_id)
+        self.unit_move_playing = False
     
     def endTurn(self):
         ClientMsg.endTurn()
@@ -446,7 +589,7 @@ class ClientFSM(FSM.FSM):
         
     def exitEngineState(self):
         None
-
+        
 #========================================================================
 #
 class Screen(DirectObject):
