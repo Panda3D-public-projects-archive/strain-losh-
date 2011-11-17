@@ -85,6 +85,8 @@ class SceneGraph():
         self.unit_move_orientation = utils.HEADING_NONE
         self.move_timer = 0
         self.movetext_np = None
+        
+        print "base.win.getGsg().getMaxTextureStages() = "+str(base.win.getGsg().getMaxTextureStages())
     
     def loadLevel(self, level):
         if self.comp_inited['level']:
