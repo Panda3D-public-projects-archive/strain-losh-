@@ -20,6 +20,12 @@ class UnitModel:
         
         # Get unit data from the Client
         unit = self.parent.parent.getUnitData(unit_id)
+        if unit['owner_id'] == "1":
+            self.team_color = Vec4(0.7, 0.2, 0.3, 1)
+        elif unit['owner_id'] == "2":
+            self.team_color = Vec4(0.106, 0.467, 0.878, 1)
+        else:
+            self.team_color = Vec4(0, 1, 0, 1)        
         self.model = self.load(unit['name'])
         
         self.model.reparentTo(self.node)
@@ -51,13 +57,6 @@ class UnitModel:
         # If unit model is not rendered for portrait, set its heading as received from server
         if not off:
             self.setHeading(unit)
-
-        if unit['owner_id'] == "1":
-            self.team_color = Vec4(1, 0, 0, 1)
-        elif unit['owner_id'] == "2":
-            self.team_color = Vec4(0.106, 0.467, 0.878, 1)
-        else:
-            self.team_color = Vec4(0, 1, 0, 1)
             
         self.marker = Actor("ripple2") 
         self.marker.reparentTo(self.node)
@@ -112,7 +111,13 @@ class UnitModel:
                                 ts_nrm = TextureStage('ts_nrm')
                                 tex_nrm = loader.loadTexture(n_tex+"_nrm.tga")
                                 ts_nrm.setMode(TextureStage.MNormal)
-                                model.node_dict[n].setTexture(ts_nrm, tex_nrm)         
+                                model.node_dict[n].setTexture(ts_nrm, tex_nrm)
+                                if n == "power_armour_common" or n=="power_armour_gabriel":
+                                    ts_tem = TextureStage('ts_tem')
+                                    tex_tem = loader.loadTexture(n_tex+"_tem.dds")
+                                    ts_tem.setMode(TextureStage.MBlend)
+                                    ts_tem.setColor(self.team_color)
+                                    model.node_dict[n].setTexture(ts_tem, tex_tem)
             model.loadAnims(utils.anim_dict)
             return model
     
