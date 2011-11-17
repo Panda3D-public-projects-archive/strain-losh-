@@ -1,7 +1,7 @@
 from direct.actor.Actor import Actor
 from panda3d.core import Vec4, Point4, Point3, Point2, NodePath#@UnresolvedImport
 from panda3d.core import PointLight#@UnresolvedImport
-from panda3d.core import TransparencyAttrib#@UnresolvedImport
+from panda3d.core import TransparencyAttrib, TextureStage#@UnresolvedImport
 from direct.interval.IntervalGlobal import Sequence, ActorInterval, Parallel, Func
 import random
 import utils
@@ -42,7 +42,7 @@ class UnitModel:
         self.model.flattenLight() 
         self.node.setPos(pos)
 
-        self.model.setLightOff()
+        #self.model.setLightOff()
         self.node.setTag("type", "unit")
         self.node.setTag("id", str(self.id))        
         self.node.setTag("player_id", str(unit['owner_id']))
@@ -91,24 +91,28 @@ class UnitModel:
                 for item in gear.itervalues():
                     for node in item:
                         if isinstance(node, tuple):
-                            model.node_dict[node[0]] = model.find("**/"+node[0])
-                            model.node_dict[node[0]].setTag("node", node[0])
-                            if node[1]:
-                                tex = loader.loadTexture(node[1]+"_dif.tga")
-                                model.node_dict[node[0]].setTexture(tex)
+                            n = node[0]
+                            n_tex = node[1]
                         else:
-                            model.node_dict[node] = model.find("**/"+node)
-                            model.node_dict[node].setTag("node", node)
-                            tex = loader.loadTexture(node+"_dif.tga")
-                            model.node_dict[node].setTexture(tex)
-                            
-            # Remove unneeded nodes from model
-            for node in model.node_dict.itervalues():
-                if node.getTag("node") not in utils.unit_types[unit_type]:
-                    node.detachNode()
-                    #node.remove()
-                    
-                
+                            n = node
+                            n_tex = node
+                        model.node_dict[n] = model.find("**/"+n)
+                        model.node_dict[n].setTag("node", n)
+                        if n not in utils.unit_types[unit_type]:
+                            model.node_dict[n].detachNode()
+                            #model.node_dict[n].remove()
+                        else:
+                            if n_tex:
+                                tex_dif = loader.loadTexture(n_tex+"_dif.tga")
+                                model.node_dict[n].setTexture(tex_dif)
+                                ts_spc = TextureStage('ts_spc')
+                                tex_spc = loader.loadTexture(n_tex+"_spc.tga")
+                                ts_spc.setMode(TextureStage.MGloss)
+                                model.node_dict[n].setTexture(ts_spc, tex_spc)
+                                ts_nrm = TextureStage('ts_nrm')
+                                tex_nrm = loader.loadTexture(n_tex+"_nrm.tga")
+                                ts_nrm.setMode(TextureStage.MNormal)
+                                model.node_dict[n].setTexture(ts_nrm, tex_nrm)         
             model.loadAnims(utils.anim_dict)
             return model
     
