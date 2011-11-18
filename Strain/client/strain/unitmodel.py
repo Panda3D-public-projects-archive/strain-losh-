@@ -104,6 +104,7 @@ class UnitModel:
                             if n_tex:
                                 tex_dif = loader.loadTexture(n_tex+"_dif.tga")
                                 model.node_dict[n].setTexture(tex_dif)
+                                """
                                 ts_spc = TextureStage('ts_spc')
                                 tex_spc = loader.loadTexture(n_tex+"_spc.tga")
                                 ts_spc.setMode(TextureStage.MGloss)
@@ -118,6 +119,7 @@ class UnitModel:
                                     ts_tem.setMode(TextureStage.MBlend)
                                     ts_tem.setColor(self.team_color)
                                     model.node_dict[n].setTexture(ts_tem, tex_tem)
+                                """
             model.loadAnims(utils.anim_dict)
             return model
     
