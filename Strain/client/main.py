@@ -370,6 +370,9 @@ class Client(DirectObject):
     def isThisMyUnit(self, unit_id):
         return self.units.has_key(unit_id)
     
+    def isThisEnemyUnit(self, unit_id):
+        return self.enemy_units.has_key(unit_id)    
+    
     def getCoordsByUnit(self, unit_id):
         if self.units.has_key(unit_id):
             unit = self.units[unit_id]
@@ -519,6 +522,7 @@ class Net():
     def handleMsg(self, msg):
         """Handles incoming messages."""
         self.log.info("Received message: %s", msg[0])
+        print msg[0]
         #========================================================================
         #
         if msg[0] == ENGINE_STATE:
@@ -549,6 +553,11 @@ class Net():
             self.parent.refreshUnit(unit)
             # TODO: ogs: Ovaj refresh interface-a se poziva i kada unit koji dodje nije selektirani unit, to srediti
             self.parent.interface.refreshUnitData()
+        #========================================================================
+        #
+        elif msg[0] == SHOOT:
+            print "Bravo Debeli, dosla je sut poruka!"        
+        
         #========================================================================
         #
         elif msg[0] == ERROR:
