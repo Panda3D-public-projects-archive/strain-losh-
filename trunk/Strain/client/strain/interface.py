@@ -301,6 +301,10 @@ class Interface(DirectObject.DirectObject):
                         else:
                             # Remember movement tile so we can send orientation message when mouse is depressed
                             self.unit_move_destination = pickedCoord                          
+                    elif self.parent.isThisEnemyUnit(unit_id):
+                        if self.parent.sel_unit_id:
+                            print self.parent.sel_unit_id, unit_id
+                            ClientMsg.shoot(self.parent.sel_unit_id, unit_id)
                 else:
                     # We clicked on the grid, find if unit is placed on those coords
                     pickedCoord = Point2(int(pickedPoint.getX()), int(pickedPoint.getY()))

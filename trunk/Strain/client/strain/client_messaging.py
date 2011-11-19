@@ -213,6 +213,11 @@ class ClientMsg:
                                            'new_position':new_position,
                                            'orientation':orientation })) 
 
+    
+    @staticmethod
+    def shoot(shooter_id, target_id):
+        ClientMsg._sendMsg((SHOOT, { 'shooter_id':shooter_id,
+                                           'target_id':target_id})) 
     @staticmethod
     def shutdownEngine():
         ClientMsg._sendMsg((ENGINE_SHUTDOWN,0)) 
