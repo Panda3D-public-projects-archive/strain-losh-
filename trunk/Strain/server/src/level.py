@@ -13,12 +13,13 @@ class Level:
         self.name = LEVELS_ROOT + name    
         self.maxX = 0
         self.maxY = 0
-        self._level_data = []    
+        self._statics = []    
         self._dynamics = []
         
         self.load(self.name)        
 
         self.center = ( self.maxX / 2, self.maxY / 2 )
+
 
     def load(self, name):
         line_count = 0
@@ -31,18 +32,18 @@ class Level:
             else:
                 s = line.split(";")
                 s = s[0:self.maxX]
-                self._level_data.append(s)
+                self._statics.append(s)
            
         lvl_file.close()
-        self._level_data.reverse()
+        self._statics.reverse()
         
-        #convert entries in _level_data from string to integer AND change x-y order
+        #convert entries in _statics from string to integer AND change x-y order
         tmp = [[None] * self.maxY for i in xrange(self.maxX)]
         for i in range( 0, self.maxX ):
             for j in range( 0, self.maxY ):
-                self._level_data[j][i] = int( self._level_data[j][i] )
-                tmp[i][j] = self._level_data[j][i]
-        self._level_data = tmp 
+                self._statics[j][i] = int( self._statics[j][i] )
+                tmp[i][j] = self._statics[j][i]
+        self._statics = tmp 
 
         #we make this so its size is the same as level 
         self._dynamics = [[(0,0)] * self.maxY for i in xrange(self.maxX)] #@UnusedVariable
@@ -56,13 +57,13 @@ class Level:
         
 
 
-    #TODO: krav: spojit ovo i test3D()
+    #TODO: krav: spojit ovo i getBox()
     def canUnitFitHere(self, unit):
 
         x, y = int(unit.pos[0]), int(unit.pos[1])
 
         #check to see if there is something in the way on level
-        if self._level_data[x][y] != 0:
+        if self._statics[x][y] != 0:
             print "This unit cannot be placed on non empty level tile", unit.type, x, y
             return False
         
@@ -100,13 +101,13 @@ class Level:
         
         return True
 
-    #TODO: krav: hrpa citanja iz _level_data[][] koje bi sve trebalo svest na ovo dole
+    #TODO: krav: hrpa citanja iz _statics[][] koje bi sve trebalo svest na ovo dole
     def tuppleGet(self, pos ):
-        return self._level_data[ int(pos[0]) ][ int(pos[1]) ]
+        return self._statics[ int(pos[0]) ][ int(pos[1]) ]
 
-    #TODO: krav: zasad je level visine 0 pun, treba stavit da su uniti na levelu 0 i 1, ne na 1 i 2 ko sad..
-    def test3D(self, x, y, z):
-        if self._level_data[ int(x) ][ int(y) ] < z: 
+    #TODO: krav: napravit da vrati false ak je prazno, inace da vrati sta je u tom boxu
+    def getBox(self, x, y, z):
+        if self._statics[ int(x) ][ int(y) ] <= z: 
             return False
         return True
     
