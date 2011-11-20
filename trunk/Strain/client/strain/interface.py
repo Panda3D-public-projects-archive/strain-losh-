@@ -103,11 +103,13 @@ class Interface(DirectObject.DirectObject):
         
         self.hovered_gui = None
         
+        self.unit_info = None
+        
         self.console = GuiConsole(base.a2dBottomLeft, 1.5, 0.4, aspect)
-        self.stats = GuiTextFrame(Point3(0.3, 0, 0), 0.4, 0.3, 5)
-        self.stats2 = GuiTextFrame(Point3(0.7, 0, 0), 0.4, 0.3, 5)
-        self.stats3 = GuiTextFrame(Point3(1.1, 0, 0), 0.4, 0.3, 5)
-        self.status_bar = GuiTextFrame(Point3(1.5 + 0.01, 0, 0), 0.85, 0.08, 1)
+        self.stats = GuiTextFrame(Point3(0.3, 0, 0), 0.4, 0.3, 5, base.a2dTopLeft)
+        self.stats2 = GuiTextFrame(Point3(0.7, 0, 0), 0.4, 0.3, 5, base.a2dTopLeft)
+        self.stats3 = GuiTextFrame(Point3(1.1, 0, 0), 0.4, 0.3, 5, base.a2dTopLeft)
+        self.status_bar = GuiTextFrame(Point3(1.5 + 0.01, 0, 0), 0.85, 0.08, 1, base.a2dTopLeft)
         player = self.parent.player
         self.status_bar.write(1, "Player: "+player+"     Server: Online")
 
@@ -251,7 +253,16 @@ class Interface(DirectObject.DirectObject):
         self.stats3.write(2, "stat4: XX/YY")
         self.stats3.write(3, "stat5: XX/YY")
         self.stats3.write(4, "stat6: XX/YY")
-            
+        
+        if not self.unit_info:
+            self.unit_info = GuiUnitInfo(Point3(0, 0, 0.9), self.parent.sgm.unit_np_dict[unit_id].node)
+            self.unit_info.label.setFg((255,255,255,1))
+            self.unit_info.label.setBillboardPointEye()
+        else:
+            self.unit_info.label.reparentTo(self.parent.sgm.unit_np_dict[unit_id].node)
+            self.unit_info.label.show()    
+        self.unit_info.write(unit_type)
+
     def clearUnitData(self):
         self.stats.write(1, "")
         self.stats.write(5, "")
@@ -261,6 +272,8 @@ class Interface(DirectObject.DirectObject):
         self.stats3.write(2, "")
         self.stats3.write(3, "")
         self.stats3.write(4, "")
+        if self.unit_info:
+            self.unit_info.label.hide()
                 
     def endTurn(self):
         """Ends the turn"""
@@ -584,14 +597,14 @@ class GuiButton:
             self.node.removeNode()   
                   
 class GuiTextFrame:
-    def __init__(self, offset, h_size, v_size, numLines):
+    def __init__(self, offset, h_size, v_size, numLines, parent):
         self.numLines = numLines
         self.frame = DirectFrame(   relief = DGG.FLAT
                                   , frameColor = (0, 0, 0, 0.2)
                                   , scale = 1
                                   , frameSize = (0, h_size, 0, -v_size) )
         
-        self.frame.reparentTo(base.a2dTopLeft)#@UndefinedVariable
+        self.frame.reparentTo(parent)#@UndefinedVariable
         self.offset = offset
         self.frame.setPos(self.offset.getX(), 0, self.offset.getZ())
 
@@ -632,4 +645,33 @@ class GuiTextFrame:
         self.frame.setPos(p)
 
 
-                  
+class GuiUnitInfo:
+    def __init__(self, offset, parent):
+
+        fixedWidthFont = loader.loadFont("monoMMM_5.ttf")#@UndefinedVariable
+        if not fixedWidthFont.isValid():
+            print "pandaInteractiveConsole.py :: could not load the defined font %s" % str(self.font)
+            fixedWidthFont = DGG.getDefaultFont()
+        
+        self.label = OnscreenText( parent = parent
+                              , text = ""
+                              , pos = (offset.getX(),offset.getZ())
+                              , align=TextNode.ACenter
+                              , mayChange=1
+                              , scale=0.14
+                              , fg = (255,255,255,1)
+                              , shadow = (0, 0, 0, 1))
+                              #, frame = (200,0,0,1) )
+        self.label.setFont( fixedWidthFont )
+        
+        self.label.setColor(255,255,255,1)
+
+
+    def write(self, text):
+        self.label.setText(text)
+        
+    def redraw(self):
+        return
+
+    def remove(self):
+        self.label.remove()
