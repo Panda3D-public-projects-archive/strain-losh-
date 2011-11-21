@@ -20,6 +20,8 @@ class Level:
 
         self.center = ( self.maxX / 2, self.maxY / 2 )
 
+    def test3D(self, x, y, z):
+        return False
 
     def load(self, name):
         line_count = 0
