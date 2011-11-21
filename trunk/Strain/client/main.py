@@ -16,6 +16,7 @@ from panda3d.core import ShadeModelAttrib, DirectionalLight, AmbientLight#@Unres
 from panda3d.core import CollisionTraverser, CollisionRay, CollisionHandlerQueue, CollisionNode
 from direct.showbase.DirectObject import DirectObject
 from direct.fsm import FSM
+from direct.gui.DirectGui import DirectButton, DirectEntry
 
 # strain related imports
 from strain.client_messaging import *
@@ -51,9 +52,58 @@ class App():
         #setup screen
         self.screen = Screen(self, (800,600))
         
-        #initialize world
-        self.client = Client(self, 'ultramarines')
+        #setup FSM
+        self.fsm = AppFSM(self, 'AppFSM')
+        
+        self.startLogin()
+    
+    def startLogin(self):
+        #go to login screen
+        self.fsm.request('LoginScreen')
+        
+    def startClient(self):
+        #start client
+        self.fsm.request('Client')
+#========================================================================
+#
+class AppFSM(FSM.FSM):
+    def __init__(self, parent, name):
+        FSM.FSM.__init__(self, name)
+        self.parent = parent
 
+    def enterLoginScreen(self):
+        self.parent.login = LoginScreen(self.parent)
+    
+    def exitLoginScreen(self):
+        self.parent.login.parent = None
+        self.parent.login.b.remove()
+        self.parent.login.c.remove()
+        del self.parent.login
+
+    def enterClient(self):
+        self.parent.client = Client(self.parent, self.parent.player)
+        
+    def exitClient(self):
+        None
+        
+
+#========================================================================
+#
+class LoginScreen():
+    def __init__(self, parent):
+        self.parent = parent
+        self.b = DirectButton(text = ("Login"),scale=.05,command=self.loginButPressed)
+        self.c = DirectEntry(scale=.05,initialText="", numLines = 1,focus=1)
+        self.b.reparentTo(aspect2d)
+        self.b.setPos(0, 0, -0.2)
+        self.c.reparentTo(aspect2d)
+        self.c.setPos(0, 0, 0)
+    
+    def loginButPressed(self):
+        self.parent.player = self.c.get()
+        if self.parent.player != "ultramarines" and self.parent.player != "blood angels":
+            self.parent.player = "ultramarines"
+        self.parent.startClient()
 #========================================================================
 #
 class SceneGraph():
@@ -111,7 +161,6 @@ class SceneGraph():
         t.setMinfilter(Texture.FTLinearMipmapLinear)
         self.level_node.setTexture(t)
         self.comp_inited['level'] = True
-        """
         
         for i in xrange(0, level['maxX']):
             t = TextNode('node name')
@@ -131,7 +180,6 @@ class SceneGraph():
             tnp.setPos(-0.3, i+0.3, 0.5)
             tnp.setBillboardPointEye()
             tnp.setLightOff()         
-        """
         
     def initLights(self):
         if self.comp_inited['lights']:
@@ -290,7 +338,7 @@ class Client(DirectObject):
         
         # Create main update task
         taskMgr.add(self.updateTask, "update_task")
-        
+    
     def deselectUnit(self):
         self.sgm.clearAltRenderModel()
         self.sgm.hideUnitAvailMove()
@@ -585,6 +633,12 @@ class ClientFSM(FSM.FSM):
     def __init__(self, parent, name):
         FSM.FSM.__init__(self, name)
         self.parent = parent
+
+    def enterLoginScreen(self):
+        None
+    
+    def exitLoginScreen(self):
+        None
 
     def enterGraphicsInit(self):
         self.parent.sgm.initLights()
