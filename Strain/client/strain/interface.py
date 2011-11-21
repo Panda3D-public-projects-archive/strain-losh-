@@ -1,7 +1,7 @@
 from direct.showbase import DirectObject
-from panda3d.core import Plane, Vec3, Point4, Point3, Point2, NodePath#@UnresolvedImport
-from pandac.PandaModules import GeomNode, CardMaker, TextNode#@UnresolvedImport
-from pandac.PandaModules import TextureStage, TransparencyAttrib#@UnresolvedImport
+from panda3d.core import Plane, Vec3, Vec4, Point4, Point3, Point2, NodePath#@UnresolvedImport
+from panda3d.core import GeomNode, CardMaker, TextNode#@UnresolvedImport
+from panda3d.core import TextureStage, TransparencyAttrib#@UnresolvedImport
 from direct.gui.DirectGui import DirectFrame, DGG
 from direct.gui.OnscreenText import OnscreenText
 from unitmodel import UnitModel
@@ -256,7 +256,6 @@ class Interface(DirectObject.DirectObject):
         
         if not self.unit_info:
             self.unit_info = GuiUnitInfo(Point3(0, 0, 0.9), self.parent.sgm.unit_np_dict[unit_id].node)
-            self.unit_info.label.setFg((255,255,255,1))
             self.unit_info.label.setBillboardPointEye()
         else:
             self.unit_info.label.reparentTo(self.parent.sgm.unit_np_dict[unit_id].node)
@@ -657,14 +656,14 @@ class GuiUnitInfo:
                               , text = ""
                               , pos = (offset.getX(),offset.getZ())
                               , align=TextNode.ACenter
-                              , mayChange=1
+                              , mayChange=True
                               , scale=0.14
-                              , fg = (255,255,255,1)
-                              , shadow = (0, 0, 0, 1))
-                              #, frame = (200,0,0,1) )
+                              , fg = (1,0,0,1)
+                              #, shadow = (0, 0, 0, 1)
+                              #, frame = (200,0,0,1) 
+                              )
         self.label.setFont( fixedWidthFont )
-        
-        self.label.setColor(255,255,255,1)
+        self.label.setLightOff()
 
 
     def write(self, text):
