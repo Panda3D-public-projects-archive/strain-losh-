@@ -291,7 +291,7 @@ class SceneGraph():
                 text.setText( "%s" % move_dict[tile])
                 textNodePath = self.movetext_np.attachNewNode(text)
                 textNodePath.setColor(0, 0, 0)
-                textNodePath.setScale(0.5, 0.5, 0.5)
+                textNodePath.setScale(0.4, 0.4, 0.4)
                 textNodePath.setPos(tile[0]+0.2, tile[1]+0.2, 0.5)
                 textNodePath.lookAt(tile[0]+0.2, tile[1]+0.2, -100)
             self.movetext_np.flattenStrong()
