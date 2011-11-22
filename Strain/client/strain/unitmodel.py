@@ -182,11 +182,11 @@ class UnitModel:
     def shootUnit(self, unit_id, dmg):
         duration = 0.0        
         enemy_unit = self.parent.unit_np_dict[unit_id]
-        curr_h = self.model.getH()
-        self.dummy_node.setPos(render, self.model.getPos())
-        self.dest_node.setPos(render, enemy_unit.model.getPos())
+        curr_h = self.model.getH(render)
+        self.dummy_node.setPos(render, self.model.getPos(render))
+        self.dest_node.setPos(render, enemy_unit.model.getPos(render))
         self.dummy_node.lookAt(self.dest_node)
-        dest_h = self.dummy_node.getH() 
+        dest_h = self.dummy_node.getH(render) 
         i_h = self.model.quatInterval(0.2, hpr = Point3(dest_h, 0, 0), startHpr = Point3(curr_h, 0, 0))
         duration = duration + 0.2               
         anim = ActorInterval(self.model, 'shoot')
