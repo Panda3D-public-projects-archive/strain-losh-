@@ -131,6 +131,7 @@ gear_list = [head_dict, armour_dict, backpack_dict, melee_weapon_dict, pistol_di
 anim_dict = {}
 anim_dict['run'] = "m_marp_run"
 anim_dict['idle_stand01'] = "m_marp_idle_stand01"
+anim_dict['shoot'] = "m_marp_run"
 
 unit_types = {}
 unit_types['marine_common'] = ['space_marine_head', 'power_armour_common', 'space_marine_backpack', 'power_axe_common', 'bolt_pistol_common', None, None]
