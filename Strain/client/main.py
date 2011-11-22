@@ -237,7 +237,7 @@ class SceneGraph():
             # This will be dinamically altered when units change position
             self.unit_np_list[int(unit['pos'][0])][int(unit['pos'][1])] = um
                         
-        self.comp_inited['units'] = True
+        self.comp_inited['units'] = True    
     
     def initAltRender(self):
         """Initializes off screen buffer used to render models and animations for unit portraits."""
@@ -339,6 +339,9 @@ class Client(DirectObject):
         # Create main update task
         taskMgr.add(self.updateTask, "update_task")
     
+    def newTurn(self):
+        self.deselectUnit()
+    
     def deselectUnit(self):
         self.sgm.clearAltRenderModel()
         self.sgm.hideUnitAvailMove()
@@ -354,7 +357,6 @@ class Client(DirectObject):
             self.sel_unit_id = unit_id
             #self.selected_unit.marker.loadAnims({"move":"ripple2"})  
             #self.selected_unit.marker.loop("move")
-            #u = self.ge.unit_np_dict[int(unit.id)].unit
             self.sgm.loadAltRenderModel(unit_id)
             self.sgm.showUnitAvailMove(unit_id)
             self.interface.printUnitData(unit_id) 
@@ -400,7 +402,10 @@ class Client(DirectObject):
             self.selectUnit(new_unit_id)
     
     def refreshUnit(self, unit):
-        self.units[unit['id']] = unit 
+        if unit['owner_id'] == self.player_id:
+            self.units[unit['id']] = unit
+        else:
+            self.enemy_units[unit['id']] = unit
     
     def setupUnitLists(self, units):
         for u in units.itervalues():
@@ -496,7 +501,7 @@ class Client(DirectObject):
             
         return True
         
-    def getMoveDict(self, unit_id, returnOrigin=False):    
+    def getMoveDict(self, unit_id, returnOrigin=False):
         unit = self.units[unit_id]
         final_dict = {}
         open_list = [(unit['pos'], unit['ap'])]
@@ -542,10 +547,13 @@ class Client(DirectObject):
         self.unit_move_playing = True
         self.sgm.hideUnitAvailMove()
     
-    def afterUnitAnimHook(self, unit_id):
+    def afterUnitAnimHook(self, unit_id, start_pos, end_pos):
+        if end_pos != None:
+            self.sgm.unit_np_list[int(start_pos.getX())][int(start_pos.getY())] = None
+            self.sgm.unit_np_list[int(end_pos.getX())][int(end_pos.getY())] = self.sgm.unit_np_dict[unit_id]
         self.sgm.showUnitAvailMove(unit_id)
         self.unit_move_playing = False
-    
+        
     def endTurn(self):
         ClientMsg.endTurn()
     
@@ -570,7 +578,14 @@ class Net():
     def handleMsg(self, msg):
         """Handles incoming messages."""
         self.log.info("Received message: %s", msg[0])
+        """
+        print "-------"
+        print "-------"
+        print "-------"
         print msg[0]
+        print "----"
+        print msg
+        """
         #========================================================================
         #
         if msg[0] == ENGINE_STATE:
@@ -593,7 +608,8 @@ class Net():
         #========================================================================
         #
         elif msg[0] == NEW_TURN:
-            None
+            print msg
+            self.parent.newTurn()
         #========================================================================
         #
         elif msg[0] == UNIT:

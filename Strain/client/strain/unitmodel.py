@@ -127,12 +127,7 @@ class UnitModel:
         intervals = []
         duration = 0.0
         start_pos = self.node.getPos()
-        # if legth of action list is greater than 1, we have movement and rotation information
-        if len(action_list) > 1:
-            end_pos = action_list[-2][1]
-        # otherwise, we are just rotating the unit so end_pos is the same as unit pos
-        else:
-            end_pos = Point2(int(self.node.getX()), int(self.node.getY()))
+        end_pos = None
         for idx, action in enumerate(action_list):
             type = action[0]
             if idx == 0:
@@ -160,6 +155,7 @@ class UnitModel:
                 else:
                     p = i
                 intervals.append(p)
+                end_pos = dest_pos
             elif type == "rotate":
                 dest_pos = Point3(action[1][0] + 0.5, action[1][1] + 0.5, 0.3)
                 self.dummy_node.setPos(render, curr_pos)
@@ -177,7 +173,10 @@ class UnitModel:
         move = Sequence(Func(self.parent.parent.beforeUnitAnimHook, int(self.id)),
                         Parallel(anim, seq), 
                         #Func(self.setUnitNpList, self.unit_np_dict[int(unit.id)], start_pos),
-                        Func(self.parent.parent.afterUnitAnimHook, int(self.id))
+                        Func(self.parent.parent.afterUnitAnimHook, int(self.id), 
+                             start_pos,
+                             end_pos
+                             )
                         )
         move.start()
 
