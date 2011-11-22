@@ -213,8 +213,8 @@ class Unit():
         self.hp -= weapon.str
         if self.hp <= 0:
             self.die( weapon )
-            return ('kill', self.id, weapon.str )
-        return('damage',self.id, weapon.str)
+            return [('kill', self.id, weapon.str )]
+        return [('damage',self.id, weapon.str)]
 
 
     def save(self, enemy_weapon):

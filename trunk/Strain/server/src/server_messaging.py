@@ -241,8 +241,14 @@ class EngMsg:
         EngMsg.log.info("Engine posted a message: %s" , msg )
     
     @staticmethod
-    def move(unit_id, move_actions):
-        EngMsg._sendMsg((MOVE, (unit_id, move_actions))) 
+    def move(unit_id, move_actions, source = None):
+        EngMsg._sendMsg((MOVE, (unit_id, move_actions)), source)
+        print (MOVE, (unit_id, move_actions)) 
+                                                                      
+    @staticmethod
+    def shoot( shoot_actions, source = None):
+        EngMsg._sendMsg( shoot_actions, source )
+        print shoot_actions 
                                                                       
     @staticmethod
     def sendState(engine_state, source):
@@ -257,12 +263,12 @@ class EngMsg:
         EngMsg._sendMsg((ERROR, error_msg), source)
     
     @staticmethod
-    def sendNewTurn(turn_num):
-        EngMsg._sendMsg((NEW_TURN, turn_num))
+    def sendNewTurn(turn_num, active_player):
+        EngMsg._sendMsg((NEW_TURN, turn_num, active_player))
     
     @staticmethod
-    def sendUnit(pickled_unit):
-        EngMsg._sendMsg((UNIT, pickled_unit))
-    
-    
+    def sendUnit(pickled_unit, source = None):
+        EngMsg._sendMsg((UNIT, pickled_unit), source)
+
+        
       
