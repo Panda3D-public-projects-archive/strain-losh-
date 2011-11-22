@@ -145,7 +145,7 @@ class SceneGraph():
         levelMesh = VoxelGenerator('level', 1, 0.3)
         for x in xrange(0, level['maxX']):
             for y in xrange(0, level['maxY']):
-                for i in xrange(0, level['_statics'][x][y]+1):
+                for i in xrange(0, level['_level_data'][x][y]+1):
                     id = randint(1, 2) 
                     levelMesh.makeLeftFace(x, y, i, id)
                     levelMesh.makeRightFace(x, y, i, id)
@@ -455,7 +455,7 @@ class Client(DirectObject):
             return False
 
         #check if the level is clear at that tile
-        if(self.level['_statics'][ptx + dx][pty + dy] != 0):
+        if(self.level['_level_data'][ptx + dx][pty + dy] != 0):
             return False
         
         #check if there is a dynamic obstacle in the way
@@ -473,8 +473,8 @@ class Client(DirectObject):
         if( dx != 0 and dy != 0 ):
             
             #if there is something in level in the way
-            if( self.level['_statics'][ ptx + dx ][ pty ] != 0 or 
-                self.level['_statics'][ ptx ][ pty + dy ] != 0 ):
+            if( self.level['_level_data'][ ptx + dx ][ pty ] != 0 or 
+                self.level['_level_data'][ ptx ][ pty + dy ] != 0 ):
                 return False
         
             #check if there is a dynamic thing in the way 
