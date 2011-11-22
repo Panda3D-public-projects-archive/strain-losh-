@@ -136,6 +136,9 @@ class SceneGraph():
         self.move_timer = 0
         self.movetext_np = None
         
+        # Create main update task
+        taskMgr.add(self.animTask, "anim_task")        
+        
         print "base.win.getGsg().getMaxTextureStages() = "+str(base.win.getGsg().getMaxTextureStages())
     
     def loadLevel(self, level):
@@ -296,7 +299,20 @@ class SceneGraph():
     
     def hideUnitAvailMove(self):
         if self.movetext_np:
-            self.movetext_np.removeNode()      
+            self.movetext_np.removeNode()     
+            
+    def animTask(self, task):
+        """Task to animate draw units while they are idling."""
+        dt = globalClock.getDt()#@UndefinedVariable
+        for unit in self.unit_np_dict.itervalues():
+            unit.passtime += dt
+
+            if unit.passtime > unit.idletime:
+                unit.model.play('idle_stand01')
+                unit.passtime = 0
+                unit.setIdleTime()
+            
+        return task.cont
             
 #========================================================================
 #
@@ -687,6 +703,7 @@ class Screen(DirectObject):
         win.setFullscreen(False)
         base.openDefaultWindow(win)        
         #base.setBackgroundColor(.05,.05,.05)
+        # TODO: ogs: enableati auto shader samo na odredjenim nodepathovima
         #render.setShaderAuto()
         self.setupKeys()
 
