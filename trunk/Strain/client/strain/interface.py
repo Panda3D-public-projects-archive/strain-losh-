@@ -232,7 +232,7 @@ class Interface(DirectObject.DirectObject):
       
 
     def refreshUnitData(self):
-        if self.parent.sel_unit_id:
+        if self.parent.sel_unit_id != None:
             self.printUnitData(self.parent.sel_unit_id)
         
     def printUnitData(self, unit_id):
@@ -314,8 +314,7 @@ class Interface(DirectObject.DirectObject):
                             # Remember movement tile so we can send orientation message when mouse is depressed
                             self.unit_move_destination = pickedCoord                          
                     elif self.parent.isThisEnemyUnit(unit_id):
-                        if self.parent.sel_unit_id:
-                            print self.parent.sel_unit_id, unit_id
+                        if self.parent.sel_unit_id != None:
                             ClientMsg.shoot(self.parent.sel_unit_id, unit_id)
                 else:
                     # We clicked on the grid, find if unit is placed on those coords
@@ -332,8 +331,9 @@ class Interface(DirectObject.DirectObject):
                             else:
                                 # Remember movement tile so we can send orientation message when mouse is depressed
                                 self.unit_move_destination = pickedCoord
-                        else:
-                            None
+                        elif self.parent.isThisEnemyUnit(unit_id):
+                            if self.parent.sel_unit_id != None:
+                                ClientMsg.shoot(self.parent.sel_unit_id, unit_id)
                     else:
                         if self.parent.sel_unit_id != None:
                             # Remember movement tile so we can send movement message when mouse is depressed
@@ -343,7 +343,7 @@ class Interface(DirectObject.DirectObject):
         """Handles left mouse click actions when mouse button is depressed.
            Used for unit movement.
         """
-        if self.parent.sel_unit_id and self.unit_move_destination and self.unit_move_orientation != HEADING_NONE:   
+        if self.parent.sel_unit_id != None and self.unit_move_destination and self.unit_move_orientation != HEADING_NONE:   
             # Send movement message to engine
             x = self.unit_move_destination.getX()
             y = self.unit_move_destination.getY()
