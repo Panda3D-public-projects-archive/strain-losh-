@@ -36,8 +36,7 @@ class Engine( Thread ):
         notify.info("------------------------Engine Starting------------------------")
 
         self.stop = False
-        self.level = None 
-        self.turn = 0        
+        self.level = None         
         self.players = []
         self.units = {}
         
@@ -57,8 +56,7 @@ class Engine( Thread ):
         notify.info("Loaded level:%s", lvl )
       
         self.loadArmyList()
-
-        self.active_player = self.players[0]        
+      
         self.beginTurn()
 
 
@@ -137,6 +135,8 @@ class Engine( Thread ):
 
     def handleMsg(self, msg, source):
         """This method is the main method for handling incoming messages to the Engine"""     
+        
+        #TODO: krav: ovdje na pocetak stavit validate player
         
         if( msg[0] == ENGINE_SHUTDOWN ):
             EngMsg.sendErrorMsg("Server is shutting down")
@@ -231,7 +231,7 @@ class Engine( Thread ):
 
         print "turn:", self.turn, "\tplayer:", self.active_player.name
 
-        EngMsg.sendNewTurn( self.turn )
+        EngMsg.sendNewTurn( self.turn, self.active_player.name )
         
         #go through all units
         for unit_id in self.units:
@@ -806,13 +806,11 @@ class Engine( Thread ):
             return
 
         unit = self.findAndValidateUnit( unit_id, source )
-                
-        
-                
         if not unit:
             return
                 
         move_actions = []
+        actions_for_others = {}
         
         #special case if we just need to rotate the unit
         if unit.pos == new_position:
@@ -820,6 +818,9 @@ class Engine( Thread ):
             #see if we actually need to rotate the unit
             if unit.rotate( new_heading ):
                 move_actions.append( ('rotate', new_heading) )
+                for p in self.players:
+                    if unit in p.visible_enemies:
+                        actions_for_others[p.connection] = ('rotate', new_heading)
             #if not, than do nothing
             else:
                 return
@@ -854,19 +855,23 @@ class Engine( Thread ):
                     
                     
             
-        EngMsg.move( unit.id, move_actions )
-        EngMsg.sendUnit( util.compileUnit(unit) )
+        EngMsg.move( unit.id, move_actions, source )
+        for conn in actions_for_others:
+            EngMsg.move( unit.id, actions_for_others[conn], conn )
+            
+            
+        EngMsg.sendUnit( util.compileUnit(unit), source )
             
 
     
     def checkMovementInterrupt(self, unit ):
-        overwatch,detected = self.isMovementInterrupted( unit )        
+        overwatch,spotted = self.isMovementInterrupted( unit )        
         ret_actions = []
         
-        if detected:
-            for enemy in detected:
+        if spotted:
+            for enemy in spotted:
                 unit.owner.visible_enemies.append( enemy )
-                ret_actions.append( ('detect', util.compileUnit(enemy)) )
+                ret_actions.append( ('spot', util.compileUnit(enemy)) )
                 
         if overwatch:
             for enemy in overwatch:
@@ -883,7 +888,7 @@ class Engine( Thread ):
         
         #we moved this unit, so we need visibilit to every enemy unit, and stop movement if this unit
         #sees anything or if an enemy unit on overwatch sees this unit
-        detected = []
+        spotted = []
         overwatch = []
         
         for player in self.players:
@@ -898,17 +903,21 @@ class Engine( Thread ):
             for enemy in player.units:
                 #TODO: krav: ovdje se skoro ista stvr racuna 2 put?! mozda optimizacija?
                 if self.getLOS( enemy, unit ):
+                    if unit not in player.visible_enemies:
+                        #TODO: krav: ovdje reagirat na to da je neko out of turn spotao ovaj unit...
+                        player.visible_enemies.append( unit )
                     if enemy.overwatch:
-                        overwatch.append( enemy )                    
+                        overwatch.append( enemy )   
+                 
                 if self.getLOS( unit, enemy ) and enemy not in unit.owner.visible_enemies:
-                    detected.append( enemy )
+                    spotted.append( enemy )
                             
-        return (overwatch, detected)
+        return (overwatch, spotted)
             
 
     def shoot(self, shooter_id, target_id, source ):
         
-        return self.units[shooter_id].shoot( self.units[target_id])
+        #return self.units[shooter_id].shoot( self.units[target_id])
         
         if not self.validatePlayer( source ):
             return
@@ -930,8 +939,12 @@ class Engine( Thread ):
             notify.critical( "Client:%s\ttried to shoot his own unit." % source.getAddress() )
             EngMsg.sendErrorMsg( "You cannot shoot you own units." )
             return None
-            
-        return shooter.shoot( target )
+         
+        msg = shooter.shoot( target )
+        if msg:
+            EngMsg.shoot( msg )   
+            EngMsg.sendUnit( util.compileUnit(shooter) ) 
+            EngMsg.sendUnit( util.compileUnit(target) ) 
 
     def findPlayer( self, source ):
         for p in self.players:
