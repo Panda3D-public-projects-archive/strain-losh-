@@ -316,6 +316,8 @@ class Interface(DirectObject.DirectObject):
                     elif self.parent.isThisEnemyUnit(unit_id):
                         if self.parent.sel_unit_id != None:
                             ClientMsg.shoot(self.parent.sel_unit_id, unit_id)
+                            # TODO: ogs: stavljeno samo za test
+                            self.parent.sgm.unit_np_dict[self.parent.sel_unit_id].shootUnit(unit_id, 2)
                 else:
                     # We clicked on the grid, find if unit is placed on those coords
                     pickedCoord = Point2(int(pickedPoint.getX()), int(pickedPoint.getY()))
