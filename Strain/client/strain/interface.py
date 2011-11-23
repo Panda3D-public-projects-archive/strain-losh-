@@ -315,9 +315,8 @@ class Interface(DirectObject.DirectObject):
                             self.unit_move_destination = pickedCoord                          
                     elif self.parent.isThisEnemyUnit(unit_id):
                         if self.parent.sel_unit_id != None:
+                            self.parent.sgm.unit_np_dict[self.parent.sel_unit_id].target_unit = self.parent.sgm.unit_np_dict[unit_id]
                             ClientMsg.shoot(self.parent.sel_unit_id, unit_id)
-                            # TODO: ogs: stavljeno samo za test
-                            self.parent.sgm.unit_np_dict[self.parent.sel_unit_id].shootUnit(unit_id, 2)
                 else:
                     # We clicked on the grid, find if unit is placed on those coords
                     pickedCoord = Point2(int(pickedPoint.getX()), int(pickedPoint.getY()))
@@ -481,6 +480,9 @@ class Interface(DirectObject.DirectObject):
                         pos_node_pos = Point2(int(self.dummy_turn_pos_node.getX()), int(self.dummy_turn_pos_node.getY()))
                         if dest_node_pos == pos_node_pos:
                             key = HEADING_NONE
+                        #else:
+                            #key = utils.clampToHeading(h)
+                        
                         elif h >= -22.5 and h < 22.5:
                             key = HEADING_N
                         elif h >= 22.5 and h < 67.5:
