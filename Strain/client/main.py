@@ -93,13 +93,13 @@ class LoginScreen():
     def __init__(self, parent):
         self.parent = parent
         self.b = DirectButton(text = ("Login"),scale=.05,command=self.loginButPressed)
-        self.c = DirectEntry(scale=.05,initialText="", numLines = 1,focus=1)
+        self.c = DirectEntry(scale=.05,initialText="", numLines = 1,focus=1,command=self.loginButPressed)
         self.b.reparentTo(aspect2d)
         self.b.setPos(0, 0, -0.2)
         self.c.reparentTo(aspect2d)
-        self.c.setPos(0, 0, 0)
+        self.c.setPos(0, 0, 0)    
     
-    def loginButPressed(self):
+    def loginButPressed(self, text=None):
         self.parent.player = self.c.get()
         if self.parent.player != "ultramarines" and self.parent.player != "blood angels":
             self.parent.player = "blood angels"
