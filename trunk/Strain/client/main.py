@@ -102,7 +102,7 @@ class LoginScreen():
     def loginButPressed(self):
         self.parent.player = self.c.get()
         if self.parent.player != "ultramarines" and self.parent.player != "blood angels":
-            self.parent.player = "ultramarines"
+            self.parent.player = "blood angels"
         self.parent.startClient()
 #========================================================================
 #
@@ -297,10 +297,23 @@ class SceneGraph():
             self.movetext_np.flattenStrong()
             self.movetext_np.reparentTo(self.node)  
     
+    def setBullet(self, b):
+        b.reparentTo(render)
+    
+    def deleteBullet(self, b):
+        b.removeNode()
+        
+    def setDamageNode(self, d):
+        d.reparentTo(render)
+        
+    def deleteDamageNode(self, d):
+        d.removeNode()
+    
     def hideUnitAvailMove(self):
         if self.movetext_np:
             self.movetext_np.removeNode()     
-            
+        
+    
     def animTask(self, task):
         """Task to animate draw units while they are idling."""
         dt = globalClock.getDt()#@UndefinedVariable
@@ -624,7 +637,6 @@ class Net():
         #========================================================================
         #
         elif msg[0] == NEW_TURN:
-            print msg
             self.parent.newTurn()
         #========================================================================
         #
@@ -636,7 +648,11 @@ class Net():
         #========================================================================
         #
         elif msg[0] == SHOOT:
-            print "Bravo Debeli, dosla je sut poruka!"        
+            unit_id = msg[1]
+            unit = self.parent.sgm.unit_np_dict[unit_id]
+            weapon = msg[2]
+            damage_list = msg[3]
+            unit.shootUnit(weapon, damage_list)       
         
         #========================================================================
         #

@@ -1,5 +1,5 @@
 from direct.actor.Actor import Actor
-from panda3d.core import Vec4, Point4, Point3, Point2, NodePath#@UnresolvedImport
+from panda3d.core import Vec4, Point4, Point3, Point2, NodePath, TextNode#@UnresolvedImport
 from panda3d.core import PointLight#@UnresolvedImport
 from panda3d.core import TransparencyAttrib, TextureStage#@UnresolvedImport
 from direct.interval.IntervalGlobal import Sequence, ActorInterval, Parallel, Func
@@ -81,6 +81,8 @@ class UnitModel:
         
         self.passtime = 0
         self.setIdleTime()
+        
+        self.target_unit = None
     
     def load(self, unit_type):
         if unit_type == 'marine_common' or unit_type == 'marine_epic':
@@ -136,7 +138,7 @@ class UnitModel:
             else:
                 curr_pos = dest_pos
                 curr_h = dest_h
-                
+    
             if type == "move":
                 dest_pos = Point3(action[1][0] + 0.5, action[1][1] + 0.5, 0.3)
                 self.dummy_node.setPos(render, curr_pos)
@@ -164,7 +166,7 @@ class UnitModel:
                 dest_h = self.dummy_node.getH() 
                 i_h = self.model.quatInterval(0.2, hpr = Point3(dest_h, 0, 0), startHpr = Point3(curr_h, 0, 0))
                 duration = duration + 0.2
-                intervals.append(i_h)                 
+                intervals.append(i_h)
         seq = Sequence()
         for i in intervals:
             seq.append(i)
@@ -177,22 +179,69 @@ class UnitModel:
                         Func(self.parent.parent.afterUnitAnimHook, int(self.id), start_pos, end_pos)
                         )
         move.start()
-        
-    # TODO: ogs: zamijeniti parametre pravim parametrima koje dobijemo iz poruke sa servera    
-    def shootUnit(self, unit_id, dmg):
-        duration = 0.0        
-        enemy_unit = self.parent.unit_np_dict[unit_id]
+   
+    def shootUnit(self, weapon, damage_list):
+        seq = Sequence()
+        enemy_unit = self.target_unit
+        # First we create our orientation animation (turning towards enemy unit)
         curr_h = self.model.getH(render)
         self.dummy_node.setPos(render, self.model.getPos(render))
         self.dest_node.setPos(render, enemy_unit.model.getPos(render))
         self.dummy_node.lookAt(self.dest_node)
-        dest_h = self.dummy_node.getH(render) 
+        dest_h = self.dummy_node.getH(render)
+        dest_h = utils.getHeadingAngle(utils.clampToHeading(dest_h))
         i_h = self.model.quatInterval(0.2, hpr = Point3(dest_h, 0, 0), startHpr = Point3(curr_h, 0, 0))
-        duration = duration + 0.2               
-        anim = ActorInterval(self.model, 'shoot')
-        seq = Sequence()
         seq.append(i_h)
-        seq.append(anim)
+        # Then we create shooting animation
+        shoot_anim = ActorInterval(self.model, 'shoot')
+        # Then we create the bullet and its animation
+        self.bullet = loader.loadModel("sphere")
+        self.bullet.setScale(0.05)
+        start_pos = Point3(self.model.getX(render), self.model.getY(render), 0.9)
+        end_pos = Point3(self.dest_node.getX(render), self.dest_node.getY(render), 0.9)
+        time = round(self.model.getDistance(self.dest_node) / 5, 2)
+        bullet_sequence = Sequence(Func(self.parent.setBullet, self.bullet),
+                                   self.bullet.posInterval(time, end_pos, start_pos),
+                                   Func(self.parent.deleteBullet, self.bullet)
+                                   )
+        # Pack unit shoot animation and bullet animation in parallel
+        shoot_parallel = Parallel(shoot_anim, bullet_sequence)
+        seq.append(shoot_parallel)
+        # Find all damaged units and play their damage/kill/miss animation
+        damage_parallel = Parallel()
+        for action in damage_list:
+            damage_type = action[0]
+            target_unit_id = action[1]
+            target_unit = self.parent.unit_np_dict[target_unit_id]
+            t = TextNode('dmg')
+            if damage_type == "bounce":
+                target_anim = ActorInterval(target_unit.model, "damage")
+                dmg = 'bounce'
+            elif damage_type == "miss":
+                target_anim = ActorInterval(target_unit.model, "damage")
+                dmg = 'miss'                
+            elif damage_type == "damage":
+                target_anim = ActorInterval(target_unit.model, "damage")
+                dmg = str(action[2])
+            elif damage_type == "kill":
+                target_anim = ActorInterval(target_unit.model, "damage")
+                dmg = str(action[2])
+            t.setText( "%s" % dmg)
+            t.setTextColor(1, 0, 0, 1)
+            t.setAlign(TextNode.ACenter)
+            textNodePath = NodePath("textnp")
+            textNodePath.attachNewNode(t)
+            textNodePath.setScale(0.25)
+            textNodePath.setBillboardPointEye()
+            start_pos = Point3(self.dest_node.getX(render), self.dest_node.getY(render), 0.9)
+            end_pos = start_pos + Point3(0, 0, 3)
+            damage_text_sequence = Sequence(Func(self.parent.setDamageNode, textNodePath),
+                                            textNodePath.posInterval(1.5, end_pos, start_pos),
+                                            Func(self.parent.deleteDamageNode, textNodePath)
+                                            )
+            damage_parallel.append(Parallel(target_anim, damage_text_sequence))
+        seq.append(damage_parallel)
+        # Start our shoot sequence
         seq.start()        
 
     

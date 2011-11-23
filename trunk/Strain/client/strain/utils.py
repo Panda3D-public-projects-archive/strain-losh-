@@ -132,6 +132,8 @@ anim_dict = {}
 anim_dict['run'] = "m_marp_run"
 anim_dict['idle_stand01'] = "m_marp_idle_stand01"
 anim_dict['shoot'] = "m_marp_run"
+anim_dict['damage'] = "m_marp_run"
+anim_dict['die'] = "m_marp_run"
 
 unit_types = {}
 unit_types['marine_common'] = ['space_marine_head', 'power_armour_common', 'space_marine_backpack', 'power_axe_common', 'bolt_pistol_common', None, None]
@@ -188,4 +190,43 @@ def flattenReallyStrong(n):
 def normalize(myVec):
     myVec.normalize()  
     return myVec
+
+def clampToHeading(h):
+    key = HEADING_NONE
+    if h >= -22.5 and h < 22.5:
+        key = HEADING_N
+    elif h >= 22.5 and h < 67.5:
+        key = HEADING_NW
+    elif h >= 67.5 and h < 112.5:
+        key = HEADING_W
+    elif h >= 112.5 and h < 157.5:
+        key = HEADING_SW
+    elif (h >= 157.5 and h <= 180) or (h >= -180 and h < -157.5):
+        key = HEADING_S
+    elif h >= -157.5 and h < -112.5:
+        key = HEADING_SE
+    elif h >= -112.5 and h < -67.5:
+        key = HEADING_E
+    elif h >= -67.5 and h < -22.5:
+        key = HEADING_NE
+    return key
+
+def getHeadingAngle(h):
+    if h == HEADING_N:
+        angle = 0
+    elif h == HEADING_NW:
+        angle = 45
+    elif h == HEADING_W:
+        angle = 90
+    elif h == HEADING_SW:
+        angle = 135
+    elif h == HEADING_S:
+        angle = 180
+    elif h == HEADING_SE:
+        angle = -135
+    elif h == HEADING_E:
+        angle = -90
+    elif h == HEADING_NE:
+        angle = -45
+    return angle
 
