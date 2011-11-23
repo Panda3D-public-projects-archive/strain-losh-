@@ -312,9 +312,11 @@ class Interface(DirectObject.DirectObject):
                             self.parent.selectUnit(unit_id)
                         else:
                             # Remember movement tile so we can send orientation message when mouse is depressed
-                            self.unit_move_destination = pickedCoord                          
+                            # Do this only if it is our turn
+                            if self.parent.player == self.parent.turn_player:
+                                self.unit_move_destination = pickedCoord                          
                     elif self.parent.isThisEnemyUnit(unit_id):
-                        if self.parent.sel_unit_id != None:
+                        if self.parent.sel_unit_id != None and self.parent.player == self.parent.turn_player:
                             self.parent.sgm.unit_np_dict[self.parent.sel_unit_id].target_unit = self.parent.sgm.unit_np_dict[unit_id]
                             ClientMsg.shoot(self.parent.sel_unit_id, unit_id)
                 else:
@@ -331,13 +333,16 @@ class Interface(DirectObject.DirectObject):
                                 self.parent.selectUnit(unit_id)
                             else:
                                 # Remember movement tile so we can send orientation message when mouse is depressed
-                                self.unit_move_destination = pickedCoord
+                                # Do this only if it is our turn
+                                if self.parent.player == self.parent.turn_player:
+                                    self.unit_move_destination = pickedCoord
                         elif self.parent.isThisEnemyUnit(unit_id):
-                            if self.parent.sel_unit_id != None:
+                            if self.parent.sel_unit_id != None and self.parent.player == self.parent.turn_player:
                                 ClientMsg.shoot(self.parent.sel_unit_id, unit_id)
                     else:
-                        if self.parent.sel_unit_id != None:
+                        if self.parent.sel_unit_id != None and self.parent.player == self.parent.turn_player:
                             # Remember movement tile so we can send movement message when mouse is depressed
+                            # Do this only if it is our turn
                             self.unit_move_destination = pickedCoord
                             
     def mouseLeftClickUp(self):
@@ -480,6 +485,7 @@ class Interface(DirectObject.DirectObject):
                         pos_node_pos = Point2(int(self.dummy_turn_pos_node.getX()), int(self.dummy_turn_pos_node.getY()))
                         if dest_node_pos == pos_node_pos:
                             key = HEADING_NONE
+                        # TODO: ogs: kad Debeli popravi turn poruku mozemo ovaj dolje kod zamijeniti s zakomentiranim
                         #else:
                             #key = utils.clampToHeading(h)
                         

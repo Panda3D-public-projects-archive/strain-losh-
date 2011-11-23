@@ -365,6 +365,10 @@ class Client(DirectObject):
         # Flags
         self.unit_move_playing = False
         
+        # Turn number and player on turn
+        self.turn_number = 0
+        self.turn_player = None
+        
         # Create main update task
         taskMgr.add(self.updateTask, "update_task")
     
@@ -387,8 +391,11 @@ class Client(DirectObject):
             #self.selected_unit.marker.loadAnims({"move":"ripple2"})  
             #self.selected_unit.marker.loop("move")
             self.sgm.loadAltRenderModel(unit_id)
-            self.sgm.showUnitAvailMove(unit_id)
             self.interface.printUnitData(unit_id) 
+            # If it is our turn, display available move tiles
+            if self.player == self.turn_player:
+                self.sgm.showUnitAvailMove(unit_id)
+
             
     def selectNextUnit(self):
         if self.sel_unit_id == None:
@@ -607,19 +614,11 @@ class Net():
     def handleMsg(self, msg):
         """Handles incoming messages."""
         self.log.info("Received message: %s", msg[0])
-        """
-        print "-------"
-        print "-------"
-        print "-------"
-        print msg[0]
-        print "----"
-        print msg
-        """
         #========================================================================
         #
         if msg[0] == ENGINE_STATE:
             self.parent.level = pickle.loads(msg[1]['level'])
-            self.parent.turn = msg[1]['turn']
+            #self.parent.turn = msg[1]['turn']
             self.parent.players = pickle.loads(msg[1]['players'])
             # TODO: ogs: Inace cu znati player_id kad se ulogiram pa necu morati ovako dekodirati
             for p in self.parent.players:
@@ -638,6 +637,8 @@ class Net():
         #
         elif msg[0] == NEW_TURN:
             self.parent.newTurn()
+            self.parent.turn_number = msg[1]
+            self.parent.turn_player = msg[2]
         #========================================================================
         #
         elif msg[0] == UNIT:
