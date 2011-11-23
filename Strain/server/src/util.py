@@ -55,19 +55,17 @@ def compileState(engine, player):
     #compile all my units
     for unt in player.units:
         units[unt.id] = compileUnit(unt)
-    #compile all visible units
+
     for unt in player.visible_enemies:
-        #TODO: krav: ovo maknut kad ogi sredi da nema ap-a kod enmeija
-        units[unt.id] = compileUnit(unt)
-        #units[unt.id] = compileEnemyUnit(unt)
+        units[unt.id] = compileEnemyUnit(unt)
     for unt in player.detected_enemies:
-        units[unt.id] = compileUnit(unt)
-        #units[unt.id] = compileDetectedEnemyUnit(unt)
+        units[unt.id] = compileDetectedEnemyUnit(unt)
     
-    #dic[ 'units' ] = pickle.dumps( compileAllUnits( engine.units ) )    
+        
     dic[ 'units' ] = pickle.dumps( units )    
     dic[ 'level' ] = pickle.dumps( compileLevel( engine.level ) )        
-    dic[ 'turn' ] = engine.turn     
+    dic[ 'turn' ] = engine.turn
+    dic[ 'active_player' ] = engine.active_player
     dic[ 'players' ] = pickle.dumps( compilePlayers( engine.players, player ) )     
     
     return dic
