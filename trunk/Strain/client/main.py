@@ -230,15 +230,6 @@ class SceneGraph():
             # Keep unit nodepath in list corresponding to level size
             # This will be dinamically altered when units change position
             self.unit_np_list[int(unit['pos'][0])][int(unit['pos'][1])] = um
-            
-        for unit in self.parent.enemy_units.itervalues():
-            um = UnitModel(self, unit['id'])
-            um.node.reparentTo(self.node)
-            # Keep unit nodepath in dictionary of all unit nodepaths
-            self.unit_np_dict[unit['id']] = um
-            # Keep unit nodepath in list corresponding to level size
-            # This will be dinamically altered when units change position
-            self.unit_np_list[int(unit['pos'][0])][int(unit['pos'][1])] = um
                         
         self.comp_inited['units'] = True    
     
@@ -338,7 +329,6 @@ class Client(DirectObject):
         # Set up important game logic variables
         self.level = None
         self.units = {}
-        self.enemy_units = {}
         self.players = {}
         self.sel_unit_id = None
         
@@ -403,7 +393,12 @@ class Client(DirectObject):
         else:
             last = self.sel_unit_id
         
-        l = sorted(self.units.iterkeys())
+        d = {}
+        for unit_id in self.units.iterkeys():
+            if self.isThisMyUnit(unit_id):
+                d[unit_id] = self.units[unit_id]
+        
+        l = sorted(d.iterkeys())
         if len(l) <= 1:
             return
         else:
@@ -422,8 +417,13 @@ class Client(DirectObject):
             last = 9999999
         else:
             last = self.sel_unit_id
+            
+        d = {}
+        for unit_id in self.units.iterkeys():
+            if self.isThisMyUnit(unit_id):
+                d[unit_id] = self.units[unit_id]
         
-        l = sorted(self.units.iterkeys())
+        l = sorted(d.iterkeys())
         l.reverse()
         if len(l) <= 1:
             return
@@ -438,35 +438,31 @@ class Client(DirectObject):
             self.selectUnit(new_unit_id)
     
     def refreshUnit(self, unit):
-        if unit['owner_id'] == self.player_id:
-            self.units[unit['id']] = unit
-        else:
-            self.enemy_units[unit['id']] = unit
+        self.units[unit['id']] = unit
     
     def setupUnitLists(self, units):
         for u in units.itervalues():
-            if u['owner_id'] == self.player_id:
-                self.units[u['id']] = u
-            else:
-                self.enemy_units[u['id']] = u
+            self.units[u['id']] = u
     
     def getUnitData(self, unit_id):
         if self.units.has_key(unit_id):
             return self.units[unit_id]
-        elif self.enemy_units.has_key(unit_id):
-            return self.enemy_units[unit_id]
     
     def isThisMyUnit(self, unit_id):
-        return self.units.has_key(unit_id)
+        if self.units[unit_id]['owner_id'] == self.player_id:
+            return True
+        else:
+            return False
     
     def isThisEnemyUnit(self, unit_id):
-        return self.enemy_units.has_key(unit_id)    
+        if self.units[unit_id]['owner_id'] != self.player_id:
+            return True
+        else:
+            return False
     
     def getCoordsByUnit(self, unit_id):
         if self.units.has_key(unit_id):
             unit = self.units[unit_id]
-        elif self.enemy_units.has_key(unit_id):
-            unit = self.enemy_units[unit_id]
         return Point2(unit['pos'][0], unit['pos'][1])
     
     def getUnitByCoords(self, pos):
@@ -629,6 +625,7 @@ class Net():
         #========================================================================
         #
         elif msg[0] == MOVE:
+            print msg
             unit_id = msg[1][0]
             tile_list = msg[1][1]
             unit = self.parent.sgm.unit_np_dict[unit_id]
