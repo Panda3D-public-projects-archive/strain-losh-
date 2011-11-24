@@ -994,7 +994,7 @@ class Engine( Thread ):
 
     def checkForDeadUnits(self):
         
-        for unit in self.units.itervalues():
+        for unit in self.units.values():
             if unit.alive:
                 continue
                 
