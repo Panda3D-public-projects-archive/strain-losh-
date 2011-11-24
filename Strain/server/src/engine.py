@@ -936,6 +936,8 @@ class Engine( Thread ):
                 if not unit.alive:
                     break
                         
+            self.checkForDeadUnits()
+                        
         return ret_actions
     
     
@@ -981,10 +983,35 @@ class Engine( Thread ):
 
         #TODO: krav: ovdje isto stavit da samo oni koji vide pucanje da dobiju poruku         
         msg = shooter.shoot( target )
+        
+        self.checkForDeadUnits()
+        
         if msg:
             EngMsg.shoot( msg )   
             EngMsg.sendUnit( util.compileUnit(shooter) ) 
             EngMsg.sendUnit( util.compileUnit(target) ) 
+
+
+    def checkForDeadUnits(self):
+        
+        for unit in self.units.itervalues():
+            if unit.alive:
+                continue
+                
+            notify.info("Unit:%s died", unit.id )
+            print "unit died:", unit.id
+            
+            del self.units[unit.id]
+            
+            self.level.removeUnit( unit )
+            
+            for p in self.players:            
+                if unit in p.units:
+                    p.units.remove( unit )
+                if unit in p.visible_enemies:
+                    p.visible_enemies.remove( unit )
+                if unit in p.detected_enemies:
+                    p.detected_enemies.remove( unit )
 
 
     def findPlayer( self, source ):
@@ -994,5 +1021,4 @@ class Engine( Thread ):
 
 
 if __name__ == "__main__":
-    me = Engine()
-    me.start()
+    Engine().start()
