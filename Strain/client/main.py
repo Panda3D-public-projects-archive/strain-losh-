@@ -168,7 +168,7 @@ class SceneGraph():
         for i in xrange(0, level['maxX']):
             t = TextNode('node name')
             t.setText( "%s" % i)
-            tnp = render.attachNewNode(t)
+            tnp = self.level_node.attachNewNode(t)
             tnp.setColor(1, 1, 1)
             tnp.setScale(0.5, 0.5, 0.5)
             tnp.setPos(i+0.3, -0.3, 0.5)
@@ -177,13 +177,20 @@ class SceneGraph():
         for i in xrange(0, level['maxY']):
             t = TextNode('node name')
             t.setText( "%s" % i)
-            tnp = render.attachNewNode(t)
+            tnp = self.level_node.attachNewNode(t)
             tnp.setColor(1, 1, 1)
             tnp.setScale(0.5, 0.5, 0.5)
             tnp.setPos(-0.3, i+0.3, 0.5)
             tnp.setBillboardPointEye()
             tnp.setLightOff()         
         
+    def deleteLevel(self):
+        if self.comp_inited['level'] == False:
+            return
+        
+        self.level_node.removeNode()
+        self.comp_inited['level'] = False
+    
     def initLights(self):
         if self.comp_inited['lights']:
             return
@@ -220,18 +227,29 @@ class SceneGraph():
         if self.comp_inited['units']:
             return
         
+        self.unit_node = self.node.attachNewNode('unit_node')
         self.unit_np_list = [[None] * self.parent.level['maxY'] for i in xrange(self.parent.level['maxX'])]
                     
         for unit in self.parent.units.itervalues():
             um = UnitModel(self, unit['id'])
-            um.node.reparentTo(self.node)
+            um.node.reparentTo(self.unit_node)
             # Keep unit nodepath in dictionary of all unit nodepaths
             self.unit_np_dict[unit['id']] = um
             # Keep unit nodepath in list corresponding to level size
             # This will be dinamically altered when units change position
             self.unit_np_list[int(unit['pos'][0])][int(unit['pos'][1])] = um
                         
-        self.comp_inited['units'] = True    
+        self.comp_inited['units'] = True  
+        
+    def deleteUnits(self):
+        if self.comp_inited['units'] == False:
+            return
+        
+        self.unit_node.removeNode()
+        self.unit_np_list = []
+        self.unit_np_dict = {}
+        self.comp_inited['units'] = False
+          
     
     def initAltRender(self):
         """Initializes off screen buffer used to render models and animations for unit portraits."""
@@ -366,10 +384,7 @@ class Client(DirectObject):
         self.deselectUnit()
     
     def deselectUnit(self):
-        self.sgm.clearAltRenderModel()
-        self.sgm.hideUnitAvailMove()
-        self.interface.clearUnitData()
-        self.sel_unit_id = None
+        self.clearState()
         
     def selectUnit(self, unit_id):
         if self.unit_move_playing == True:
@@ -441,6 +456,7 @@ class Client(DirectObject):
         self.units[unit['id']] = unit
     
     def setupUnitLists(self, units):
+        self.units = {}
         for u in units.itervalues():
             self.units[u['id']] = u
     
@@ -589,6 +605,13 @@ class Client(DirectObject):
     def endTurn(self):
         ClientMsg.endTurn()
     
+    def clearState(self):
+        self.sgm.clearAltRenderModel()
+        self.sgm.hideUnitAvailMove()
+        self.interface.clearUnitData()
+        self.sel_unit_id = None
+        
+    
     def updateTask(self, task):
         """Main update Client task."""
         return task.cont
@@ -695,9 +718,12 @@ class ClientFSM(FSM.FSM):
         None
         
     def enterEngineState(self):
+        self.parent.clearState()
+        self.parent.sgm.deleteLevel()
+        self.parent.sgm.deleteUnits()
         self.parent.sgm.loadLevel(self.parent.level)
         self.parent.sgm.loadUnits()
-        
+
     def exitEngineState(self):
         None
         
