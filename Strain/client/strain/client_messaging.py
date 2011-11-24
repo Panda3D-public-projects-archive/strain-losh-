@@ -102,9 +102,10 @@ class ClientMsg:
         
         #if we are not connected, try to connect
         if not ClientMsg.myConnection:
-            
-            if ClientMsg.num_failed_attempts > 5:
-                return False
+
+            #TODO: krav: ovo je za debug komentirano            
+            #if ClientMsg.num_failed_attempts > 5:
+            #    return False
             
             #if we already tried 5 times, don't even bother
             if ClientMsg.num_failed_attempts == 5:
