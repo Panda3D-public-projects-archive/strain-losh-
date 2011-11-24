@@ -4,51 +4,6 @@ import util
 import armour
 
 
-def loadUnit( name ):
-    xmldoc = minidom.parse('data/base/units.xml')
-    
-    unit = None
-    
-    for p in xmldoc.getElementsByTagName( 'unit' ):
-                
-        if p.attributes['name'].value != name:
-            continue
-        
-        unit = Unit( p.attributes['name'].value )            
-                     
-        #add all weapons, and try to set first ranged weapon as active
-        wpns = p.attributes['weapons'].value.split(',')
-        for wname in wpns:
-            wpn = weapon.loadWeapon( wname )
-            unit.weapons.append( wpn )  
-            if wpn.type != weapon.TYPE_MELEE:
-                unit.active_weapon = wpn
-        if not unit.active_weapon:
-            unit.weapons[0]
-
-        unit.armour =  armour.loadArmour( p.attributes['armour'].value )
-        unit.armour.owner = unit
-        
-        unit.default_ap = int( p.attributes['ap'].value )
-        unit.default_hp = int( p.attributes['w'].value )
-        
-        
-        unit.m = int( p.attributes['m'].value )
-        unit.ws = int( p.attributes['ws'].value )
-        unit.bs = int( p.attributes['bs'].value )
-        unit.s = int( p.attributes['s'].value )
-        unit.t = int( p.attributes['t'].value )
-        unit.w = int( p.attributes['w'].value )
-        unit.i = int( p.attributes['i'].value )
-        unit.a = int( p.attributes['a'].value )
-        unit.ld = int( p.attributes['ld'].value )
-
-    xmldoc.unlink()
-    
-    if not unit:
-        raise Exception("Unit:%s not found in database." % name)
-    return unit
-    
 HEADING_NONE      = 0
 HEADING_NW        = 1
 HEADING_N         = 2
@@ -265,3 +220,51 @@ class Unit():
 
         
         
+
+
+def loadUnit( name ):
+    xmldoc = minidom.parse('data/base/units.xml')
+    
+    unit = None
+    
+    for p in xmldoc.getElementsByTagName( 'unit' ):
+                
+        if p.attributes['name'].value != name:
+            continue
+        
+        unit = Unit( p.attributes['name'].value )            
+                     
+        #add all weapons, and try to set first ranged weapon as active
+        wpns = p.attributes['weapons'].value.split(',')
+        for wname in wpns:
+            wpn = weapon.loadWeapon( wname )
+            unit.weapons.append( wpn )  
+            if wpn.type != weapon.TYPE_MELEE:
+                unit.active_weapon = wpn
+        if not unit.active_weapon:
+            unit.weapons[0]
+
+        unit.armour =  armour.loadArmour( p.attributes['armour'].value )
+        unit.armour.owner = unit
+        
+        unit.default_ap = int( p.attributes['ap'].value )
+        unit.default_hp = int( p.attributes['w'].value )
+        
+        
+        unit.m = int( p.attributes['m'].value )
+        unit.ws = int( p.attributes['ws'].value )
+        unit.bs = int( p.attributes['bs'].value )
+        unit.s = int( p.attributes['s'].value )
+        unit.t = int( p.attributes['t'].value )
+        unit.w = int( p.attributes['w'].value )
+        unit.i = int( p.attributes['i'].value )
+        unit.a = int( p.attributes['a'].value )
+        unit.ld = int( p.attributes['ld'].value )
+
+    xmldoc.unlink()
+    
+    if not unit:
+        raise Exception("Unit:%s not found in database." % name)
+    return unit
+    
+
