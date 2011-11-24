@@ -12,6 +12,7 @@ import sys, traceback
 import cPickle as pickle
 import util
 from player import Player
+from util import compileEnemyUnit
 
 
 notify = util.Notify()
@@ -89,7 +90,7 @@ class Engine( Thread ):
     def testLevelLOS(self):
         dic = {}
         
-        self.getLOS( self.units[0], self.units[1] )
+        print self.getLOS( self.units[0], self.units[1] )
         return
         
         
@@ -112,9 +113,9 @@ class Engine( Thread ):
             lista = []
             listb = []
             
-            for a,b in dic[ (t1,t2)]:
+            for a,b in dic[ (t1,t2)]: #@UnusedVariable
                 lista.append(a)
-            for a,b in dic[ (t2,t1)]:
+            for a,b in dic[ (t2,t1)]: #@UnusedVariable
                 listb.append(a)
             
             #listb.reverse()
@@ -213,7 +214,6 @@ class Engine( Thread ):
         if self.active_player == self.players[-1]:
             self.active_player = None          
         
-        
         self.beginTurn()
         
         pass
@@ -269,24 +269,31 @@ class Engine( Thread ):
         
         pass
 
-    
+
     def getLOS(self, beholder, target ):
         """0-cant see, 1-partial, 2-full"""
-        b_pos = beholder.pos + ( ( self.level.tuppleGet( beholder.pos ) + beholder.height ) , )
-    
+        b_pos = beholder.pos + ( ( self.level.tuppleGet( beholder.pos ) + beholder.height -1 ) , )
+        #print "print "beh:", beholder.pos, "\ttar:", target.pos 
         seen = 0        
+        seen_back = 0        
         #check if we see target's head
-        t1 = target.pos + ( ( self.level.tuppleGet( target.pos ) + target.height ) , )        
-        if not self.getTiles3D( b_pos, t1 ):
-            return seen
+        t1 = target.pos + ( ( self.level.tuppleGet( target.pos ) + target.height -1 ) , )        
+        if self.getTiles3D( b_pos, t1 ):
+            seen += 1
+            seen_back += 1
         
-        seen += 1
         #check if we see target's feet
-        t2 = target.pos + ( ( self.level.tuppleGet( target.pos ) + target.height ) , )
-        if not self.getTiles3D( b_pos, t2 ):
-            return seen
- 
-        seen += 1
+        t2 = target.pos + ( self.level.tuppleGet( target.pos ) , )
+        if self.getTiles3D( b_pos, t2 ):
+            seen += 1
+
+        #TODO: krav: ovo stavit da vraca za oboje
+        #check if target sees beholders feet
+        #b2 = beholder.pos + ( ( self.level.tuppleGet( beholder.pos ) ) , )        
+        #if self.getTiles3D( t1, b2 ):
+        #    seen_back += 1
+        #return ( seen, seen_back )
+    
         return seen
     
     
@@ -809,18 +816,24 @@ class Engine( Thread ):
         if not unit:
             return
                 
-        move_actions = []
-        actions_for_others = {}
+        my_actions = []
         
+        actions_for_others = {}
+        #fill it up with empty lists
+        for p in self.players:
+            if p.connection == source:
+                continue
+            actions_for_others[p] = []                                    
+                                    
         #special case if we just need to rotate the unit
         if unit.pos == new_position:
             
             #see if we actually need to rotate the unit
             if unit.rotate( new_heading ):
-                move_actions.append( ('rotate', new_heading) )
+                my_actions.append( ('rotate', new_heading) )
                 for p in self.players:
                     if unit in p.visible_enemies:
-                        actions_for_others[p.connection] = ('rotate', new_heading)
+                        actions_for_others[p].append( ('rotate', new_heading) )
             #if not, than do nothing
             else:
                 return
@@ -836,37 +849,79 @@ class Engine( Thread ):
             
             #everything checks out, do the actual moving
             for tile, ap_remaining in path:
+                
                 self.level.removeUnit( unit )
                 unit.rotate( tile )                
                 unit.move( tile, ap_remaining )
-                self.level.putUnit( unit )                                
-                move_actions.append( ('move', tile ) )
-                
-                res = self.checkMovementInterrupt( unit ) 
+                self.level.putUnit( unit )            
+                                    
+                my_actions.append( ('move', tile ) )              
+                                 
+                for p in self.players:
+                    if unit in p.visible_enemies: 
+                        actions_for_others[p].append( ('move', tile ) )
+                 
+                overwatch = self.checkEnemyVision( unit, actions_for_others )
+                 
+                res = self.checkMovementInterrupt( unit, overwatch )
                 if res:
-                    move_actions.extend( res )
+                    my_actions.extend( res )
                     break
+                
+
                 
                 #if this is the last tile than apply last orientation change
                 if( tile == path[-1][0] ):
                     if unit.rotate( new_heading ):
-                        move_actions.append( ('rotate', new_heading) )
+                        my_actions.append( ('rotate', new_heading) )
                     
+                    for p in self.players:
+                        if unit in p.visible_enemies: 
+                            actions_for_others[p].append( ('rotate', new_heading) )
                     
                     
             
-        EngMsg.move( unit.id, move_actions, source )
-        for conn in actions_for_others:
-            EngMsg.move( unit.id, actions_for_others[conn], conn )
+        EngMsg.move( unit.id, my_actions, source )
+        for plyr in actions_for_others:
+            if actions_for_others[plyr] and plyr.connection:
+                EngMsg.move( unit.id, actions_for_others[plyr], plyr.connection )
             
             
         EngMsg.sendUnit( util.compileUnit(unit), source )
             
 
+    def checkEnemyVision(self, unit, actions_for_others ):
+        
+        overwatch = []
+        
+        #go through all enemy players, if we see this unit we need to register its movement
+        for p in self.players:
+            if p == unit.owner:
+                continue
+            
+            seen = 0
+            
+            for enemy in p.units:
+                if self.getLOS( enemy, unit ):
+                    seen = 1
+                    if enemy.overwatch:
+                        overwatch.append( enemy )
+            
+            if seen:
+                if unit not in p.visible_enemies:
+                    p.visible_enemies.append( unit )
+                    actions_for_others[ p ].append( ('spot', compileEnemyUnit(unit) ) )
+            else:
+                if unit in p.visible_enemies:
+                    p.visible_enemies.remove( unit )
+                    actions_for_others[ p ].append( ('vanish', unit.id ) )
+                
+        return overwatch
     
-    def checkMovementInterrupt(self, unit ):
-        overwatch,spotted = self.isMovementInterrupted( unit )        
-        ret_actions = []
+    
+    def checkMovementInterrupt(self, unit, overwatch ):
+        spotted = self.checkMyVision( unit )        
+        ret_actions = []        
         
         if spotted:
             for enemy in spotted:
@@ -880,44 +935,28 @@ class Engine( Thread ):
                     ret_actions.append( ('overwatch', res ) )
                 if not unit.alive:
                     break
-            
+                        
         return ret_actions
     
     
-    def isMovementInterrupted(self, unit):
+    def checkMyVision(self, unit):
         
         #we moved this unit, so we need visibilit to every enemy unit, and stop movement if this unit
         #sees anything or if an enemy unit on overwatch sees this unit
         spotted = []
-        overwatch = []
-        
+
         for player in self.players:
-            #if this is owning player, skip
-            if player == unit.owner:
-                continue
-        
-            #if this is a teammate, skip
-            if player.team == unit.owner.team:
-                continue
+            if player == unit.owner or player.team == unit.owner.team:
+                continue        
         
             for enemy in player.units:
-                #TODO: krav: ovdje se skoro ista stvr racuna 2 put?! mozda optimizacija?
-                if self.getLOS( enemy, unit ):
-                    if unit not in player.visible_enemies:
-                        #TODO: krav: ovdje reagirat na to da je neko out of turn spotao ovaj unit...
-                        player.visible_enemies.append( unit )
-                    if enemy.overwatch:
-                        overwatch.append( enemy )   
-                 
                 if self.getLOS( unit, enemy ) and enemy not in unit.owner.visible_enemies:
                     spotted.append( enemy )
                             
-        return (overwatch, spotted)
+        return spotted
             
 
     def shoot(self, shooter_id, target_id, source ):
-        
-        #return self.units[shooter_id].shoot( self.units[target_id])
         
         if not self.validatePlayer( source ):
             return
@@ -939,12 +978,14 @@ class Engine( Thread ):
             notify.critical( "Client:%s\ttried to shoot his own unit." % source.getAddress() )
             EngMsg.sendErrorMsg( "You cannot shoot you own units." )
             return None
-         
+
+        #TODO: krav: ovdje isto stavit da samo oni koji vide pucanje da dobiju poruku         
         msg = shooter.shoot( target )
         if msg:
             EngMsg.shoot( msg )   
             EngMsg.sendUnit( util.compileUnit(shooter) ) 
             EngMsg.sendUnit( util.compileUnit(target) ) 
+
 
     def findPlayer( self, source ):
         for p in self.players:
