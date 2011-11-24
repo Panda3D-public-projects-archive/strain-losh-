@@ -614,8 +614,9 @@ class Net():
         #
         if msg[0] == ENGINE_STATE:
             self.parent.level = pickle.loads(msg[1]['level'])
-            #self.parent.turn = msg[1]['turn']
+            self.parent.turn_number = msg[1]['turn']
             self.parent.players = pickle.loads(msg[1]['players'])
+            self.parent.turn_player = msg[1]['active_player'].name 
             # TODO: ogs: Inace cu znati player_id kad se ulogiram pa necu morati ovako dekodirati
             for p in self.parent.players:
                 if p['name'] == self.parent.player:
@@ -625,7 +626,6 @@ class Net():
         #========================================================================
         #
         elif msg[0] == MOVE:
-            print msg
             unit_id = msg[1][0]
             tile_list = msg[1][1]
             unit = self.parent.sgm.unit_np_dict[unit_id]
