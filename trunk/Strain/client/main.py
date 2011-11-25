@@ -16,7 +16,7 @@ from panda3d.core import ShadeModelAttrib, DirectionalLight, AmbientLight#@Unres
 from panda3d.core import CollisionTraverser, CollisionRay, CollisionHandlerQueue, CollisionNode
 from direct.showbase.DirectObject import DirectObject
 from direct.fsm import FSM
-from direct.gui.DirectGui import DirectButton, DirectEntry
+from direct.gui.DirectGui import DirectButton, DirectEntry, DirectLabel, DGG
 
 # strain related imports
 from strain.client_messaging import *
@@ -76,8 +76,11 @@ class AppFSM(FSM.FSM):
     
     def exitLoginScreen(self):
         self.parent.login.parent = None
-        self.parent.login.b.remove()
-        self.parent.login.c.remove()
+        self.parent.login.label_username.remove()
+        self.parent.login.label_password.remove()
+        self.parent.login.entry_username.remove()          
+        self.parent.login.entry_password.remove()        
+        self.parent.login.button.remove()
         del self.parent.login
 
     def enterClient(self):
@@ -92,15 +95,25 @@ class AppFSM(FSM.FSM):
 class LoginScreen():
     def __init__(self, parent):
         self.parent = parent
-        self.b = DirectButton(text = ("Login"),scale=.05,command=self.loginButPressed)
-        self.c = DirectEntry(scale=.05,initialText="", numLines = 1,focus=1,command=self.loginButPressed)
-        self.b.reparentTo(aspect2d)
-        self.b.setPos(0, 0, -0.2)
-        self.c.reparentTo(aspect2d)
-        self.c.setPos(0, 0, 0)    
+        font = loader.loadFont('FRIZQT__.TTF')
+        self.label_username = DirectLabel(text = "Username:", scale=.05, frameColor=(0,0,0,0), text_font=font, text_align=TextNode.ARight)
+        self.label_password = DirectLabel(text = "Password:", scale=.05, frameColor=(0,0,0,0), text_font=font, text_align=TextNode.ARight)
+        self.button = DirectButton(text = ("Login"),scale=.05,command=self.loginButPressed, text_font=font, text_align=TextNode.ACenter)
+        self.entry_username = DirectEntry(scale=.05,initialText="", numLines = 1,focus=1,command=self.loginButPressed, text_font=font)
+        self.entry_password = DirectEntry(scale=.05,initialText="", numLines = 1,command=self.loginButPressed, text_font=font)
+        self.label_username.reparentTo(aspect2d)
+        self.label_username.setPos(-0.2, 0, -0.4)
+        self.label_password.reparentTo(aspect2d)
+        self.label_password.setPos(-0.2, 0, -0.5)        
+        self.entry_username.reparentTo(aspect2d)
+        self.entry_username.setPos(-0.1, 0, -0.4)    
+        self.entry_password.reparentTo(aspect2d)
+        self.entry_password.setPos(-0.1, 0, -0.5)
+        self.button.reparentTo(aspect2d)
+        self.button.setPos(0, 0, -0.6)        
     
     def loginButPressed(self, text=None):
-        self.parent.player = self.c.get()
+        self.parent.player = self.entry_username.get()
         if self.parent.player != "ultramarines" and self.parent.player != "blood angels":
             self.parent.player = "blood angels"
         self.parent.startClient()
