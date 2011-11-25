@@ -290,6 +290,7 @@ class SceneGraph():
         
     def showUnitAvailMove(self, unit_id):
         """Displays visual indicator of tiles which are in movement range of the selected unit."""
+        self.hideUnitAvailMove()
         unit = self.parent.units[unit_id]
         if unit:
             self.parent.units[unit_id]['move_dict'] = self.parent.getMoveDict(unit_id)
@@ -305,6 +306,10 @@ class SceneGraph():
                 textNodePath.lookAt(tile[0]+0.2, tile[1]+0.2, -100)
             self.movetext_np.flattenStrong()
             self.movetext_np.reparentTo(self.node)  
+
+    def hideUnitAvailMove(self):
+        if self.movetext_np:
+            self.movetext_np.removeNode() 
     
     def setBullet(self, b):
         b.reparentTo(render)
@@ -316,18 +321,13 @@ class SceneGraph():
         d.reparentTo(render)
         
     def deleteDamageNode(self, d):
-        d.removeNode()
-    
-    def hideUnitAvailMove(self):
-        if self.movetext_np:
-            self.movetext_np.removeNode()     
-        
+        d.removeNode()    
     
     def animTask(self, task):
         """Task to animate draw units while they are idling."""
         dt = globalClock.getDt()#@UndefinedVariable
         for unit in self.unit_np_dict.itervalues():
-            if self.parent.units[int(unit.id)]['alive'] == True:
+            if self.parent.isUnitAlive(int(unit.id)) == True:
                 unit.passtime += dt
     
                 if unit.passtime > unit.idletime:
@@ -476,6 +476,9 @@ class Client(DirectObject):
             return True
         else:
             return False
+        
+    def isUnitAlive(self, unit_id):
+        return self.units[unit_id]['alive']
     
     def getCoordsByUnit(self, unit_id):
         if self.units.has_key(unit_id):
@@ -592,14 +595,21 @@ class Client(DirectObject):
         
         return final_dict
     
-    def beforeUnitAnimHook(self, unit_id):
+    def beforeUnitMoveHook(self, unit_id):
         self.unit_move_playing = True
         self.sgm.hideUnitAvailMove()
     
-    def afterUnitAnimHook(self, unit_id, start_pos, end_pos):
+    def afterUnitMoveHook(self, unit_id, start_pos, end_pos):
         if end_pos != None:
             self.sgm.unit_np_list[int(start_pos.getX())][int(start_pos.getY())] = None
             self.sgm.unit_np_list[int(end_pos.getX())][int(end_pos.getY())] = self.sgm.unit_np_dict[unit_id]
+        self.sgm.showUnitAvailMove(unit_id)
+        self.unit_move_playing = False
+        
+    def beforeUnitShootHook(self, unit_id):
+        self.unit_move_playing = True
+        
+    def afterUnitShootHook(self, unit_id):
         self.sgm.showUnitAvailMove(unit_id)
         self.unit_move_playing = False
         

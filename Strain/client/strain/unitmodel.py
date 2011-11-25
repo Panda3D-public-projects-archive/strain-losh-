@@ -179,10 +179,10 @@ class UnitModel:
         #return
         anim = ActorInterval(self.model, 'run', loop = 1, duration = duration)
         anim_end = ActorInterval(self.model, 'idle_stand01', startFrame=1, endFrame=1)
-        move = Sequence(Func(self.parent.parent.beforeUnitAnimHook, int(self.id)),
+        move = Sequence(Func(self.parent.parent.beforeUnitMoveHook, int(self.id)),
                         Parallel(anim, seq),
                         Sequence(anim_end),
-                        Func(self.parent.parent.afterUnitAnimHook, int(self.id), start_pos, end_pos)
+                        Func(self.parent.parent.afterUnitMoveHook, int(self.id), start_pos, end_pos)
                         )
         move.start()
    
@@ -245,10 +245,13 @@ class UnitModel:
                                             textNodePath.posInterval(1.5, end_pos, start_pos),
                                             Func(self.parent.deleteDamageNode, textNodePath)
                                             )
-            damage_parallel.append(Parallel(target_anim, damage_text_sequence))
+            damage_parallel.append(Parallel(target_anim, damage_text_sequence, Func(self.parent.parent.afterUnitShootHook, int(self.id))))
         seq.append(damage_parallel)
         # Start our shoot sequence
-        seq.start()        
+        shoot = Sequence(Func(self.parent.parent.beforeUnitShootHook, int(self.id)),
+                         seq
+                         )
+        shoot.start()        
 
     
     def setIdleTime(self):
