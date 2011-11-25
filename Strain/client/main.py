@@ -327,12 +327,13 @@ class SceneGraph():
         """Task to animate draw units while they are idling."""
         dt = globalClock.getDt()#@UndefinedVariable
         for unit in self.unit_np_dict.itervalues():
-            unit.passtime += dt
-
-            if unit.passtime > unit.idletime:
-                unit.model.play('idle_stand01')
-                unit.passtime = 0
-                unit.setIdleTime()
+            if self.parent.units[int(unit.id)]['alive'] == True:
+                unit.passtime += dt
+    
+                if unit.passtime > unit.idletime:
+                    unit.model.play('idle_stand01')
+                    unit.passtime = 0
+                    unit.setIdleTime()
             
         return task.cont
             
@@ -633,6 +634,7 @@ class Net():
     def handleMsg(self, msg):
         """Handles incoming messages."""
         self.log.info("Received message: %s", msg[0])
+        print msg
         #========================================================================
         #
         if msg[0] == ENGINE_STATE:
