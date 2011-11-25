@@ -167,6 +167,12 @@ class UnitModel:
                 i_h = self.model.quatInterval(0.2, hpr = Point3(dest_h, 0, 0), startHpr = Point3(curr_h, 0, 0))
                 duration = duration + 0.2
                 intervals.append(i_h)
+            elif type == "vanish":
+                None
+                # TODO: ogs: kod za vanish
+            elif type == "spot":
+                None
+                # TODO: ogs: kod za spot
         seq = Sequence()
         for i in intervals:
             seq.append(i)
@@ -224,7 +230,7 @@ class UnitModel:
                 target_anim = ActorInterval(target_unit.model, "damage")
                 dmg = str(action[2])
             elif damage_type == "kill":
-                target_anim = ActorInterval(target_unit.model, "damage")
+                target_anim = ActorInterval(target_unit.model, "die")
                 dmg = str(action[2])
             t.setText( "%s" % dmg)
             t.setTextColor(1, 0, 0, 1)
