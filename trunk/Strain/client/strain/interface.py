@@ -328,7 +328,7 @@ class Interface(DirectObject.DirectObject):
                     # If unit is there, check if it is our unit. If it is, select it.
                     # If enemy unit is there, we are trying to attack.
                     # If unit is not there, check if we have unit selected. If we do, we are trying to move it.
-                    if unit_id:
+                    if unit_id != None:
                         if self.parent.isThisMyUnit(unit_id):
                             if unit_id != self.parent.sel_unit_id:
                                 self.parent.selectUnit(unit_id)
