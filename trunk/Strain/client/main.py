@@ -657,7 +657,7 @@ class Net():
     def handleMsg(self, msg):
         """Handles incoming messages."""
         self.log.info("Received message: %s", msg[0])
-        #print msg
+        print msg
         #========================================================================
         #
         if msg[0] == ENGINE_STATE:
@@ -685,9 +685,7 @@ class Net():
             self.parent.turn_number = msg[1]['turn']
             self.parent.turn_player = msg[1]['active_player'].name 
             units = pickle.loads(msg[1]['units'])
-            print "----",units
             for unit in units.itervalues():
-                print "----",unit
                 self.parent.refreshUnit(unit)
             self.parent.interface.refreshUnitData()
         #========================================================================
