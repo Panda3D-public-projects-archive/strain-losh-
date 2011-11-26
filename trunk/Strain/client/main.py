@@ -711,6 +711,12 @@ class Net():
             self.parent.interface.console.show()
         #========================================================================
         #
+        elif msg[0] == CHAT:
+            sender_name = msg[2]
+            self.parent.interface.console.consoleOutput( sender_name + ":" + str(msg[1]), utils.CONSOLE_SYSTEM_MESSAGE)
+            self.parent.interface.console.show()
+        #========================================================================
+        #
         else:
             self.log.error("Unknown message Type: %s", msg[0])
     
