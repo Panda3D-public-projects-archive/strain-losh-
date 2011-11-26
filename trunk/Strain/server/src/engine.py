@@ -230,10 +230,10 @@ class Engine( Thread ):
 
         print "turn:", self.turn, "\tplayer:", self.active_player.name
 
-        #go through all units and reset them
+        #go through all units of active player and reset them
         for unit in self.units.itervalues():   
-            print dir(unit)            
-            unit.newTurn( self.turn )
+            if unit.owner == self.active_player:            
+                unit.newTurn( self.turn )
           
         #check visibility
         self.checkVisibility()
@@ -241,7 +241,7 @@ class Engine( Thread ):
         #send all stuff to all players that are logged in        
         for p in self.players:
             if p.connection:
-                EngMsg.sendNewTurn( self.turn, self.active_player.name, util.compileNewTurn(self, p), p )
+                EngMsg.sendNewTurn( self.turn, self.active_player.name, util.compileNewTurn(self, p), p.connection )
         
         
     def checkVisibility(self):
@@ -255,7 +255,7 @@ class Engine( Thread ):
                     if self.getLOS( myunit, enemy ):
                         if enemy not in player.visible_enemies: 
                             player.visible_enemies.append( enemy )
-                            print player.name,"\tvidim:", enemy.name, "\t@:", enemy.pos
+                            
         
 
 
