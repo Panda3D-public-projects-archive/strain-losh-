@@ -122,6 +122,8 @@ class Unit():
     def numberOfMeleeWeapons(self):
         res = 0
         for wpn in self.weapons:
+            if wpn.type == weapon.TYPE_HEAVY and self.owner.armour.name != 'Terminator':
+                res -= 1
             if wpn.type == weapon.TYPE_MELEE or wpn.type == weapon.TYPE_PISTOL:
                 res += 1        
             if wpn.parry:
