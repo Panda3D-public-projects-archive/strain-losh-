@@ -2,6 +2,7 @@ from xml.dom import minidom
 import weapon
 import util
 import armour
+from util import getHeading
 
 
 HEADING_NONE      = 0
@@ -145,8 +146,8 @@ class Unit():
         if distance < 2:
             return self.melee( target )
         
-        #check if we have a heavy weapon if we are set up
-        if self.active_weapon.type == weapon.TYPE_HEAVY:
+        #check if we have a heavy weapon if we are set up, terms ignore set up
+        if self.active_weapon.type == weapon.TYPE_HEAVY and self.armour.name != 'Terminator':
             if not self.set_up:
                 return None
             
@@ -159,9 +160,24 @@ class Unit():
                 return None
             self.ap -= 1        
                         
-        self.last_action = 'shoot'                        
-        return ('shoot', self.id, target.pos, self.active_weapon.name, self.active_weapon.shoot( self, target ) )
+        #check to see if we need to rotate unit before shooting
+        rot = [] 
+        if self.rotate( target.pos ):
+            rot.append( ('rotate', self.heading) ) 
+                        
+        self.last_action = 'shoot'
+        
+        rot.append( ('shoot', self.id, target.pos, self.active_weapon.name, self.active_weapon.shoot( self, target ) ) )
+        return rot
 
+
+    def setOverwatch(self):
+        #check if there are enough AP
+        if self.ap >= 2:
+            self.overwatch = True
+            return True
+        
+        return False
 
 
     def hit(self, weapon):
@@ -216,7 +232,7 @@ class Unit():
         if self.heading == tmp_heading:
             return False
         
-        self.last_action = 'rotate'
+        #self.last_action = 'rotate'
         self.heading = tmp_heading        
         return True
 
