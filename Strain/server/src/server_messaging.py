@@ -263,8 +263,8 @@ class EngMsg:
         EngMsg._sendMsg((ERROR, error_msg), source)
     
     @staticmethod
-    def sendNewTurn(turn_num, active_player, data, player ):
-        EngMsg._sendMsg( (NEW_TURN, data), player )
+    def sendNewTurn(turn_num, active_player, data, source ):
+        EngMsg._sendMsg( (NEW_TURN, data), source )
     
     @staticmethod
     def sendUnit(pickled_unit, source = None):
