@@ -47,24 +47,8 @@ class Notify():
 
 
 def compileNewTurn(engine, player):
-    dic = {}
-    units = {}
-
-    #compile all my units
-    for unt in player.units:
-        units[unt.id] = compileUnit(unt)
-    #compile all enemy units
-    for unt in player.visible_enemies:
-        units[unt.id] = compileEnemyUnit(unt)
-    for unt in player.detected_enemies:
-        units[unt.id] = compileDetectedEnemyUnit(unt)
-    
-    
-    dic[ 'units' ] = pickle.dumps( units )            
-    dic[ 'turn' ] = engine.turn
-    dic[ 'active_player' ] = engine.active_player
-    dic[ 'players' ] = pickle.dumps( compilePlayers( engine.players, player ) )     
-    
+    dic = compileState(engine, player)
+    del dic['level']
     return dic
 
 
