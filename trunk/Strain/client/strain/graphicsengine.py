@@ -397,11 +397,13 @@ class GraphicsEngine(ShowBase):
             unit = self.unit_np_dict[unit_id]
             self.playUnitAnim(self.unit_np_dict[unit_id], tile_list)
         elif msg[0] == NEW_TURN:
-            print msg[1]
+            self.turn = msg[1]['turn']
+            units = pickle.loads(msg[1]['units'])
+            for unit in units:            
+                self.updateUnit(unit)
         elif msg[0] == UNIT:
             if self.engineLoaded:
                 unit = msg[1]
-                self.updateUnit(unit)
                 self.interface.printUnitData()
         elif msg[0] == ERROR:
             self.interface.console.consoleOutput(str(msg[1]), CONSOLE_SYSTEM_ERROR)

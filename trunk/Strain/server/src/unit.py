@@ -219,9 +219,18 @@ class Unit():
         return True
 
         
+    def newTurn(self, turn_num):
+        #replenish AP
+        self.ap = self.default_ap
+        
+        #if unit rested last turn
+        if self.resting:
+            self.ap += 1
+            self.resting = False
+
         
 
-
+#-----------------------------------------------------------------------
 def loadUnit( name ):
     xmldoc = minidom.parse('data/base/units.xml')
     
