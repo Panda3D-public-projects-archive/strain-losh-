@@ -160,7 +160,7 @@ class Unit():
             self.ap -= 1        
                         
         self.last_action = 'shoot'                        
-        return ('shoot', self.id, self.active_weapon.name, self.active_weapon.shoot( self, target ) )
+        return ('shoot', self.id, target.pos, self.active_weapon.name, self.active_weapon.shoot( self, target ) )
 
 
 
