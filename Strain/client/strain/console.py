@@ -6,6 +6,7 @@ from pandac.PandaModules import TextNode#@UnresolvedImport
 import textwrap, re, string
 
 import utils
+from strain.client_messaging import ClientMsg
 
 
 
@@ -154,6 +155,7 @@ class GuiConsole(DirectObject.DirectObject):
         # clear line
         self.consoleEntry.enterText('')
         self.consoleOutput(textEntered, utils.CONSOLE_PLAYER1_TEXT)
+        ClientMsg.chat( textEntered )
         self.focus()
 
     def manageFocus(self):

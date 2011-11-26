@@ -155,6 +155,9 @@ class Engine( Thread ):
         elif( msg[0] == END_TURN ):
             self.endTurn()
                         
+        elif( msg[0] == CHAT ):
+            self.chat( msg[1], source, msg[2] )
+                        
         elif( msg[0] == SHOOT ):
             self.shoot( msg[1]['shooter_id'], msg[1]['target_id'], source )
                         
@@ -162,6 +165,18 @@ class Engine( Thread ):
             notify.error( "Unknown message Type: %s", msg )
         
         
+    def chat(self, msg, source, to_allies):
+        sender = self.findPlayer( source )
+        
+        for p in self.players:
+            if not p.connection or p == sender:
+                continue
+            if to_allies:
+                if p.team == sender.team:
+                    EngMsg.chat( msg, sender.name, p.connection )
+            else:                    
+                EngMsg.chat( msg, sender.name, p.connection )
+            
                 
     def loadArmyList(self):
         

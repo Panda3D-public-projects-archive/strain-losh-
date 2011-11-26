@@ -16,12 +16,8 @@ from engine import *
 
 
 
-
-IP_ADDRESS = 'localhost'
-#IP_ADDRESS = 'krav.servebeer.com'
-#NAME = 'blood angels'
-NAME = 'ultramarines'
 TCP_PORT = 56005
+
 
 MOVE = 'move'                   #values - list of actions ('move',tile) ('rotate',tile) ('overwatch',overwatchresult) ('detected',enemy)
 NEW_TURN = 'new_turn'           #value - turn number
@@ -32,11 +28,8 @@ LEVEL = 'level'                 #value - pickled level
 END_TURN = 'end_turn'           #no values
 UNIT = 'unit'                   #value - pickled unit
 SHOOT = 'shoot'                 #value - (which unit, target unit)
+CHAT = 'chat'                   #value - string for chat
 
-
-
- 
- 
 
 
 
@@ -242,13 +235,16 @@ class EngMsg:
     
     @staticmethod
     def move(unit_id, move_actions, source = None):
-        EngMsg._sendMsg((MOVE, (unit_id, move_actions)), source)
-        print (MOVE, (unit_id, move_actions)) 
+        EngMsg._sendMsg((MOVE, (unit_id, move_actions)), source) 
                                                                       
     @staticmethod
     def shoot( shoot_actions, source = None):
         EngMsg._sendMsg( shoot_actions, source )
         print shoot_actions 
+                                                                      
+    @staticmethod
+    def chat( msg, sender, source = None):
+        EngMsg._sendMsg( (CHAT, msg, sender), source) 
                                                                       
     @staticmethod
     def sendState(engine_state, source):

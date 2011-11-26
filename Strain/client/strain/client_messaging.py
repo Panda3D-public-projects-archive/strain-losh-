@@ -17,7 +17,7 @@ LEVEL = 'level'                 #value - pickled level
 END_TURN = 'end_turn'           #no values
 UNIT = 'unit'                   #value - pickled unit
 SHOOT = 'shoot'                 #value - (which unit, target unit)
-
+CHAT = 'chat'                   #value - string for chat
 
 class Msg:
     def __init__(self, in_type, value=None):
@@ -222,6 +222,10 @@ class ClientMsg:
     @staticmethod
     def shutdownEngine():
         ClientMsg._sendMsg((ENGINE_SHUTDOWN,0)) 
+        
+    @staticmethod
+    def chat( msg, to_allies=False ):
+        ClientMsg._sendMsg( (CHAT, msg, to_allies) ) 
         
     @staticmethod
     def endTurn():
