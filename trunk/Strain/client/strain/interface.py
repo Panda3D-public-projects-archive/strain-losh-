@@ -79,12 +79,12 @@ class Interface(DirectObject.DirectObject):
         self.action_c = GuiButton("topleft", Point3(0.0, 0, -0.8), aspect, plane, "action_c")
         self.action_d = GuiButton("topleft", Point3(0.0, 0, -0.9), aspect, plane, "action_d")
         
-        self.action_1 = GuiButton("topleft", Point3(1.5+0.01, 0, -0.09), aspect, plane, "deselect")
-        self.action_2 = GuiButton("topleft", Point3(1.6+0.02, 0, -0.09), aspect, plane, "deselect")
-        self.action_3 = GuiButton("topleft", Point3(1.7+0.03, 0, -0.09), aspect, plane, "deselect")
-        self.action_4 = GuiButton("topleft", Point3(1.5+0.01, 0, -0.2), aspect, plane, "deselect")
-        self.action_5 = GuiButton("topleft", Point3(1.6+0.02, 0, -0.2), aspect, plane, "deselect")
-        self.action_6 = GuiButton("topleft", Point3(1.7+0.03, 0, -0.2), aspect, plane, "deselect")
+        self.overwatch = GuiButton("topleft", Point3(1.5+0.01, 0, -0.09), aspect, plane, "overwatch")
+        self.action_2 = GuiButton("topleft", Point3(1.6+0.02, 0, -0.09), aspect, plane, "empty")
+        self.action_3 = GuiButton("topleft", Point3(1.7+0.03, 0, -0.09), aspect, plane, "empty")
+        self.action_4 = GuiButton("topleft", Point3(1.5+0.01, 0, -0.2), aspect, plane, "empty")
+        self.action_5 = GuiButton("topleft", Point3(1.6+0.02, 0, -0.2), aspect, plane, "empty")
+        self.action_6 = GuiButton("topleft", Point3(1.7+0.03, 0, -0.2), aspect, plane, "empty")
         
         self.buttons["deselect"] = self.deselect_button
         self.buttons["prev_unit"] = self.punit_button
@@ -94,7 +94,7 @@ class Interface(DirectObject.DirectObject):
         self.buttons["action_b"] = self.action_b
         self.buttons["action_c"] = self.action_c
         self.buttons["action_d"] = self.action_d
-        self.buttons["action_1"] = self.action_1
+        self.buttons["overwatch"] = self.overwatch
         self.buttons["action_2"] = self.action_2
         self.buttons["action_3"] = self.action_3
         self.buttons["action_4"] = self.action_4
