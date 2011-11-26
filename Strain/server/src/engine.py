@@ -221,7 +221,6 @@ class Engine( Thread ):
 
     def beginTurn(self):
 
-        
         if not self.active_player:
             self.active_player = self.players[0]
             self.turn += 1
@@ -231,27 +230,18 @@ class Engine( Thread ):
 
         print "turn:", self.turn, "\tplayer:", self.active_player.name
 
-        EngMsg.sendNewTurn( self.turn, self.active_player.name )
-        
-        #go through all units
-        for unit_id in self.units:
-            
-            unit = self.units[unit_id]
-            
-            #replenish AP
-            unit.ap = unit.default_ap
-            
-            #if unit rested last turn
-            if unit.resting:
-                unit.ap += 1
-                unit.resting = False
-                
-            
-            #after updating everything send unit_id data to client        
-            EngMsg.sendUnit( util.compileUnit(unit) )
-        
+        #go through all units and reset them
+        for unit in self.units.itervalues():   
+            print dir(unit)            
+            unit.newTurn( self.turn )
+          
         #check visibility
         self.checkVisibility()
+
+        #send all stuff to all players that are logged in        
+        for p in self.players:
+            if p.connection:
+                EngMsg.sendNewTurn( self.turn, self.active_player.name, util.compileNewTurn(self, p), p )
         
         
     def checkVisibility(self):
@@ -267,7 +257,6 @@ class Engine( Thread ):
                             player.visible_enemies.append( enemy )
                             print player.name,"\tvidim:", enemy.name, "\t@:", enemy.pos
         
-        pass
 
 
     def getLOS(self, beholder, target ):
