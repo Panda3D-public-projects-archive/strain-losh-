@@ -90,10 +90,10 @@ class Unit():
         
         #roll to hit
         if util.d100() > base:
-            return ('melee', self.id, wpn.name, [('miss', target.id)] )        
+            return [('melee', self.id, target.pos, wpn.name, [('miss', target.id)] )]        
             
         self.last_action = 'melee'
-        return ('melee', self.id, wpn.name, wpn.hitInMelee( self, target ) )
+        return [('melee', self.id, target.pos, wpn.name, wpn.hitInMelee( self, target ) )]
         
 
         
