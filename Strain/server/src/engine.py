@@ -13,7 +13,7 @@ import cPickle as pickle
 import util
 from player import Player
 from util import compileEnemyUnit
-
+import copy
 
 notify = util.Notify()
 
@@ -158,6 +158,9 @@ class Engine( Thread ):
         elif( msg[0] == CHAT ):
             self.chat( msg[1], source, msg[2] )
                         
+        elif( msg[0] == OVERWATCH ):
+            self.chat( msg[1], source, msg[2] )
+                        
         elif( msg[0] == SHOOT ):
             self.shoot( msg[1]['shooter_id'], msg[1]['target_id'], source )
                         
@@ -260,12 +263,12 @@ class Engine( Thread ):
         
         
     def checkVisibility(self):
-        #TODO: krav: mozda stavit da se ide prvo po playerima?
+
         for player in self.players:
             player.visible_enemies = []
             for myunit in player.units:
                 for enemy in self.units.itervalues():
-                    if enemy.owner == player:
+                    if enemy.owner == player or enemy.owner.team == player.team:
                         continue
                     if self.getLOS( myunit, enemy ):
                         if enemy not in player.visible_enemies: 
@@ -985,17 +988,92 @@ class Engine( Thread ):
             EngMsg.sendErrorMsg( "You cannot shoot you own units." )
             return None
 
-        #TODO: krav: ovdje isto stavit da samo oni koji vide pucanje da dobiju poruku         
-        msg = shooter.shoot( target )
+         
+        shoot_msg = shooter.shoot( target )
+               
+        #if nothing happened
+        if not shoot_msg:
+            return
+                
+        #check visibility for each player
+        for p in self.players:
+            print p.name
+            #if this player is the one doing the shooting send him everything
+            if shooter.owner == p:
+                if p.connection:
+                    EngMsg.shoot( shoot_msg, p.connection )
+                
+            else:
+                #example message = [('rotate', 0, 3), ('shoot', 0, (4, 7), u'Bolt Pistol', [('bounce', 6)])]
+                tmp_shoot_msg = copy.deepcopy(shoot_msg)
+                for m in tmp_shoot_msg[:]:
+
+                    if m[0] == 'rotate':
+                        unit_id = m[1]
+                        #if we dont see the shooter, remove the rotate msg                    
+                        if self.units[unit_id].owner != p and self.units[unit_id] not in p.visible_enemies:
+                            tmp_shoot_msg.remove( m )
+
+                    elif m[0] == 'shoot':
+                        sht, unit_id, pos, wpn, lst = m
+
+                        #if we dont see the shooter, remove him and his position
+                        if self.units[unit_id] not in p.visible_enemies:
+                            unit_id = -1
+                            pos = None
+                        #go through list of targets and if we dont see the target, remove it from the list
+                        for effect in lst[:]:
+                            tmp_target_id = effect[1]
+                            if self.units[tmp_target_id].owner != p and self.units[tmp_target_id] not in p.visible_enemies:
+                                lst.remove( effect )
+                                
+                        i = tmp_shoot_msg.index(m)
+                        tmp_shoot_msg.pop( i )
+                        new = (sht, unit_id, pos, wpn, lst)
+                        tmp_shoot_msg.insert( i, new )
+                        
+                        if p.connection:
+                            EngMsg.shoot( tmp_shoot_msg, p.connection )
+
         
         self.checkForDeadUnits()
         
-        if msg:
-            EngMsg.shoot( msg )   
-            EngMsg.sendUnit( util.compileUnit(shooter) ) 
-            EngMsg.sendUnit( util.compileUnit(target) ) 
-
-
+        
+        #update units for players and their allies
+        for p in self.players:
+            if p == shooter.owner or p.team == shooter.owner.team:
+                if p.connection:
+                    EngMsg.sendUnit( util.compileUnit(shooter), p.connection )
+            if p == target.owner or p.team == target.owner.team:
+                if p.connection: 
+                    EngMsg.sendUnit( util.compileUnit(target), p.connection ) 
+        
+        
+        #TODO: krav: ovo provjerit sa 3 igraca, sa 2 nece bas radit
+        self.updateVisibilityAndSendVanishMessages()
+        
+        
+        
+    def updateVisibilityAndSendVanishMessages(self):
+        
+        for p in self.players:
+            tmp_enemy_list = []
+            for enemy in p.visible_enemies:
+                for myunit in p.units:
+                    if enemy not in tmp_enemy_list and self.getLOS( myunit, enemy ):
+                        tmp_enemy_list.append( enemy )
+                        
+            #compare tmp_enemy_list with old enemy list
+            for enemy in p.visible_enemies[:]:
+                
+                #if there is an enemy that vanished, send a message to player and remove it from visible list 
+                if enemy not in tmp_enemy_list:
+                    if p.connection:
+                        EngMsg.sendMsg( ('vanish', enemy.id) , p.connection )
+                    p.visible_enemies.remove( enemy )
+                        
+        
+        
     def checkForDeadUnits(self):
         
         for unit in self.units.values():
