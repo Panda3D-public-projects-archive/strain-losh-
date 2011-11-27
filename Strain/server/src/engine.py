@@ -997,7 +997,7 @@ class Engine( Thread ):
                 
         #check visibility for each player
         for p in self.players:
-            print p.name
+
             #if this player is the one doing the shooting send him everything
             if shooter.owner == p:
                 if p.connection:
