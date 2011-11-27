@@ -23,5 +23,9 @@
 		<unit x="10" y="6" type="marine_common"/>
 	</player>
 
+	<player name="vidi_blood" team = "3" id="3">
+		<unit x="10" y="3" type="marine_common"/>
+	</player>
+
 
 </armylist>
