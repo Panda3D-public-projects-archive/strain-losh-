@@ -163,7 +163,7 @@ class Unit():
         #check to see if we need to rotate unit before shooting
         rot = [] 
         if self.rotate( target.pos ):
-            rot.append( ('rotate', self.heading) ) 
+            rot.append( ('rotate', self.id, self.heading) ) 
                         
         self.last_action = 'shoot'
         
