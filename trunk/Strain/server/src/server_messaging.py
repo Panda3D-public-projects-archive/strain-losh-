@@ -29,7 +29,7 @@ END_TURN = 'end_turn'           #no values
 UNIT = 'unit'                   #value - pickled unit
 SHOOT = 'shoot'                 #value - (which unit, target unit)
 CHAT = 'chat'                   #value - string for chat
-
+OVERWATCH = 'overwatch'         #value - id of unit going on overwatch, this message toggles overwatch on/off
 
 
 
@@ -265,6 +265,14 @@ class EngMsg:
     @staticmethod
     def sendUnit(pickled_unit, source = None):
         EngMsg._sendMsg((UNIT, pickled_unit), source)
+
+    @staticmethod
+    def sendMsg( msg, source = None):
+        EngMsg._sendMsg( msg, source )
+
+    @staticmethod
+    def sendOverwatch( unit_id, overwatch, source ):
+        EngMsg._sendMsg((OVERWATCH, unit_id, overwatch), source)
 
         
       
