@@ -232,6 +232,27 @@ class Engine( Thread ):
         if self.active_player == self.players[-1]:
             self.active_player = None          
         
+        #check victory conditions
+        
+        #check if a player was left without any units, if so than delete him
+        for p in self.players[:]:
+            if not p.units:
+                if p.connection:
+                    EngMsg.sendErrorMsg('U have no more units... pathetic...', p.connection)
+                EngMsg.sendErrorMsg( p.name + ' was defeated!!!' )
+                self.players.remove(p)
+        
+        #check if there is only one player left
+        if len( self.players ) == 1:
+            if p.connection:
+                EngMsg.sendErrorMsg('U WIN!', p.connection)
+            EngMsg.sendErrorMsg( self.players[0].name + ' WINS! He is the best!!@' )
+            
+        #if there are no more players - its a draw?
+        if len( self.players ) == 0:
+            EngMsg.sendErrorMsg( 'Draw! really?!' )
+        
+        
         self.beginTurn()
         
         pass
@@ -1014,7 +1035,7 @@ class Engine( Thread ):
                         if self.units[unit_id].owner != p and self.units[unit_id] not in p.visible_enemies:
                             tmp_shoot_msg.remove( m )
 
-                    elif m[0] == 'shoot':
+                    elif m[0] == 'shoot' or m[0] == 'melee':
                         sht, unit_id, pos, wpn, lst = m
 
                         #if we dont see the shooter, remove him and his position
@@ -1071,7 +1092,7 @@ class Engine( Thread ):
                     if p.connection:
                         EngMsg.sendMsg( ('vanish', enemy.id) , p.connection )
                     p.visible_enemies.remove( enemy )
-                        
+                    print p.name, ('vanish', enemy.id)
         
         
     def checkForDeadUnits(self):
