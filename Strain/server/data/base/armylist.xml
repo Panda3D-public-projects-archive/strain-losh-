@@ -15,5 +15,13 @@
 		<unit x="4" y="7" type="marine_epic"/>					
 	</player>
 
+	<player name="nevidi_nikog" team = "3" id="3">
+		<unit x="19" y="19" type="marine_common"/>
+	</player>
+
+	<player name="vidi_ultra" team = "3" id="3">
+		<unit x="10" y="6" type="marine_common"/>
+	</player>
+
 
 </armylist>
