@@ -162,7 +162,10 @@ class SceneGraph():
         for x in xrange(0, level['maxX']):
             for y in xrange(0, level['maxY']):
                 for i in xrange(0, level['_level_data'][x][y]+1):
-                    id = randint(1, 2) 
+                    if i == 0:
+                        id = 1
+                    else:
+                        id = 2 
                     levelMesh.makeLeftFace(x, y, i, id)
                     levelMesh.makeRightFace(x, y, i, id)
                     levelMesh.makeBackFace(x, y, i, id)
