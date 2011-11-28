@@ -10,10 +10,11 @@ from random import randint
 
 # panda3D imports
 from direct.showbase.ShowBase import ShowBase
-from panda3d.core import loadPrcFile, WindowProperties, Texture, OrthographicLens, PerspectiveLens
+from panda3d.core import loadPrcFile, WindowProperties, Texture, OrthographicLens, PerspectiveLens#@UnresolvedImport
 from panda3d.core import TextNode, NodePath, Point2, Point3, VBase4, GeomNode, Vec3, Vec4#@UnresolvedImport
 from panda3d.core import ShadeModelAttrib, DirectionalLight, AmbientLight#@UnresolvedImport
-from panda3d.core import CollisionTraverser, CollisionRay, CollisionHandlerQueue, CollisionNode
+from panda3d.core import CollisionTraverser, CollisionRay, CollisionHandlerQueue, CollisionNode#@UnresolvedImport
+from direct.interval.IntervalGlobal import Sequence, ActorInterval, Parallel, Func#@UnresolvedImport
 from direct.showbase.DirectObject import DirectObject
 from direct.fsm import FSM
 from direct.gui.DirectGui import DirectButton, DirectEntry, DirectLabel, DGG
@@ -247,16 +248,19 @@ class SceneGraph():
         self.unit_np_list = [[None] * self.parent.level['maxY'] for i in xrange(self.parent.level['maxX'])]
                     
         for unit in self.parent.units.itervalues():
-            um = UnitModel(self, unit['id'])
-            um.node.reparentTo(self.unit_node)
-            # Keep unit nodepath in dictionary of all unit nodepaths
-            self.unit_np_dict[unit['id']] = um
-            # Keep unit nodepath in list corresponding to level size
-            # This will be dinamically altered when units change position
-            self.unit_np_list[int(unit['pos'][0])][int(unit['pos'][1])] = um
+            self.showUnit(unit)
                         
         self.comp_inited['units'] = True  
         
+    def showUnit(self, unit):
+        um = UnitModel(self, unit['id'])
+        um.node.reparentTo(self.unit_node)
+        # Keep unit nodepath in dictionary of all unit nodepaths
+        self.unit_np_dict[unit['id']] = um
+        # Keep unit nodepath in list corresponding to level size
+        # This will be dinamically altered when units change position
+        self.unit_np_list[int(unit['pos'][0])][int(unit['pos'][1])] = um
+    
     def deleteUnits(self):
         if self.comp_inited['units'] == False:
             return
@@ -638,8 +642,88 @@ class Client(DirectObject):
         self.sgm.hideUnitAvailMove()
         self.interface.clearUnitData()
         self.sel_unit_id = None
-        
     
+#========================================================================
+# Client animation handler methods
+    
+    def handleMove(self, unit_id, action_list):
+        for a in action_list:
+            print a
+        unit_model = self.sgm.unit_np_dict[unit_id]
+        # We will change start_pos variable on tile-per-tile basis
+        start_pos = unit_model.node.getPos()
+        # We need initial position of the entire animation so we can correctly change nps in unit_np_list
+        animation_start_pos = start_pos
+        start_h = unit_model.node.getH(render)
+        s = Sequence()
+        d = 0.0
+        
+        for idx, action in enumerate(action_list):
+            action_type = action[0]
+            if action_type == "move":
+                end_pos = Point3(action[1][0] + 0.5, action[1][1] + 0.5, utils.GROUND_LEVEL)
+                i, duration, start_pos, start_h = self.buildMoveAnim(unit_model, start_pos, end_pos, start_h)
+                d += duration
+                s.append(i)
+            elif action_type == "rotate":
+                end_pos = Point3(action[1][0] + 0.5, action[1][1] + 0.5, utils.GROUND_LEVEL)
+                i, duration, start_pos, start_h = self.buildRotateAnim(unit_model, start_pos, end_pos, start_h)
+                d += duration
+                s.append(i)
+            elif action_type == "spot":
+                spotted_unit = action[1]
+                self.units[spotted_unit['id']] = spotted_unit
+                i = self.buildSpotAnim(spotted_unit)
+                s.append(i)
+        end_pos = start_pos  
+        anim = ActorInterval(unit_model.model, 'run', loop = 1, duration = d)
+        anim_end = ActorInterval(unit_model.model, 'idle_stand01', startFrame=1, endFrame=1)
+        move = Sequence(Func(self.beforeUnitMoveHook, unit_id),
+                        Parallel(anim, s),
+                        Sequence(anim_end),
+                        Func(self.afterUnitMoveHook, unit_id, animation_start_pos, end_pos)
+                        )
+        move.start()
+    
+    def buildSpotAnim(self, unit_model):
+        return Func(self.sgm.showUnit, unit_model)
+    
+    def buildRotateAnim(self, unit_model, start_pos, end_pos, start_h):
+        dummy_start = NodePath("dummy_start")
+        dummy_end = NodePath("dummy_end")
+        duration = 0.0
+        dummy_start.setPos(start_pos)
+        dummy_end.setPos(end_pos)
+        dummy_start.lookAt(dummy_end)
+        end_h = dummy_start.getH(render)
+        interval = unit_model.node.quatInterval(0.2, hpr = Point3(end_h, 0, 0), startHpr = Point3(start_h, 0, 0))
+        duration += 0.2
+        return interval, duration, start_pos, end_h
+    
+    def buildMoveAnim(self, unit_model, start_pos, end_pos, start_h):
+        dummy_start = NodePath("dummy_start")
+        dummy_end = NodePath("dummy_end")
+        duration = 0.0
+        p = None   
+        dummy_start.setPos(start_pos)
+        dummy_end.setPos(end_pos)
+        dummy_start.lookAt(dummy_end) 
+        end_h = dummy_start.getH(render)               
+        # Model heading is different than movement heading, first create animation that turns model to his destination
+        i_h = None
+        if end_h != start_h:
+            i_h = unit_model.node.quatInterval(0.2, hpr = Point3(end_h, 0, 0), startHpr = Point3(start_h, 0, 0))
+        i = unit_model.node.posInterval(0.5, end_pos, start_pos)
+        duration += 0.5
+        if i_h:
+            p = Parallel(i, i_h)
+        else:
+            p = i
+        return p, duration, end_pos, end_h 
+         
+#========================================================================
+# Client tasks
+   
     def updateTask(self, task):
         """Main update Client task."""
         return task.cont
@@ -661,7 +745,7 @@ class Net():
     def handleMsg(self, msg):
         """Handles incoming messages."""
         self.log.info("Received message: %s", msg[0])
-        print msg
+        #print msg
         #========================================================================
         #
         if msg[0] == ENGINE_STATE:
@@ -680,8 +764,9 @@ class Net():
         elif msg[0] == MOVE:
             unit_id = msg[1][0]
             tile_list = msg[1][1]
-            unit = self.parent.sgm.unit_np_dict[unit_id]
-            unit.moveUnitModel(tile_list)
+            #unit = self.parent.sgm.unit_np_dict[unit_id]
+            #unit.moveUnitModel(tile_list)
+            self.parent.handleMove(unit_id, tile_list)
         #========================================================================
         #
         elif msg[0] == NEW_TURN:

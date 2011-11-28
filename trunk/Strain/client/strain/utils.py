@@ -34,6 +34,8 @@ HEADING_SW        = 6
 HEADING_S         = 7
 HEADING_SE        = 8
 
+GROUND_LEVEL = 0.3
+
 head_dict = {}
 head_dict['space_marine_head'] = ["space_marine_head"]
 head_dict['assault_marine_head'] = ["assault_marine_head"]        
