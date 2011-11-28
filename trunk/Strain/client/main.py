@@ -843,7 +843,7 @@ class Net():
             units = pickle.loads(msg[1]['units'])
             for unit in units.itervalues():
                 self.parent.refreshUnit(unit)
-            self.parent.interface.refreshUnitData()
+            self.parent.interface.refreshUnitData( unit['id'] )
         #========================================================================
         #
         elif msg[0] == UNIT:
@@ -851,7 +851,7 @@ class Net():
             self.parent.refreshUnit(unit)
             # TODO: ogs: Ovaj refresh interface-a se poziva i kada unit koji dodje nije selektirani unit, to srediti
             if self.parent.sel_unit_id == unit['id']:
-                self.parent.interface.refreshUnitData()
+                self.parent.interface.refreshUnitData( unit['id'] )
         #========================================================================
         #
         elif msg[0] == SHOOT:
