@@ -18,6 +18,7 @@ from direct.interval.IntervalGlobal import Sequence, ActorInterval, Parallel, Fu
 from direct.showbase.DirectObject import DirectObject
 from direct.fsm import FSM
 from direct.gui.DirectGui import DirectButton, DirectEntry, DirectLabel, DGG
+from direct.gui.OnscreenText import OnscreenText
 
 # strain related imports
 from strain.client_messaging import *
@@ -73,6 +74,7 @@ class AppFSM(FSM.FSM):
         self.parent = parent
 
     def enterLoginScreen(self):
+        base.win.setClearColor(VBase4(0, 0, 0, 0))
         self.parent.login = LoginScreen(self.parent)
     
     def exitLoginScreen(self):
@@ -82,9 +84,18 @@ class AppFSM(FSM.FSM):
         self.parent.login.entry_username.remove()          
         self.parent.login.entry_password.remove()        
         self.parent.login.button.remove()
+        self.parent.login.commoner1.delete()
+        self.parent.login.commoner2.delete()
+        self.parent.login.commander.delete()
+        self.parent.login.heavy.delete()
+        self.parent.login.assault.delete()
+        self.parent.login.assault2.delete()
+        self.parent.login.assault3.delete() 
+        self.parent.login.textObject.remove()       
         del self.parent.login
 
     def enterClient(self):
+        base.win.setClearColor(VBase4(0.5, 0.5, 0.5, 0))
         self.parent.client = Client(self.parent, self.parent.player)
         
     def exitClient(self):
@@ -111,7 +122,32 @@ class LoginScreen():
         self.entry_password.reparentTo(aspect2d)
         self.entry_password.setPos(-0.1, 0, -0.5)
         self.button.reparentTo(aspect2d)
-        self.button.setPos(0, 0, -0.6)        
+        self.button.setPos(0, 0, -0.6) 
+        
+        ground_level = -1.6
+        self.commoner1 = utils.loadUnit('common')
+        self.commoner1.setPos(-3, 25, ground_level)
+        self.commoner1.loop('idle_combat01')
+        self.commoner2 = utils.loadUnit('common')
+        self.commoner2.setPos(-4.5, 23.5, ground_level)
+        self.commoner2.loop('idle_combat02')           
+        self.heavy = utils.loadUnit('heavy')
+        self.heavy.setPos(-2, 27, ground_level)
+        self.heavy.loop('idle_stand03')             
+        self.commander = utils.loadUnit('commander')
+        self.commander.setPos(0, 20, ground_level)
+        self.commander.loop('idle_stand02') 
+        self.assault = utils.loadUnit('assault')
+        self.assault.setPos(4, 25, ground_level)
+        self.assault.loop('idle_stand01')
+        self.assault2 = utils.loadUnit('assault')
+        self.assault2.setPos(2.5, 23, ground_level)
+        self.assault2.loop('idle_stand02')  
+        self.assault3 = utils.loadUnit('assault')
+        self.assault3.setPos(6, 23, ground_level)
+        self.assault3.loop('idle_stand03')  
+        
+        self.textObject = OnscreenText(text = 'STRAIN', pos = (0, 0.4), scale = 0.2, font=font, fg = (1,0,0,1))
     
     def loginButPressed(self, text=None):
         self.parent.player = self.entry_username.get()
@@ -647,8 +683,6 @@ class Client(DirectObject):
 # Client animation handler methods
     
     def handleMove(self, unit_id, action_list):
-        for a in action_list:
-            print a
         unit_model = self.sgm.unit_np_dict[unit_id]
         # We will change start_pos variable on tile-per-tile basis
         start_pos = unit_model.node.getPos()
@@ -662,18 +696,18 @@ class Client(DirectObject):
             action_type = action[0]
             if action_type == "move":
                 end_pos = Point3(action[1][0] + 0.5, action[1][1] + 0.5, utils.GROUND_LEVEL)
-                i, duration, start_pos, start_h = self.buildMoveAnim(unit_model, start_pos, end_pos, start_h)
+                i, duration, start_pos, start_h = self.buildMoveMoveAnim(unit_model, start_pos, end_pos, start_h)
                 d += duration
                 s.append(i)
             elif action_type == "rotate":
                 end_pos = Point3(action[1][0] + 0.5, action[1][1] + 0.5, utils.GROUND_LEVEL)
-                i, duration, start_pos, start_h = self.buildRotateAnim(unit_model, start_pos, end_pos, start_h)
+                i, duration, start_pos, start_h = self.buildMoveRotateAnim(unit_model, start_pos, end_pos, start_h)
                 d += duration
                 s.append(i)
             elif action_type == "spot":
                 spotted_unit = action[1]
                 self.units[spotted_unit['id']] = spotted_unit
-                i = self.buildSpotAnim(spotted_unit)
+                i = self.buildMoveSpotAnim(spotted_unit)
                 s.append(i)
         end_pos = start_pos  
         anim = ActorInterval(unit_model.model, 'run', loop = 1, duration = d)
@@ -685,10 +719,10 @@ class Client(DirectObject):
                         )
         move.start()
     
-    def buildSpotAnim(self, unit_model):
+    def buildMoveSpotAnim(self, unit_model):
         return Func(self.sgm.showUnit, unit_model)
     
-    def buildRotateAnim(self, unit_model, start_pos, end_pos, start_h):
+    def buildMoveRotateAnim(self, unit_model, start_pos, end_pos, start_h):
         dummy_start = NodePath("dummy_start")
         dummy_end = NodePath("dummy_end")
         duration = 0.0
@@ -700,7 +734,7 @@ class Client(DirectObject):
         duration += 0.2
         return interval, duration, start_pos, end_h
     
-    def buildMoveAnim(self, unit_model, start_pos, end_pos, start_h):
+    def buildMoveMoveAnim(self, unit_model, start_pos, end_pos, start_h):
         dummy_start = NodePath("dummy_start")
         dummy_end = NodePath("dummy_end")
         duration = 0.0
@@ -720,6 +754,41 @@ class Client(DirectObject):
         else:
             p = i
         return p, duration, end_pos, end_h 
+    
+    def handleShoot(self, action_list):
+        s = Sequence()
+        d = 0.0        
+        for idx, action in enumerate(action_list):
+            action_type = action[0]
+            if action_type == "shoot":
+                end_pos = Point3(action[1][0] + 0.5, action[1][1] + 0.5, utils.GROUND_LEVEL)
+                i, duration, start_pos, start_h = self.buildMoveMoveAnim(unit_model, start_pos, end_pos, start_h)
+                d += duration
+                s.append(i)
+            elif action_type == "rotate":
+                end_pos = Point3(action[1][0] + 0.5, action[1][1] + 0.5, utils.GROUND_LEVEL)
+                i, duration, start_pos, start_h = self.buildMoveRotateAnim(unit_model, start_pos, end_pos, start_h)
+                d += duration
+                s.append(i)
+        end_pos = start_pos  
+        anim = ActorInterval(unit_model.model, 'run', loop = 1, duration = d)
+        anim_end = ActorInterval(unit_model.model, 'idle_stand01', startFrame=1, endFrame=1)
+        move = Sequence(Func(self.beforeUnitMoveHook, unit_id),
+                        Parallel(anim, s),
+                        Sequence(anim_end),
+                        Func(self.afterUnitMoveHook, unit_id, animation_start_pos, end_pos)
+                        )
+        move.start()
+    
+    def buildShootRotateAnim(self, unit_model, start_h, heading):
+        duration = 0.0
+        end_h = utils.getHeadingAngle(heading)
+        interval = unit_model.node.quatInterval(0.2, hpr = Point3(end_h, 0, 0), startHpr = Point3(start_h, 0, 0))
+        duration += 0.2
+        return interval, duration, end_h
+    
+    def buildShootShootAnim(self, unit_model, target_model, target_tile):
+        None
          
 #========================================================================
 # Client tasks
@@ -745,7 +814,7 @@ class Net():
     def handleMsg(self, msg):
         """Handles incoming messages."""
         self.log.info("Received message: %s", msg[0])
-        #print msg
+        print msg
         #========================================================================
         #
         if msg[0] == ENGINE_STATE:
@@ -764,8 +833,6 @@ class Net():
         elif msg[0] == MOVE:
             unit_id = msg[1][0]
             tile_list = msg[1][1]
-            #unit = self.parent.sgm.unit_np_dict[unit_id]
-            #unit.moveUnitModel(tile_list)
             self.parent.handleMove(unit_id, tile_list)
         #========================================================================
         #
@@ -788,11 +855,10 @@ class Net():
         #========================================================================
         #
         elif msg[0] == SHOOT:
-            unit_id = msg[1]
-            unit = self.parent.sgm.unit_np_dict[unit_id]
-            weapon = msg[2]
-            damage_list = msg[3]
-            unit.shootUnit(weapon, damage_list)       
+            action_list = msg[1][1]
+            print msg
+            print msg[0]
+            #self.handleShoot(action_list)       
         
         #========================================================================
         #
