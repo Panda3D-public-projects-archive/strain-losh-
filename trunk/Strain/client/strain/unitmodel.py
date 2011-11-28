@@ -104,7 +104,7 @@ class UnitModel:
                             #model.node_dict[n].remove()
                         else:
                             if n_tex:
-                                tex_dif = loader.loadTexture(n_tex+"_dif.tga")
+                                tex_dif = loader.loadTexture(n_tex+"_dif.dds")
                                 model.node_dict[n].setTexture(tex_dif)
                                 """
                                 ts_spc = TextureStage('ts_spc')
@@ -122,7 +122,7 @@ class UnitModel:
                                     ts_tem.setColor(self.team_color)
                                     model.node_dict[n].setTexture(ts_tem, tex_tem)
                                 """
-            model.loadAnims(utils.anim_dict)
+            utils.initAnims(model, unit_type)
             return model
    
     def shootUnit(self, weapon, damage_list):
