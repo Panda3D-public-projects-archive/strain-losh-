@@ -855,7 +855,7 @@ class Net():
         #========================================================================
         #
         elif msg[0] == SHOOT:
-            action_list = msg[1][1]
+            action_list = msg[1]
             print msg
             print msg[0]
             #self.handleShoot(action_list)       
