@@ -15,8 +15,8 @@ class UnitModel:
         self.id = str(unit_id)
 
         self.node = NodePath("unit_"+self.id)
-        self.dummy_node = NodePath("dummy_unit_"+self.id)
-        self.dest_node = NodePath("dest_unit_"+self.id)
+        #self.dummy_node = NodePath("dummy_unit_"+self.id)
+        #self.dest_node = NodePath("dest_unit_"+self.id)
         
         # Get unit data from the Client
         unit = self.parent.parent.getUnitData(unit_id)
@@ -29,8 +29,8 @@ class UnitModel:
         self.model = self.load(unit['name'])
         
         self.model.reparentTo(self.node)
-        self.dummy_node.reparentTo(self.node)
-        self.dest_node.reparentTo(self.node)        
+        #self.dummy_node.reparentTo(self.node)
+        #self.dest_node.reparentTo(self.node)        
         
         if not off:
             scale = 0.25
@@ -124,67 +124,6 @@ class UnitModel:
                                 """
             model.loadAnims(utils.anim_dict)
             return model
-    
-    def moveUnitModel(self, action_list):
-        intervals = []
-        duration = 0.0
-        start_pos = self.node.getPos()
-        end_pos = None
-        for idx, action in enumerate(action_list):
-            type = action[0]
-            if idx == 0:
-                curr_pos = start_pos
-                curr_h = self.model.getH()
-            else:
-                curr_pos = dest_pos
-                curr_h = dest_h
-    
-            if type == "move":
-                dest_pos = Point3(action[1][0] + 0.5, action[1][1] + 0.5, 0.3)
-                self.dummy_node.setPos(render, curr_pos)
-                self.dest_node.setPos(render, dest_pos)
-                self.dummy_node.lookAt(self.dest_node)
-                dest_h = self.dummy_node.getH()
-                # Model heading is different than movement heading, first create animation that turns model to his destination
-                i_h = None
-                if dest_h != curr_h:
-                    i_h = self.model.quatInterval(0.2, hpr = Point3(dest_h, 0, 0), startHpr = Point3(curr_h, 0, 0))
-                    curr_h = dest_h
-                i = self.node.posInterval(0.5, dest_pos, curr_pos)
-                duration = duration + 0.5
-                if i_h:
-                    p = Parallel(i, i_h)
-                else:
-                    p = i
-                intervals.append(p)
-                end_pos = dest_pos
-            elif type == "rotate":
-                dest_pos = Point3(action[1][0] + 0.5, action[1][1] + 0.5, 0.3)
-                self.dummy_node.setPos(render, curr_pos)
-                self.dest_node.setPos(render, dest_pos)
-                self.dummy_node.lookAt(self.dest_node)
-                dest_h = self.dummy_node.getH() 
-                i_h = self.model.quatInterval(0.2, hpr = Point3(dest_h, 0, 0), startHpr = Point3(curr_h, 0, 0))
-                duration = duration + 0.2
-                intervals.append(i_h)
-            elif type == "vanish":
-                None
-                # TODO: ogs: kod za vanish
-            elif type == "spot":
-                None
-                # TODO: ogs: kod za spot
-        seq = Sequence()
-        for i in intervals:
-            seq.append(i)
-        #return
-        anim = ActorInterval(self.model, 'run', loop = 1, duration = duration)
-        anim_end = ActorInterval(self.model, 'idle_stand01', startFrame=1, endFrame=1)
-        move = Sequence(Func(self.parent.parent.beforeUnitMoveHook, int(self.id)),
-                        Parallel(anim, seq),
-                        Sequence(anim_end),
-                        Func(self.parent.parent.afterUnitMoveHook, int(self.id), start_pos, end_pos)
-                        )
-        move.start()
    
     def shootUnit(self, weapon, damage_list):
         seq = Sequence()
@@ -292,8 +231,9 @@ class UnitModel:
     
     def setHeading(self, heading):
         tile_pos = self.getHeadingTile(heading)
-        self.dest_node.setPos(render, tile_pos.getX()+0.5, tile_pos.getY()+0.5, 0.3)
-        self.model.lookAt(self.dest_node)
+        dest_node = NodePath("dest_node")
+        dest_node.setPos(render, tile_pos.getX()+0.5, tile_pos.getY()+0.5, 0.3)
+        self.node.lookAt(dest_node)
         
         
     def cleanup(self):
