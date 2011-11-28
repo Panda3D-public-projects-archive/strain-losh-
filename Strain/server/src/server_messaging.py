@@ -239,7 +239,7 @@ class EngMsg:
                                                                       
     @staticmethod
     def shoot( shoot_actions, source = None):
-        EngMsg._sendMsg( shoot_actions, source )
+        EngMsg._sendMsg( (SHOOT, shoot_actions), source )
         print shoot_actions 
                                                                       
     @staticmethod
