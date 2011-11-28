@@ -454,7 +454,7 @@ class Client(DirectObject):
             #self.selected_unit.marker.loadAnims({"move":"ripple2"})  
             #self.selected_unit.marker.loop("move")
             self.sgm.loadAltRenderModel(unit_id)
-            self.interface.printUnitData(unit_id) 
+            self.interface.refreshUnitData(unit_id) 
             # If it is our turn, display available move tiles
             if self.player == self.turn_player:
                 self.sgm.showUnitAvailMove(unit_id)
