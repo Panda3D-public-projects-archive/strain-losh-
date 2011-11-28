@@ -341,6 +341,7 @@ class SceneGraph():
     
     def animTask(self, task):
         """Task to animate draw units while they are idling."""
+        """
         dt = globalClock.getDt()#@UndefinedVariable
         for unit in self.unit_np_dict.itervalues():
             if self.parent.isUnitAlive(int(unit.id)) == True:
@@ -350,7 +351,7 @@ class SceneGraph():
                     unit.model.play('idle_stand01')
                     unit.passtime = 0
                     unit.setIdleTime()
-            
+        """    
         return task.cont
             
 #========================================================================
@@ -697,7 +698,8 @@ class Net():
             unit = msg[1]
             self.parent.refreshUnit(unit)
             # TODO: ogs: Ovaj refresh interface-a se poziva i kada unit koji dodje nije selektirani unit, to srediti
-            self.parent.interface.refreshUnitData()
+            if self.parent.sel_unit_id == unit['id']:
+                self.parent.interface.refreshUnitData()
         #========================================================================
         #
         elif msg[0] == SHOOT:
