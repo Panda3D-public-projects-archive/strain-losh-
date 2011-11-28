@@ -529,10 +529,7 @@ class Interface(DirectObject.DirectObject):
 
     def toggleOverwatch(self):
         unit = self.parent.units[self.parent.sel_unit_id]
-        if unit['overwatch']:
-            self.overwatch.turnOff()
-        else:
-            self.overwatch.turnOn()
+        ClientMsg.overwatch( self.parent.sel_unit_id )
             
     def setButtons(self):
         for button in self.action_buttons.itervalues():

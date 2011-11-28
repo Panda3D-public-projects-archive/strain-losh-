@@ -12,7 +12,7 @@ import sys, traceback
 import cPickle as pickle
 import util
 from player import Player
-from util import compileEnemyUnit
+from util import compileEnemyUnit, compileUnit
 import copy
 
 notify = util.Notify()
@@ -159,13 +159,27 @@ class Engine( Thread ):
             self.chat( msg[1], source, msg[2] )
                         
         elif( msg[0] == OVERWATCH ):
-            self.chat( msg[1], source, msg[2] )
+            self.unitUpdate( msg[1],'overwatch', source)
                         
         elif( msg[0] == SHOOT ):
             self.shoot( msg[1]['shooter_id'], msg[1]['target_id'], source )
                         
         else:
             notify.error( "Unknown message Type: %s", msg )
+        
+ 
+        
+    def unitUpdate(self, unit_id, param, source ):
+        player = self.findPlayer( source )
+        unit = self.findAndValidateUnit( unit_id, source )
+        
+        if param == 'overwatch':
+            unit.overwatch = not unit.overwatch
+            
+        EngMsg.sendUnit( compileUnit(unit), source )
+        
+        
+        pass
         
         
     def chat(self, msg, source, to_allies):
