@@ -18,6 +18,8 @@ END_TURN = 'end_turn'           #no values
 UNIT = 'unit'                   #value - pickled unit
 SHOOT = 'shoot'                 #value - (which unit, target unit)
 CHAT = 'chat'                   #value - string for chat
+OVERWATCH = 'overwatch'         #value - id of unit going on overwatch, this message toggles overwatch on/off
+
 
 class Msg:
     def __init__(self, in_type, value=None):
@@ -226,6 +228,10 @@ class ClientMsg:
     @staticmethod
     def chat( msg, to_allies=False ):
         ClientMsg._sendMsg( (CHAT, msg, to_allies) ) 
+        
+    @staticmethod
+    def overwatch( unit_id ):
+        ClientMsg._sendMsg( (OVERWATCH, unit_id) ) 
         
     @staticmethod
     def endTurn():
