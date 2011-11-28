@@ -59,14 +59,14 @@ class Interface(DirectObject.DirectObject):
         self.unit_move_destination = None
         self.unit_move_orientation = HEADING_NONE
         self.turn_np = NodePath("turn_arrows_np")
-        self.turn_np.reparentTo(render)
+        self.turn_np.reparentTo(render)#@UndefinedVariable
         self.plane = Plane(Vec3(0, 0, 1), Point3(0, 0, 0.3))  
         self.dummy_turn_pos_node = NodePath("dummy_turn_pos_node")
         self.dummy_turn_dest_node = NodePath("dummy_turn_dest_node")
         
-        wp = base.win.getProperties() 
+        wp = base.win.getProperties() #@UndefinedVariable
         aspect = float(wp.getXSize()) / wp.getYSize()
-        plane = loader.loadModel('plane')
+        plane = loader.loadModel('plane')#@UndefinedVariable
         plane.setScale(2)
         plane.flattenLight()
         self.unit_card = GuiCard(0.3, 0.3, 0.01, None, "topleft", Point4(0, 0, 0, 0))
@@ -101,15 +101,18 @@ class Interface(DirectObject.DirectObject):
         self.buttons["action_5"] = self.action_5
         self.buttons["action_6"] = self.action_6
         
+        self.action_buttons = {}
+        self.action_buttons["overwatch"] = self.overwatch
+        
         self.hovered_gui = None
         
         self.unit_info = None
         
-        self.console = GuiConsole(base.a2dBottomLeft, 1.5, 0.4, aspect)
-        self.stats = GuiTextFrame(Point3(0.3, 0, 0), 0.4, 0.3, 5, base.a2dTopLeft)
-        self.stats2 = GuiTextFrame(Point3(0.7, 0, 0), 0.4, 0.3, 5, base.a2dTopLeft)
-        self.stats3 = GuiTextFrame(Point3(1.1, 0, 0), 0.4, 0.3, 5, base.a2dTopLeft)
-        self.status_bar = GuiTextFrame(Point3(1.5 + 0.01, 0, 0), 0.85, 0.08, 1, base.a2dTopLeft)
+        self.console = GuiConsole(base.a2dBottomLeft, 1.5, 0.4, aspect)#@UndefinedVariable
+        self.stats = GuiTextFrame(Point3(0.3, 0, 0), 0.4, 0.3, 5, base.a2dTopLeft)#@UndefinedVariable
+        self.stats2 = GuiTextFrame(Point3(0.7, 0, 0), 0.4, 0.3, 5, base.a2dTopLeft)#@UndefinedVariable
+        self.stats3 = GuiTextFrame(Point3(1.1, 0, 0), 0.4, 0.3, 5, base.a2dTopLeft)#@UndefinedVariable
+        self.status_bar = GuiTextFrame(Point3(1.5 + 0.01, 0, 0), 0.85, 0.08, 1, base.a2dTopLeft)#@UndefinedVariable
         player = self.parent.player
         self.status_bar.write(1, "Player: "+player+"     Server: Online")
 
@@ -117,12 +120,12 @@ class Interface(DirectObject.DirectObject):
         self.accept("mouse1", self.mouseLeftClick)
         self.accept("mouse1-up", self.mouseLeftClickUp)
         
-        taskMgr.add(self.processGui, 'processGui_task')
-        taskMgr.add(self.hover, 'hover_task') 
-        taskMgr.add(self.turnUnit, 'turnUnit_task')       
+        taskMgr.add(self.processGui, 'processGui_task')#@UndefinedVariable
+        taskMgr.add(self.hover, 'hover_task') #@UndefinedVariable
+        taskMgr.add(self.turnUnit, 'turnUnit_task')     #@UndefinedVariable  
     
     def redraw(self):
-        wp = base.win.getProperties() 
+        wp = base.win.getProperties() #@UndefinedVariable
         aspect = float(wp.getXSize()) / wp.getYSize()
         if aspect >= 1:
             flag = "wide"
@@ -140,8 +143,8 @@ class Interface(DirectObject.DirectObject):
 
     def getMousePos(self):
         """Returns mouse coordinates if mouse pointer is inside Panda window."""
-        if base.mouseWatcherNode.hasMouse(): 
-            return base.mouseWatcherNode.getMouse() 
+        if base.mouseWatcherNode.hasMouse(): #@UndefinedVariable
+            return base.mouseWatcherNode.getMouse() #@UndefinedVariable
         return None
 
     def getMouseHoveredObject(self):
@@ -150,8 +153,8 @@ class Interface(DirectObject.DirectObject):
         """
         pos = self.getMousePos()
         if pos:
-            self.parent.sgm.coll_ray.setFromLens(base.camNode, pos.getX(), pos.getY())
-            self.parent.sgm.coll_trav.traverse(render)
+            self.parent.sgm.coll_ray.setFromLens(base.camNode, pos.getX(), pos.getY())#@UndefinedVariable
+            self.parent.sgm.coll_trav.traverse(render)#@UndefinedVariable
             if self.parent.sgm.coll_queue.getNumEntries() > 0:
                 self.parent.sgm.coll_queue.sortEntries()
                 entry = self.parent.sgm.coll_queue.getEntry(0)
@@ -163,7 +166,7 @@ class Interface(DirectObject.DirectObject):
     def loadTurnArrows(self, dest):
         self.turn_arrow_dict = {}        
         for i in xrange(9):
-            m = loader.loadModel("sphere")
+            m = loader.loadModel("sphere")#@UndefinedVariable
             m.setScale(0.07, 0.07, 0.07)
             x = dest.getX()+0.5
             y = dest.getY()+0.5   
@@ -228,12 +231,21 @@ class Interface(DirectObject.DirectObject):
         if self.selected_unit:
             self.deselectUnit()
         else:
-            messenger.send("shutdown-event")
+            messenger.send("shutdown-event")#@UndefinedVariable
       
 
-    def refreshUnitData(self):
-        if self.parent.sel_unit_id != None:
-            self.printUnitData(self.parent.sel_unit_id)
+    def refreshUnitData(self, unit_id):
+        if unit_id != None:
+            self.processUnitData(unit_id)
+    
+    def processUnitData(self, unit_id):
+        self.printUnitData(unit_id)
+        self.setButtons()
+        if self.parent.units[unit_id]['overwatch']:
+            self.overwatch.turnOn()
+        else:
+            self.overwatch.turnOff()
+            
         
     def printUnitData(self, unit_id):
         unit = self.parent.getUnitData(unit_id)
@@ -273,7 +285,8 @@ class Interface(DirectObject.DirectObject):
         self.stats3.write(4, "")
         if self.unit_info:
             self.unit_info.label.hide()
-                
+        self.clearButtons()        
+        
     def endTurn(self):
         """Ends the turn"""
         if not self.ge.interface_disabled:
@@ -295,6 +308,10 @@ class Interface(DirectObject.DirectObject):
             self.console.unfocus() 
         elif self.hovered_gui == self.endturn_button:
             self.parent.endTurn()
+            self.console.unfocus()
+        elif self.hovered_gui == self.overwatch:
+            if self.overwatch.enabled:
+                self.toggleOverwatch()
             self.console.unfocus()
         elif self.hovered_gui == self.console:
             self.console.focus()
@@ -429,8 +446,8 @@ class Interface(DirectObject.DirectObject):
         """
     def processGui(self, task):
         """Visually marks and selects GUI element over which mouse cursor hovers."""
-        if base.mouseWatcherNode.hasMouse(): 
-            mpos = base.mouseWatcherNode.getMouse()
+        if base.mouseWatcherNode.hasMouse(): #@UndefinedVariable
+            mpos = base.mouseWatcherNode.getMouse()#@UndefinedVariable
             hovering_over_something = False
             
             #Vidi me kako iteriram kroz dictionary
@@ -458,20 +475,20 @@ class Interface(DirectObject.DirectObject):
         if self.unit_move_destination: 
             #print self.unit_move_destination
             if self.move_timer < 0.1:
-                dt = globalClock.getDt()
+                dt = globalClock.getDt()#@UndefinedVariable
                 self.move_timer += dt
                 if self.move_timer > 0.1:
                     self.loadTurnArrows(self.unit_move_destination)
                     pos = Point3(self.unit_move_destination.getX()+0.5, self.unit_move_destination.getY()+0.5, 0.3)
                     self.dummy_turn_pos_node.setPos(pos)
             else: 
-                if base.mouseWatcherNode.hasMouse(): 
-                    mpos = base.mouseWatcherNode.getMouse() 
+                if base.mouseWatcherNode.hasMouse(): #@UndefinedVariable
+                    mpos = base.mouseWatcherNode.getMouse()#@UndefinedVariable 
                     pos3d = Point3() 
                     nearPoint = Point3() 
                     farPoint = Point3() 
-                    base.camLens.extrude(mpos, nearPoint, farPoint) 
-                    if self.plane.intersectsLine(pos3d, render.getRelativePoint(base.camera, nearPoint), render.getRelativePoint(base.camera, farPoint)): 
+                    base.camLens.extrude(mpos, nearPoint, farPoint) #@UndefinedVariable
+                    if self.plane.intersectsLine(pos3d, render.getRelativePoint(base.camera, nearPoint), render.getRelativePoint(base.camera, farPoint)):#@UndefinedVariable 
                         self.dummy_turn_dest_node.setPos(pos3d)
                         self.dummy_turn_pos_node.lookAt(self.dummy_turn_dest_node)
                         h = self.dummy_turn_pos_node.getH()
@@ -510,6 +527,22 @@ class Interface(DirectObject.DirectObject):
                         self.markTurnArrow(key)
         return task.cont
 
+    def toggleOverwatch(self):
+        unit = self.parent.units[self.parent.sel_unit_id]
+        if unit['overwatch']:
+            self.overwatch.turnOff()
+        else:
+            self.overwatch.turnOn()
+            
+    def setButtons(self):
+        for button in self.action_buttons.itervalues():
+            print "button enabled"
+            button.enable()
+            
+    def clearButtons(self):
+        for button in self.action_buttons.itervalues():
+            print "button disabled"
+            button.disable()
 
 #===============================================================================
 # CLASS GuiCard --- DEFINITION
@@ -567,12 +600,13 @@ class GuiCard:
     def removeNode(self):
         self.node.removeNode()
 
-
 #===============================================================================
 # CLASS GuiButton --- DEFINITION
 #===============================================================================
 class GuiButton:
     def __init__(self, hugpos, offset, aspect, plane, name):
+        self.enabled = True
+        self.name = name
         self.node = aspect2d.attachNewNode("guibutton")#@UndefinedVariable
         self.node.setTransparency(TransparencyAttrib.MAlpha)
         self.node.setAlphaScale(0.5) 
@@ -602,7 +636,21 @@ class GuiButton:
             self.pos_min_x = posx.getX()
             self.pos_min_y = posx.getZ() / aspect
             self.pos_max_x = posy.getX()
-            self.pos_max_y = posy.getZ() / aspect            
+            self.pos_max_y = posy.getZ() / aspect
+            
+    def turnOn(self):
+        self.node.setTexture(loader.loadTexture(self.name+"_on.png"))#@UndefinedVariable
+        
+    def turnOff(self):
+        self.node.setTexture(loader.loadTexture(self.name+".png"))#@UndefinedVariable    
+            
+    def enable(self):
+        self.node.setTexture(loader.loadTexture(self.name+".png"))#@UndefinedVariable
+        self.enabled = True
+        
+    def disable(self):
+        self.node.setTexture(loader.loadTexture("empty.png"))#@UndefinedVariable
+        self.enabled = False
             
     def removeNode(self):
             self.node.removeNode()   
@@ -654,7 +702,6 @@ class GuiTextFrame:
         p.setX(p.getX() + self.offset.getX())
         p.setZ(p.getZ() - 0.05)
         self.frame.setPos(p)
-
 
 class GuiUnitInfo:
     def __init__(self, offset, parent):
