@@ -403,6 +403,24 @@ class SceneGraph():
             else:
                 unit_model.model.play('idle_stand01')
     
+    def deleteTurnNode(self, d):
+        d.removeNode()
+    
+    def playNewTurnAnim(self):
+        text = TextNode('new turn node')
+        text.setText("TURN: "+self.parent.turn_player)
+        textnp = NodePath("textnp")
+        textNodePath = textnp.attachNewNode(text)
+        textNodePath.setColor(1, 0, 0)
+        textNodePath.setScale(0.01, 0.01, 0.01)
+        textNodePath.setPos(-0.7, 0, 0)
+        textNodePath.reparentTo(aspect2d)
+        s = Sequence(textNodePath.scaleInterval(.3, textNodePath.getScale()*20,blendType='easeIn'),
+                     Wait(1.0),
+                     textNodePath.scaleInterval(.3, textNodePath.getScale()*0.05,blendType='easeIn'),
+                     Func(self.deleteTurnNode, textNodePath))
+        s.start()
+    
     def animTask(self, task):
         """Task to animate draw units while they are idling."""
         """
@@ -914,6 +932,14 @@ class Client(DirectObject):
                                             )
             damage_parallel.append(Parallel(target_anim, damage_text_sequence, Func(self.afterUnitShootHook, int(shooter_id))))        
         return damage_parallel
+    
+    def handleVanish(self, unit_id):
+        s = Sequence()
+        i = self.buildMoveVanishAnim(unit_id)
+        s.append(i)
+        s.start()
+
+
 #========================================================================
 # Client tasks
    
@@ -967,6 +993,7 @@ class Net():
             units = pickle.loads(msg[1]['units'])
             for unit in units.itervalues():
                 self.parent.refreshUnit(unit)
+            self.parent.sgm.playNewTurnAnim()                
             #self.parent.interface.refreshUnitData( unit['id'] )
         #========================================================================
         #
@@ -983,7 +1010,12 @@ class Net():
         elif msg[0] == SHOOT:
             action_list = msg[1]
             self.parent.handleShoot(action_list)       
-        
+        #========================================================================
+        #
+        elif msg[0] == 'vanish':
+            unit_id = msg[1]
+            self.parent.handleVanish(unit_id)
+                
         #========================================================================
         #
         elif msg[0] == ERROR:
