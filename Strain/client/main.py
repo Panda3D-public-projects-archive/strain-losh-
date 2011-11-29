@@ -14,7 +14,7 @@ from panda3d.core import loadPrcFile, WindowProperties, Texture, OrthographicLen
 from panda3d.core import TextNode, NodePath, Point2, Point3, VBase4, GeomNode, Vec3, Vec4#@UnresolvedImport
 from panda3d.core import ShadeModelAttrib, DirectionalLight, AmbientLight#@UnresolvedImport
 from panda3d.core import CollisionTraverser, CollisionRay, CollisionHandlerQueue, CollisionNode#@UnresolvedImport
-from direct.interval.IntervalGlobal import Sequence, ActorInterval, Parallel, Func#@UnresolvedImport
+from direct.interval.IntervalGlobal import Sequence, ActorInterval, Parallel, Func, Interval, Wait#@UnresolvedImport
 from direct.showbase.DirectObject import DirectObject
 from direct.fsm import FSM
 from direct.gui.DirectGui import DirectButton, DirectEntry, DirectLabel, DGG
@@ -300,6 +300,15 @@ class SceneGraph():
     
     def showUnit(self, unit_model):
         unit_model.node.reparentTo(self.unit_node)
+        
+    def hideUnit(self, unit_id):
+        unit_model = self.unit_np_dict[unit_id] 
+        cd = self.parent.getCoordsByUnit(unit_id)       
+        self.parent.units.pop(unit_id)
+        self.unit_np_dict.pop(unit_id)
+        self.unit_np_list[int(cd.getX())][int(cd.getY())] = None
+        unit_model.node.remove()
+        del unit_model
     
     def deleteUnits(self):
         if self.comp_inited['units'] == False:
@@ -673,8 +682,9 @@ class Client(DirectObject):
     
     def afterUnitMoveHook(self, unit_id, start_pos, end_pos):
         if end_pos != None:
-            self.sgm.unit_np_list[int(start_pos.getX())][int(start_pos.getY())] = None
-            self.sgm.unit_np_list[int(end_pos.getX())][int(end_pos.getY())] = self.sgm.unit_np_dict[unit_id]
+            if self.sgm.unit_np_dict.has_key(unit_id):
+                self.sgm.unit_np_list[int(start_pos.getX())][int(start_pos.getY())] = None
+                self.sgm.unit_np_list[int(end_pos.getX())][int(end_pos.getY())] = self.sgm.unit_np_dict[unit_id]
         if self.player == self.turn_player: 
             self.sgm.showUnitAvailMove(unit_id)
         self.unit_move_playing = False
@@ -745,6 +755,10 @@ class Client(DirectObject):
                 start_h = unit_model.node.getH(render)
                 i = self.buildMoveSpotAnim(spotted_unit_model)
                 s.append(i)
+            elif action_type == "vanish":
+                vanish_unit_id = action[1]
+                i = self.buildMoveVanishAnim(vanish_unit_id)
+                s.append(i)
                     
         end_pos = start_pos  
         anim = ActorInterval(unit_model.model, 'run', loop = 1, duration = d)
@@ -757,7 +771,10 @@ class Client(DirectObject):
         move.start()
     
     def buildMoveSpotAnim(self, unit_model):
-        return Func(self.sgm.showUnit, unit_model)
+        return Sequence(Func(self.sgm.showUnit, unit_model), Wait(1.0))
+    
+    def buildMoveVanishAnim(self, unit_id):
+        return Sequence(Func(self.sgm.hideUnit, unit_id), Wait(1.0))
     
     def buildMoveRotateAnim(self, unit_model, start_pos, end_pos, start_h):
         dummy_start = NodePath("dummy_start")
@@ -807,6 +824,16 @@ class Client(DirectObject):
                 s.append(i)
                 i = self.buildShootDamageAnim(damage_list, shooter_id)
                 s.append(i)
+            elif action_type == "melee":
+                shooter_id = action[1] # unit_id of the shooter
+                shoot_tile = action[2] # (x,y) pos of targeted tile
+                weapon = action[3] # weapon id
+                damage_list = action[4] # list of all damaged/missed/bounced/killed units
+                shooter_model = self.sgm.unit_np_dict[shooter_id]
+                i = self.buildShootMeleeAnim(shooter_model, shoot_tile, weapon)
+                s.append(i)
+                i = self.buildShootDamageAnim(damage_list, shooter_id)
+                s.append(i)
             elif action_type == "rotate":
                 unit_id = action[1]
                 heading = action[2]
@@ -846,6 +873,11 @@ class Client(DirectObject):
         # Pack unit shoot animation and bullet animation in parallel
         shoot_parallel = Parallel(shoot_anim, bullet_sequence)
         return shoot_parallel
+
+    def buildShootMeleeAnim(self, unit_model, target_tile, weapon):
+        # First we create melee animation
+        melee_anim = ActorInterval(unit_model.model, 'melee')
+        return melee_anim
     
     def buildShootDamageAnim(self, damage_list, shooter_id):
         # Find all damaged units and play their damage/kill/miss animation
