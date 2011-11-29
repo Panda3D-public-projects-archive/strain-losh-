@@ -97,6 +97,7 @@ anim_dict['run'] = 'run'
 anim_dict['shoot'] = 'fire_stand'
 anim_dict['damage'] = 'pinned_idle'
 anim_dict['die'] = 'die_normal_f'
+anim_dict['overwatch'] = 'aim_stand'
 
 unit_types = {}
 unit_types['marine_common'] = ['space_marine_head', 'power_armour_common', 'space_marine_backpack', 'power_axe_common', 'bolt_pistol_common', None, None]
