@@ -377,7 +377,18 @@ class SceneGraph():
         d.reparentTo(render)
         
     def deleteDamageNode(self, d):
-        d.removeNode()    
+        d.removeNode()  
+        
+    def playUnitStateAnim(self, unit_id):
+        # Check if we have toggled overwatch
+        unit = self.parent.units[unit_id]
+        unit_model = self.unit_np_dict[unit_id]
+        if unit_model.last_overwatch != unit['overwatch']:
+            unit_model.last_overwatch = unit['overwatch']
+            if unit['overwatch'] == True:
+                unit_model.model.play('overwatch')
+            else:
+                unit_model.model.play('idle_stand01')
     
     def animTask(self, task):
         """Task to animate draw units while they are idling."""
@@ -907,6 +918,7 @@ class Net():
             if self.parent.sel_unit_id == unit['id']:
                 self.parent.interface.refreshUnitData( unit['id'] )
                 self.parent.sgm.showUnitAvailMove( unit['id'] )
+                self.parent.sgm.playUnitStateAnim( unit['id'] )
         #========================================================================
         #
         elif msg[0] == SHOOT:

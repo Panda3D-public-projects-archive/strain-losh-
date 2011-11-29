@@ -79,6 +79,8 @@ class UnitModel:
         #self.marker.flattenLight()
         #self.marker.hide()
         
+        self.last_overwatch = False
+        
         self.passtime = 0
         self.setIdleTime()
         
