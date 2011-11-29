@@ -76,6 +76,8 @@ class Unit():
         if self.ap < 1:
             return None
         
+        self.ap -= 1
+        
         base = 90
         
         #charge
