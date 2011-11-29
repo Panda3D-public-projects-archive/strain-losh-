@@ -201,7 +201,6 @@ def getHeadingAngle(h):
 
 def loadUnit(unit_type):
     model = Actor('marine') 
-    model.loadAnims(anim_dict)
     model.reparentTo(render)
     model.node_dict = {}
     for dict in gear_list:
