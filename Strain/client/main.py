@@ -284,18 +284,22 @@ class SceneGraph():
         self.unit_np_list = [[None] * self.parent.level['maxY'] for i in xrange(self.parent.level['maxX'])]
                     
         for unit in self.parent.units.itervalues():
-            self.showUnit(unit)
+            unit_model = self.loadUnit(unit)
+            self.showUnit(unit_model)
                         
         self.comp_inited['units'] = True  
         
-    def showUnit(self, unit):
+    def loadUnit(self, unit):
         um = UnitModel(self, unit['id'])
-        um.node.reparentTo(self.unit_node)
         # Keep unit nodepath in dictionary of all unit nodepaths
         self.unit_np_dict[unit['id']] = um
         # Keep unit nodepath in list corresponding to level size
         # This will be dinamically altered when units change position
         self.unit_np_list[int(unit['pos'][0])][int(unit['pos'][1])] = um
+        return um
+    
+    def showUnit(self, unit_model):
+        unit_model.node.reparentTo(self.unit_node)
     
     def deleteUnits(self):
         if self.comp_inited['units'] == False:
@@ -671,7 +675,8 @@ class Client(DirectObject):
         if end_pos != None:
             self.sgm.unit_np_list[int(start_pos.getX())][int(start_pos.getY())] = None
             self.sgm.unit_np_list[int(end_pos.getX())][int(end_pos.getY())] = self.sgm.unit_np_dict[unit_id]
-        self.sgm.showUnitAvailMove(unit_id)
+        if self.player == self.turn_player: 
+            self.sgm.showUnitAvailMove(unit_id)
         self.unit_move_playing = False
         
     def beforeUnitShootHook(self, unit_id):
@@ -693,15 +698,23 @@ class Client(DirectObject):
 # Client animation handler methods
     
     def handleMove(self, unit_id, action_list):
-        unit_model = self.sgm.unit_np_dict[unit_id]
-        # We will change start_pos variable on tile-per-tile basis
-        start_pos = unit_model.node.getPos()
-        # We need initial position of the entire animation so we can correctly change nps in unit_np_list
-        animation_start_pos = start_pos
-        start_h = unit_model.node.getH(render)
         s = Sequence()
         d = 0.0
+        unit_model = None
+        spotted_unit_model = None
         
+        if self.units.has_key(unit_id):
+            unit_model = self.sgm.unit_np_dict[unit_id]
+            # We will change start_pos variable on tile-per-tile basis
+            start_pos = unit_model.node.getPos()
+            # We need initial position of the entire animation so we can correctly change nps in unit_np_list
+            animation_start_pos = start_pos
+            start_h = unit_model.node.getH(render)
+        else:
+            # This is the first time we see this unit, we have no record of it in client.units dict or sgm nodepath list and dict
+            # First action we MUST receive here is 'spot', otherwise client will break as we dont have unit_model defined
+            None
+            
         for idx, action in enumerate(action_list):
             action_type = action[0]
             if action_type == "move":
@@ -717,8 +730,22 @@ class Client(DirectObject):
             elif action_type == "spot":
                 spotted_unit = action[1]
                 self.units[spotted_unit['id']] = spotted_unit
-                i = self.buildMoveSpotAnim(spotted_unit)
+                # Check if we have this unit in our scene graph records
+                if self.sgm.unit_np_dict.has_key(spotted_unit['id']):
+                    spotted_unit_model = self.sgm.unit_np_dict[spotted_unit['id']]
+                # This is the first time we see this unit, fill out starting variables for move and rotate actions
+                else:
+                    spotted_unit_model = self.sgm.loadUnit(spotted_unit)
+                
+                if unit_model == None:
+                    unit_model = spotted_unit_model
+                    
+                start_pos = unit_model.node.getPos()
+                animation_start_pos = start_pos
+                start_h = unit_model.node.getH(render)
+                i = self.buildMoveSpotAnim(spotted_unit_model)
                 s.append(i)
+                    
         end_pos = start_pos  
         anim = ActorInterval(unit_model.model, 'run', loop = 1, duration = d)
         anim_end = ActorInterval(unit_model.model, 'idle_stand01', startFrame=1, endFrame=1)
@@ -908,7 +935,7 @@ class Net():
             units = pickle.loads(msg[1]['units'])
             for unit in units.itervalues():
                 self.parent.refreshUnit(unit)
-            self.parent.interface.refreshUnitData( unit['id'] )
+            #self.parent.interface.refreshUnitData( unit['id'] )
         #========================================================================
         #
         elif msg[0] == UNIT:
