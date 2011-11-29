@@ -94,7 +94,7 @@ anim_dict['idle_combat01'] = 'idle_combat_stand01'
 anim_dict['idle_combat02'] = 'idle_combat_stand02'
 anim_dict['idle_combat03'] = 'idle_combat_stand03'   
 anim_dict['run'] = 'run' 
-anim_dict['shoot'] = 'shoot'
+anim_dict['shoot'] = 'fire_stand'
 anim_dict['damage'] = 'pinned_idle'
 anim_dict['die'] = 'die_normal_f'
 

@@ -667,7 +667,6 @@ class Client(DirectObject):
         self.unit_move_playing = True
         
     def afterUnitShootHook(self, unit_id):
-        self.sgm.showUnitAvailMove(unit_id)
         self.unit_move_playing = False
         
     def endTurn(self):
@@ -757,29 +756,33 @@ class Client(DirectObject):
     
     def handleShoot(self, action_list):
         s = Sequence()
-        d = 0.0        
+        d = 0.0                
         for idx, action in enumerate(action_list):
             action_type = action[0]
             if action_type == "shoot":
-                end_pos = Point3(action[1][0] + 0.5, action[1][1] + 0.5, utils.GROUND_LEVEL)
-                i, duration, start_pos, start_h = self.buildMoveMoveAnim(unit_model, start_pos, end_pos, start_h)
-                d += duration
+                shooter_id = action[1] # unit_id of the shooter
+                shoot_tile = action[2] # (x,y) pos of targeted tile
+                weapon = action[3] # weapon id
+                damage_list = action[4] # list of all damaged/missed/bounced/killed units
+                shooter_model = self.sgm.unit_np_dict[shooter_id]
+                i = self.buildShootShootAnim(shooter_model, shoot_tile, weapon)
+                s.append(i)
+                i = self.buildShootDamageAnim(damage_list, shooter_id)
                 s.append(i)
             elif action_type == "rotate":
-                end_pos = Point3(action[1][0] + 0.5, action[1][1] + 0.5, utils.GROUND_LEVEL)
-                i, duration, start_pos, start_h = self.buildMoveRotateAnim(unit_model, start_pos, end_pos, start_h)
-                d += duration
+                unit_id = action[1]
+                heading = action[2]
+                unit_model = self.sgm.unit_np_dict[unit_id]
+                start_h = unit_model.node.getH(render)
+                i, duration, start_h = self.buildShootRotateAnim(unit_model, start_h, heading)
                 s.append(i)
-        end_pos = start_pos  
-        anim = ActorInterval(unit_model.model, 'run', loop = 1, duration = d)
-        anim_end = ActorInterval(unit_model.model, 'idle_stand01', startFrame=1, endFrame=1)
-        move = Sequence(Func(self.beforeUnitMoveHook, unit_id),
-                        Parallel(anim, s),
-                        Sequence(anim_end),
-                        Func(self.afterUnitMoveHook, unit_id, animation_start_pos, end_pos)
-                        )
-        move.start()
-    
+        
+        # Start our shoot sequence
+        shoot = Sequence(Func(self.beforeUnitShootHook, int(shooter_id)),
+                         s
+                         )
+        shoot.start()        
+
     def buildShootRotateAnim(self, unit_model, start_h, heading):
         duration = 0.0
         end_h = utils.getHeadingAngle(heading)
@@ -787,9 +790,60 @@ class Client(DirectObject):
         duration += 0.2
         return interval, duration, end_h
     
-    def buildShootShootAnim(self, unit_model, target_model, target_tile):
-        None
-         
+    def buildShootShootAnim(self, unit_model, target_tile, weapon):
+        # First we create shooting animation
+        shoot_anim = ActorInterval(unit_model.model, 'shoot')
+        # Then we create the bullet and its animation
+        self.bullet = loader.loadModel("sphere")
+        self.bullet.setScale(0.05)
+        start_pos = Point3(unit_model.node.getX(render), unit_model.node.getY(render), 0.9)
+        end_pos = Point3(target_tile[0] + 0.5, target_tile[1] + 0.5, 0.9)
+        dest_node = NodePath("dest_node")
+        dest_node.setPos(end_pos)
+        time = round(unit_model.node.getDistance(dest_node) / 5, 2)
+        bullet_sequence = Sequence(Func(self.sgm.setBullet, self.bullet),
+                                   self.bullet.posInterval(time, end_pos, start_pos),
+                                   Func(self.sgm.deleteBullet, self.bullet)
+                                   )
+        # Pack unit shoot animation and bullet animation in parallel
+        shoot_parallel = Parallel(shoot_anim, bullet_sequence)
+        return shoot_parallel
+    
+    def buildShootDamageAnim(self, damage_list, shooter_id):
+        # Find all damaged units and play their damage/kill/miss animation
+        damage_parallel = Parallel()
+        for action in damage_list:
+            damage_type = action[0]
+            target_unit_id = action[1]
+            target_unit = self.sgm.unit_np_dict[target_unit_id]
+            t = TextNode('dmg')
+            if damage_type == "bounce":
+                target_anim = ActorInterval(target_unit.model, "damage")
+                dmg = 'bounce'
+            elif damage_type == "miss":
+                target_anim = ActorInterval(target_unit.model, "damage")
+                dmg = 'miss'                
+            elif damage_type == "damage":
+                target_anim = ActorInterval(target_unit.model, "damage")
+                dmg = str(action[2])
+            elif damage_type == "kill":
+                target_anim = ActorInterval(target_unit.model, "die")
+                dmg = str(action[2])
+            t.setText( "%s" % dmg)
+            t.setTextColor(1, 0, 0, 1)
+            t.setAlign(TextNode.ACenter)
+            textNodePath = NodePath("textnp")
+            textNodePath.attachNewNode(t)
+            textNodePath.setScale(0.25)
+            textNodePath.setBillboardPointEye()
+            start_pos = Point3(target_unit.node.getX(render), target_unit.node.getY(render), 0.9)
+            end_pos = start_pos + Point3(0, 0, 3)
+            damage_text_sequence = Sequence(Func(self.sgm.setDamageNode, textNodePath),
+                                            textNodePath.posInterval(1.5, end_pos, start_pos),
+                                            Func(self.sgm.deleteDamageNode, textNodePath)
+                                            )
+            damage_parallel.append(Parallel(target_anim, damage_text_sequence, Func(self.afterUnitShootHook, int(shooter_id))))        
+        return damage_parallel
 #========================================================================
 # Client tasks
    
@@ -852,13 +906,12 @@ class Net():
             # TODO: ogs: Ovaj refresh interface-a se poziva i kada unit koji dodje nije selektirani unit, to srediti
             if self.parent.sel_unit_id == unit['id']:
                 self.parent.interface.refreshUnitData( unit['id'] )
+                self.parent.sgm.showUnitAvailMove( unit['id'] )
         #========================================================================
         #
         elif msg[0] == SHOOT:
             action_list = msg[1]
-            print msg
-            print msg[0]
-            #self.handleShoot(action_list)       
+            self.parent.handleShoot(action_list)       
         
         #========================================================================
         #
