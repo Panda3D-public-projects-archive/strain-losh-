@@ -141,7 +141,7 @@ class UnitModel:
         shoot_anim = ActorInterval(self.model, 'shoot')
         # Then we create the bullet and its animation
         self.bullet = loader.loadModel("sphere")
-        self.bullet.setScale(0.05)
+        self.bullet.setScale(0.04)
         start_pos = Point3(self.model.getX(render), self.model.getY(render), 0.9)
         end_pos = Point3(self.dest_node.getX(render), self.dest_node.getY(render), 0.9)
         time = round(self.model.getDistance(self.dest_node) / 5, 2)

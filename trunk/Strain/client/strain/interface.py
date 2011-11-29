@@ -533,12 +533,10 @@ class Interface(DirectObject.DirectObject):
             
     def setButtons(self):
         for button in self.action_buttons.itervalues():
-            print "button enabled"
             button.enable()
             
     def clearButtons(self):
         for button in self.action_buttons.itervalues():
-            print "button disabled"
             button.disable()
 
 #===============================================================================
