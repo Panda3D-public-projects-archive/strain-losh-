@@ -159,7 +159,10 @@ class Engine( Thread ):
             self.chat( msg[1], source, msg[2] )
                         
         elif( msg[0] == OVERWATCH ):
-            self.unitUpdate( msg[1],'overwatch', source)
+            self.unitUpdate( msg[1], OVERWATCH, source)
+                        
+        elif( msg[0] == SET_UP ):
+            self.unitUpdate( msg[1], SET_UP, source)
                         
         elif( msg[0] == SHOOT ):
             self.shoot( msg[1]['shooter_id'], msg[1]['target_id'], source )
@@ -170,16 +173,29 @@ class Engine( Thread ):
  
         
     def unitUpdate(self, unit_id, param, source ):
-        player = self.findPlayer( source )
+        #player = self.findPlayer( source )
         unit = self.findAndValidateUnit( unit_id, source )
         
-        if param == 'overwatch':
+        if param == OVERWATCH:
             unit.overwatch = not unit.overwatch
             
+        if param == SET_UP:
+            if not unit.hasHeavyWeapon():
+                EngMsg.sendErrorMsg( "The unit does not have any heavy weapons.", source )
+
+            if unit.set_up:
+                msg = unit.tearDown()
+                if msg:
+                    EngMsg.sendErrorMsg( msg, source )
+            else:
+                msg = unit.setUp()
+                if msg:
+                    EngMsg.sendErrorMsg( msg, source )
+                    
+                    
+                    
         EngMsg.sendUnit( compileUnit(unit), source )
         
-        
-        pass
         
         
     def chat(self, msg, source, to_allies):
@@ -985,7 +1001,7 @@ class Engine( Thread ):
     
     def checkMyVision(self, unit):
         
-        #we moved this unit, so we need visibilit to every enemy unit, and stop movement if this unit
+        #we moved this unit, so we need visibility to every enemy unit, and stop movement if this unit
         #sees anything or if an enemy unit on overwatch sees this unit
         spotted = []
 

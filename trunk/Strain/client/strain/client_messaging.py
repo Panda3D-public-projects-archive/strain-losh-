@@ -19,6 +19,7 @@ UNIT = 'unit'                   #value - pickled unit
 SHOOT = 'shoot'                 #value - (which unit, target unit)
 CHAT = 'chat'                   #value - string for chat
 OVERWATCH = 'overwatch'         #value - id of unit going on overwatch, this message toggles overwatch on/off
+SET_UP = 'set_up'               #value - id of unit setting up heavy weapon
 
 
 class Msg:
@@ -232,6 +233,10 @@ class ClientMsg:
     @staticmethod
     def overwatch( unit_id ):
         ClientMsg._sendMsg( (OVERWATCH, unit_id) ) 
+        
+    @staticmethod
+    def setUp( unit_id ):
+        ClientMsg._sendMsg( (SET_UP, unit_id) ) 
         
     @staticmethod
     def endTurn():

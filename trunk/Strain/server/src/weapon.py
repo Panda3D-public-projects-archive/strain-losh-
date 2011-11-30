@@ -15,41 +15,6 @@ SPECIAL_FLAMER = 'flamer'
 SPECIAL_STORM_SHIELD = 'storm_shield'
 
 
-def loadWeapon( name ):     
-    xmldoc = minidom.parse('data/base/weapons.xml')
-    
-    wpn = None
-    
-    for p in xmldoc.getElementsByTagName( 'weapon' ):
-                
-        if p.attributes['name'].value != name:
-            continue
-        
-        wpn = Weapon()            
-        wpn.name = p.attributes['name'].value
-        
-        try:wpn.type = p.attributes['type'].value 
-        except:pass
-        try:wpn.str = int(p.attributes['Str'].value)
-        except:pass
-        try:wpn.ap = int(p.attributes['AP'].value)
-        except:pass
-        try:wpn.range = int(p.attributes['range'].value)
-        except:pass
-        try:wpn.sustained = int(p.attributes['sustained'].value)
-        except:pass
-        try:wpn.special = p.attributes['special'].value
-        except:pass
-        try:wpn.blast = int(p.attributes['blast'].value)
-        except:pass
-        
-
-    xmldoc.unlink()
-    if not wpn:
-        raise Exception("Weapon:%s not found in database." % name)
-    return wpn
-
-
 
     
     
@@ -162,4 +127,38 @@ class Weapon():
         return res
 
         
+def loadWeapon( name ):     
+    xmldoc = minidom.parse('data/base/weapons.xml')
+    
+    wpn = None
+    
+    for p in xmldoc.getElementsByTagName( 'weapon' ):
+                
+        if p.attributes['name'].value != name:
+            continue
         
+        wpn = Weapon()            
+        wpn.name = p.attributes['name'].value
+        
+        try:wpn.type = p.attributes['type'].value 
+        except:pass
+        try:wpn.str = int(p.attributes['Str'].value)
+        except:pass
+        try:wpn.ap = int(p.attributes['AP'].value)
+        except:pass
+        try:wpn.range = int(p.attributes['range'].value)
+        except:pass
+        try:wpn.sustained = int(p.attributes['sustained'].value)
+        except:pass
+        try:wpn.special = p.attributes['special'].value
+        except:pass
+        try:wpn.blast = int(p.attributes['blast'].value)
+        except:pass
+        
+
+    xmldoc.unlink()
+    if not wpn:
+        raise Exception("Weapon:%s not found in database." % name)
+    return wpn
+
+
