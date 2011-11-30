@@ -964,7 +964,8 @@ class Net():
     def handleMsg(self, msg):
         """Handles incoming messages."""
         self.log.info("Received message: %s", msg[0])
-        print msg
+        if msg[0] != ENGINE_STATE and msg[0] != UNIT and msg[0] != NEW_TURN:
+            print msg
         #========================================================================
         #
         if msg[0] == ENGINE_STATE:
