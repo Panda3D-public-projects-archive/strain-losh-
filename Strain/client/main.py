@@ -91,6 +91,8 @@ class AppFSM(FSM.FSM):
         self.parent.login.assault.delete()
         self.parent.login.assault2.delete()
         self.parent.login.assault3.delete() 
+        self.parent.login.base.remove()
+        self.parent.login.base2.remove()
         self.parent.login.textObject.remove()       
         del self.parent.login
 
@@ -146,6 +148,18 @@ class LoginScreen():
         self.assault3 = utils.loadUnit('assault')
         self.assault3.setPos(6, 23, ground_level)
         self.assault3.loop('idle_stand03')  
+        
+        self.base = loader.loadModel('sm_base')
+        self.base.setTexture(loader.loadTexture('space_marine_base_dif.dds'))
+        self.base.setPos(-2, 55, 0)
+        self.base.setColorScale(1, 0.7, 0.7, 1)
+        self.base.reparentTo(render)
+        self.base2 = loader.loadModel('sm_base')
+        self.base2.setTexture(loader.loadTexture('space_marine_base_dif.dds'))
+        self.base2.setPos(8, 65, 0)
+        self.base2.setH(90)
+        self.base2.setColorScale(1, 0.7, 0.7, 1)        
+        self.base2.reparentTo(render)
         
         self.textObject = OnscreenText(text = 'STRAIN', pos = (0, 0.4), scale = 0.2, font=font, fg = (1,0,0,1))
     
