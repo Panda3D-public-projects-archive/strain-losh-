@@ -213,11 +213,7 @@ def loadUnit(unit_type):
                         model.node_dict[node[0]].setTexture(l)
                 else:
                     model.node_dict[node] = model.find("**/"+node)
-                    if node == 'bolter_common':
-                        #TODO: ogs: dodati dds teksturu
-                        l=loader.loadTexture("bolter_common_dif.tga")
-                    else:
-                        l = loader.loadTexture(node+"_dif.dds")
+                    l = loader.loadTexture(node+"_dif.dds")
                     model.node_dict[node].setTexture(l)
     initModels(model, unit_type)
     initAnims(model, unit_type)
