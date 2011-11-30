@@ -107,7 +107,7 @@ class EngMsg:
                         
                         #see if there is already a connection for this player, if yes than disconnect it
                         if player.connection != None:
-                            EngMsg.sendErrorMsg("Disconnecting because this player is connecting from other connection", player.connection )
+                            EngMsg.error("Disconnecting because this player is connecting from other connection", player.connection )
                             EngMsg.disconnect( player.connection, player.connection.getAddress(), player.name )
                             EngMsg.log.info("Player %s disconnected because he was logging in from other connection", player.name)
                             
@@ -255,7 +255,7 @@ class EngMsg:
         EngMsg._sendMsg((LEVEL, pickled_level))
     
     @staticmethod
-    def sendErrorMsg(error_msg, source = None):
+    def error(error_msg, source = None):
         EngMsg._sendMsg((ERROR, error_msg), source)
     
     @staticmethod
@@ -269,10 +269,6 @@ class EngMsg:
     @staticmethod
     def sendMsg( msg, source = None):
         EngMsg._sendMsg( msg, source )
-
-    @staticmethod
-    def sendOverwatch( unit_id, overwatch, source ):
-        EngMsg._sendMsg((OVERWATCH, unit_id, overwatch), source)
 
         
       

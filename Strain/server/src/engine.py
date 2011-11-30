@@ -140,20 +140,20 @@ class Engine( Thread ):
         #TODO: krav: ovdje na pocetak stavit validate player
         
         if( msg[0] == ENGINE_SHUTDOWN ):
-            EngMsg.sendErrorMsg("Server is shutting down")
+            EngMsg.error("Server is shutting down")
             self.stop = True
             
         elif( msg[0] == MOVE ):            
             self.moveUnit( msg[1]['unit_id'], msg[1]['new_position'], msg[1]['orientation'], source )
             
         elif( msg[0] == LEVEL ):                
-            EngMsg.sendLevel( util.compileLevel( self.level ) )
+            EngMsg.sendLevel( util.compileLevel( self.level ), source )
                         
         elif( msg[0] == ENGINE_STATE ):                
             EngMsg.sendState( util.compileState( self, self.findPlayer( source ) ), source )
             
         elif( msg[0] == END_TURN ):
-            self.endTurn()
+            self.endTurn( source )
                         
         elif( msg[0] == CHAT ):
             self.chat( msg[1], source, msg[2] )
@@ -181,16 +181,16 @@ class Engine( Thread ):
             
         if param == SET_UP:
             if not unit.hasHeavyWeapon():
-                EngMsg.sendErrorMsg( "The unit does not have any heavy weapons.", source )
+                EngMsg.error( "The unit does not have any heavy weapons.", source )
 
             if unit.set_up:
                 msg = unit.tearDown()
                 if msg:
-                    EngMsg.sendErrorMsg( msg, source )
+                    EngMsg.error( msg, source )
             else:
                 msg = unit.setUp()
                 if msg:
-                    EngMsg.sendErrorMsg( msg, source )
+                    EngMsg.error( msg, source )
                     
                     
                     
@@ -257,7 +257,14 @@ class Engine( Thread ):
         notify.info( "Army lists loaded OK" )
 
 
-    def endTurn(self):
+    def endTurn(self, source):
+        
+        player = self.findPlayer( source )
+        
+#        if player != self.active_player:
+#            EngMsg.error( "It's not your turn.", source)
+#            return
+        
         
         if self.active_player == self.players[-1]:
             self.active_player = None          
@@ -268,19 +275,19 @@ class Engine( Thread ):
         for p in self.players[:]:
             if not p.units:
                 if p.connection:
-                    EngMsg.sendErrorMsg('U have no more units... pathetic...', p.connection)
-                EngMsg.sendErrorMsg( p.name + ' was defeated!!!' )
+                    EngMsg.error('U have no more units... pathetic...', p.connection)
+                EngMsg.error( p.name + ' was defeated!!!' )
                 self.players.remove(p)
         
         #check if there is only one player left
         if len( self.players ) == 1:
             if p.connection:
-                EngMsg.sendErrorMsg('U WIN!', p.connection)
-            EngMsg.sendErrorMsg( self.players[0].name + ' WINS! He is the best!!@' )
+                EngMsg.error('U WIN!', p.connection)
+            EngMsg.error( self.players[0].name + ' WINS! He is the best!!@' )
             
         #if there are no more players - its a draw?
         if len( self.players ) == 0:
-            EngMsg.sendErrorMsg( 'Draw! really?!' )
+            EngMsg.error( 'Draw! really?!' )
         
         
         self.beginTurn()
@@ -305,7 +312,7 @@ class Engine( Thread ):
                 unit.newTurn( self.turn )
           
         #check visibility
-        self.checkVisibility()
+        self.updateVisibilityAndSendVanishMessages()
 
         #send all stuff to all players that are logged in        
         for p in self.players:
@@ -313,20 +320,6 @@ class Engine( Thread ):
                 EngMsg.sendNewTurn( self.turn, self.active_player.name, util.compileNewTurn(self, p), p.connection )
         
         
-    def checkVisibility(self):
-
-        for player in self.players:
-            player.visible_enemies = []
-            for myunit in player.units:
-                for enemy in self.units.itervalues():
-                    if enemy.owner == player or enemy.owner.team == player.team:
-                        continue
-                    if self.getLOS( myunit, enemy ):
-                        if enemy not in player.visible_enemies: 
-                            player.visible_enemies.append( enemy )
-                            
-        
-
 
     def getLOS(self, beholder, target ):
         """0-cant see, 1-partial, 2-full"""
@@ -843,7 +836,7 @@ class Engine( Thread ):
     def findAndValidateUnit(self, unit_id, source):
         if( unit_id in self.units ) == False:
             notify.critical( "Got wrong unit id:%s", unit_id )
-            EngMsg.sendErrorMsg( "Wrong unit id.", source )
+            EngMsg.error( "Wrong unit id.", source )
             return None
 
         unit = self.units[unit_id]
@@ -851,7 +844,7 @@ class Engine( Thread ):
         #check to see if this is the owner
         if unit.owner.connection != source:
             notify.critical( "Client:%s\ttried to do an action with unit that he does not own" % source.getAddress() )
-            EngMsg.sendErrorMsg( "You cannot do this to a unit you do not own." )
+            EngMsg.error( "You cannot do this to a unit you do not own." )
             return None
 
         return unit
@@ -861,7 +854,7 @@ class Engine( Thread ):
         if self.active_player.connection == source:
             return True
         
-        EngMsg.sendErrorMsg( 'It is not your turn.', source )
+        EngMsg.error( 'It is not your turn.', source )
         return False
         
         
@@ -873,9 +866,11 @@ class Engine( Thread ):
         unit = self.findAndValidateUnit( unit_id, source )
         if not unit:
             return
-                
+        
+        #list that we will send to owning player        
         my_actions = []
         
+        #dict where we will fill out actions for other players that they see
         actions_for_others = {}
         #fill it up with empty lists
         for p in self.players:
@@ -902,7 +897,7 @@ class Engine( Thread ):
                 path = self.getPath( unit, new_position )
             except Exception:
                 notify.critical( "Exception:%s", sys.exc_info()[1] )
-                EngMsg.sendErrorMsg( sys.exc_info()[1], source )
+                EngMsg.error( sys.exc_info()[1], source )
                 return   
             
             #everything checks out, do the actual moving
@@ -962,6 +957,7 @@ class Engine( Thread ):
             for enemy in p.units:
                 if self.getLOS( enemy, unit ):
                     seen = 1
+                    #TODO: krav: ovdje stavit da overwatch radi samo ako te neprijatelj an ovewatchu gleda
                     if enemy.overwatch:
                         overwatch.append( enemy )
             
@@ -1010,7 +1006,7 @@ class Engine( Thread ):
                 continue        
         
             for enemy in player.units:
-                if self.getLOS( unit, enemy ) and enemy not in unit.owner.visible_enemies:
+                if enemy not in unit.owner.visible_enemies and self.getLOS( unit, enemy ):
                     spotted.append( enemy )
                             
         return spotted
@@ -1028,7 +1024,7 @@ class Engine( Thread ):
         
         if( target_id in self.units ) == False:
             notify.critical( "Got wrong unit id:%s", target_id )
-            EngMsg.sendErrorMsg( "Wrong unit id.", source )
+            EngMsg.error( "Wrong unit id.", source )
             return None
 
         target = self.units[target_id]
@@ -1036,7 +1032,7 @@ class Engine( Thread ):
         #check to see if the owner is trying to shoot his own units
         if target.owner.connection == source:
             notify.critical( "Client:%s\ttried to shoot his own unit." % source.getAddress() )
-            EngMsg.sendErrorMsg( "You cannot shoot you own units." )
+            EngMsg.error( "You cannot shoot you own units." )
             return None
 
          
