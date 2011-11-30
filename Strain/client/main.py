@@ -35,6 +35,33 @@ import strain.utils as utils
 
 loadPrcFile(os.path.join("config","config.prc"))
 
+"""
+loadPrcFileData("", "model-path "+"./data/models")
+loadPrcFileData("", "model-path "+"./data/sounds")
+loadPrcFileData("", "model-path "+"./data/textures")
+
+# config dictionary variable
+config = {} 
+cfile = open("data/config/user.cfg", "r")
+while 1:
+    string = cfile.readline()
+    if (string == ""):
+        break
+    elif (string[0] == "#"):
+        continue
+    part = string.rsplit("=")
+    config[part[0].strip()] = part[1].strip()
+cfile.close()
+
+loadPrcFileData("", "fullscreen "+config["fullscreen"])
+loadPrcFileData("", "win-size "+config['resx']+" "+config["resy"])
+loadPrcFileData("", "show-frame-rate-meter "+config["showfps"])
+loadPrcFileData("", "model-cache-dir ./tmp")
+loadPrcFileData("", "window-title Strain")
+if config["scene-explorer"] == "1":
+    loadPrcFileData("", "want-directtools #t")
+    loadPrcFileData("", "want-tk #t")
+"""
 #############################################################################
 # CLASSES
 #############################################################################
@@ -91,8 +118,6 @@ class AppFSM(FSM.FSM):
         self.parent.login.assault.delete()
         self.parent.login.assault2.delete()
         self.parent.login.assault3.delete() 
-        self.parent.login.base.remove()
-        self.parent.login.base2.remove()
         self.parent.login.textObject.remove()       
         del self.parent.login
 
@@ -148,18 +173,6 @@ class LoginScreen():
         self.assault3 = utils.loadUnit('assault')
         self.assault3.setPos(6, 23, ground_level)
         self.assault3.loop('idle_stand03')  
-        
-        self.base = loader.loadModel('sm_base')
-        self.base.setTexture(loader.loadTexture('space_marine_base_dif.dds'))
-        self.base.setPos(-2, 55, 0)
-        self.base.setColorScale(1, 0.7, 0.7, 1)
-        self.base.reparentTo(render)
-        self.base2 = loader.loadModel('sm_base')
-        self.base2.setTexture(loader.loadTexture('space_marine_base_dif.dds'))
-        self.base2.setPos(8, 65, 0)
-        self.base2.setH(90)
-        self.base2.setColorScale(1, 0.7, 0.7, 1)        
-        self.base2.reparentTo(render)
         
         self.textObject = OnscreenText(text = 'STRAIN', pos = (0, 0.4), scale = 0.2, font=font, fg = (1,0,0,1))
     
@@ -449,7 +462,34 @@ class SceneGraph():
                     unit.setIdleTime()
         """    
         return task.cont
-            
+    
+    """
+    def initOutlineShader(self):  
+        self.light_dummy = NodePath("outline_light_dummy_node")      
+        self.light_input = NodePath("outline_light_input_node")#self.loader.loadModel('misc/sphere') 
+        self.light_input.reparentTo(self.light_dummy) 
+        self.light_input.setPos(5,0,1) 
+        self.light_dummy.setShaderOff(1) 
+        self.light_dummy.hprInterval(1,Vec3(360,0,0)).loop() 
+        self.SHA_outline = Shader.load('./data/shaders/facingRatio1.sha') 
+
+    def setOutlineShader(self, np, color=Vec4(1, 0, 0, 0)):
+        facingRatioPower = 1.5
+        envirLightColor = color    
+
+        self.light_dummy.reparentTo(np)
+        self.light_dummy.setPos(np, 0, 0, 1)
+        
+        np.setShader(self.SHA_outline) 
+        np.setShaderInput('cam', self.camera) 
+        np.setShaderInput('light', self.light_input) 
+        np.setShaderInput('envirLightColor', envirLightColor * facingRatioPower) 
+        np.setAntialias(AntialiasAttrib.MMultisample) 
+        
+    def clearOutlineShader(self, np):
+        self.light_dummy.detachNode()
+        np.setShaderOff()
+    """
 #========================================================================
 #
 class Client(DirectObject):
