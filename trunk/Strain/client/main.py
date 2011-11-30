@@ -789,10 +789,10 @@ class Client(DirectObject):
         move.start()
     
     def buildMoveSpotAnim(self, unit_model):
-        return Sequence(Func(self.sgm.showUnit, unit_model), Wait(1.0))
+        return Sequence(Func(self.sgm.showUnit, unit_model), Wait(0.5))
     
     def buildMoveVanishAnim(self, unit_id):
-        return Sequence(Func(self.sgm.hideUnit, unit_id), Wait(1.0))
+        return Sequence(Func(self.sgm.hideUnit, unit_id), Wait(0.5))
     
     def buildMoveRotateAnim(self, unit_model, start_pos, end_pos, start_h):
         dummy_start = NodePath("dummy_start")
@@ -833,6 +833,7 @@ class Client(DirectObject):
         for idx, action in enumerate(action_list):
             action_type = action[0]
             if action_type == "shoot":
+                # TODO: ogs: hendlati da je shooter_id = 1 (znaci da ga ne vidimo, a puca na nas)
                 shooter_id = action[1] # unit_id of the shooter
                 shoot_tile = action[2] # (x,y) pos of targeted tile
                 weapon = action[3] # weapon id
@@ -964,8 +965,7 @@ class Net():
     def handleMsg(self, msg):
         """Handles incoming messages."""
         self.log.info("Received message: %s", msg[0])
-        if msg[0] != ENGINE_STATE and msg[0] != UNIT and msg[0] != NEW_TURN:
-            print msg
+        print msg
         #========================================================================
         #
         if msg[0] == ENGINE_STATE:
@@ -1004,7 +1004,7 @@ class Net():
             # TODO: ogs: Ovaj refresh interface-a se poziva i kada unit koji dodje nije selektirani unit, to srediti
             if self.parent.sel_unit_id == unit['id']:
                 self.parent.interface.refreshUnitData( unit['id'] )
-                self.parent.sgm.showUnitAvailMove( unit['id'] )
+                #self.parent.sgm.showUnitAvailMove( unit['id'] )
                 self.parent.sgm.playUnitStateAnim( unit['id'] )
         #========================================================================
         #
