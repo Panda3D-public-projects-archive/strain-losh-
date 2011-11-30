@@ -26,7 +26,7 @@ class UnitModel:
             self.team_color = Vec4(0.106, 0.467, 0.878, 1)
         else:
             self.team_color = Vec4(0, 1, 0, 1)        
-        self.model = self.load(unit['name'])
+        self.model = utils.loadUnit(unit['name'])
         
         self.model.reparentTo(self.node)
         #self.dummy_node.reparentTo(self.node)
@@ -85,47 +85,6 @@ class UnitModel:
         self.setIdleTime()
         
         self.target_unit = None
-    
-    def load(self, unit_type):
-        if unit_type == 'marine_common' or unit_type == 'marine_epic':
-            model = Actor('marine') 
-            model.node_dict = {}
-            for gear in utils.gear_list:
-                for item in gear.itervalues():
-                    for node in item:
-                        if isinstance(node, tuple):
-                            n = node[0]
-                            n_tex = node[1]
-                        else:
-                            n = node
-                            n_tex = node
-                        model.node_dict[n] = model.find("**/"+n)
-                        model.node_dict[n].setTag("node", n)
-                        if n not in utils.unit_types[unit_type]:
-                            model.node_dict[n].detachNode()
-                            #model.node_dict[n].remove()
-                        else:
-                            if n_tex:
-                                tex_dif = loader.loadTexture(n_tex+"_dif.dds")
-                                model.node_dict[n].setTexture(tex_dif)
-                                """
-                                ts_spc = TextureStage('ts_spc')
-                                tex_spc = loader.loadTexture(n_tex+"_spc.tga")
-                                ts_spc.setMode(TextureStage.MGloss)
-                                model.node_dict[n].setTexture(ts_spc, tex_spc)
-                                ts_nrm = TextureStage('ts_nrm')
-                                tex_nrm = loader.loadTexture(n_tex+"_nrm.tga")
-                                ts_nrm.setMode(TextureStage.MNormal)
-                                model.node_dict[n].setTexture(ts_nrm, tex_nrm)
-                                if n == "power_armour_common" or n=="power_armour_gabriel":
-                                    ts_tem = TextureStage('ts_tem')
-                                    tex_tem = loader.loadTexture(n_tex+"_tem.dds")
-                                    ts_tem.setMode(TextureStage.MBlend)
-                                    ts_tem.setColor(self.team_color)
-                                    model.node_dict[n].setTexture(ts_tem, tex_tem)
-                                """
-            utils.initAnims(model, unit_type)
-            return model
     
     def setIdleTime(self):
         self.idletime = random.randint(10, 20)
