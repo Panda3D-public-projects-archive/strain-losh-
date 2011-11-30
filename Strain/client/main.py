@@ -212,7 +212,7 @@ class SceneGraph():
 
         self.level_node = self.node.attachNewNode(levelMesh.getGeomNode())
         self.level_node.setTag('type', 'level')
-        t = loader.loadTexture('tex2.png')
+        t = loader.loadTexture('tex3.png')
         t.setMagfilter(Texture.FTLinearMipmapLinear)
         t.setMinfilter(Texture.FTLinearMipmapLinear)
         self.level_node.setTexture(t)
