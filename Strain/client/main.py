@@ -33,35 +33,8 @@ import strain.utils as utils
 # GLOBALS
 #############################################################################
 
-loadPrcFile(os.path.join("config","config.prc"))
+loadPrcFile("./config/config.prc")
 
-"""
-loadPrcFileData("", "model-path "+"./data/models")
-loadPrcFileData("", "model-path "+"./data/sounds")
-loadPrcFileData("", "model-path "+"./data/textures")
-
-# config dictionary variable
-config = {} 
-cfile = open("data/config/user.cfg", "r")
-while 1:
-    string = cfile.readline()
-    if (string == ""):
-        break
-    elif (string[0] == "#"):
-        continue
-    part = string.rsplit("=")
-    config[part[0].strip()] = part[1].strip()
-cfile.close()
-
-loadPrcFileData("", "fullscreen "+config["fullscreen"])
-loadPrcFileData("", "win-size "+config['resx']+" "+config["resy"])
-loadPrcFileData("", "show-frame-rate-meter "+config["showfps"])
-loadPrcFileData("", "model-cache-dir ./tmp")
-loadPrcFileData("", "window-title Strain")
-if config["scene-explorer"] == "1":
-    loadPrcFileData("", "want-directtools #t")
-    loadPrcFileData("", "want-tk #t")
-"""
 #############################################################################
 # CLASSES
 #############################################################################
@@ -71,8 +44,8 @@ if config["scene-explorer"] == "1":
 class App():
     def __init__(self):
         #setup logger
-        self.logger = logging.getLogger('GraphicsLog')
-        hdlr = logging.FileHandler('Graphics.log')
+        self.logger = logging.getLogger('ClientLog')
+        hdlr = logging.FileHandler('Client.log')
         formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
         hdlr.setFormatter(formatter)
         self.logger.addHandler(hdlr) 
