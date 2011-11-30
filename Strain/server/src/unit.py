@@ -33,7 +33,7 @@ class Unit():
         self.overwatch = False
         self.alive = True
         self.last_action = 'spawn'
-        self.set_up = False #for heavy weapons
+        #self.set_up = False #for heavy weapons this is only initilaized if a unit has a heavy weapon
         self.height = 2
         
         self.ap, self.default_ap = 0, 0
@@ -139,7 +139,7 @@ class Unit():
     def numberOfMeleeWeapons(self):
         res = 0
         for wpn in self.weapons:
-            if wpn.type == weapon.TYPE_HEAVY and self.owner.armour.name != 'Terminator':
+            if self.hasHeavyWepon():
                 res -= 1
             if wpn.type == weapon.TYPE_MELEE or wpn.type == weapon.TYPE_PISTOL:
                 res += 1        
@@ -163,7 +163,7 @@ class Unit():
             return self.melee( target )
         
         #check if we have a heavy weapon if we are set up, terms ignore set up
-        if self.active_weapon.type == weapon.TYPE_HEAVY and self.armour.name != 'Terminator':
+        if self.hasHeavyWepon():
             if not self.set_up:
                 return None
             
@@ -216,19 +216,27 @@ class Unit():
        
     def setUp(self):
         if self.set_up:
-            return None
+            return "This unit already set-up."
         else:
+            if self.ap < 2:
+                return "Not enough AP."
+            
+            self.ap -= 2
             self.set_up = True
             self.last_action = 'setup'
-            return True
+            return None
         
     def teardown(self):
         if self.set_up:
+            if self.ap < 2:
+                return "Not enough AP."
+            
+            self.ap -= 2
             self.set_up = False
             self.last_action = 'teardown'
-            return True
-        else:
             return None
+        else:
+            return "This unit is not set-up."
        
     #mora vratit rezultat koji ce ic u actions u movementu
     #lista akcija koja se dogodila na overatchu
@@ -262,7 +270,12 @@ class Unit():
             self.ap += 1
             self.resting = False
 
-        
+    def hasHeavyWepon(self):
+        for w in self.weapons:
+            if w.type == weapon.TYPE_HEAVY and self.armour != 'Terminator':
+                return True
+            
+        return False
 
 #-----------------------------------------------------------------------
 def loadUnit( name ):
@@ -286,6 +299,10 @@ def loadUnit( name ):
                 unit.active_weapon = wpn
         if not unit.active_weapon:
             unit.weapons[0]
+
+        #initialize set_up if needed
+        if unit.hasHeavyWepon():
+            unit.set_up = False
 
         unit.armour =  armour.loadArmour( p.attributes['armour'].value )
         unit.armour.owner = unit
