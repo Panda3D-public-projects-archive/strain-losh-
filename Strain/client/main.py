@@ -109,7 +109,7 @@ class AppFSM(FSM.FSM):
 class LoginScreen():
     def __init__(self, parent):
         self.parent = parent
-        font = loader.loadFont('FRIZQT__.TTF')
+        font = loader.loadFont('frizqt__.ttf')
         self.label_username = DirectLabel(text = "Username:", scale=.05, frameColor=(0,0,0,0), text_font=font, text_align=TextNode.ARight, text_fg=(1,1,1,1))
         self.label_password = DirectLabel(text = "Password:", scale=.05, frameColor=(0,0,0,0), text_font=font, text_align=TextNode.ARight, text_fg=(1,1,1,1))
         self.button = DirectButton(text = ("Login"),scale=.05,command=self.loginButPressed, text_font=font, text_align=TextNode.ACenter)
