@@ -73,6 +73,8 @@ class Unit():
         
     def melee(self, target):
         
+        ret_lst = []
+        
         if self.ap < 1:
             return None
         
@@ -84,19 +86,31 @@ class Unit():
         if self.last_action == 'move':
             base += 10        
         
+        #face opponent 
+        if self.rotate( target.pos ):
+            ret_lst.append( ('rotate', self.id, self.heading) )
+            
+        #TODO: krav: ovdje stavit da ak nema dovoljno ap-a da se protivnik ne okrene prema tebi?
+        #rotate opponent to us
+        if target.rotate( self.pos ):
+            ret_lst.append( ('rotate', target.id, target.heading) )
+         
+        
         base -= 10 * target.numberOfMeleeWeapons() 
         base += 10 * (self.numberOfMeleeWeapons() - 1)        
         base += (self.ws - target.ws) * 10
         
         wpn = self.chooseMeleeWeapon(target)
         
+        self.last_action = 'melee'
+        
         #roll to hit
         if util.d100() > base:
-            return [('melee', self.id, target.pos, wpn.name, [('miss', target.id)] )]        
+            ret_lst.append( ('melee', self.id, target.pos, wpn.name, [('miss', target.id)] ) )
+            return ret_lst        
             
-        self.last_action = 'melee'
-        return [('melee', self.id, target.pos, wpn.name, wpn.hitInMelee( self, target ) )]
-        
+        ret_lst.append(  ('melee', self.id, target.pos, wpn.name, wpn.hitInMelee( self, target ) ) )
+        return ret_lst
 
         
     def chooseMeleeWeapon(self, target):

@@ -279,7 +279,7 @@ class Engine( Thread ):
             self.turn += 1
         else:
             i = self.players.index(self.active_player)
-            self.active_player = self.players[i+1]
+            self.active_player = self.players[i+1 % len( self.players )]
 
         print "turn:", self.turn, "\tplayer:", self.active_player.name
 
