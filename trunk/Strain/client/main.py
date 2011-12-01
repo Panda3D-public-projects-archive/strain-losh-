@@ -509,6 +509,11 @@ class Client(DirectObject):
     
     def newTurn(self):
         self.deselectUnit()
+        
+    def getPlayerName(self, player_id):
+        for p in self.players:
+            if p['id'] == player_id:
+                return p['name']
     
     def deselectUnit(self):
         self.clearState()
@@ -923,7 +928,7 @@ class Client(DirectObject):
         end_pos = Point3(target_tile[0] + 0.5, target_tile[1] + 0.5, 0.9)
         dest_node = NodePath("dest_node")
         dest_node.setPos(end_pos)
-        time = round(unit_model.node.getDistance(dest_node) / 5, 2)
+        time = round(unit_model.node.getDistance(dest_node) / 10, 2)
         bullet_sequence = Sequence(Func(self.sgm.setBullet, self.bullet),
                                    self.bullet.posInterval(time, end_pos, start_pos),
                                    Func(self.sgm.deleteBullet, self.bullet)
@@ -1011,11 +1016,11 @@ class Net():
             self.parent.level = pickle.loads(msg[1]['level'])
             self.parent.turn_number = msg[1]['turn']
             self.parent.players = pickle.loads(msg[1]['players'])
-            self.parent.turn_player = msg[1]['active_player'].name 
             # TODO: ogs: Inace cu znati player_id kad se ulogiram pa necu morati ovako dekodirati
             for p in self.parent.players:
                 if p['name'] == self.parent.player:
                     self.parent.player_id = p['id']
+            self.parent.turn_player = self.parent.getPlayerName(msg[1]['active_player_id'])                    
             self.parent.setupUnitLists(pickle.loads(msg[1]['units']))
             self.parent.fsm.request('EngineState')
         #========================================================================
@@ -1029,7 +1034,7 @@ class Net():
         elif msg[0] == NEW_TURN:
             self.parent.newTurn()
             self.parent.turn_number = msg[1]['turn']
-            self.parent.turn_player = msg[1]['active_player'].name 
+            self.parent.turn_player = self.parent.getPlayerName(msg[1]['active_player_id'])
             units = pickle.loads(msg[1]['units'])
             for unit in units.itervalues():
                 self.parent.refreshUnit(unit)
