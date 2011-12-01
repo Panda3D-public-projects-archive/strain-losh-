@@ -2,7 +2,7 @@ from xml.dom import minidom
 import weapon
 import util
 import armour
-from util import getHeading
+import math
 
 
 HEADING_NONE      = 0
@@ -30,7 +30,7 @@ class Unit():
         self.bs = -1
         self.weapons = []
         self.active_weapon = None
-        self.overwatch = False
+        self.overwatch = True
         self.alive = True
         self.last_action = 'spawn'
         #self.set_up = False #for heavy weapons this is only initilaized if a unit has a heavy weapon
@@ -149,7 +149,7 @@ class Unit():
         
 
                 
-    def shoot(self, target):
+    def shoot(self, target, overwatch = False):
         #TODO: krav: stavit da se moze gadjat i tile?
         
         distance = util.distanceTupple(self.pos, target.pos)
@@ -162,7 +162,7 @@ class Unit():
         if distance < 2:
             return self.melee( target )
         
-        #check if we have a heavy weapon if we are set up, terms ignore set up
+        #check if we have a heavy weapon and if we are set up
         if self.hasHeavyWepon():
             if not self.set_up:
                 return None
@@ -176,16 +176,19 @@ class Unit():
                 return None
             self.ap -= 1        
                         
-        #check to see if we need to rotate unit before shooting
+        #check to see if we need to rotate unit before shooting, but if we are on overwatch, we cant rotate
         rot = [] 
-        if self.rotate( target.pos ):
-            rot.append( ('rotate', self.id, self.heading) ) 
+        if not overwatch:
+            if self.rotate( target.pos ):
+                rot.append( ('rotate', self.id, self.heading) ) 
                         
         self.last_action = 'shoot'
         
         rot.append( ('shoot', self.id, target.pos, self.active_weapon.name, self.active_weapon.shoot( self, target ) ) )
         return rot
 
+    def _shoot(self, target):
+        pass
 
     def setOverwatch(self):
         #check if there are enough AP
@@ -219,7 +222,7 @@ class Unit():
             return "This unit already set-up."
         else:
             if self.ap < 2:
-                return "Not enough AP."
+                return "Not enough AP to set up."
             
             self.ap -= 2
             self.set_up = True
@@ -229,7 +232,7 @@ class Unit():
     def teardown(self):
         if self.set_up:
             if self.ap < 2:
-                return "Not enough AP."
+                return "Not enough AP to teardown."
             
             self.ap -= 2
             self.set_up = False
@@ -246,6 +249,7 @@ class Unit():
         
     def move(self, new_position, ap_remaining ):
         self.last_action = 'move'
+        self.overwatch = False
         self.pos = new_position
         self.ap = ap_remaining
         
@@ -276,6 +280,16 @@ class Unit():
                 return True
             
         return False
+
+
+    def inFront90(self, tile):
+        angle1 = math.atan2( tile[1] - self.pos[1] , tile[0] - self.pos[0] )
+        angle2 = util.headingToAngle(self.heading)
+
+        if math.fabs( angle1-angle2 ) < util._PI_2:
+            return True
+                
+
 
 #-----------------------------------------------------------------------
 def loadUnit( name ):
