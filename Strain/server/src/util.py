@@ -69,7 +69,7 @@ def compileState(engine, player):
     dic[ 'units' ] = pickle.dumps( units )    
     dic[ 'level' ] = pickle.dumps( compileLevel( engine.level ) )        
     dic[ 'turn' ] = engine.turn
-    dic[ 'active_player' ] = engine.active_player.id
+    dic[ 'active_player_id' ] = engine.active_player.id
     dic[ 'players' ] = pickle.dumps( compilePlayers( engine.players, player ) )     
     
     return dic
