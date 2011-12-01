@@ -4,10 +4,6 @@ from direct.distributed.PyDatagramIterator import PyDatagramIterator
 import time
 
 
-IP_ADDRESS = 'localhost'
-#IP_ADDRESS = 'krav.servebeer.com'
-TCP_PORT = 56005
-
 MOVE = 'move'                   #values - list of actions ('move',tile) ('rotate',tile) ('overwatch',overwatchresult) ('detected',enemy)
 NEW_TURN = 'new_turn'           #value - turn number
 ENGINE_SHUTDOWN = 'shutdown'    #no values
@@ -62,8 +58,8 @@ class ClientMsg:
     log = None
 
     @staticmethod
-    def connect(player):
-        ClientMsg.log.info( "Trying to connect to server: %s:%s", IP_ADDRESS, TCP_PORT )
+    def connect(player, ip_address, tcp_port):
+        ClientMsg.log.info( "Trying to connect to server: %s:%s", ip_address, tcp_port )
         
         ClientMsg.cManager = QueuedConnectionManager()
         ClientMsg.cReader = QueuedConnectionReader(ClientMsg.cManager, 0)
@@ -71,7 +67,7 @@ class ClientMsg:
         
         # how long until we give up trying to reach the server?
         timeout_in_miliseconds = 3000  # 3 seconds
-        ClientMsg.myConnection = ClientMsg.cManager.openTCPClientConnection(IP_ADDRESS, TCP_PORT, timeout_in_miliseconds)
+        ClientMsg.myConnection = ClientMsg.cManager.openTCPClientConnection(ip_address, tcp_port, timeout_in_miliseconds)
         
         if ClientMsg.myConnection:
             ClientMsg.myConnection.setNoDelay(1)
@@ -100,7 +96,7 @@ class ClientMsg:
             
             
     @staticmethod
-    def handleConnection(player):
+    def handleConnection(player, ip_address, tcp_port):
         """Return True if connection is ok, returns False if there is no connection."""
         
         #if we are not connected, try to connect
@@ -116,7 +112,7 @@ class ClientMsg:
                 ClientMsg.num_failed_attempts += 1
                 return False
             
-            if ClientMsg.connect(player):
+            if ClientMsg.connect(player, ip_address, tcp_port):
                 #every time we reconnect to server, get the engine state 
                 ClientMsg.getEngineState()
                 ClientMsg.num_failed_attempts = 0             
@@ -128,7 +124,7 @@ class ClientMsg:
         
         #check the connection, if there is none, disconnect everything and return false
         if not ClientMsg.myConnection.getSocket().Active():
-            ClientMsg.log.error( "Lost connection to server: %s", IP_ADDRESS )
+            ClientMsg.log.error( "Lost connection to server: %s", ip_address )
             ClientMsg.disconnect()
             return False
 

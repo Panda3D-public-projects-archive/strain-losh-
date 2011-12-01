@@ -16,7 +16,7 @@ window-title Strain
 
 # These control the placement and size of the default rendering window.
 
-win-origin 50 50
+#win-origin 50 50
 win-size 800 600
 
 # Uncomment this line if you want to run Panda fullscreen instead of
@@ -117,4 +117,6 @@ particle-path $MAIN_DIR/data/particles/
 # Set this true to yield the timeslice at the end of the frame to be more polite to other applications that are trying to run.
 yield-timeslice #t
 
-
+# Custom Strain parameters
+server-ip localhost
+server-port 56005
