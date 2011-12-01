@@ -882,14 +882,15 @@ class Client(DirectObject):
         for idx, action in enumerate(action_list):
             action_type = action[0]
             if action_type == "shoot":
-                # TODO: ogs: hendlati da je shooter_id = 1 (znaci da ga ne vidimo, a puca na nas)
+                # TODO: ogs: hendlati da je shooter_id = -1 (znaci da ga ne vidimo, a puca na nas)
                 shooter_id = action[1] # unit_id of the shooter
                 shoot_tile = action[2] # (x,y) pos of targeted tile
                 weapon = action[3] # weapon id
                 damage_list = action[4] # list of all damaged/missed/bounced/killed units
-                shooter_model = self.sgm.unit_np_dict[shooter_id]
-                i = self.buildShootShootAnim(shooter_model, shoot_tile, weapon)
-                s.append(i)
+                if shooter_id > -1:
+                    shooter_model = self.sgm.unit_np_dict[shooter_id]
+                    i = self.buildShootShootAnim(shooter_model, shoot_tile, weapon)
+                    s.append(i)
                 i = self.buildShootDamageAnim(damage_list, shooter_id)
                 s.append(i)
             elif action_type == "melee":
@@ -980,7 +981,10 @@ class Client(DirectObject):
                                             textNodePath.posInterval(1.5, end_pos, start_pos),
                                             Func(self.sgm.deleteDamageNode, textNodePath)
                                             )
-            damage_parallel.append(Parallel(target_anim, damage_text_sequence, Func(self.afterUnitShootHook, int(shooter_id))))        
+            if shooter_id > -1:
+                damage_parallel.append(Parallel(target_anim, damage_text_sequence, Func(self.afterUnitShootHook, int(shooter_id))))
+            else:
+                damage_parallel.append(Parallel(target_anim, damage_text_sequence))        
         return damage_parallel
     
     def handleVanish(self, unit_id):

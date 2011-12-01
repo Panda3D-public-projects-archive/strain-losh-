@@ -118,5 +118,5 @@ particle-path $MAIN_DIR/data/particles/
 yield-timeslice #t
 
 # Custom Strain parameters
-server-ip localhost
+server-ip 127.0.0.1
 server-port 56005
