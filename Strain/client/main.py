@@ -388,8 +388,8 @@ class SceneGraph():
     def deleteBullet(self, b):
         b.removeNode()
         
-    def setDamageNode(self, d):
-        d.reparentTo(render)
+    def setDamageNode(self, d, u):
+        d.reparentTo(u)
         
     def deleteDamageNode(self, d):
         d.removeNode()  
@@ -975,9 +975,10 @@ class Client(DirectObject):
             textNodePath.attachNewNode(t)
             textNodePath.setScale(0.25)
             textNodePath.setBillboardPointEye()
-            start_pos = Point3(target_unit.node.getX(render), target_unit.node.getY(render), 0.9)
+            # textNodePath will be reparented to unitmodel, so set start and end pos relative to the unit
+            start_pos = Point3(0, 0, 0.9)
             end_pos = start_pos + Point3(0, 0, 3)
-            damage_text_sequence = Sequence(Func(self.sgm.setDamageNode, textNodePath),
+            damage_text_sequence = Sequence(Func(self.sgm.setDamageNode, textNodePath, target_unit.node),
                                             textNodePath.posInterval(1.5, end_pos, start_pos),
                                             Func(self.sgm.deleteDamageNode, textNodePath)
                                             )
