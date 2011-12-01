@@ -14,11 +14,13 @@ from panda3d.core import loadPrcFile, WindowProperties, Texture, OrthographicLen
 from panda3d.core import TextNode, NodePath, Point2, Point3, VBase4, GeomNode, Vec3, Vec4#@UnresolvedImport
 from panda3d.core import ShadeModelAttrib, DirectionalLight, AmbientLight#@UnresolvedImport
 from panda3d.core import CollisionTraverser, CollisionRay, CollisionHandlerQueue, CollisionNode#@UnresolvedImport
+from panda3d.core import ConfigVariableString, ConfigVariableInt#@UnresolvedImport
 from direct.interval.IntervalGlobal import Sequence, ActorInterval, Parallel, Func, Interval, Wait#@UnresolvedImport
 from direct.showbase.DirectObject import DirectObject
 from direct.fsm import FSM
 from direct.gui.DirectGui import DirectButton, DirectEntry, DirectLabel, DGG
 from direct.gui.OnscreenText import OnscreenText
+
 
 # strain related imports
 from strain.client_messaging import *
@@ -494,6 +496,9 @@ class Client(DirectObject):
         self.fsm.request('GraphicsInit')
         
         # Init Network
+        self.server_ip = ConfigVariableString("server-ip", "127.0.0.1").getValue()
+        self.server_port = ConfigVariableInt("server-port", "56005").getValue()
+
         self.net = Net(self)
         self.net.startNet()
         
@@ -1081,7 +1086,7 @@ class Net():
     def msgTask(self, task):
         """Task that listens for messages on client queue."""
         # Needs to be called every frame, this takes care of connection
-        ClientMsg.handleConnection(self.parent.player)
+        ClientMsg.handleConnection(self.parent.player, self.parent.server_ip, self.parent.server_port)
         
         msg = ClientMsg.readMsg()        
         if msg:
@@ -1131,7 +1136,7 @@ class Screen(DirectObject):
         screen = (base.pipe.getDisplayWidth(), base.pipe.getDisplayHeight())
         win = WindowProperties.getDefault()
         win.setSize(res[0], res[1])
-        win.setOrigin(screen[0]/2 - res[0]/2, screen[1]/2 - res[1]/2)
+        #win.setOrigin(screen[0]/2 - res[0]/2, screen[1]/2 - res[1]/2)
         win.setFullscreen(False)
         base.openDefaultWindow(win)        
         #base.setBackgroundColor(.05,.05,.05)
