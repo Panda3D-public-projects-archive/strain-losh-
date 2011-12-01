@@ -804,6 +804,10 @@ class Client(DirectObject):
                 vanish_unit_id = action[1]
                 i = self.buildMoveVanishAnim(vanish_unit_id)
                 s.append(i)
+            elif action_type == "overwatch":
+                action_list = action[1]
+                i = self.buildMoveOverwatchAnim(action_list)
+                s.append(i)
                     
         end_pos = start_pos  
         anim = ActorInterval(unit_model.model, 'run', loop = 1, duration = d)
@@ -854,7 +858,15 @@ class Client(DirectObject):
             p = i
         return p, duration, end_pos, end_h 
     
+    def buildMoveOverwatchAnim(self, action_list):
+        i = self.buildShoot(action_list)
+        return i
+    
     def handleShoot(self, action_list):
+        shoot = self.buildShoot(action_list)
+        shoot.start() 
+    
+    def buildShoot(self, action_list):
         s = Sequence()
         d = 0.0                
         for idx, action in enumerate(action_list):
@@ -892,7 +904,7 @@ class Client(DirectObject):
         shoot = Sequence(Func(self.beforeUnitShootHook, int(shooter_id)),
                          s
                          )
-        shoot.start()        
+        return shoot       
 
     def buildShootRotateAnim(self, unit_model, start_h, heading):
         duration = 0.0
