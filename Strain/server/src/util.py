@@ -69,7 +69,7 @@ def compileState(engine, player):
     dic[ 'units' ] = pickle.dumps( units )    
     dic[ 'level' ] = pickle.dumps( compileLevel( engine.level ) )        
     dic[ 'turn' ] = engine.turn
-    dic[ 'active_player' ] = engine.active_player
+    dic[ 'active_player' ] = engine.active_player.id
     dic[ 'players' ] = pickle.dumps( compilePlayers( engine.players, player ) )     
     
     return dic
@@ -179,6 +179,10 @@ def getHeading( myPosition, lookAtPoint ):
     
     angle = math.atan2( lookAtPoint[1] - myPosition[1] , lookAtPoint[0] - myPosition[0] )
 
+    return angleToHeading(angle)
+    
+    
+def angleToHeading( angle ):
     if angle < -_7_PI_8:
         return unit.HEADING_W
     elif angle < -_5_PI_8:
@@ -198,7 +202,27 @@ def getHeading( myPosition, lookAtPoint ):
     
     return unit.HEADING_W
     
+    
+def headingToAngle( heading ):
+    
+    if heading == unit.HEADING_W:
+        return -_PI
+    if heading == unit.HEADING_S:
+        return -_PI_2
+    if heading == unit.HEADING_E:
+        return 0
+    if heading == unit.HEADING_N:
+        return _PI_2    
+    if heading == unit.HEADING_SW:
+        return -_3_PI_4
+    if heading == unit.HEADING_SE:
+        return -_PI_4
+    if heading == unit.HEADING_NE:
+        return _PI_4
+    if heading == unit.HEADING_NW:
+        return _3_PI_4
 
+    
 
 def signum( num ):
     if( num < 0 ): 

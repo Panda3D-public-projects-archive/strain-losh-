@@ -60,8 +60,6 @@ class Engine( Thread ):
       
         self.beginTurn()
 
-
-
         #+++++++++++++++++++++++++++++++++++++++++++++MAIN LOOP+++++++++++++++++++++++++++++++++++++++++++++
         #+++++++++++++++++++++++++++++++++++++++++++++MAIN LOOP+++++++++++++++++++++++++++++++++++++++++++++
         while( self.stop == False ):
@@ -177,7 +175,10 @@ class Engine( Thread ):
         unit = self.findAndValidateUnit( unit_id, source )
         
         if param == OVERWATCH:
-            unit.overwatch = not unit.overwatch
+            if unit.ap >= 2:
+                unit.overwatch = not unit.overwatch
+            else:
+                EngMsg.error("Not enough AP for overwatch.")
             
         if param == SET_UP:
             if not unit.hasHeavyWeapon():
@@ -957,8 +958,7 @@ class Engine( Thread ):
             for enemy in p.units:
                 if self.getLOS( enemy, unit ):
                     seen = 1
-                    #TODO: krav: ovdje stavit da overwatch radi samo ako te neprijatelj an ovewatchu gleda
-                    if enemy.overwatch:
+                    if enemy.overwatch and enemy.inFront90( unit.pos ):
                         overwatch.append( enemy )
             
             if seen:
