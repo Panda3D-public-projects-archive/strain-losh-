@@ -1064,7 +1064,10 @@ class Engine( Thread ):
         if not vis:
             EngMsg.error( "No line of sight to target.", source)
          
+         
+        #---------------- main shoot event ------------------------
         shoot_msg = shooter.shoot( target, vis )
+         
                
         #if nothing happened, just return
         if not shoot_msg:
@@ -1117,24 +1120,37 @@ class Engine( Thread ):
                         if p.connection:
                             EngMsg.shoot( tmp_shoot_msg, p.connection )
 
+
+        #find all units involved in shooting, shooter and (multiple) targets, and update them
+        unit_ids_involved = { shooter.id:0, target.id:0 }
+        for cmd in shoot_msg:
+            if cmd[0] == 'shoot':
+                #grab targets list
+                lst = cmd[4]
+                for trgt in lst:
+                    unit_ids_involved[ trgt[1] ] = 0
+            elif cmd[0] == 'overwatch':
+                #grab targets list
+                lst = cmd[1][4]
+                for trgt in lst:
+                    unit_ids_involved[ trgt[1] ] = 0
+                
+                
+        for unit_id in unit_ids_involved:
+            for p in self.players:
+                unit = self.units[unit_id] 
+                if unit.owner == p or unit.owner.team == p.team:
+                    if p.connection:
+                        EngMsg.sendUnit( util.compileUnit(shooter), p.connection )
+                else:
+                    if unit in p.visible_enemies:
+                        if p.connection:
+                            EngMsg.sendUnit( util.compileEnemyUnit(target), p.connection ) 
+                        
+
         self.checkForDeadUnits()
         
         self.updateVisibilityAndSendVanishAndSpotMessages()
-        
-            
-            
-            
-        #update units for players and their allies
-        for p in self.players:
-            if p == shooter.owner or p.team == shooter.owner.team:
-                if p.connection:
-                    EngMsg.sendUnit( util.compileUnit(shooter), p.connection )
-            if p == target.owner or p.team == target.owner.team:
-                if p.connection: 
-                    EngMsg.sendUnit( util.compileUnit(target), p.connection ) 
-        
-        
-        
         
             
         
