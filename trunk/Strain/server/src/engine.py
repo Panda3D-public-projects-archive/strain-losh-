@@ -943,8 +943,17 @@ class Engine( Thread ):
             if actions_for_others[plyr] and plyr.connection:
                 EngMsg.move( unit.id, actions_for_others[plyr], plyr.connection )
             
-            
+        #send this unit to owner    
         EngMsg.sendUnit( util.compileUnit(unit), source )
+        
+        #send this unit to all others who see it, but not if the last message was vanish
+        for plyr in actions_for_others:
+            if actions_for_others[plyr] and plyr.connection:
+                lst = actions_for_others[plyr]
+                if lst[-1][0] == 'vanish':
+                    continue
+                EngMsg.sendUnit( util.compileEnemyUnit(unit), plyr.connection )
+        
             
         self.checkForDeadUnits()
         

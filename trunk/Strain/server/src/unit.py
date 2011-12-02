@@ -31,7 +31,7 @@ class Unit():
         self.bs = -1
         self.weapons = []
         self.active_weapon = None
-        self.overwatch = True
+        self.overwatch = False
         self.alive = True
         self.last_action = 'spawn'
         #self.set_up = False #for heavy weapons this is only initilaized if a unit has a heavy weapon
