@@ -178,7 +178,7 @@ class Engine( Thread ):
             if unit.ap >= 2:
                 unit.overwatch = not unit.overwatch
             else:
-                EngMsg.error("Not enough AP for overwatch.")
+                EngMsg.error("Not enough AP for overwatch.", source)
             
         if param == SET_UP:
             if not unit.hasHeavyWeapon():
@@ -313,7 +313,7 @@ class Engine( Thread ):
                 unit.newTurn( self.turn )
           
         #check visibility
-        self.updateVisibilityAndSendVanishMessages()
+        self.updateVisibilityAndSendVanishAndSpotMessages()
 
         #send all stuff to all players that are logged in        
         for p in self.players:
@@ -915,13 +915,16 @@ class Engine( Thread ):
                     if unit in p.visible_enemies: 
                         actions_for_others[p].append( ('move', tile ) )
                  
-                overwatch = self.checkEnemyVision( unit, actions_for_others )
-                 
-                res = self.checkMovementInterrupt( unit, overwatch )
-                if res:
-                    my_actions.extend( res )
-                    break
+                self.checkEnemyVision( unit, actions_for_others )
                 
+                res_spot = self.checkMovementInterrupt( unit )
+                res_over = self.checkForOverwatch( unit ) 
+                if res_spot or res_over:
+                    if res_spot:
+                        my_actions.extend( res_spot )
+                    if res_over:
+                        my_actions.extend( res_over )
+                    break
 
                 
                 #if this is the last tile than apply last orientation change
@@ -933,8 +936,8 @@ class Engine( Thread ):
                         if unit in p.visible_enemies: 
                             actions_for_others[p].append( ('rotate', new_heading) )
                     
-                    
             
+                            
         EngMsg.move( unit.id, my_actions, source )
         for plyr in actions_for_others:
             if actions_for_others[plyr] and plyr.connection:
@@ -943,12 +946,35 @@ class Engine( Thread ):
             
         EngMsg.sendUnit( util.compileUnit(unit), source )
             
+        self.checkForDeadUnits()
+        
+            
+    def checkForOverwatch(self, unit ):
+        
+        ret_actions = []
+        
+        for p in self.players:
+            if p == unit.owner:
+                continue
+            
+            for enemy in p.units:
+                vis = self.getLOS( enemy, unit ) 
+                if vis:
+                    if enemy.overwatch and enemy.inFront90( unit.pos ):
 
+                        res = enemy.doOverwatch( unit, vis )
+                        if res:
+                            ret_actions.append( ('overwatch', res ) )
+                        if not unit.alive:
+                            break
+        
+        
+        return ret_actions
+    
+    
     def checkEnemyVision(self, unit, actions_for_others ):
-        
-        overwatch = []
-        
-        #go through all enemy players, if we see this unit we need to register its movement
+            
+        #go through all enemy players, if we see this unit we need to spot or vanish someone
         for p in self.players:
             if p == unit.owner:
                 continue
@@ -958,8 +984,7 @@ class Engine( Thread ):
             for enemy in p.units:
                 if self.getLOS( enemy, unit ):
                     seen = 1
-                    if enemy.overwatch and enemy.inFront90( unit.pos ):
-                        overwatch.append( enemy )
+                    break
             
             if seen:
                 if unit not in p.visible_enemies:
@@ -970,10 +995,9 @@ class Engine( Thread ):
                     p.visible_enemies.remove( unit )
                     actions_for_others[ p ].append( ('vanish', unit.id ) )
                 
-        return overwatch
     
     
-    def checkMovementInterrupt(self, unit, overwatch ):
+    def checkMovementInterrupt(self, unit ):
         spotted = self.checkMyVision( unit )        
         ret_actions = []        
         
@@ -982,15 +1006,6 @@ class Engine( Thread ):
                 unit.owner.visible_enemies.append( enemy )
                 ret_actions.append( ('spot', util.compileUnit(enemy)) )
                 
-        if overwatch:
-            for enemy in overwatch:
-                res = enemy.doOverwatch( unit )
-                if res:
-                    ret_actions.append( ('overwatch', res ) )
-                if not unit.alive:
-                    break
-                        
-            self.checkForDeadUnits()
                         
         return ret_actions
     
@@ -1032,15 +1047,26 @@ class Engine( Thread ):
         #check to see if the owner is trying to shoot his own units
         if target.owner.connection == source:
             notify.critical( "Client:%s\ttried to shoot his own unit." % source.getAddress() )
-            EngMsg.error( "You cannot shoot you own units." )
+            EngMsg.error( "You cannot shoot you own units.", source )
             return None
-
+        
+        
+        vis = self.getLOS( shooter, target )
+        if not vis:
+            EngMsg.error( "No line of sight to target.", source)
          
-        shoot_msg = shooter.shoot( target )
+        shoot_msg = shooter.shoot( target, vis )
                
-        #if nothing happened
+        #if nothing happened, just return
         if not shoot_msg:
             return
+                
+                
+        res = self.checkForOverwatch( shooter )
+        if res:
+            shoot_msg.extend( res )
+                
+                            
                 
         #check visibility for each player
         for p in self.players:
@@ -1082,10 +1108,13 @@ class Engine( Thread ):
                         if p.connection:
                             EngMsg.shoot( tmp_shoot_msg, p.connection )
 
-        
         self.checkForDeadUnits()
         
+        self.updateVisibilityAndSendVanishAndSpotMessages()
         
+            
+            
+            
         #update units for players and their allies
         for p in self.players:
             if p == shooter.owner or p.team == shooter.owner.team:
@@ -1096,13 +1125,14 @@ class Engine( Thread ):
                     EngMsg.sendUnit( util.compileUnit(target), p.connection ) 
         
         
-        #TODO: krav: ovo provjerit sa 3 igraca, sa 2 nece bas radit
-        self.updateVisibilityAndSendVanishMessages()
         
         
+            
         
-    def updateVisibilityAndSendVanishMessages(self):
         
+    def updateVisibilityAndSendVanishAndSpotMessages(self):
+        
+        #remove enemies that we don't see anymore, and send vanish messages
         for p in self.players:
             tmp_enemy_list = []
             for enemy in p.visible_enemies:
@@ -1119,6 +1149,20 @@ class Engine( Thread ):
                         EngMsg.sendMsg( ('vanish', enemy.id) , p.connection )
                     p.visible_enemies.remove( enemy )
                     print p.name, ('vanish', enemy.id)
+        
+        #add new enemies
+        for p in self.players:
+            for enemy in self.units.itervalues():
+                if enemy.owner == p or enemy.owner.team == p.team:
+                    continue
+                
+                for myunit in p.units:
+                    if enemy not in p.visible_enemies and self.getLOS( myunit, enemy ):
+                        p.visible_enemies.append( enemy )
+                        
+                        if p.connection:
+                            EngMsg.sendMsg( ('spot', util.compileEnemyUnit(enemy)), p.connection )
+        
         
         
     def checkForDeadUnits(self):
