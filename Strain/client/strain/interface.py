@@ -335,7 +335,7 @@ class Interface(DirectObject.DirectObject):
                     elif self.parent.isThisEnemyUnit(unit_id):
                         if self.parent.sel_unit_id != None and self.parent.player == self.parent.turn_player:
                             self.parent.sgm.unit_np_dict[self.parent.sel_unit_id].target_unit = self.parent.sgm.unit_np_dict[unit_id]
-                            if self.parent.unit_move_playing == False:
+                            if self.parent._anim_in_process == False:
                                 ClientMsg.shoot(self.parent.sel_unit_id, unit_id)
                 else:
                     # We clicked on the grid, find if unit is placed on those coords
@@ -356,7 +356,7 @@ class Interface(DirectObject.DirectObject):
                                     self.unit_move_destination = pickedCoord
                         elif self.parent.isThisEnemyUnit(unit_id):
                             if self.parent.sel_unit_id != None and self.parent.player == self.parent.turn_player:
-                                if self.parent.unit_move_playing == False:
+                                if self.parent._anim_in_process == False:
                                     ClientMsg.shoot(self.parent.sel_unit_id, unit_id)
                     else:
                         if self.parent.sel_unit_id != None and self.parent.player == self.parent.turn_player:

@@ -305,8 +305,7 @@ class SceneGraph():
         
     def hideUnit(self, unit_id):
         unit_model = self.unit_np_dict[unit_id] 
-        cd = self.parent.getCoordsByUnit(unit_id)       
-        self.parent.units.pop(unit_id)
+        cd = self.parent.getCoordsByUnit(unit_id)
         self.unit_np_dict.pop(unit_id)
         self.unit_np_list[int(cd.getX())][int(cd.getY())] = None
         unit_model.node.remove()
@@ -499,11 +498,14 @@ class Client(DirectObject):
         self.server_ip = ConfigVariableString("server-ip", "127.0.0.1").getValue()
         self.server_port = ConfigVariableInt("server-port", "56005").getValue()
 
+        # Flags
+        # This handles message queue - we will process messages in sync one by one
+        self._message_in_process = False
+        # This handles interface interactions - we will not allow interaction if current animation is not done
+        self._anim_in_process = False 
+
         self.net = Net(self)
         self.net.startNet()
-        
-        # Flags
-        self.unit_move_playing = False
         
         # Turn number and player on turn
         self.turn_number = 0
@@ -524,7 +526,7 @@ class Client(DirectObject):
         self.clearState()
         
     def selectUnit(self, unit_id):
-        if self.unit_move_playing == True:
+        if self._anim_in_process == True:
             return
         
         if self.sel_unit_id != unit_id:
@@ -591,6 +593,13 @@ class Client(DirectObject):
     
     def refreshUnit(self, unit):
         self.units[unit['id']] = unit
+        if unit['alive'] == False:
+            if self.sel_unit_id == unit['id']:
+                self.sel_unit_id = None
+            #self.sgm.hideUnit(unit['id'])
+    
+    def deleteUnit(self, unit_id):
+        self.units.pop(unit_id)
     
     def setupUnitLists(self, units):
         self.units = {}
@@ -732,7 +741,7 @@ class Client(DirectObject):
         return final_dict
     
     def beforeUnitMoveHook(self, unit_id):
-        self.unit_move_playing = True
+        self._anim_in_process = True
         self.sgm.hideUnitAvailMove()
     
     def afterUnitMoveHook(self, unit_id, start_pos, end_pos):
@@ -742,13 +751,13 @@ class Client(DirectObject):
                 self.sgm.unit_np_list[int(end_pos.getX())][int(end_pos.getY())] = self.sgm.unit_np_dict[unit_id]
         if self.player == self.turn_player: 
             self.sgm.showUnitAvailMove(unit_id)
-        self.unit_move_playing = False
+        self._anim_in_process = False
         
     def beforeUnitShootHook(self, unit_id):
-        self.unit_move_playing = True
+        self._anim_in_process = True
         
     def afterUnitShootHook(self, unit_id):
-        self.unit_move_playing = False
+        self._anim_in_process = False
         
     def endTurn(self):
         ClientMsg.endTurn()
@@ -833,7 +842,7 @@ class Client(DirectObject):
         return Sequence(Func(self.sgm.showUnit, unit_model), Wait(0.2))
     
     def buildMoveVanishAnim(self, unit_id):
-        return Sequence(Func(self.sgm.hideUnit, unit_id), Wait(0.2))
+        return Sequence(Func(self.sgm.hideUnit, unit_id), Func(self.parent.deleteUnit, unit_id), Wait(0.2))
     
     def buildMoveRotateAnim(self, unit_model, start_pos, end_pos, start_h):
         dummy_start = NodePath("dummy_start")
@@ -959,6 +968,7 @@ class Client(DirectObject):
             damage_type = action[0]
             target_unit_id = action[1]
             target_unit = self.sgm.unit_np_dict[target_unit_id]
+            killed = False
             t = TextNode('dmg')
             if damage_type == "bounce":
                 target_anim = ActorInterval(target_unit.model, "damage", startFrame=1, endFrame=1)
@@ -970,8 +980,9 @@ class Client(DirectObject):
                 target_anim = ActorInterval(target_unit.model, "damage", startFrame=1, endFrame=1)
                 dmg = str(action[2])
             elif damage_type == "kill":
-                target_anim = ActorInterval(target_unit.model, "die")
+                target_anim = Sequence(ActorInterval(target_unit.model, "die"))
                 dmg = str(action[2])
+                killed = True
             t.setText( "%s" % dmg)
             t.setTextColor(1, 0, 0, 1)
             t.setAlign(TextNode.ACenter)
@@ -988,6 +999,10 @@ class Client(DirectObject):
                                             )
             if shooter_id > -1:
                 damage_parallel.append(Parallel(target_anim, damage_text_sequence, Func(self.afterUnitShootHook, int(shooter_id))))
+                if killed == True:
+                    damage_sequence = Sequence(damage_parallel, Func(self.sgm.hideUnit(target_unit_id)), Func(self.deleteUnit(target_unit_id)))
+                else:
+                    damage_sequence = damage_parallel
             else:
                 damage_parallel.append(Parallel(target_anim, damage_text_sequence))        
         return damage_parallel
@@ -1097,9 +1112,11 @@ class Net():
         # Needs to be called every frame, this takes care of connection
         ClientMsg.handleConnection(self.parent.player, self.parent.server_ip, self.parent.server_port)
         
-        msg = ClientMsg.readMsg()        
-        if msg:
-            self.handleMsg(msg)            
+        if self.parent._message_in_process == False:
+            msg = ClientMsg.readMsg()        
+            if msg:
+                self.handleMsg(msg)      
+              
         return task.cont
 
 #========================================================================
