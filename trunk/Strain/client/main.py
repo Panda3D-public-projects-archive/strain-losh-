@@ -830,10 +830,10 @@ class Client(DirectObject):
         move.start()
     
     def buildMoveSpotAnim(self, unit_model):
-        return Sequence(Func(self.sgm.showUnit, unit_model), Wait(0.5))
+        return Sequence(Func(self.sgm.showUnit, unit_model), Wait(0.2))
     
     def buildMoveVanishAnim(self, unit_id):
-        return Sequence(Func(self.sgm.hideUnit, unit_id), Wait(0.5))
+        return Sequence(Func(self.sgm.hideUnit, unit_id), Wait(0.2))
     
     def buildMoveRotateAnim(self, unit_model, start_pos, end_pos, start_h):
         dummy_start = NodePath("dummy_start")
@@ -910,6 +910,10 @@ class Client(DirectObject):
                 start_h = unit_model.node.getH(render)
                 i, duration, start_h = self.buildShootRotateAnim(unit_model, start_h, heading)
                 s.append(i)
+            elif action_type == "overwatch":
+                action_list = action[1]
+                i = self.buildMoveOverwatchAnim(action_list)
+                s.append(i)
         
         # Start our shoot sequence
         shoot = Sequence(Func(self.beforeUnitShootHook, int(shooter_id)),
@@ -957,13 +961,13 @@ class Client(DirectObject):
             target_unit = self.sgm.unit_np_dict[target_unit_id]
             t = TextNode('dmg')
             if damage_type == "bounce":
-                target_anim = ActorInterval(target_unit.model, "damage")
+                target_anim = ActorInterval(target_unit.model, "damage", startFrame=1, endFrame=1)
                 dmg = 'bounce'
             elif damage_type == "miss":
-                target_anim = ActorInterval(target_unit.model, "damage")
+                target_anim = ActorInterval(target_unit.model, "damage", startFrame=1, endFrame=1)
                 dmg = 'miss'                
             elif damage_type == "damage":
-                target_anim = ActorInterval(target_unit.model, "damage")
+                target_anim = ActorInterval(target_unit.model, "damage", startFrame=1, endFrame=1)
                 dmg = str(action[2])
             elif damage_type == "kill":
                 target_anim = ActorInterval(target_unit.model, "die")
