@@ -33,7 +33,7 @@ class Weapon():
         self.blast = None
         self.parry = None
     
-    def givePercent( self, distance, bs ):
+    def givePercent( self, distance, bs, visibility ):
         
         #TODO: krav: razlika izmedju ws-ova oba lika da se gleda
         if self.type == TYPE_MELEE:
@@ -73,10 +73,14 @@ class Weapon():
             res = sin * (25 + factor ) 
         
         res += 30 + factor    
+        
+        if visibility == 1:
+            res *= 0.5
+        
         return res
         
         
-    def shoot(self, shooter, target):
+    def shoot(self, shooter, target, visibility ):
         #('result', unit_id, damage)
         #result = [('bounce',target.id),('miss',target.id)]
         #result = [('damage',target.id,2)]                       #damage caused
@@ -89,7 +93,7 @@ class Weapon():
         #check range
         distance = util.distanceTupple(shooter.pos, target.pos)
         
-        to_hit = self.givePercent(distance, shooter.bs)       
+        to_hit = self.givePercent(distance, shooter.bs, visibility)       
         
         #check partial cover
         #TODO: krav: ovdje stavit provjeru dal ovaj lik vidi metu i kolko

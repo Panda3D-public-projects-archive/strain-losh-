@@ -3,6 +3,7 @@ import weapon
 import util
 import armour
 import math
+import engine
 
 
 HEADING_NONE      = 0
@@ -149,8 +150,11 @@ class Unit():
         
 
                 
-    def shoot(self, target, overwatch = False):
+    def shoot(self, target, visibility, overwatch = False):
         #TODO: krav: stavit da se moze gadjat i tile?
+                
+        if not visibility:
+            return None
         
         distance = util.distanceTupple(self.pos, target.pos)
         
@@ -174,7 +178,7 @@ class Unit():
         else:
             if self.ap < 1:
                 return None
-            self.ap -= 1        
+            self.ap -= 1
                         
         #check to see if we need to rotate unit before shooting, but if we are on overwatch, we cant rotate
         rot = [] 
@@ -184,7 +188,7 @@ class Unit():
                         
         self.last_action = 'shoot'
         
-        rot.append( ('shoot', self.id, target.pos, self.active_weapon.name, self.active_weapon.shoot( self, target ) ) )
+        rot.append( ('shoot', self.id, target.pos, self.active_weapon.name, self.active_weapon.shoot( self, target, visibility ) ) )
         return rot
 
     def _shoot(self, target):
@@ -243,8 +247,8 @@ class Unit():
        
     #mora vratit rezultat koji ce ic u actions u movementu
     #lista akcija koja se dogodila na overatchu
-    def doOverwatch(self, target):      
-        return self.shoot( target )
+    def doOverwatch(self, target, visibility ):
+        return self.shoot( target, visibility )
         
         
     def move(self, new_position, ap_remaining ):
