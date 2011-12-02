@@ -132,7 +132,10 @@ class Unit():
                     w = wpn
         
         if not w:
-            return weapon.loadWeapon("Karate")
+            w = weapon.loadWeapon("Karate")
+            w.str = self.s
+            if w.str > 3:
+                w.ap = w.str - 3 
         return w
 
         
