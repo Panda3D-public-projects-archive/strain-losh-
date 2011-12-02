@@ -2,17 +2,17 @@
 
 <weaponList>
 	<weapon name="None"/>
-	<weapon name="Bolt Pistol" 		range="12" 	Str="4"	AP="2" 	type="pistol"/>
+	<weapon name="Bolt Pistol" 		range="12" 	Str="3"	AP="2" 	type="pistol"/>
 	<weapon name="Bolter" 			range="24" 	Str="4"	AP="2" 	type="rifle"/>
 	<weapon name="Storm Bolter" 	range="24" 	Str="4"	AP="2" 	type="assault" 	sustained="0.75"/>
 	<weapon name="Heavy Bolter" 	range="36" 	Str="5"	AP="3" 	type="heavy" 	sustained="0.5"/>
-	<weapon name="Autopistol" 		range="12" 	Str="3"			type="pistol"/>
-	<weapon name="Autogun" 			range="24" 	Str="3"			type="rifle"/>
-	<weapon name="Shotgun" 			range="12" 	Str="3"			type="assault" 	sustained="0.75"/>
+	<weapon name="Autopistol" 		range="12" 	Str="3"	AP="0"	type="pistol"/>
+	<weapon name="Autogun" 			range="24" 	Str="3"	AP="0"	type="rifle"/>
+	<weapon name="Shotgun" 			range="12" 	Str="3"	AP="0"	type="assault" 	sustained="0.75"/>
 	<weapon name="Assault Cannon"	range="24"	Str="6"	AP="3" 	type="heavy" 	sustained="0.5"	special="ac"/>
 	<weapon name="Autocannon"		range="48" 	Str="7"	AP="3" 	type="heavy" 	sustained="0.75"/>
-	<weapon name="Laspistol"		range="12" 	Str="3"			type="pistol"/>
-	<weapon name="Lasgun"			range="24" 	Str="3"			type="rifle"/>
+	<weapon name="Laspistol"		range="12" 	Str="3"	AP="0"	type="pistol"/>
+	<weapon name="Lasgun"			range="24" 	Str="3"	AP="0"	type="rifle"/>
 	<weapon name="Multilaser"		range="36" 	Str="6"	AP="1" 	type="heavy" 	sustained="0.5"/>
 	<weapon name="Lascannon"		range="48" 	Str="9"	AP="5" 	type="heavy"/>
 	<weapon name="Flamer"			range="4"	Str="4"	AP="2" 	type="assault" 				special="flamer"/>
@@ -32,7 +32,7 @@
 	<weapon name="Plasma Gun" 		range="24" 	Str="7"	AP="5" 	type="rifle"				special="plasma"/>
 	<weapon name="Heavy Plasma" 	range="36" 	Str="7"	AP="5" 	type="heavy" 				special="plasma"			blast="2"/>
 	
-	<weapon name="Karate"										type="melee"/>
+	<weapon name="Karate"								AP="0"	type="melee"/>
 	<weapon name="Knife" 								AP="1"	type="melee"/>
 	<weapon name="Sword" 								AP="1"	type="melee"										parry="1"/>
 	<weapon name="Axe" 									AP="2"	type="melee"/>
