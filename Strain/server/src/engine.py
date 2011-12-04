@@ -1131,7 +1131,7 @@ class Engine( Thread ):
                     unit_ids_involved[ trgt[1] ] = 0
             elif cmd[0] == 'overwatch':
                 #grab targets list
-                lst = cmd[1][4]
+                lst = cmd[1][0][4]
                 for trgt in lst:
                     unit_ids_involved[ trgt[1] ] = 0
                 
