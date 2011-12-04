@@ -173,9 +173,8 @@ class SceneGraph():
         self.comp_inited['units'] = False
         self.comp_inited['alt_render'] = False
         
-        # Set up dictionary and list for unit nodepaths
+        # Set up dictionary for unit nodepaths
         self.unit_np_dict = {}
-        self.unit_np_list = []
         
         self.off_model = None
         
@@ -283,31 +282,25 @@ class SceneGraph():
             return
         
         self.unit_node = self.node.attachNewNode('unit_node')
-        self.unit_np_list = [[None] * self.parent.level['maxY'] for i in xrange(self.parent.level['maxX'])]
                     
-        for unit in self.parent.units.itervalues():
-            unit_model = self.loadUnit(unit)
+        for unit_id in self.parent.units.iterkeys():
+            unit_model = self.loadUnit(unit_id)
             self.showUnit(unit_model)
                         
         self.comp_inited['units'] = True  
         
-    def loadUnit(self, unit):
-        um = UnitModel(self, unit['id'])
+    def loadUnit(self, unit_id):
+        um = UnitModel(self, unit_id)
         # Keep unit nodepath in dictionary of all unit nodepaths
-        self.unit_np_dict[unit['id']] = um
-        # Keep unit nodepath in list corresponding to level size
-        # This will be dinamically altered when units change position
-        self.unit_np_list[int(unit['pos'][0])][int(unit['pos'][1])] = um
+        self.unit_np_dict[unit_id] = um
         return um
     
     def showUnit(self, unit_model):
         unit_model.node.reparentTo(self.unit_node)
-        
+       
     def hideUnit(self, unit_id):
         unit_model = self.unit_np_dict[unit_id] 
-        cd = self.parent.getCoordsByUnit(unit_id)
         self.unit_np_dict.pop(unit_id)
-        self.unit_np_list[int(cd.getX())][int(cd.getY())] = None
         unit_model.node.remove()
         del unit_model
     
@@ -406,21 +399,6 @@ class SceneGraph():
     
     def deleteTurnNode(self, d):
         d.removeNode()
-    
-    def playNewTurnAnim(self):
-        text = TextNode('new turn node')
-        text.setText("TURN: "+self.parent.turn_player)
-        textnp = NodePath("textnp")
-        textNodePath = textnp.attachNewNode(text)
-        textNodePath.setColor(1, 0, 0)
-        textNodePath.setScale(0.01, 0.01, 0.01)
-        textNodePath.setPos(-0.7, 0, 0)
-        textNodePath.reparentTo(aspect2d)
-        s = Sequence(textNodePath.scaleInterval(.3, textNodePath.getScale()*20,blendType='easeIn'),
-                     Wait(1.0),
-                     textNodePath.scaleInterval(.3, textNodePath.getScale()*0.05,blendType='easeIn'),
-                     Func(self.deleteTurnNode, textNodePath))
-        s.start()
     
     def animTask(self, task):
         """Task to animate draw units while they are idling."""
@@ -596,7 +574,8 @@ class Client(DirectObject):
         if unit['alive'] == False:
             if self.sel_unit_id == unit['id']:
                 self.sel_unit_id = None
-            #self.sgm.hideUnit(unit['id'])
+            self.sgm.hideUnit(unit['id'])
+            self.deleteUnit(unit['id'])
     
     def deleteUnit(self, unit_id):
         self.units.pop(unit_id)
@@ -661,15 +640,9 @@ class Client(DirectObject):
             return False
         
         #check if there is a dynamic obstacle in the way
-        if self.sgm.unit_np_list[ptx+dx][pty+dy]:
-            return False
-        """
-        if( self.dynamic_obstacles[ ptx + dx ][ pty + dy ][0] != DYNAMICS_EMPTY ):
-            #ok if it a unit, it may be the current unit so we need to check that
-            if( self.dynamic_obstacles[ ptx + dx ][ pty + dy ][0] == DYNAMICS_UNIT ):
-                if( self.dynamic_obstacles[ ptx + dx ][ pty + dy ][1] != unit.id ):
-                    return False
-        """
+        for unit in self.units.itervalues():  
+            if unit['pos'][0] == ptx+dx and unit['pos'][1] == pty+dy:
+                return False
         
         #check diagonal if it is clear
         if( dx != 0 and dy != 0 ):
@@ -678,23 +651,6 @@ class Client(DirectObject):
             if( self.level['_level_data'][ ptx + dx ][ pty ] != 0 or 
                 self.level['_level_data'][ ptx ][ pty + dy ] != 0 ):
                 return False
-        
-            #check if there is a dynamic thing in the way 
-            """
-            if( self.dynamic_obstacles[ ptx + dx ][ pty ][0] != DYNAMICS_EMPTY ):
-                #see if it is a unit
-                if( self.dynamic_obstacles[ ptx + dx ][ pty ][0] == DYNAMICS_UNIT ):
-                    #so its a unit, see if it is friendly
-                    unit_id = self.dynamic_obstacles[ ptx + dx ][ pty ][1] 
-                    if( self.units[unit_id].owner != unit.owner ):
-                        return False
-                    
-            if( self.dynamic_obstacles[ ptx ][ pty + dy ][0] != DYNAMICS_EMPTY ):
-                if( self.dynamic_obstacles[ ptx ][ pty + dy ][0] == DYNAMICS_UNIT ):
-                    unit_id = self.dynamic_obstacles[ ptx ][ pty + dy ][1] 
-                    if( self.units[unit_id].owner != unit.owner ):
-                        return False
-            """
             
         return True
         
@@ -740,24 +696,13 @@ class Client(DirectObject):
         
         return final_dict
     
-    def beforeUnitMoveHook(self, unit_id):
+    def beforeAnimHook(self):
         self._anim_in_process = True
         self.sgm.hideUnitAvailMove()
     
-    def afterUnitMoveHook(self, unit_id, start_pos, end_pos):
-        if end_pos != None:
-            if self.sgm.unit_np_dict.has_key(unit_id):
-                self.sgm.unit_np_list[int(start_pos.getX())][int(start_pos.getY())] = None
-                self.sgm.unit_np_list[int(end_pos.getX())][int(end_pos.getY())] = self.sgm.unit_np_dict[unit_id]
-        if self.player == self.turn_player: 
-            self.sgm.showUnitAvailMove(unit_id)
+    def afterAnimHook(self):
         self._anim_in_process = False
-        
-    def beforeUnitShootHook(self, unit_id):
-        self._anim_in_process = True
-        
-    def afterUnitShootHook(self, unit_id):
-        self._anim_in_process = False
+        self._message_in_process = False
         
     def endTurn(self):
         ClientMsg.endTurn()
@@ -770,35 +715,42 @@ class Client(DirectObject):
     
 #========================================================================
 # Client animation handler methods
+    def handleMove(self, move_msg):
+        move = self.buildMove(move_msg)
+        s = Sequence(Func(self.beforeAnimHook), move, Func(self.afterAnimHook))
+        s.start()
     
-    def handleMove(self, unit_id, action_list):
+    def buildMove(self, move_msg):
+        unit_id = move_msg[0]
+        action_list = move_msg[1]
+        
+        pos = None
+        heading = None
+        unit_model = None
+        
         s = Sequence()
         d = 0.0
-        unit_model = None
-        spotted_unit_model = None
         
         if self.units.has_key(unit_id):
-            unit_model = self.sgm.unit_np_dict[unit_id]
-            # We will change start_pos variable on tile-per-tile basis
-            start_pos = unit_model.node.getPos()
-            # We need initial position of the entire animation so we can correctly change nps in unit_np_list
-            animation_start_pos = start_pos
-            start_h = unit_model.node.getH(render)
+            pos = Point3(self.units[unit_id]['pos'][0] + utils.MODEL_OFFSET, self.units[unit_id]['pos'][1] + utils.MODEL_OFFSET, utils.GROUND_LEVEL)
+            heading = utils.getHeadingAngle(self.units[unit_id]['heading'])
+            if self.sgm.unit_np_dict.has_key(unit_id):
+                unit_model = self.sgm.unit_np_dict[unit_id]
         else:
             # This is the first time we see this unit, we have no record of it in client.units dict or sgm nodepath list and dict
             # First action we MUST receive here is 'spot', otherwise client will break as we dont have unit_model defined
             None
             
-        for idx, action in enumerate(action_list):
+        for action in action_list:
             action_type = action[0]
             if action_type == "move":
-                end_pos = Point3(action[1][0] + 0.5, action[1][1] + 0.5, utils.GROUND_LEVEL)
-                i, duration, start_pos, start_h = self.buildMoveMoveAnim(unit_model, start_pos, end_pos, start_h)
+                end_pos = Point3(action[1][0] + utils.MODEL_OFFSET, action[1][1] + utils.MODEL_OFFSET, utils.GROUND_LEVEL)
+                i, duration, pos, heading = self.buildMoveAnim(unit_model, pos, end_pos, heading)
                 d += duration
                 s.append(i)
             elif action_type == "rotate":
-                end_pos = Point3(action[1][0] + 0.5, action[1][1] + 0.5, utils.GROUND_LEVEL)
-                i, duration, start_pos, start_h = self.buildMoveRotateAnim(unit_model, start_pos, end_pos, start_h)
+                end_pos = Point3(action[1][0] + utils.MODEL_OFFSET, action[1][1] + utils.MODEL_OFFSET, utils.GROUND_LEVEL)
+                i, duration, start_pos, heading = self.buildRotateAnim(unit_model, pos, end_pos, heading)
                 d += duration
                 s.append(i)
             elif action_type == "spot":
@@ -809,54 +761,34 @@ class Client(DirectObject):
                     spotted_unit_model = self.sgm.unit_np_dict[spotted_unit['id']]
                 # This is the first time we see this unit, fill out starting variables for move and rotate actions
                 else:
-                    spotted_unit_model = self.sgm.loadUnit(spotted_unit)
+                    spotted_unit_model = self.sgm.loadUnit(spotted_unit['id'])
                 
-                if unit_model == None:
+                # If this is our move message, means we spotted an enemy, and he will not be moving
+                # If this is enemy move message, means we have spotted a moving enemy and we will set unit_model variable
+                if self.isThisEnemyUnit(unit_id):
                     unit_model = spotted_unit_model
-                    
-                start_pos = unit_model.node.getPos()
-                animation_start_pos = start_pos
-                start_h = unit_model.node.getH(render)
-                i = self.buildMoveSpotAnim(spotted_unit_model)
+                    pos = Point3(self.units[spotted_unit['id']]['pos'][0] + utils.MODEL_OFFSET, 
+                                 self.units[spotted_unit['id']]['pos'][1] + utils.MODEL_OFFSET,
+                                 utils.GROUND_LEVEL
+                                 )
+                    heading = utils.getHeadingAngle(self.units[spotted_unit['id']]['heading'])
+                i = self.buildSpotAnim(spotted_unit_model)
                 s.append(i)
             elif action_type == "vanish":
                 vanish_unit_id = action[1]
-                i = self.buildMoveVanishAnim(vanish_unit_id)
+                i = self.buildVanishAnim(vanish_unit_id)
                 s.append(i)
             elif action_type == "overwatch":
                 action_list = action[1]
-                i = self.buildMoveOverwatchAnim(action_list)
+                i = self.buildOverwatchAnim(action_list)
                 s.append(i)
                     
-        end_pos = start_pos  
         anim = ActorInterval(unit_model.model, 'run', loop = 1, duration = d)
         anim_end = ActorInterval(unit_model.model, 'idle_stand01', startFrame=1, endFrame=1)
-        move = Sequence(Func(self.beforeUnitMoveHook, unit_id),
-                        Parallel(anim, s),
-                        Sequence(anim_end),
-                        Func(self.afterUnitMoveHook, unit_id, animation_start_pos, end_pos)
-                        )
-        move.start()
-    
-    def buildMoveSpotAnim(self, unit_model):
-        return Sequence(Func(self.sgm.showUnit, unit_model), Wait(0.2))
-    
-    def buildMoveVanishAnim(self, unit_id):
-        return Sequence(Func(self.sgm.hideUnit, unit_id), Func(self.parent.deleteUnit, unit_id), Wait(0.2))
-    
-    def buildMoveRotateAnim(self, unit_model, start_pos, end_pos, start_h):
-        dummy_start = NodePath("dummy_start")
-        dummy_end = NodePath("dummy_end")
-        duration = 0.0
-        dummy_start.setPos(start_pos)
-        dummy_end.setPos(end_pos)
-        dummy_start.lookAt(dummy_end)
-        end_h = dummy_start.getH(render)
-        interval = unit_model.node.quatInterval(0.2, hpr = Point3(end_h, 0, 0), startHpr = Point3(start_h, 0, 0))
-        duration += 0.2
-        return interval, duration, start_pos, end_h
-    
-    def buildMoveMoveAnim(self, unit_model, start_pos, end_pos, start_h):
+        move = Sequence(Parallel(anim, s), Sequence(anim_end))
+        return move
+        
+    def buildMoveAnim(self, unit_model, start_pos, end_pos, start_h):
         dummy_start = NodePath("dummy_start")
         dummy_end = NodePath("dummy_end")
         duration = 0.0
@@ -875,9 +807,29 @@ class Client(DirectObject):
             p = Parallel(i, i_h)
         else:
             p = i
-        return p, duration, end_pos, end_h 
+        return p, duration, end_pos, end_h  
     
-    def buildMoveOverwatchAnim(self, action_list):
+    def buildRotateAnim(self, unit_model, start_pos, end_pos, start_h, heading=None):
+        if heading == None:
+            dummy_start = NodePath("dummy_start")
+            dummy_end = NodePath("dummy_end")
+            dummy_start.setPos(start_pos)
+            dummy_end.setPos(end_pos)
+            dummy_start.lookAt(dummy_end)
+            end_h = dummy_start.getH(render)
+        else:
+            end_h = utils.getHeadingAngle(heading)
+        interval = unit_model.node.quatInterval(0.2, hpr = Point3(end_h, 0, 0), startHpr = Point3(start_h, 0, 0))
+        duration = 0.2
+        return interval, duration, start_pos, end_h          
+    
+    def buildSpotAnim(self, unit_model):
+        return Sequence(Func(self.sgm.showUnit, unit_model), Wait(0.2))
+    
+    def buildVanishAnim(self, unit_id):
+        return Sequence(Func(self.sgm.hideUnit, unit_id), Func(self.deleteUnit, unit_id), Wait(0.2))
+    
+    def buildOverwatchAnim(self, action_list):
         i = self.buildShoot(action_list)
         return i
     
@@ -887,88 +839,86 @@ class Client(DirectObject):
     
     def buildShoot(self, action_list):
         s = Sequence()
-        d = 0.0                
-        for idx, action in enumerate(action_list):
+        d = 0.0       
+                 
+        for action in action_list:
             action_type = action[0]
             if action_type == "shoot":
-                # TODO: ogs: hendlati da je shooter_id = -1 (znaci da ga ne vidimo, a puca na nas)
                 shooter_id = action[1] # unit_id of the shooter
                 shoot_tile = action[2] # (x,y) pos of targeted tile
                 weapon = action[3] # weapon id
                 damage_list = action[4] # list of all damaged/missed/bounced/killed units
-                if shooter_id > -1:
-                    shooter_model = self.sgm.unit_np_dict[shooter_id]
-                    i = self.buildShootShootAnim(shooter_model, shoot_tile, weapon)
-                    s.append(i)
-                i = self.buildShootDamageAnim(damage_list, shooter_id)
-                s.append(i)
+                #TODO: ogs: handle shooter_id = -1
+                shooter_model = self.sgm.unit_np_dict[shooter_id]
+                a = self.buildShootAnim(shooter_model, weapon)
+                shooter_pos =  Point3(self.units[shooter_id]['pos'][0] + utils.MODEL_OFFSET, 
+                                      self.units[shooter_id]['pos'][1] + utils.MODEL_OFFSET,
+                                      utils.GROUND_LEVEL
+                                      )
+                b = self.buildBulletAnim(shooter_pos, shoot_tile)
+                i = self.buildDamageAnim(damage_list)
+                bi = Sequence(b, i)
+                s.append(Parallel(a, bi))
             elif action_type == "melee":
                 shooter_id = action[1] # unit_id of the shooter
                 shoot_tile = action[2] # (x,y) pos of targeted tile
                 weapon = action[3] # weapon id
                 damage_list = action[4] # list of all damaged/missed/bounced/killed units
                 shooter_model = self.sgm.unit_np_dict[shooter_id]
-                i = self.buildShootMeleeAnim(shooter_model, shoot_tile, weapon)
+                i = self.buildMeleeAnim(shooter_model, shoot_tile, weapon)
                 s.append(i)
-                i = self.buildShootDamageAnim(damage_list, shooter_id)
+                i = self.buildDamageAnim(damage_list)
                 s.append(i)
             elif action_type == "rotate":
                 unit_id = action[1]
                 heading = action[2]
                 unit_model = self.sgm.unit_np_dict[unit_id]
-                start_h = unit_model.node.getH(render)
-                i, duration, start_h = self.buildShootRotateAnim(unit_model, start_h, heading)
+                start_h = utils.getHeadingAngle(self.units[unit_id]['heading'])
+                i, duration, pos, h = self.buildRotateAnim(unit_model, None, None, start_h, heading)
                 s.append(i)
             elif action_type == "overwatch":
                 action_list = action[1]
-                i = self.buildMoveOverwatchAnim(action_list)
+                i = self.buildOverwatchAnim(action_list)
                 s.append(i)
         
         # Start our shoot sequence
-        shoot = Sequence(Func(self.beforeUnitShootHook, int(shooter_id)),
-                         s
-                         )
-        return shoot       
-
-    def buildShootRotateAnim(self, unit_model, start_h, heading):
-        duration = 0.0
-        end_h = utils.getHeadingAngle(heading)
-        interval = unit_model.node.quatInterval(0.2, hpr = Point3(end_h, 0, 0), startHpr = Point3(start_h, 0, 0))
-        duration += 0.2
-        return interval, duration, end_h
+        shoot = Sequence(Func(self.beforeAnimHook), s, Func(self.afterAnimHook))
+        return shoot
     
-    def buildShootShootAnim(self, unit_model, target_tile, weapon):
-        # First we create shooting animation
+    def buildShootAnim(self, unit_model, weapon):
+        # Unit shooting animation
         shoot_anim = ActorInterval(unit_model.model, 'shoot')
-        # Then we create the bullet and its animation
+        return shoot_anim
+    
+    def buildBulletAnim(self, start_pos, target_tile):
+        # We create the bullet and its animation
         self.bullet = loader.loadModel("sphere")
         self.bullet.setScale(0.05)
-        start_pos = Point3(unit_model.node.getX(render), unit_model.node.getY(render), 0.9)
-        end_pos = Point3(target_tile[0] + 0.5, target_tile[1] + 0.5, 0.9)
+        start_pos = Point3(start_pos.getX(), start_pos.getY(), 0.9)
+        end_pos = Point3(target_tile[0] + utils.MODEL_OFFSET, target_tile[1] + utils.MODEL_OFFSET, 0.9)
         dest_node = NodePath("dest_node")
         dest_node.setPos(end_pos)
-        time = round(unit_model.node.getDistance(dest_node) / 10, 2)
+        start_node = NodePath("start_node")
+        start_node.setPos(start_pos)
+        time = round(start_node.getDistance(dest_node) / utils.BULLET_SPEED, 2)
         bullet_sequence = Sequence(Func(self.sgm.setBullet, self.bullet),
                                    self.bullet.posInterval(time, end_pos, start_pos),
                                    Func(self.sgm.deleteBullet, self.bullet)
                                    )
-        # Pack unit shoot animation and bullet animation in parallel
-        shoot_parallel = Parallel(shoot_anim, bullet_sequence)
-        return shoot_parallel
+        return bullet_sequence
 
-    def buildShootMeleeAnim(self, unit_model, target_tile, weapon):
-        # First we create melee animation
+    def buildMeleeAnim(self, unit_model, target_tile, weapon):
+        # Unit melee animation
         melee_anim = ActorInterval(unit_model.model, 'melee')
         return melee_anim
     
-    def buildShootDamageAnim(self, damage_list, shooter_id):
+    def buildDamageAnim(self, damage_list):
         # Find all damaged units and play their damage/kill/miss animation
         damage_parallel = Parallel()
         for action in damage_list:
             damage_type = action[0]
             target_unit_id = action[1]
             target_unit = self.sgm.unit_np_dict[target_unit_id]
-            killed = False
             t = TextNode('dmg')
             if damage_type == "bounce":
                 target_anim = ActorInterval(target_unit.model, "damage", startFrame=1, endFrame=1)
@@ -982,7 +932,6 @@ class Client(DirectObject):
             elif damage_type == "kill":
                 target_anim = Sequence(ActorInterval(target_unit.model, "die"))
                 dmg = str(action[2])
-                killed = True
             t.setText( "%s" % dmg)
             t.setTextColor(1, 0, 0, 1)
             t.setAlign(TextNode.ACenter)
@@ -996,24 +945,32 @@ class Client(DirectObject):
             damage_text_sequence = Sequence(Func(self.sgm.setDamageNode, textNodePath, target_unit.node),
                                             textNodePath.posInterval(1.5, end_pos, start_pos),
                                             Func(self.sgm.deleteDamageNode, textNodePath)
-                                            )
-            if shooter_id > -1:
-                damage_parallel.append(Parallel(target_anim, damage_text_sequence, Func(self.afterUnitShootHook, int(shooter_id))))
-                if killed == True:
-                    damage_sequence = Sequence(damage_parallel, Func(self.sgm.hideUnit(target_unit_id)), Func(self.deleteUnit(target_unit_id)))
-                else:
-                    damage_sequence = damage_parallel
-            else:
-                damage_parallel.append(Parallel(target_anim, damage_text_sequence))        
+                                            ) 
+            damage_parallel = Parallel(damage_text_sequence, target_anim)       
         return damage_parallel
     
     def handleVanish(self, unit_id):
-        s = Sequence()
-        i = self.buildMoveVanishAnim(unit_id)
-        s.append(i)
+        i = self.buildVanishAnim(unit_id)
+        s = Sequence(i, Func(self.afterAnimHook))
         s.start()
-
-
+        
+    def handleNewTurn(self):
+        text = TextNode('new turn node')
+        text.setText("TURN: "+self.turn_player)
+        textnp = NodePath("textnp")
+        textNodePath = textnp.attachNewNode(text)
+        textNodePath.setColor(1, 0, 0)
+        textNodePath.setScale(0.01, 0.01, 0.01)
+        textNodePath.setPos(-0.7, 0, 0)
+        textNodePath.reparentTo(aspect2d)
+        s = Sequence(textNodePath.scaleInterval(.3, textNodePath.getScale()*20,blendType='easeIn'),
+                     Wait(1.0),
+                     textNodePath.scaleInterval(.3, textNodePath.getScale()*0.05,blendType='easeIn'),
+                     Func(self.sgm.deleteTurnNode, textNodePath),
+                     Func(self.afterAnimHook)
+                     )
+        s.start()        
+        
 #========================================================================
 # Client tasks
    
@@ -1042,6 +999,7 @@ class Net():
         #========================================================================
         #
         if msg[0] == ENGINE_STATE:
+            self.parent._message_in_process = True
             self.parent.level = pickle.loads(msg[1]['level'])
             self.parent.turn_number = msg[1]['turn']
             self.parent.players = pickle.loads(msg[1]['players'])
@@ -1052,60 +1010,69 @@ class Net():
             self.parent.turn_player = self.parent.getPlayerName(msg[1]['active_player_id'])                    
             self.parent.setupUnitLists(pickle.loads(msg[1]['units']))
             self.parent.fsm.request('EngineState')
+            self.parent._message_in_process = False
         #========================================================================
         #
         elif msg[0] == MOVE:
-            unit_id = msg[1][0]
-            tile_list = msg[1][1]
-            self.parent.handleMove(unit_id, tile_list)
+            self.parent._message_in_process = True
+            self.parent.handleMove(msg[1])
         #========================================================================
         #
         elif msg[0] == NEW_TURN:
+            self.parent._message_in_process = True            
             self.parent.newTurn()
             self.parent.turn_number = msg[1]['turn']
             self.parent.turn_player = self.parent.getPlayerName(msg[1]['active_player_id'])
             units = pickle.loads(msg[1]['units'])
             for unit in units.itervalues():
                 self.parent.refreshUnit(unit)
-            self.parent.sgm.playNewTurnAnim()                
-            #self.parent.interface.refreshUnitData( unit['id'] )
+            self.parent.handleNewTurn()
         #========================================================================
         #
         elif msg[0] == UNIT:
+            self.parent._message_in_process = True            
             unit = msg[1]
             self.parent.refreshUnit(unit)
             # TODO: ogs: Ovaj refresh interface-a se poziva i kada unit koji dodje nije selektirani unit, to srediti
             if self.parent.sel_unit_id == unit['id']:
                 self.parent.interface.refreshUnitData( unit['id'] )
-                #self.parent.sgm.showUnitAvailMove( unit['id'] )
-                self.parent.sgm.playUnitStateAnim( unit['id'] )
+                self.parent.sgm.showUnitAvailMove( unit['id'] )
+                #self.parent.sgm.playUnitStateAnim( unit['id'] )
+            self.parent._message_in_process = False
         #========================================================================
         #
         elif msg[0] == SHOOT:
-            action_list = msg[1]
-            self.parent.handleShoot(action_list)       
+            self.parent._message_in_process = True
+            self.parent.handleShoot(msg[1])       
         #========================================================================
         #
+        # TODO: ogs/krav: fali VANISH global
         elif msg[0] == 'vanish':
+            self.parent._message_in_process = True            
             unit_id = msg[1]
             self.parent.handleVanish(unit_id)
                 
         #========================================================================
         #
         elif msg[0] == ERROR:
+            self.parent._message_in_process = True            
             self.parent.interface.console.consoleOutput(str(msg[1]), utils.CONSOLE_SYSTEM_ERROR)
             self.parent.interface.console.show()
+            self.parent._message_in_process = False
         #========================================================================
         #
         elif msg[0] == CHAT:
+            self.parent._message_in_process = True            
             sender_name = msg[2]
             self.parent.interface.console.consoleOutput( sender_name + ":" + str(msg[1]), utils.CONSOLE_SYSTEM_MESSAGE)
             self.parent.interface.console.show()
+            self.parent._message_in_process = False            
         #========================================================================
         #
         else:
+            self.parent._message_in_process = True
             self.log.error("Unknown message Type: %s", msg[0])
-    
+            self.parent._message_in_process = False
     
     def msgTask(self, task):
         """Task that listens for messages on client queue."""

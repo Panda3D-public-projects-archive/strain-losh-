@@ -36,6 +36,8 @@ HEADING_S         = 7
 HEADING_SE        = 8
 
 GROUND_LEVEL = 0.3
+MODEL_OFFSET = 0.5
+BULLET_SPEED = 10
 
 armour_dict = {}
 armour_dict['power_armour_common'] = ["power_armour_common"]
