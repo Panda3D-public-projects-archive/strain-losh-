@@ -4,7 +4,7 @@ import util
 import armour
 import math
 import engine
-
+from server_messaging import *
 
 HEADING_NONE      = 0
 HEADING_NW        = 1
@@ -89,12 +89,12 @@ class Unit():
         
         #face opponent 
         if self.rotate( target.pos ):
-            ret_lst.append( ('rotate', self.id, self.heading) )
+            ret_lst.append( ( ROTATE, self.id, self.heading) )
             
         #TODO: krav: ovdje stavit da ak nema dovoljno ap-a da se protivnik ne okrene prema tebi?
         #rotate opponent to us
         if target.rotate( self.pos ):
-            ret_lst.append( ('rotate', target.id, target.heading) )
+            ret_lst.append( ( ROTATE, target.id, target.heading) )
          
         
         base -= 10 * target.numberOfMeleeWeapons() 
@@ -187,11 +187,11 @@ class Unit():
         rot = [] 
         if not overwatch:
             if self.rotate( target.pos ):
-                rot.append( ('rotate', self.id, self.heading) ) 
+                rot.append( ( ROTATE, self.id, self.heading) ) 
                         
         self.last_action = 'shoot'
         
-        rot.append( ('shoot', self.id, target.pos, self.active_weapon.name, self.active_weapon.shoot( self, target, visibility ) ) )
+        rot.append( (SHOOT, self.id, target.pos, self.active_weapon.name, self.active_weapon.shoot( self, target, visibility ) ) )
         return rot
 
     def _shoot(self, target):
