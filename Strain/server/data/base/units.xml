@@ -1,13 +1,16 @@
 <units>
-	<unit name="marine_common" 	m="4" ws="4" bs="4" s="4" t="4" w="5" i="8" a="1" ld="8" ap="5" 
+	<unit name="marine_common" 	m="4" ws="4" bs="4" s="4" t="4" w="5" i="4" a="1" ld="8" ap="5" 
 					armour="Power" weapons="Bolter"/>
 					
-	<unit name="marine_epic" 	m="4" ws="4" bs="4" s="4" t="4" w="6" i="8" a="1" ld="8" ap="6"
+	<unit name="marine_epic" 	m="4" ws="4" bs="4" s="4" t="4" w="6" i="4" a="1" ld="8" ap="6"
 					armour="Power" weapons="Bolt Pistol,Power Axe"/>
 					
-	<unit name="commissar" 		m="4" ws="4" bs="4" s="3" t="3" w="5" i="7" a="1" ld="9" ap="5"
+	<unit name="commissar" 		m="4" ws="4" bs="4" s="3" t="3" w="5" i="4" a="1" ld="9" ap="5"
 					armour="Flak" weapons="Bolt Pistol,Sword"/>
 					
-	<unit name="terminator" 	m="4" ws="5" bs="5" s="4" t="4" w="6" i="9" a="1" ld="9" ap="6" 
+	<unit name="terminator" 	m="4" ws="5" bs="5" s="4" t="4" w="6" i="5" a="1" ld="9" ap="6" 
 					armour="Terminator"	weapons="Storm Bolter,Power Glove"/>
+					
+	<unit name="scout" 	m="4" ws="4" bs="3" s="4" t="3" w="6" i="4" a="1" ld="7" ap="6" 
+					armour="Scout"	weapons="Bolter"/>
 </units>

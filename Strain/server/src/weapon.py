@@ -23,6 +23,7 @@ class Weapon():
 
 
     def __init__(self):
+        self.owner = None
         self.name = None
         self.range = None
         self.str = None
