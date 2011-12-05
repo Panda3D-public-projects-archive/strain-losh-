@@ -5,6 +5,8 @@ import logging.handlers
 import cPickle as pickle
 
 
+OBSERVER_ID = -666
+
 random.random()
 
 _PI = math.pi
@@ -79,6 +81,11 @@ def compilePlayers(players, active_player):
     ret = []
     
     for p in players:
+        
+        #observer
+        if p.id == OBSERVER_ID:
+            continue
+        
         if p == active_player:
             plyr = compileTarget(p, ['units', 'connection', 'msg_lst'] )
             plyr['units'] = compileAllUnits( p.units )
@@ -150,13 +157,13 @@ def compileArmour(armr):
 
 
 def compileWeapon( wpn ):
-    return compileTarget( wpn )
+    return compileTarget( wpn, ['owner'] )
 
     
 def compileWeaponList( weapons ):
     wpn_list = []
     for weapon in weapons:
-        wpn_list.append( compileTarget( weapon ) )
+        wpn_list.append( compileWeapon( weapon ) )
     return wpn_list
 
 
