@@ -2,10 +2,7 @@
 
 <armours>
 <armour name="None" 		front="0" 	head="0"/>
-<armour name="Terminator" 	front="6" 	head="6"/>
-<armour name="Power" 		front="4" 	head="4"/>
-<armour name="Scout" 		front="3" 	head="3"/>
-<armour name="Flak" 		front="1" 	head="2"/>
-<armour name="Body" 		front="0.7"	head="1"/>			<!-- orkish -->
-<armour name="Eavy" 		front="3" 	head="3"/>			<!-- orkish -->
+<armour name="Terminator" 	front="4" 	head="4"/>
+<armour name="Power" 		front="2" 	head="2"/>
+<armour name="Scout" 		front="1" 	head="1"/>
 </armours>

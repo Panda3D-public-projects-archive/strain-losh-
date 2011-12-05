@@ -136,6 +136,7 @@ class Unit():
             w.str = self.s
             if w.str > 3:
                 w.ap = w.str - 3 
+                
         return w
 
         
@@ -314,6 +315,7 @@ def loadUnit( name ):
         wpns = p.attributes['weapons'].value.split(',')
         for wname in wpns:
             wpn = weapon.loadWeapon( wname )
+            wpn.owner = unit
             unit.weapons.append( wpn )  
             if wpn.type != weapon.TYPE_MELEE:
                 unit.active_weapon = wpn
