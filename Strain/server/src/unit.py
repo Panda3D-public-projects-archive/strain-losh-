@@ -251,7 +251,7 @@ class Unit():
     #mora vratit rezultat koji ce ic u actions u movementu
     #lista akcija koja se dogodila na overatchu
     def doOverwatch(self, target, visibility ):
-        return self.shoot( target, visibility )
+        return self.shoot( target, visibility, True )
         
         
     def move(self, new_position, ap_remaining ):

@@ -81,31 +81,17 @@ class Weapon():
         
         
     def shoot(self, shooter, target, visibility ):
-        #('result', unit_id, damage)
-        #result = [('bounce',target.id),('miss',target.id)]
-        #result = [('damage',target.id,2)]                       #damage caused
-        #result = [('kill',target.id,5),('miss',target.id)]      #damage caused
-        #TODO: krav: tu dodavat headshovote i critove i to...
-        
 
-        
         #when we are here, we are certain that the target is in los
         #check range
         distance = util.distanceTupple(shooter.pos, target.pos)
         
         to_hit = self.givePercent(distance, shooter.bs, visibility)       
-        
-        #check partial cover
-        #TODO: krav: ovdje stavit provjeru dal ovaj lik vidi metu i kolko
-        #if shooter.losh_dict[target.pos] == 1:
-        #    to_hit * 0.66
-         
+                
         if util.d100() <= to_hit:
-            result = self.hit( target )
+            return self.hit( target )
         else:
-            result= [('miss', target.id)]
-            
-        return result
+            return [('miss', target.id)]
     
     
     def hit(self, target):
