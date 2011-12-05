@@ -12,7 +12,7 @@ import sys, traceback
 import cPickle as pickle
 import util
 from player import Player
-from util import compileEnemyUnit, compileUnit
+from util import compileEnemyUnit, compileUnit, compileState
 import copy
 
 notify = util.Notify()
@@ -58,7 +58,7 @@ class Engine( Thread ):
       
         self.loadArmyList()
       
-        self.beginTurn()
+        self.firstTurn()
 
         #+++++++++++++++++++++++++++++++++++++++++++++MAIN LOOP+++++++++++++++++++++++++++++++++++++++++++++
         #+++++++++++++++++++++++++++++++++++++++++++++MAIN LOOP+++++++++++++++++++++++++++++++++++++++++++++
@@ -171,7 +171,7 @@ class Engine( Thread ):
  
         
     def unitUpdate(self, unit_id, param, source ):
-        #player = self.findPlayer( source )
+
         unit = self.findAndValidateUnit( unit_id, source )
         
         if param == OVERWATCH:
@@ -193,9 +193,8 @@ class Engine( Thread ):
                 if msg:
                     EngMsg.error( msg, source )
                     
-                    
-                    
-        EngMsg.sendUnit( compileUnit(unit), source )
+        player = self.findPlayer( source )                    
+        player.addUnitMsg( compileUnit(unit) )
         
         
         
@@ -296,6 +295,27 @@ class Engine( Thread ):
         pass
 
 
+    def firstTurn(self):
+        self.active_player = self.players[0]
+        self.turn = 1
+
+        print "turn:", self.turn, "\tplayer:", self.active_player.name
+
+        #go through all units of active player and reset them
+        for unit in self.units.itervalues():   
+            if unit.owner == self.active_player:            
+                unit.newTurn( self.turn )
+          
+        #check visibility
+        self.updateVisibilityAndSendVanishAndSpotMessages()
+
+        for p in self.players:
+            #delete all previous msgs (like vanish and spot)
+            p.msg_lst = []
+            p.addEngineStateMsg( util.compileState(self, p) )
+            p.addNewTurnMsg( util.compileNewTurn(self, p) )        
+
+
     def beginTurn(self):
 
         if not self.active_player:
@@ -315,10 +335,9 @@ class Engine( Thread ):
         #check visibility
         self.updateVisibilityAndSendVanishAndSpotMessages()
 
-        #send all stuff to all players that are logged in        
+        #send new turn messages       
         for p in self.players:
-            if p.connection:
-                EngMsg.sendNewTurn( self.turn, self.active_player.name, util.compileNewTurn(self, p), p.connection )
+            p.addNewTurnMsg( util.compileNewTurn(self, p) )
         
         
 
@@ -937,22 +956,23 @@ class Engine( Thread ):
                             actions_for_others[p].append( ('rotate', new_heading) )
                     
             
-                            
-        EngMsg.move( unit.id, my_actions, source )
+        player = self.findPlayer( source )
+        player.addMoveMsg( unit.id, my_actions )
+        
         for plyr in actions_for_others:
-            if actions_for_others[plyr] and plyr.connection:
-                EngMsg.move( unit.id, actions_for_others[plyr], plyr.connection )
+            if actions_for_others[plyr]:
+                plyr.addMoveMsg( unit.id, actions_for_others[plyr] )
             
         #send this unit to owner    
-        EngMsg.sendUnit( util.compileUnit(unit), source )
+        player.addUnitMsg( util.compileUnit(unit) )
         
         #send this unit to all others who see it, but not if the last message was vanish
         for plyr in actions_for_others:
-            if actions_for_others[plyr] and plyr.connection:
+            if actions_for_others[plyr]:
                 lst = actions_for_others[plyr]
                 if lst[-1][0] == 'vanish':
                     continue
-                EngMsg.sendUnit( util.compileEnemyUnit(unit), plyr.connection )
+                plyr.addUnitMsg( util.compileEnemyUnit(unit) )
         
             
         self.checkForDeadUnits()
@@ -1085,8 +1105,7 @@ class Engine( Thread ):
 
             #if this player is the one doing the shooting send him everything
             if shooter.owner == p:
-                if p.connection:
-                    EngMsg.shoot( shoot_msg, p.connection )
+                p.addShootMsg( shoot_msg )
                 
             else:
                 #example message = [('rotate', 0, 3), ('shoot', 0, (4, 7), u'Bolt Pistol', [('bounce', 6)])]
@@ -1117,8 +1136,7 @@ class Engine( Thread ):
                         new = (sht, unit_id, pos, wpn, lst)
                         tmp_shoot_msg.insert( i, new )
                         
-                        if p.connection:
-                            EngMsg.shoot( tmp_shoot_msg, p.connection )
+                        p.addShootMsg( tmp_shoot_msg )
 
 
         #find all units involved in shooting, shooter and (multiple) targets, and update them
@@ -1140,12 +1158,10 @@ class Engine( Thread ):
             for p in self.players:
                 unit = self.units[unit_id] 
                 if unit.owner == p or unit.owner.team == p.team:
-                    if p.connection:
-                        EngMsg.sendUnit( util.compileUnit(shooter), p.connection )
+                    p.addUnitMsg( util.compileUnit(shooter) )
                 else:
                     if unit in p.visible_enemies:
-                        if p.connection:
-                            EngMsg.sendUnit( util.compileEnemyUnit(target), p.connection ) 
+                        p.addUnitMsg( util.compileEnemyUnit(target) )
                         
 
         self.checkForDeadUnits()
@@ -1170,8 +1186,7 @@ class Engine( Thread ):
                 
                 #if there is an enemy that vanished, send a message to player and remove it from visible list 
                 if enemy not in tmp_enemy_list:
-                    if p.connection:
-                        EngMsg.sendMsg( ('vanish', enemy.id) , p.connection )
+                    p.addMsg( ('vanish', enemy.id) )
                     p.visible_enemies.remove( enemy )
                     print p.name, ('vanish', enemy.id)
         
@@ -1184,10 +1199,7 @@ class Engine( Thread ):
                 for myunit in p.units:
                     if enemy not in p.visible_enemies and self.getLOS( myunit, enemy ):
                         p.visible_enemies.append( enemy )
-                        
-                        if p.connection:
-                            EngMsg.sendMsg( ('spot', util.compileEnemyUnit(enemy)), p.connection )
-        
+                        p.addMsg( ('spot', util.compileEnemyUnit(enemy)) )
         
         
     def checkForDeadUnits(self):

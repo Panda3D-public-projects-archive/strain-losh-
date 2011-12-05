@@ -1,3 +1,5 @@
+from server_messaging import *
+
 
 class Player:
     
@@ -9,5 +11,49 @@ class Player:
         self.visible_enemies = []
         self.detected_enemies = []
         self.connection = None
+        self.msg_lst = []
         pass
+
+
+    def addMoveMsg(self, unit_id, move_actions):
+        if self.connection:
+            EngMsg.move( unit_id, move_actions, self.connection )
+        else:
+            self.msg_lst.append( (MOVE, (unit_id, move_actions)) )
+            
+            
+    def addShootMsg(self, shoot_actions):
+        if self.connection:
+            EngMsg.shoot( shoot_actions, self.connection )
+        else:
+            self.msg_lst.append( (SHOOT, shoot_actions) )
+            
+            
+    def addUnitMsg(self, pickled_unit):
+        if self.connection:
+            EngMsg.sendUnit( pickled_unit, self.connection )
+        else:
+            self.msg_lst.append( (UNIT, pickled_unit) )
+
+
+    def addNewTurnMsg(self, data):
+        if self.connection:
+            EngMsg.sendNewTurn( data, self.connection )
+        else:
+            self.msg_lst.append( (NEW_TURN, data) )
+            
+
+    def addEngineStateMsg(self, state ):
+        if self.connection:
+            EngMsg.sendNewTurn( state, self.connection )
+        else:
+            self.msg_lst.append( (ENGINE_STATE, state) )
+            
+
+    def addMsg(self, msg ):
+        if self.connection:
+            EngMsg.sendMsg( msg, self.connection )
+        else:
+            self.msg_lst.append( msg )
+
 
