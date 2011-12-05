@@ -87,7 +87,7 @@ def compilePlayers(players, active_player):
             ret.append( plyr )
             
         else:
-            plyr = compileTarget(p, ['units', 'connection', 'visible_enemies', 'detected_enemies']) 
+            plyr = compileTarget(p, ['units', 'connection', 'visible_enemies', 'detected_enemies', 'msg_lst']) 
             ret.append( plyr )
     
     return ret
