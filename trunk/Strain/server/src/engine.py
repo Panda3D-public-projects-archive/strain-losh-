@@ -903,10 +903,10 @@ class Engine( Thread ):
             
             #see if we actually need to rotate the unit
             if unit.rotate( new_heading ):
-                my_actions.append( ('rotate', new_heading) )
+                my_actions.append( (ROTATE, new_heading) )
                 for p in self.players:
                     if unit in p.visible_enemies:
-                        actions_for_others[p].append( ('rotate', new_heading) )
+                        actions_for_others[p].append( (ROTATE, new_heading) )
             #if not, than do nothing
             else:
                 return
@@ -928,11 +928,11 @@ class Engine( Thread ):
                 unit.move( tile, ap_remaining )
                 self.level.putUnit( unit )            
                                     
-                my_actions.append( ('move', tile ) )              
+                my_actions.append( (MOVE, tile ) )              
                                  
                 for p in self.players:
                     if unit in p.visible_enemies: 
-                        actions_for_others[p].append( ('move', tile ) )
+                        actions_for_others[p].append( (MOVE, tile ) )
                  
                 self.checkEnemyVision( unit, actions_for_others )
                 
@@ -949,11 +949,11 @@ class Engine( Thread ):
                 #if this is the last tile than apply last orientation change
                 if( tile == path[-1][0] ):
                     if unit.rotate( new_heading ):
-                        my_actions.append( ('rotate', new_heading) )
+                        my_actions.append( ( ROTATE, new_heading) )
                     
                     for p in self.players:
                         if unit in p.visible_enemies: 
-                            actions_for_others[p].append( ('rotate', new_heading) )
+                            actions_for_others[p].append( (ROTATE, new_heading) )
                     
             
         player = self.findPlayer( source )
@@ -970,7 +970,7 @@ class Engine( Thread ):
         for plyr in actions_for_others:
             if actions_for_others[plyr]:
                 lst = actions_for_others[plyr]
-                if lst[-1][0] == 'vanish':
+                if lst[-1][0] == VANISH:
                     continue
                 plyr.addUnitMsg( util.compileEnemyUnit(unit) )
         
@@ -1018,11 +1018,11 @@ class Engine( Thread ):
             if seen:
                 if unit not in p.visible_enemies:
                     p.visible_enemies.append( unit )
-                    actions_for_others[ p ].append( ('spot', compileEnemyUnit(unit) ) )
+                    actions_for_others[ p ].append( ( SPOT, compileEnemyUnit(unit) ) )
             else:
                 if unit in p.visible_enemies:
                     p.visible_enemies.remove( unit )
-                    actions_for_others[ p ].append( ('vanish', unit.id ) )
+                    actions_for_others[ p ].append( ( VANISH, unit.id ) )
                 
     
     
@@ -1033,7 +1033,7 @@ class Engine( Thread ):
         if spotted:
             for enemy in spotted:
                 unit.owner.visible_enemies.append( enemy )
-                ret_actions.append( ('spot', util.compileUnit(enemy)) )
+                ret_actions.append( ( SPOT, util.compileUnit(enemy)) )
                 
                         
         return ret_actions
@@ -1108,17 +1108,17 @@ class Engine( Thread ):
                 p.addShootMsg( shoot_msg )
                 
             else:
-                #example message = [('rotate', 0, 3), ('shoot', 0, (4, 7), u'Bolt Pistol', [('bounce', 6)])]
+                #example message = [(ROTATE, 0, 3), (SHOOT, 0, (4, 7), u'Bolt Pistol', [('bounce', 6)])]
                 tmp_shoot_msg = copy.deepcopy(shoot_msg)
                 for m in tmp_shoot_msg[:]:
 
-                    if m[0] == 'rotate':
+                    if m[0] == ROTATE:
                         unit_id = m[1]
                         #if we dont see the shooter, remove the rotate msg                    
                         if self.units[unit_id].owner != p and self.units[unit_id] not in p.visible_enemies:
                             tmp_shoot_msg.remove( m )
 
-                    elif m[0] == 'shoot' or m[0] == 'melee':
+                    elif m[0] == SHOOT or m[0] == 'melee':
                         sht, unit_id, pos, wpn, lst = m
 
                         #if we dont see the shooter, remove him and his position
@@ -1142,7 +1142,7 @@ class Engine( Thread ):
         #find all units involved in shooting, shooter and (multiple) targets, and update them
         unit_ids_involved = { shooter.id:0, target.id:0 }
         for cmd in shoot_msg:
-            if cmd[0] == 'shoot':
+            if cmd[0] == SHOOT:
                 #grab targets list
                 lst = cmd[4]
                 for trgt in lst:
@@ -1186,9 +1186,9 @@ class Engine( Thread ):
                 
                 #if there is an enemy that vanished, send a message to player and remove it from visible list 
                 if enemy not in tmp_enemy_list:
-                    p.addMsg( ('vanish', enemy.id) )
+                    p.addMsg( (VANISH, enemy.id) )
                     p.visible_enemies.remove( enemy )
-                    print p.name, ('vanish', enemy.id)
+                    print p.name, (VANISH, enemy.id)
         
         #add new enemies
         for p in self.players:
@@ -1199,7 +1199,7 @@ class Engine( Thread ):
                 for myunit in p.units:
                     if enemy not in p.visible_enemies and self.getLOS( myunit, enemy ):
                         p.visible_enemies.append( enemy )
-                        p.addMsg( ('spot', util.compileEnemyUnit(enemy)) )
+                        p.addMsg( ( SPOT, util.compileEnemyUnit(enemy)) )
         
         
     def checkForDeadUnits(self):
