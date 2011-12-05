@@ -60,6 +60,7 @@ class Engine( Thread ):
       
         self.firstTurn()
 
+
         #+++++++++++++++++++++++++++++++++++++++++++++MAIN LOOP+++++++++++++++++++++++++++++++++++++++++++++
         #+++++++++++++++++++++++++++++++++++++++++++++MAIN LOOP+++++++++++++++++++++++++++++++++++++++++++++
         while( self.stop == False ):
@@ -989,7 +990,7 @@ class Engine( Thread ):
             for enemy in p.units:
                 vis = self.getLOS( enemy, unit ) 
                 if vis:
-                    if enemy.overwatch and enemy.inFront90( unit.pos ):
+                    if enemy.overwatch and enemy.inFront( unit.pos ):
 
                         res = enemy.doOverwatch( unit, vis )
                         if res:
