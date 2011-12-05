@@ -86,6 +86,7 @@ class AppFSM(FSM.FSM):
         self.parent.login.entry_username.remove()          
         self.parent.login.entry_password.remove()        
         self.parent.login.button.remove()
+        self.parent.login.button_ultras.remove()
         self.parent.login.commoner1.delete()
         self.parent.login.commoner2.delete()
         self.parent.login.commander.delete()
@@ -126,6 +127,10 @@ class LoginScreen():
         self.button.reparentTo(aspect2d)
         self.button.setPos(0, 0, -0.6) 
         
+        self.button_ultras = DirectButton(text = ("Login as Ultramarines"),scale=.02,command=self.loginButUltrasPressed, text_font=font, text_align=TextNode.ACenter)
+        self.button_ultras.reparentTo(aspect2d)
+        self.button_ultras.setPos(0.5, 0, -0.6) 
+        
         ground_level = -1.6
         self.commoner1 = utils.loadUnit('common')
         self.commoner1.setPos(-3, 25, ground_level)
@@ -155,6 +160,10 @@ class LoginScreen():
         self.parent.player = self.entry_username.get()
         if self.parent.player != "ultramarines" and self.parent.player != "blood angels":
             self.parent.player = "blood angels"
+        self.parent.startClient()
+        
+    def loginButUltrasPressed(self, text=None):
+        self.parent.player = "ultramarines"
         self.parent.startClient()
 #========================================================================
 #
@@ -1014,7 +1023,6 @@ class Net():
     def handleMsg(self, msg):
         """Handles incoming messages."""
         self.log.info("Received message: %s", msg[0])
-        print msg
         #========================================================================
         #
         if msg[0] == ENGINE_STATE:
