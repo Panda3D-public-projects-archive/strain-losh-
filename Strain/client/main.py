@@ -295,7 +295,11 @@ class SceneGraph():
         self.unit_np_dict[unit_id] = um
         return um
     
-    def showUnit(self, unit_model):
+    def showUnit(self, unit_model, pos=None, heading=None):
+        if pos:
+            unit_model.node.setPos(pos)
+        if heading:
+            unit_model.node.setH(heading)
         unit_model.node.reparentTo(self.unit_node)
        
     def hideUnit(self, unit_id):
@@ -303,6 +307,10 @@ class SceneGraph():
         self.unit_np_dict.pop(unit_id)
         unit_model.node.remove()
         del unit_model
+        
+    def detachUnit(self, unit_id):
+        unit_model = self.unit_np_dict[unit_id] 
+        unit_model.node.detachNode()
     
     def deleteUnits(self):
         if self.comp_inited['units'] == False:
@@ -741,7 +749,7 @@ class Client(DirectObject):
             # First action we MUST receive here is 'spot', otherwise client will break as we dont have unit_model defined
             None
             
-        for action in action_list:
+        for idx, action in enumerate(action_list):
             action_type = action[0]
             if action_type == "move":
                 end_pos = Point3(action[1][0] + utils.MODEL_OFFSET, action[1][1] + utils.MODEL_OFFSET, utils.GROUND_LEVEL)
@@ -772,11 +780,19 @@ class Client(DirectObject):
                                  utils.GROUND_LEVEL
                                  )
                     heading = utils.getHeadingAngle(self.units[spotted_unit['id']]['heading'])
-                i = self.buildSpotAnim(spotted_unit_model)
+                i = self.buildSpotAnim(spotted_unit_model, pos, heading)
                 s.append(i)
             elif action_type == "vanish":
                 vanish_unit_id = action[1]
-                i = self.buildVanishAnim(vanish_unit_id)
+                spotted_later = False
+                for a in action_list[idx:]:
+                    if a[0] == "spot":
+                        spotted_later = True
+                        break
+                if spotted_later:
+                    i = self.buildDetachAnim(vanish_unit_id)
+                else:
+                    i = self.buildDeleteAnim(vanish_unit_id)
                 s.append(i)
             elif action_type == "overwatch":
                 action_list = action[1]
@@ -823,11 +839,14 @@ class Client(DirectObject):
         duration = 0.2
         return interval, duration, start_pos, end_h          
     
-    def buildSpotAnim(self, unit_model):
-        return Sequence(Func(self.sgm.showUnit, unit_model), Wait(0.2))
+    def buildSpotAnim(self, unit_model, pos, heading):
+        return Sequence(Func(self.sgm.showUnit, unit_model, pos, heading), Wait(0.2))
     
-    def buildVanishAnim(self, unit_id):
+    def buildDeleteAnim(self, unit_id):
         return Sequence(Func(self.sgm.hideUnit, unit_id), Func(self.deleteUnit, unit_id), Wait(0.2))
+    
+    def buildDetachAnim(self, unit_id):
+        return Sequence(Func(self.sgm.detachUnit, unit_id), Wait(0.2))
     
     def buildOverwatchAnim(self, action_list):
         i = self.buildShoot(action_list)
