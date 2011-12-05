@@ -1069,7 +1069,6 @@ class Net():
             self.parent._message_in_process = True            
             unit = msg[1]
             self.parent.refreshUnit(unit)
-            # TODO: ogs: Ovaj refresh interface-a se poziva i kada unit koji dodje nije selektirani unit, to srediti
             if self.parent.sel_unit_id == unit['id']:
                 self.parent.interface.refreshUnitData( unit['id'] )
                 self.parent.sgm.showUnitAvailMove( unit['id'] )
@@ -1082,8 +1081,7 @@ class Net():
             self.parent.handleShoot(msg[1])       
         #========================================================================
         #
-        # TODO: ogs/krav: fali VANISH global
-        elif msg[0] == 'vanish':
+        elif msg[0] == VANISH:
             self.parent._message_in_process = True            
             unit_id = msg[1]
             self.parent.handleVanish(unit_id)
