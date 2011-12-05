@@ -87,6 +87,7 @@ class AppFSM(FSM.FSM):
         self.parent.login.entry_password.remove()        
         self.parent.login.button.remove()
         self.parent.login.button_ultras.remove()
+        self.parent.login.button_obs.remove()
         self.parent.login.commoner1.delete()
         self.parent.login.commoner2.delete()
         self.parent.login.commander.delete()
@@ -131,6 +132,11 @@ class LoginScreen():
         self.button_ultras.reparentTo(aspect2d)
         self.button_ultras.setPos(0.5, 0, -0.6) 
         
+        self.button_obs = DirectButton(text = ("Login as Berserker"),scale=.02,command=self.loginButObsPressed, text_font=font, text_align=TextNode.ACenter)
+        self.button_obs.reparentTo(aspect2d)
+        self.button_obs.setPos(0.5, 0, -0.7) 
+        
+        
         ground_level = -1.6
         self.commoner1 = utils.loadUnit('common')
         self.commoner1.setPos(-3, 25, ground_level)
@@ -165,6 +171,10 @@ class LoginScreen():
     def loginButUltrasPressed(self, text=None):
         self.parent.player = "ultramarines"
         self.parent.startClient()
+        
+    def loginButObsPressed(self, text=None):
+        self.parent.player = "observer"
+        self.parent.startClient()        
 #========================================================================
 #
 class SceneGraph():
