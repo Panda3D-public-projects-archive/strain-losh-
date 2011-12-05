@@ -983,7 +983,7 @@ class Client(DirectObject):
         return damage_parallel
     
     def handleVanish(self, unit_id):
-        i = self.buildVanishAnim(unit_id)
+        i = self.buildDeleteAnim(unit_id)
         s = Sequence(i, Func(self.afterAnimHook))
         s.start()
         
