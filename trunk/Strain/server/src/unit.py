@@ -289,13 +289,12 @@ class Unit():
         return False
 
 
-    def inFront90(self, tile):
+    def inFront(self, tile):
         angle1 = math.atan2( tile[1] - self.pos[1] , tile[0] - self.pos[0] )
         angle2 = util.headingToAngle(self.heading)
 
-        if math.fabs( angle1-angle2 ) < util._PI_2:
+        if math.fabs( angle1-angle2 ) <= util._PI_4:
             return True
-                
 
 
 #-----------------------------------------------------------------------
