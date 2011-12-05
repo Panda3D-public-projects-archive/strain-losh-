@@ -2,6 +2,9 @@
 	<unit name="marine_common" 	m="4" ws="4" bs="4" s="4" t="4" w="5" i="4" a="1" ld="8" ap="5" 
 					armour="Power" weapons="Bolter"/>
 					
+	<unit name="marine_hb"	 	m="4" ws="4" bs="4" s="4" t="4" w="5" i="4" a="1" ld="8" ap="5" 
+					armour="Power" weapons="Heavy Bolter"/>
+					
 	<unit name="marine_epic" 	m="4" ws="4" bs="4" s="4" t="4" w="6" i="4" a="1" ld="8" ap="6"
 					armour="Power" weapons="Bolt Pistol,Power Axe"/>
 					

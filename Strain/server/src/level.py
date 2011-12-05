@@ -64,7 +64,7 @@ class Level:
 
         #check to see if there is something in the way on level
         if self._level_data[x][y] != 0:
-            print "This unit cannot be placed on non empty level tile", unit.type, x, y
+            print "This unit cannot be placed on non empty level tile", unit.name, x, y
             return False
         
         #check to see if the tile is already occupied

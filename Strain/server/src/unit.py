@@ -310,7 +310,11 @@ def loadUnit( name ):
             continue
         
         unit = Unit( p.attributes['name'].value )            
-                     
+
+        #load armour                     
+        unit.armour =  armour.loadArmour( p.attributes['armour'].value )
+        unit.armour.owner = unit
+        
         #add all weapons, and try to set first ranged weapon as active
         wpns = p.attributes['weapons'].value.split(',')
         for wname in wpns:
@@ -326,9 +330,6 @@ def loadUnit( name ):
         if unit.hasHeavyWepon():
             unit.set_up = False
 
-        unit.armour =  armour.loadArmour( p.attributes['armour'].value )
-        unit.armour.owner = unit
-        
         unit.default_ap = int( p.attributes['ap'].value )
         unit.default_hp = int( p.attributes['w'].value )
         
