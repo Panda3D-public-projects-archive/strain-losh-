@@ -57,3 +57,10 @@ class Player:
             self.msg_lst.append( msg )
 
 
+    def addChatMsg(self, msg, sender):
+        if self.connection:
+            EngMsg.chat( msg, sender, self.connection )
+        else:
+            self.msg_lst.append( (CHAT, msg, sender) )
+        
+

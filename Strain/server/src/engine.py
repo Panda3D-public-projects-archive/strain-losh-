@@ -14,10 +14,10 @@ import util
 from player import Player
 from util import compileEnemyUnit, compileUnit, compileState
 import copy
+from util import OBSERVER_ID
+
 
 notify = util.Notify()
-
-
 
 
 class Engine( Thread ):
@@ -45,6 +45,8 @@ class Engine( Thread ):
         self.active_player = None
                 
         self.name = "EngineThread"
+
+        self.player_turn_sequence = []
 
 
     def run(self):
@@ -203,13 +205,13 @@ class Engine( Thread ):
         sender = self.findPlayer( source )
         
         for p in self.players:
-            if not p.connection or p == sender:
+            if p == sender:
                 continue
             if to_allies:
                 if p.team == sender.team:
-                    EngMsg.chat( msg, sender.name, p.connection )
+                    p.addChatMsg( msg, sender.name )
             else:                    
-                EngMsg.chat( msg, sender.name, p.connection )
+                p.addChatMsg( msg, sender.name )
             
                 
     def loadArmyList(self):
@@ -225,6 +227,8 @@ class Engine( Thread ):
         
         for p in xmldoc.getElementsByTagName( 'player' ):
             player = Player( p.attributes['id'].value, p.attributes['name'].value, p.attributes['team'].value )                        
+            
+            self.player_turn_sequence.append( player )
             
             for u in p.getElementsByTagName( 'unit' ):
                 
@@ -253,7 +257,12 @@ class Engine( Thread ):
                 
             self.players.append( player )
     
-        xmldoc.unlink()   
+        xmldoc.unlink()
+        
+        self.observer = Player( OBSERVER_ID, 'observer', None )
+        self.players.append( self.observer )
+        for unt in self.units.itervalues():
+            self.observer.visible_enemies.append( unt )
 
         notify.info( "Army lists loaded OK" )
 
@@ -267,13 +276,15 @@ class Engine( Thread ):
 #            return
         
         
-        if self.active_player == self.players[-1]:
+        if self.active_player == self.player_turn_sequence[-1]:
             self.active_player = None          
         
         #check victory conditions
         
         #check if a player was left without any units, if so than delete him
         for p in self.players[:]:
+            if p.id == OBSERVER_ID:
+                continue
             if not p.units:
                 if p.connection:
                     EngMsg.error('U have no more units... pathetic...', p.connection)
@@ -281,13 +292,13 @@ class Engine( Thread ):
                 self.players.remove(p)
         
         #check if there is only one player left
-        if len( self.players ) == 1:
+        if len( self.players ) == 2:
             if p.connection:
                 EngMsg.error('U WIN!', p.connection)
             EngMsg.error( self.players[0].name + ' WINS! He is the best!!@' )
             
         #if there are no more players - its a draw?
-        if len( self.players ) == 0:
+        if len( self.players ) == 1:
             EngMsg.error( 'Draw! really?!' )
         
         
@@ -297,7 +308,7 @@ class Engine( Thread ):
 
 
     def firstTurn(self):
-        self.active_player = self.players[0]
+        self.active_player = self.player_turn_sequence[0]
         self.turn = 1
 
         print "turn:", self.turn, "\tplayer:", self.active_player.name
@@ -320,11 +331,11 @@ class Engine( Thread ):
     def beginTurn(self):
 
         if not self.active_player:
-            self.active_player = self.players[0]
+            self.active_player = self.player_turn_sequence[0]
             self.turn += 1
         else:
-            i = self.players.index(self.active_player)
-            self.active_player = self.players[i+1 % len( self.players )]
+            i = self.player_turn_sequence.index(self.active_player)
+            self.active_player = self.player_turn_sequence[i+1 % len( self.player_turn_sequence )]
 
         print "turn:", self.turn, "\tplayer:", self.active_player.name
 
@@ -1006,7 +1017,7 @@ class Engine( Thread ):
             
         #go through all enemy players, if we see this unit we need to spot or vanish someone
         for p in self.players:
-            if p == unit.owner:
+            if p == unit.owner or p.id == OBSERVER_ID:
                 continue
             
             seen = 0
@@ -1159,7 +1170,7 @@ class Engine( Thread ):
         for unit_id in unit_ids_involved:
             for p in self.players:
                 unit = self.units[unit_id] 
-                if unit.owner == p or unit.owner.team == p.team:
+                if unit.owner == p or unit.owner.team == p.team or p.id == OBSERVER_ID:
                     p.addUnitMsg( util.compileUnit(shooter) )
                 else:
                     if unit in p.visible_enemies:
@@ -1177,6 +1188,11 @@ class Engine( Thread ):
         
         #remove enemies that we don't see anymore, and send vanish messages
         for p in self.players:
+            
+            #observer must always see all units
+            if p.id == OBSERVER_ID:
+                continue
+            
             tmp_enemy_list = []
             for enemy in p.visible_enemies:
                 for myunit in p.units:
