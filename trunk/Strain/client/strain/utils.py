@@ -104,6 +104,7 @@ anim_dict['melee'] = 'melee_attack01'
 
 unit_types = {}
 unit_types['marine_common'] = ['space_marine_head', 'power_armour_common', 'space_marine_backpack', None, None, None, 'bolter_common']
+unit_types['marine_hb'] = ['space_marine_head', 'power_armour_common', 'space_marine_backpack', None, None, None, 'heavy_bolter_common']
 unit_types['marine_epic'] = ['gabriel_head', 'power_armour_commander', 'gabriel_backpack', 'power_axe_common', 'bolt_pistol_common', None, None]
 unit_types['common'] = ['power_armour_rare', 'space_marine_head', 'space_marine_backpack', None, None, None, 'bolter_common']
 unit_types['commander'] = ['power_armour_commander', 'gabriel_head', 'gabriel_backpack', None, 'doublehand_hammer_common', None, None]
@@ -236,7 +237,7 @@ def initModels(model, unit_type):
     
 def initAnims(model, unit_type):
     model.anims = {}
-    if unit_type == 'common' or unit_type == 'marine_common':
+    if unit_type == 'common' or unit_type == 'marine_common' or unit_type == 'marine_hb':
         prefix = 'range_burst/'
     elif unit_type == 'commander':
         prefix = 'twohand_hammer/'
