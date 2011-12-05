@@ -1142,16 +1142,17 @@ class Engine( Thread ):
         #find all units involved in shooting, shooter and (multiple) targets, and update them
         unit_ids_involved = { shooter.id:0, target.id:0 }
         for cmd in shoot_msg:
-            if cmd[0] == SHOOT:
-                #grab targets list
-                lst = cmd[4]
-                for trgt in lst:
+            if cmd[0] == SHOOT: 
+                for trgt in cmd[4]:
                     unit_ids_involved[ trgt[1] ] = 0
-            elif cmd[0] == 'overwatch':
-                #grab targets list
-                lst = cmd[1][0][4]
-                for trgt in lst:
-                    unit_ids_involved[ trgt[1] ] = 0
+            elif cmd[0] == 'overwatch': 
+                for cmd2 in cmd[1]:
+                    if cmd2[0] == ROTATE:
+                        unit_ids_involved[ cmd2[1] ] = 0
+                    elif cmd2[0] == SHOOT:
+                        for trgt in cmd2[4]:
+                            unit_ids_involved[ trgt[1] ] = 0
+                        
                 
                 
         for unit_id in unit_ids_involved:
