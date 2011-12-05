@@ -587,12 +587,15 @@ class Client(DirectObject):
             self.selectUnit(new_unit_id)
     
     def refreshUnit(self, unit):
-        self.units[unit['id']] = unit
         if unit['alive'] == False:
             if self.sel_unit_id == unit['id']:
                 self.sel_unit_id = None
-            self.sgm.hideUnit(unit['id'])
-            self.deleteUnit(unit['id'])
+            if self.sgm.unit_np_dict.has_key(unit['id']):
+                self.sgm.hideUnit(unit['id'])
+            if self.units.has_key(unit['id']):
+                self.deleteUnit(unit['id'])
+        else:
+            self.units[unit['id']] = unit
     
     def deleteUnit(self, unit_id):
         self.units.pop(unit_id)
