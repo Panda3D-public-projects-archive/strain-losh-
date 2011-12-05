@@ -16,6 +16,7 @@ SHOOT = 'shoot'                 #value - (which unit, target unit)
 CHAT = 'chat'                   #value - string for chat
 OVERWATCH = 'overwatch'         #value - id of unit going on overwatch, this message toggles overwatch on/off
 SET_UP = 'set_up'               #value - id of unit setting up heavy weapon
+VANISH = 'vanish'
 
 
 class Msg:
