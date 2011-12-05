@@ -80,7 +80,7 @@ def compilePlayers(players, active_player):
     
     for p in players:
         if p == active_player:
-            plyr = compileTarget(p, ['units', 'connection'] )
+            plyr = compileTarget(p, ['units', 'connection', 'msg_lst'] )
             plyr['units'] = compileAllUnits( p.units )
             plyr['visible_enemies'] = compileAllEnemyUnits( p.visible_enemies ) 
             plyr['detected_enemies'] = compileAllDetectedUnits( p.detected_enemies ) 

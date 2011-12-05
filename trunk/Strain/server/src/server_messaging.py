@@ -13,7 +13,7 @@ import time
 import threading
 import collections
 from engine import *
-
+import util
 
 
 TCP_PORT = 56005
@@ -101,6 +101,8 @@ class EngMsg:
             conn, success, player_name = EngMsg.handshakedConnections.pop()            
             if success:
                 
+                tmp_player = None
+                
                 #go through all players
                 for player in engine._instance.players:
                     if player.name == player_name:
@@ -113,10 +115,21 @@ class EngMsg:
                             
                         #remember this connection
                         player.connection = conn
+                        tmp_player = player
                 
                 EngMsg.cReader.addConnection(conn)
                 EngMsg.log.info("Client connected: %s @ %s", player_name, conn.getAddress() )
                 EngMsg.activeConnections.append( ( conn, conn.getAddress(), player_name ) )
+                
+                #send engine_state to this new connection
+                #EngMsg.sendState( util.compileState(engine._instance, tmp_player), conn )
+                
+                #send all backlogged messages to this player
+                for msg in tmp_player.msg_lst:
+                    EngMsg.sendMsg( msg, conn )
+                
+                #clear all messages because we sent them
+                tmp_player.msg_lst = []
                 
             else:
                 #in this case, address and name parameter don't matter, cause there is nothing in activeConnections yet
@@ -135,6 +148,14 @@ class EngMsg:
     
     @staticmethod
     def disconnect( connection, address, name ):
+        
+            for p in engine._instance.players:
+                if p.connection == connection:
+                    p.connection = None
+                    #remember this state for this player              
+                    p.addEngineStateMsg( util.compileState( engine._instance, p) )
+                
+                
             EngMsg.cListener.removeConnection( connection )
             EngMsg.cReader.removeConnection( connection )
             EngMsg.cManager.closeConnection( connection )
@@ -259,7 +280,7 @@ class EngMsg:
         EngMsg._sendMsg((ERROR, error_msg), source)
     
     @staticmethod
-    def sendNewTurn(turn_num, active_player, data, source ):
+    def sendNewTurn( data, source ):
         EngMsg._sendMsg( (NEW_TURN, data), source )
     
     @staticmethod

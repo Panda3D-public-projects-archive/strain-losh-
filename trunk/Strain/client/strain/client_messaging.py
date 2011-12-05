@@ -114,7 +114,7 @@ class ClientMsg:
             
             if ClientMsg.connect(player, ip_address, tcp_port):
                 #every time we reconnect to server, get the engine state 
-                ClientMsg.getEngineState()
+                #ClientMsg.getEngineState()
                 ClientMsg.num_failed_attempts = 0             
                 return True
             else:
