@@ -789,7 +789,12 @@ class Client(DirectObject):
                                  utils.GROUND_LEVEL
                                  )
                     heading = utils.getHeadingAngle(self.units[spotted_unit['id']]['heading'])
-                i = self.buildSpotAnim(spotted_unit_model, pos, heading)
+                    spotted_pos = pos
+                    spotted_h = heading
+                else:
+                    spotted_pos = None
+                    spotted_h = None
+                i = self.buildSpotAnim(spotted_unit_model, spotted_pos, spotted_h)
                 s.append(i)
             elif action_type == "vanish":
                 vanish_unit_id = action[1]
@@ -1023,6 +1028,7 @@ class Net():
     def handleMsg(self, msg):
         """Handles incoming messages."""
         self.log.info("Received message: %s", msg[0])
+        print msg
         #========================================================================
         #
         if msg[0] == ENGINE_STATE:
