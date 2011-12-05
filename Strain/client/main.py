@@ -871,7 +871,8 @@ class Client(DirectObject):
     
     def handleShoot(self, action_list):
         shoot = self.buildShoot(action_list)
-        shoot.start() 
+        s = Sequence(Func(self.beforeAnimHook), shoot, Func(self.afterAnimHook))
+        s.start()        
     
     def buildShoot(self, action_list):
         s = Sequence()
@@ -918,8 +919,7 @@ class Client(DirectObject):
                 s.append(i)
         
         # Start our shoot sequence
-        shoot = Sequence(Func(self.beforeAnimHook), s, Func(self.afterAnimHook))
-        return shoot
+        return s
     
     def buildShootAnim(self, unit_model, weapon):
         # Unit shooting animation
@@ -1031,7 +1031,7 @@ class Net():
     def handleMsg(self, msg):
         """Handles incoming messages."""
         self.log.info("Received message: %s", msg[0])
-        print msg
+        #print msg
         #========================================================================
         #
         if msg[0] == ENGINE_STATE:
@@ -1119,7 +1119,8 @@ class Net():
             msg = ClientMsg.readMsg()        
             if msg:
                 self.handleMsg(msg)      
-              
+        
+        #print self.parent._message_in_process      
         return task.cont
 
 #========================================================================
