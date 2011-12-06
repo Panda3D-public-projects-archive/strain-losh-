@@ -382,6 +382,8 @@ class SceneGraph():
         """Displays visual indicator of tiles which are in movement range of the selected unit."""
         self.hideUnitAvailMove()
         unit = self.parent.units[unit_id]
+        if self.parent.turn_player != self.parent.player:
+            return
         if unit:
             self.parent.units[unit_id]['move_dict'] = self.parent.getMoveDict(unit_id)
             move_dict = unit['move_dict']
@@ -1042,6 +1044,7 @@ class Net():
         """Handles incoming messages."""
         self.log.info("Received message: %s", msg[0])
         #print msg
+        #print self.parent.sel_unit_id
         #========================================================================
         #
         if msg[0] == ENGINE_STATE:
