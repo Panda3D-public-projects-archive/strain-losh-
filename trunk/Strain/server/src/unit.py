@@ -144,7 +144,7 @@ class Unit():
     def numberOfMeleeWeapons(self):
         res = 0
         for wpn in self.weapons:
-            if self.hasHeavyWepon():
+            if self.hasHeavyWeapon():
                 res -= 1
             if wpn.type == weapon.TYPE_MELEE or wpn.type == weapon.TYPE_PISTOL:
                 res += 1        
@@ -171,7 +171,7 @@ class Unit():
             return self.melee( target )
         
         #check if we have a heavy weapon and if we are set up
-        if self.hasHeavyWepon():
+        if self.hasHeavyWeapon():
             if not self.set_up:
                 return None
             
@@ -282,7 +282,7 @@ class Unit():
             self.ap += 1
             self.resting = False
 
-    def hasHeavyWepon(self):
+    def hasHeavyWeapon(self):
         for w in self.weapons:
             if w.type == weapon.TYPE_HEAVY and self.armour != 'Terminator':
                 return True
@@ -327,8 +327,8 @@ def loadUnit( name ):
             unit.weapons[0]
 
         #initialize set_up if needed
-        if unit.hasHeavyWepon():
-            unit.set_up = False
+        if unit.hasHeavyWeapon():
+            unit.set_up = True
 
         unit.default_ap = int( p.attributes['ap'].value )
         unit.default_hp = int( p.attributes['w'].value )
