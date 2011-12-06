@@ -37,7 +37,7 @@ class Armour():
         if util.d100() <= percent_to_save:
             return True
         
-        return True
+        return False
 
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
