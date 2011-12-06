@@ -139,13 +139,13 @@ def loadWeapon( name ):
         except:pass
         try:wpn.range = int(p.attributes['range'].value)
         except:pass
-        try:wpn.sustained = int(p.attributes['sustained'].value)
+        try:wpn.sustained = float(p.attributes['sustained'].value)
         except:pass
         try:wpn.special = p.attributes['special'].value
         except:pass
         try:wpn.blast = int(p.attributes['blast'].value)
         except:pass
-        
+
 
     xmldoc.unlink()
     if not wpn:
