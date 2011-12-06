@@ -10,7 +10,7 @@ import utils
 # CLASS UnitModel --- DEFINITION
 #===============================================================================
 class UnitModel:
-    def __init__(self, parent, unit_id, off=False):
+    def __init__(self, parent, unit_id, wpn_list, off=False):
         self.parent = parent
         self.id = str(unit_id)
 
@@ -26,7 +26,7 @@ class UnitModel:
             self.team_color = Vec4(0.106, 0.467, 0.878, 1)
         else:
             self.team_color = Vec4(0, 1, 0, 1)        
-        self.model = utils.loadUnit(unit['name'])
+        self.model = utils.loadUnit(unit['name'], wpn_list)
         
         self.model.reparentTo(self.node)
         #self.dummy_node.reparentTo(self.node)
