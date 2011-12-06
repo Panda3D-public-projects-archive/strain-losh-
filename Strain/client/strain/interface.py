@@ -241,11 +241,17 @@ class Interface(DirectObject.DirectObject):
     
     def processUnitData(self, unit_id):
         self.printUnitData(unit_id)
-        self.setButtons()
-        if self.parent.units[unit_id]['overwatch']:
+        self.setButtons(unit_id)
+        if self.parent.units[unit_id]['overwatch'] == True:
             self.overwatch.turnOn()
         else:
             self.overwatch.turnOff()
+        
+        if self.parent.units[unit_id]['heavy_weapon'] == True:
+            if self.parent.units[unit_id]['set_up'] == True:
+                self.set_up.turnOn()
+            else:
+                self.set_up.turnOff()
             
         
     def printUnitData(self, unit_id):
@@ -538,9 +544,11 @@ class Interface(DirectObject.DirectObject):
         unit = self.parent.units[self.parent.sel_unit_id]
         ClientMsg.setUp( self.parent.sel_unit_id )
             
-    def setButtons(self):
+    def setButtons(self, unit_id):
         for button in self.action_buttons.itervalues():
             button.enable()
+        if self.parent.units[unit_id]['heavy_weapon'] == False:
+            self.set_up.disable()
             
     def clearButtons(self):
         for button in self.action_buttons.itervalues():
