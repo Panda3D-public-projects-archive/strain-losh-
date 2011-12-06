@@ -1171,10 +1171,10 @@ class Engine( Thread ):
             for p in self.players:
                 unit = self.units[unit_id] 
                 if unit.owner == p or unit.owner.team == p.team or p.id == OBSERVER_ID:
-                    p.addUnitMsg( util.compileUnit(shooter) )
+                    p.addUnitMsg( util.compileUnit(unit) )
                 else:
                     if unit in p.visible_enemies:
-                        p.addUnitMsg( util.compileEnemyUnit(target) )
+                        p.addUnitMsg( util.compileEnemyUnit(unit) )
                         
 
         self.checkForDeadUnits()
