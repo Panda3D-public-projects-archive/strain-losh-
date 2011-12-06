@@ -80,7 +80,7 @@ class Interface(DirectObject.DirectObject):
         self.action_d = GuiButton("topleft", Point3(0.0, 0, -0.9), aspect, plane, "action_d")
         
         self.overwatch = GuiButton("topleft", Point3(1.5+0.01, 0, -0.09), aspect, plane, "overwatch")
-        self.action_2 = GuiButton("topleft", Point3(1.6+0.02, 0, -0.09), aspect, plane, "empty")
+        self.set_up = GuiButton("topleft", Point3(1.6+0.02, 0, -0.09), aspect, plane, "set_up")
         self.action_3 = GuiButton("topleft", Point3(1.7+0.03, 0, -0.09), aspect, plane, "empty")
         self.action_4 = GuiButton("topleft", Point3(1.5+0.01, 0, -0.2), aspect, plane, "empty")
         self.action_5 = GuiButton("topleft", Point3(1.6+0.02, 0, -0.2), aspect, plane, "empty")
@@ -95,7 +95,7 @@ class Interface(DirectObject.DirectObject):
         self.buttons["action_c"] = self.action_c
         self.buttons["action_d"] = self.action_d
         self.buttons["overwatch"] = self.overwatch
-        self.buttons["action_2"] = self.action_2
+        self.buttons["set_up"] = self.set_up
         self.buttons["action_3"] = self.action_3
         self.buttons["action_4"] = self.action_4
         self.buttons["action_5"] = self.action_5
@@ -103,6 +103,7 @@ class Interface(DirectObject.DirectObject):
         
         self.action_buttons = {}
         self.action_buttons["overwatch"] = self.overwatch
+        self.action_buttons["set_up"] = self.set_up
         
         self.hovered_gui = None
         
@@ -313,6 +314,8 @@ class Interface(DirectObject.DirectObject):
             if self.overwatch.enabled:
                 self.toggleOverwatch()
             self.console.unfocus()
+        elif self.hovered_gui == self.set_up:
+            self.toggleSetUp()
         elif self.hovered_gui == self.console:
             self.console.focus()
         else:
@@ -530,6 +533,10 @@ class Interface(DirectObject.DirectObject):
     def toggleOverwatch(self):
         unit = self.parent.units[self.parent.sel_unit_id]
         ClientMsg.overwatch( self.parent.sel_unit_id )
+        
+    def toggleSetUp(self):
+        unit = self.parent.units[self.parent.sel_unit_id]
+        ClientMsg.setUp( self.parent.sel_unit_id )
             
     def setButtons(self):
         for button in self.action_buttons.itervalues():
