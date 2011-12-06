@@ -186,15 +186,18 @@ class Engine( Thread ):
         if param == SET_UP:
             if not unit.hasHeavyWeapon():
                 EngMsg.error( "The unit does not have any heavy weapons.", source )
+                return
 
             if unit.set_up:
                 msg = unit.tearDown()
                 if msg:
                     EngMsg.error( msg, source )
+                    return
             else:
                 msg = unit.setUp()
                 if msg:
                     EngMsg.error( msg, source )
+                    return
                     
         player = self.findPlayer( source )                    
         player.addUnitMsg( compileUnit(unit) )

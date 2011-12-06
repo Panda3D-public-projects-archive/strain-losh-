@@ -179,6 +179,8 @@ class Unit():
         if self.active_weapon.sustained and self.last_action == 'shoot':
             if self.ap >= self.active_weapon.sustained:
                 self.ap -= self.active_weapon.sustained
+            else:
+                return None
         else:
             if self.ap < 1:
                 return None
@@ -237,14 +239,14 @@ class Unit():
             self.last_action = 'setup'
             return None
         
-    def teardown(self):
+    def tearDown(self):
         if self.set_up:
             if self.ap < 2:
-                return "Not enough AP to teardown."
+                return "Not enough AP to tearDown."
             
             self.ap -= 2
             self.set_up = False
-            self.last_action = 'teardown'
+            self.last_action = 'tearDown'
             return None
         else:
             return "This unit is not set-up."
@@ -328,7 +330,7 @@ def loadUnit( name ):
 
         #initialize set_up if needed
         if unit.hasHeavyWeapon():
-            unit.set_up = True
+            unit.set_up = False
 
         unit.default_ap = int( p.attributes['ap'].value )
         unit.default_hp = int( p.attributes['w'].value )
