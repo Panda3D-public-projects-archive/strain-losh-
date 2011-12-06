@@ -795,7 +795,8 @@ class Client(DirectObject):
                     spotted_unit_model = self.sgm.unit_np_dict[spotted_unit['id']]
                 # This is the first time we see this unit, fill out starting variables for move and rotate actions
                 else:
-                    spotted_unit_model = self.sgm.loadUnit(spotted_unit['id'])
+                    wpn_list = utils.getUnitWeapons(spotted_unit)
+                    spotted_unit_model = self.sgm.loadUnit(spotted_unit['id'], wpn_list)
                 
                 # If this is our move message, means we spotted an enemy, and he will not be moving
                 # If this is enemy move message, means we have spotted a moving enemy and we will set unit_model variable
