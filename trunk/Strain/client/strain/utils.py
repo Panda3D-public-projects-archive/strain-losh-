@@ -3,6 +3,7 @@
 #############################################################################
 
 # python imports
+import string
 
 # panda3D imports
 from pandac.PandaModules import GeomNode, NodePath
@@ -58,35 +59,30 @@ backpack_dict['gabriel_backpack'] = [("gabriel_backpack", "fc_backpack")]
 backpack_dict['avitus_backpack'] = [("avitus_backpack", "space_marine_backpack")]
 
 melee_weapon_dict = {}
-melee_weapon_dict['power_axe_common'] = ["power_axe_common"]
-melee_weapon_dict['chainsword_common'] = ["chainsword_common"]
-melee_weapon_dict['power_fist_common'] = ["power_fist_common"]     
-melee_weapon_dict['knife_common'] = ["knife_common"]    
+melee_weapon_dict['Power Axe'] = ["power_axe_common"]
+melee_weapon_dict['Chain Sword'] = ["chainsword_common"]
+melee_weapon_dict['Power Glove'] = ["power_fist_common"]     
+melee_weapon_dict['Knife'] = ["knife_common"]    
 
 melee_2h_weapon_dict = {}
-melee_2h_weapon_dict['doublehand_hammer_common'] = ["doublehand_hammer_common"]
+melee_2h_weapon_dict['Thunder Hammer'] = ["doublehand_hammer_common"]
 
 pistol_dict = {}
-pistol_dict['bolt_pistol_common'] = ["bolt_pistol_common"] 
-pistol_dict['plasma_pistol_common'] = ["plasma_pistol_common"]    
+pistol_dict['Bolt Pistol'] = ["bolt_pistol_common"] 
+pistol_dict['Plasma Pistol'] = ["plasma_pistol_common"]    
 
 weapon_dict = {}
-weapon_dict['bolter_common'] = ["bolter_common"]  
-weapon_dict['heavy_bolter_common'] = ["heavy_bolter_common"] 
-weapon_dict['flamer_common'] = ["flamer_common"]       
-weapon_dict['lascannon_common'] = ["lascannon_common"]   
-weapon_dict['meltagun_common'] = ["meltagun_common"]     
-weapon_dict['missile_launcher_common'] = ["missile_launcher_common"]                
-weapon_dict['plasma_cannon_common'] = ["plasma_cannon_common"]               
-weapon_dict['plasma_gun_common'] = ["plasma_gun_common"]               
+weapon_dict['Bolter'] = ["bolter_common"]  
+weapon_dict['Heavy Bolter'] = ["heavy_bolter_common"] 
+weapon_dict['Flamer'] = ["flamer_common"]       
+weapon_dict['Lascannon'] = ["lascannon_common"]   
+weapon_dict['Meltagun'] = ["meltagun_common"]     
+weapon_dict['Missile Launcher'] = ["missile_launcher_common"]                
+weapon_dict['Plasma Cannon'] = ["plasma_cannon_common"]               
+weapon_dict['Plasma Gun'] = ["plasma_gun_common"]               
 
-gear_list = [armour_dict, head_dict, backpack_dict, melee_weapon_dict, melee_2h_weapon_dict, pistol_dict, weapon_dict]     
-
-unit_types = {}
-unit_types['common'] = ['power_armour_rare', 'space_marine_head', 'space_marine_backpack', None, None, None, 'bolter_common']
-unit_types['commander'] = ['power_armour_commander', 'gabriel_head', 'gabriel_backpack', None, 'doublehand_hammer_common', None, None]
-unit_types['heavy'] = ['power_armour_rare', 'space_marine_head', 'space_marine_backpack', None, None, None, 'heavy_bolter_common']
-unit_types['assault'] = ['power_armour_common', 'assault_marine_head', 'assault_marine_jumppack', 'power_axe_common', None, 'bolt_pistol_common', None]
+gear_list = [armour_dict, head_dict, backpack_dict] 
+weapon_gear_list = [weapon_dict, pistol_dict, melee_weapon_dict, melee_2h_weapon_dict]    
 
 anim_dict = {}
 anim_dict['idle_stand01'] = 'idle_stand01'
@@ -103,13 +99,13 @@ anim_dict['overwatch'] = 'aim_stand'
 anim_dict['melee'] = 'melee_attack01'
 
 unit_types = {}
-unit_types['marine_common'] = ['space_marine_head', 'power_armour_common', 'space_marine_backpack', None, None, None, 'bolter_common']
-unit_types['marine_hb'] = ['space_marine_head', 'power_armour_common', 'space_marine_backpack', None, None, None, 'heavy_bolter_common']
-unit_types['marine_epic'] = ['gabriel_head', 'power_armour_commander', 'gabriel_backpack', 'power_axe_common', 'bolt_pistol_common', None, None]
-unit_types['common'] = ['power_armour_rare', 'space_marine_head', 'space_marine_backpack', None, None, None, 'bolter_common']
-unit_types['commander'] = ['power_armour_commander', 'gabriel_head', 'gabriel_backpack', None, 'doublehand_hammer_common', None, None]
-unit_types['heavy'] = ['power_armour_rare', 'space_marine_head', 'space_marine_backpack', None, None, None, 'heavy_bolter_common']
-unit_types['assault'] = ['power_armour_common', 'assault_marine_head', 'assault_marine_jumppack', 'power_axe_common', None, 'bolt_pistol_common', None]
+unit_types['marine_common'] = ['space_marine_head', 'power_armour_common', 'space_marine_backpack']
+unit_types['marine_hb'] = ['space_marine_head', 'power_armour_common', 'space_marine_backpack']
+unit_types['marine_epic'] = ['gabriel_head', 'power_armour_commander', 'gabriel_backpack']
+unit_types['common'] = ['power_armour_rare', 'space_marine_head', 'space_marine_backpack']
+unit_types['commander'] = ['power_armour_commander', 'gabriel_head', 'gabriel_backpack']
+unit_types['heavy'] = ['power_armour_rare', 'space_marine_head', 'space_marine_backpack']
+unit_types['assault'] = ['power_armour_common', 'assault_marine_head', 'assault_marine_jumppack']
 
 #############################################################################
 # METHODS
@@ -202,11 +198,23 @@ def getHeadingAngle(h):
         angle = -45
     return angle
 
-def loadUnit(unit_type):
+def getUnitWeapons(unit):
+    wpn_list = ""
+    for w in unit['weapons']:
+        wpn_list += str(w['name']) + ','
+    wpn_list = wpn_list[:-1]
+    print wpn_list
+    return wpn_list
+
+def parseUnitWeapons(weapons):
+    return string.split(weapons,',')
+
+def loadUnit(unit_type, weapons):
     model = Actor('marine') 
     model.reparentTo(render)
     model.node_dict = {}
-    for dict in gear_list:
+    gear = gear_list + weapon_gear_list
+    for dict in gear:
         for g in dict.itervalues():
             for node in g:
                 if isinstance(node, tuple):
@@ -218,24 +226,40 @@ def loadUnit(unit_type):
                     model.node_dict[node] = model.find("**/"+node)
                     l = loader.loadTexture(node+"_dif.dds")
                     model.node_dict[node].setTexture(l)
-    initModels(model, unit_type)
-    initAnims(model, unit_type)
+    wpns = parseUnitWeapons(weapons)
+    initModels(model, unit_type, wpns)
+    initAnims(model, unit_type, wpns)
     return model
 
-def initModels(model, unit_type):
+def initModels(model, unit_type, wpns):
+    # Parsing dictionaries for armour, head and backpack types
     for gear in gear_list:
-        for item in gear.itervalues():
-            for node in item:
+        for item in gear.iterkeys():
+            if item not in unit_types[unit_type]:
+                for node in gear[item]:
+                    if isinstance(node, tuple):
+                        n = node[0]
+                    else:
+                        n = node
+                    model.node_dict[n] = model.find("**/"+n)
+                    model.node_dict[n].detachNode()
+                    #model.node_dict[n].remove()
+
+    # Parsing for weapons
+    d = dict(weapon_dict.items() + melee_2h_weapon_dict.items() + pistol_dict.items() + melee_weapon_dict.items())
+    for item in d.iterkeys():
+        if item not in wpns:
+            for node in d[item]:
                 if isinstance(node, tuple):
                     n = node[0]
                 else:
                     n = node
                 model.node_dict[n] = model.find("**/"+n)
-                if n not in unit_types[unit_type]:
-                    model.node_dict[n].detachNode()
-                    #model.node_dict[n].remove()
+                model.node_dict[n].detachNode()
+
     
-def initAnims(model, unit_type):
+    
+def initAnims(model, unit_type, wpns):
     model.anims = {}
     if unit_type == 'common' or unit_type == 'marine_common' or unit_type == 'marine_hb':
         prefix = 'range_burst/'

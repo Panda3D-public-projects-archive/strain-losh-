@@ -138,25 +138,25 @@ class LoginScreen():
         
         
         ground_level = -1.6
-        self.commoner1 = utils.loadUnit('common')
+        self.commoner1 = utils.loadUnit('common', 'Bolter')
         self.commoner1.setPos(-3, 25, ground_level)
         self.commoner1.loop('idle_combat01')
-        self.commoner2 = utils.loadUnit('common')
+        self.commoner2 = utils.loadUnit('common', 'Bolter')
         self.commoner2.setPos(-4.5, 23.5, ground_level)
         self.commoner2.loop('idle_combat02')           
-        self.heavy = utils.loadUnit('heavy')
+        self.heavy = utils.loadUnit('heavy', 'Heavy Bolter')
         self.heavy.setPos(-2, 27, ground_level)
         self.heavy.loop('idle_stand03')             
-        self.commander = utils.loadUnit('commander')
+        self.commander = utils.loadUnit('commander', 'Thunder Hammer')
         self.commander.setPos(0, 20, ground_level)
         self.commander.loop('idle_stand02') 
-        self.assault = utils.loadUnit('assault')
+        self.assault = utils.loadUnit('assault', 'Chain Sword,Bolt Pistol')
         self.assault.setPos(4, 25, ground_level)
         self.assault.loop('idle_stand01')
-        self.assault2 = utils.loadUnit('assault')
+        self.assault2 = utils.loadUnit('assault', 'Power Axe,Bolt Pistol')
         self.assault2.setPos(2.5, 23, ground_level)
         self.assault2.loop('idle_stand02')  
-        self.assault3 = utils.loadUnit('assault')
+        self.assault3 = utils.loadUnit('assault', 'Chain Sword,Plasma Pistol')
         self.assault3.setPos(6, 23, ground_level)
         self.assault3.loop('idle_stand03')  
         
@@ -209,7 +209,7 @@ class SceneGraph():
         # Create main update task
         taskMgr.add(self.animTask, "anim_task")        
         
-        print "base.win.getGsg().getMaxTextureStages() = "+str(base.win.getGsg().getMaxTextureStages())
+        #print "base.win.getGsg().getMaxTextureStages() = "+str(base.win.getGsg().getMaxTextureStages())
     
     def loadLevel(self, level):
         if self.comp_inited['level']:
@@ -303,13 +303,14 @@ class SceneGraph():
         self.unit_node = self.node.attachNewNode('unit_node')
                     
         for unit_id in self.parent.units.iterkeys():
-            unit_model = self.loadUnit(unit_id)
+            wpn_list = utils.getUnitWeapons(self.parent.units[unit_id])
+            unit_model = self.loadUnit(unit_id, wpn_list)
             self.showUnit(unit_model)
                         
         self.comp_inited['units'] = True  
         
-    def loadUnit(self, unit_id):
-        um = UnitModel(self, unit_id)
+    def loadUnit(self, unit_id, wpn_list):
+        um = UnitModel(self, unit_id, wpn_list)
         # Keep unit nodepath in dictionary of all unit nodepaths
         self.unit_np_dict[unit_id] = um
         return um
@@ -374,7 +375,8 @@ class SceneGraph():
     def loadAltRenderModel(self, unit_id):
         if not self.comp_inited['alt_render']:
             return
-        self.off_model = UnitModel(self, unit_id, off=True)
+        wpn_list = utils.getUnitWeapons(self.parent.units[unit_id])
+        self.off_model = UnitModel(self, unit_id, wpn_list, off=True)
         self.off_model.reparentTo(self.alt_render)
         self.off_model.model.play('idle_stand01')
         
@@ -782,7 +784,7 @@ class Client(DirectObject):
                 s.append(i)
             elif action_type == "rotate":
                 end_pos = Point3(action[1][0] + utils.MODEL_OFFSET, action[1][1] + utils.MODEL_OFFSET, utils.GROUND_LEVEL)
-                i, duration, start_pos, heading = self.buildRotateAnim(unit_model, pos, end_pos, heading)
+                i, duration, pos, heading = self.buildRotateAnim(unit_model, pos, end_pos, heading)
                 d += duration
                 s.append(i)
             elif action_type == "spot":

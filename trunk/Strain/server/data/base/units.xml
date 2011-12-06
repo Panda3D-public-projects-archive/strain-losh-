@@ -6,7 +6,7 @@
 					armour="Power" weapons="Heavy Bolter"/>
 					
 	<unit name="marine_epic" 	m="4" ws="4" bs="4" s="4" t="4" w="6" i="4" a="1" ld="8" ap="6"
-					armour="Power" weapons="Bolt Pistol,Power Axe"/>
+					armour="Power" weapons="Bolt Pistol,Power Glove"/>
 					
 	<unit name="commissar" 		m="4" ws="4" bs="4" s="3" t="3" w="5" i="4" a="1" ld="9" ap="5"
 					armour="Flak" weapons="Bolt Pistol,Sword"/>
