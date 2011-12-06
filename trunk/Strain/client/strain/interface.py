@@ -247,7 +247,7 @@ class Interface(DirectObject.DirectObject):
         else:
             self.overwatch.turnOff()
         
-        if self.parent.units[unit_id]['heavy_weapon'] == True:
+        if 'set_up' in self.parent.units[unit_id]:
             if self.parent.units[unit_id]['set_up'] == True:
                 self.set_up.turnOn()
             else:
@@ -547,7 +547,8 @@ class Interface(DirectObject.DirectObject):
     def setButtons(self, unit_id):
         for button in self.action_buttons.itervalues():
             button.enable()
-        if self.parent.units[unit_id]['heavy_weapon'] == False:
+        #if self.parent.units[unit_id]['heavy_weapon'] == False:
+        if not 'set_up' in self.parent.units[unit_id]:
             self.set_up.disable()
             
     def clearButtons(self):
