@@ -203,7 +203,6 @@ def getUnitWeapons(unit):
     for w in unit['weapons']:
         wpn_list += str(w['name']) + ','
     wpn_list = wpn_list[:-1]
-    print wpn_list
     return wpn_list
 
 def parseUnitWeapons(weapons):
