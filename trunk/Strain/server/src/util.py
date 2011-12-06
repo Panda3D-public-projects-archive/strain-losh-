@@ -30,7 +30,8 @@ class Notify():
         self.hdlr = logging.handlers.RotatingFileHandler('Engine.log', maxBytes = 1024*1024*3 )
         self.formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
         self.hdlr.setFormatter(self.formatter)
-        self.logger.addHandler(self.hdlr) 
+        if len( self.logger.handlers ) < 1:
+            self.logger.addHandler( self.hdlr )
         self.logger.setLevel(logging.DEBUG)
 
     def critical(self,msg, *args):
