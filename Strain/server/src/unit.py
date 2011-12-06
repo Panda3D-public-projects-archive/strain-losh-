@@ -299,6 +299,12 @@ class Unit():
         if math.fabs( angle1-angle2 ) <= util._PI_4:
             return True
 
+    def amIStuck(self):
+        if self.hasHeavyWeapon() and self.set_up:
+            return "Need to teardown heavy weapon first."
+            
+        
+        return False
 
 #-----------------------------------------------------------------------
 def loadUnit( name ):

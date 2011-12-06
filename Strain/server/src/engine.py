@@ -902,6 +902,12 @@ class Engine( Thread ):
         if not unit:
             return
         
+        
+        msg = unit.amIStuck()
+        if msg:
+            EngMsg.error( msg, source )            
+            return 
+        
         #list that we will send to owning player        
         my_actions = []
         
@@ -1084,7 +1090,7 @@ class Engine( Thread ):
         if( target_id in self.units ) == False:
             notify.critical( "Got wrong unit id:%s", target_id )
             EngMsg.error( "Wrong unit id.", source )
-            return None
+            return
 
         target = self.units[target_id]
 
@@ -1092,14 +1098,19 @@ class Engine( Thread ):
         if target.owner.connection == source:
             notify.critical( "Client:%s\ttried to shoot his own unit." % source.getAddress() )
             EngMsg.error( "You cannot shoot you own units.", source )
-            return None
+            return
         
         
         vis = self.getLOS( shooter, target )
         if not vis:
             EngMsg.error( "No line of sight to target.", source)
-         
-         
+            return
+                 
+        
+        if shooter.hasHeavyWeapon() and shooter.set_up == False:
+            EngMsg.error( "Need to set up heavy weapon before shooting.", source )
+            return
+        
         #---------------- main shoot event ------------------------
         shoot_msg = shooter.shoot( target, vis )
          
