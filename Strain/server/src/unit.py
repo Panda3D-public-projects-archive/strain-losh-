@@ -36,6 +36,7 @@ class Unit():
         self.last_action = 'spawn'
         #self.set_up = False #for heavy weapons this is only initilaized if a unit has a heavy weapon
         self.height = 2
+        self.heavy_weapon = None
         
         self.ap, self.default_ap = 0, 0
         self.hp, self.default_hp = 0, 0
@@ -337,6 +338,9 @@ def loadUnit( name ):
         #initialize set_up if needed
         if unit.hasHeavyWeapon():
             unit.set_up = False
+            unit.heavy_weapon = True
+        else:
+            unit.heavy_weapon = False
 
         unit.default_ap = int( p.attributes['ap'].value )
         unit.default_hp = int( p.attributes['w'].value )
