@@ -337,7 +337,6 @@ class SceneGraph():
             return
         
         self.unit_node.removeNode()
-        self.unit_np_list = []
         self.unit_np_dict = {}
         self.comp_inited['units'] = False
           
