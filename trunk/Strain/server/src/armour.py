@@ -16,6 +16,10 @@ class Armour():
     def save( self, enemy_weapon ):
         
         effective_armour = self.front
+        effective_ap = 0
+        
+        if enemy_weapon.ap:
+            effective_ap = enemy_weapon.ap
         
         #see if i have a storm shield, if so raise my effective armour by 1 if attack is from front
         for wpn in self.owner.weapons:
@@ -25,13 +29,13 @@ class Armour():
         
         percent_to_save = 100
         
-        if enemy_weapon.ap > effective_armour:
+        if effective_ap > effective_armour:
             return False
-        elif enemy_weapon.ap == effective_armour:
+        elif effective_ap == effective_armour:
             percent_to_save = 20
-        elif enemy_weapon.ap == effective_armour - 1:
+        elif effective_ap == effective_armour - 1:
             percent_to_save = 50
-        elif enemy_weapon.ap == effective_armour - 2:
+        elif effective_ap == effective_armour - 2:
             percent_to_save = 90
 
         if util.d100() <= percent_to_save:
