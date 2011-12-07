@@ -12,6 +12,7 @@ class Player:
         self.detected_enemies = []
         self.connection = None
         self.msg_lst = []
+        self.defeated = False
         pass
 
 
