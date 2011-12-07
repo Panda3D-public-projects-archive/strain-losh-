@@ -67,7 +67,7 @@ class EngMsg:
     def stopServer():
         for client, address, name in EngMsg.activeConnections[:]:
             EngMsg.disconnect(client, address, name)
-            EngMsg.logger.notify.info("Closing connection with: %s @ %s", name, address)
+            EngMsg.log.info("Closing connection with: %s @ %s", name, address)
     
         EngMsg.activeConnections = []
         
@@ -77,7 +77,7 @@ class EngMsg:
         EngMsg.cWriter = None
         EngMsg.tcpSocket = None
      
-        EngMsg.handshakedConnections = None
+        EngMsg.handshakedConnections.clear()
     
     @staticmethod
     def handleConnections():
