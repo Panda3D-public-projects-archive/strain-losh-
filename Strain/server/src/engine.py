@@ -42,11 +42,12 @@ class Engine( Thread ):
         self.units = {}
         
         self.turn = 0
+        self.turn_sequence = []
         self.active_player = None
                 
         self.name = "EngineThread"
 
-        self.player_turn_sequence = []
+        self.observer = Player( OBSERVER_ID, 'observer', None )
 
 
     def run(self):
@@ -57,7 +58,7 @@ class Engine( Thread ):
         lvl = "level2.txt"
         self.level = Level( lvl )
         notify.info("Loaded level:%s", lvl )
-      
+
         self.loadArmyList()
       
         self.firstTurn()
@@ -83,8 +84,11 @@ class Engine( Thread ):
         #we are shutting down everything   
         EngMsg.stopServer()       
         
-        notify.info( "++++++++++++++++++++++++Engine stopped!++++++++++++++++++++++++" ) 
-
+        notify.info( "++++++++++++++++++++++++Engine stopped!++++++++++++++++++++++++" )
+        
+        #restart server 
+        Engine().start()
+        
         return 0
 
 
@@ -176,6 +180,11 @@ class Engine( Thread ):
     def unitUpdate(self, unit_id, param, source ):
 
         unit = self.findAndValidateUnit( unit_id, source )
+        player = self.findPlayer( source )
+        
+        if player != self.active_player:
+            EngMsg.error( "It is not your turn.", source )
+            return                    
         
         if param == OVERWATCH:
             if unit.ap >= 2:
@@ -199,7 +208,6 @@ class Engine( Thread ):
                     EngMsg.error( msg, source )
                     return
                     
-        player = self.findPlayer( source )                    
         player.addUnitMsg( compileUnit(unit) )
         
         
@@ -231,8 +239,6 @@ class Engine( Thread ):
         for p in xmldoc.getElementsByTagName( 'player' ):
             player = Player( p.attributes['id'].value, p.attributes['name'].value, p.attributes['team'].value )                        
             
-            self.player_turn_sequence.append( player )
-            
             for u in p.getElementsByTagName( 'unit' ):
                 
                 x = int( u.attributes['x'].value )
@@ -262,13 +268,10 @@ class Engine( Thread ):
     
         xmldoc.unlink()
         
-        self.observer = Player( OBSERVER_ID, 'observer', None )
-        self.players.append( self.observer )
-        for unt in self.units.itervalues():
-            self.observer.visible_enemies.append( unt )
-
         notify.info( "Army lists loaded OK" )
 
+        self.turn_sequence = self.players
+        
 
     def endTurn(self, source):
         
@@ -278,40 +281,39 @@ class Engine( Thread ):
 #            EngMsg.error( "It's not your turn.", source)
 #            return
         
-        
-        if self.active_player == self.player_turn_sequence[-1]:
-            self.active_player = None          
-        
-        #check victory conditions
-        
-        #check if a player was left without any units, if so than delete him
-        for p in self.players[:]:
-            if p.id == OBSERVER_ID:
-                continue
-            if not p.units:
-                if p.connection:
-                    EngMsg.error('U have no more units... pathetic...', p.connection)
-                EngMsg.error( p.name + ' was defeated!!!' )
-                self.players.remove(p)
-        
-        #check if there is only one player left
-        if len( self.players ) == 2:
-            if p.connection:
-                EngMsg.error('U WIN!', p.connection)
-            EngMsg.error( self.players[0].name + ' WINS! He is the best!!@' )
-            
-        #if there are no more players - its a draw?
-        if len( self.players ) == 1:
-            EngMsg.error( 'Draw! really?!' )
-        
-        
+        if self.checkVictoryConditions():
+            self.stop = True
+            return
+
         self.beginTurn()
         
-        pass
+        
+        
+    def checkVictoryConditions(self):
+        
+        for p in self.players:
+            if not p.units:
+                p.addMsg( 'U have no more units... hahahhhah' )
+                EngMsg.error( p.name + ' was defeated!!!' )
+                p.defeated = True
+                self.turn_sequence.remove( p )
+                
+        if len( self.turn_sequence ) == 1:            
+            #send derogatory messages to losers
+            for p in self.players:
+                if p == self.turn_sequence[0]:
+                    p.addMsg( 'U WIN!!!' )
+                else:
+                    p.addMsg( self.turn_sequence[0].name + ' WINS! ...and you lose!' )
+
+            print "winner:", self.turn_sequence[0].name
+            return True
+                            
+        return False
 
 
     def firstTurn(self):
-        self.active_player = self.player_turn_sequence[0]
+        self.active_player = self.players[0]
         self.turn = 1
 
         print "turn:", self.turn, "\tplayer:", self.active_player.name
@@ -329,23 +331,23 @@ class Engine( Thread ):
             p.msg_lst = []
             p.addEngineStateMsg( util.compileState(self, p) )
             p.addNewTurnMsg( util.compileNewTurn(self, p) )        
-
+        
+                             
 
     def beginTurn(self):
 
-        if not self.active_player:
-            self.active_player = self.player_turn_sequence[0]
-            self.turn += 1
-        else:
-            i = self.player_turn_sequence.index(self.active_player)
-            self.active_player = self.player_turn_sequence[i+1 % len( self.player_turn_sequence )]
+        #if this is last player in list
+        if self.active_player == self.turn_sequence[-1]:
+            self.active_player = self.turn_sequence[0]
+        else:                
+            i = self.turn_sequence.index( self.active_player )            
+            self.active_player = self.turn_sequence[ i + 1 ]
 
         print "turn:", self.turn, "\tplayer:", self.active_player.name
 
         #go through all units of active player and reset them
-        for unit in self.units.itervalues():   
-            if unit.owner == self.active_player:            
-                unit.newTurn( self.turn )
+        for unit in self.active_player.units:               
+            unit.newTurn( self.turn )
           
         #check visibility
         self.updateVisibilityAndSendVanishAndSpotMessages()
