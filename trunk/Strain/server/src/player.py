@@ -58,6 +58,13 @@ class Player:
             self.msg_lst.append( msg )
 
 
+    def addErrorMsg(self, msg ):
+        if self.connection:
+            EngMsg.error( msg, self.connection )
+        else:
+            self.msg_lst.append( msg )
+
+
     def addChatMsg(self, msg, sender):
         if self.connection:
             EngMsg.chat( msg, sender, self.connection )

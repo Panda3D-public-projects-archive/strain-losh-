@@ -42,7 +42,6 @@ class Engine( Thread ):
         self.units = {}
         
         self.turn = 0
-        self.turn_sequence = []
         self.active_player = None
                 
         self.name = "EngineThread"
@@ -63,7 +62,7 @@ class Engine( Thread ):
       
         self.firstTurn()
 
-
+        
         #+++++++++++++++++++++++++++++++++++++++++++++MAIN LOOP+++++++++++++++++++++++++++++++++++++++++++++
         #+++++++++++++++++++++++++++++++++++++++++++++MAIN LOOP+++++++++++++++++++++++++++++++++++++++++++++
         while( self.stop == False ):
@@ -90,53 +89,6 @@ class Engine( Thread ):
         Engine().start()
         
         return 0
-
-
-    def testLevelLOS(self):
-        dic = {}
-        
-        print self.getLOS( self.units[0], self.units[1] )
-        return
-        
-        
-        print "poceo test"
-        for x1 in xrange(self.level.maxX):
-            for y1 in xrange( self.level.maxY ):
-                for x2 in xrange(self.level.maxX):
-                    for y2 in xrange( self.level.maxY ):
-                        t1 = (x1,y1)
-                        t2 = (x2,y2)
-                        dic[ (t1,t2) ] = self.getTiles2D( t1 , t2 )
-                        try:dic[ (t1,t2) ].pop()
-                        except:pass
-        
-        print "zavrsio filanje"
-        
-        total = 0
-        drukcijih = 0
-        for t1, t2 in dic:
-            lista = []
-            listb = []
-            
-            for a,b in dic[ (t1,t2)]: #@UnusedVariable
-                lista.append(a)
-            for a,b in dic[ (t2,t1)]: #@UnusedVariable
-                listb.append(a)
-            
-            #listb.reverse()
-            
-            for idx,a in enumerate(lista):
-                if a != listb[idx]:
-                    if drukcijih < 7:
-                        print "--------nije jednako:", lista, listb 
-                    drukcijih += 1
-                    break
-            total += 1
-            
-                
-        print "zavrsio test, total:",total,"\tdrukcijih:", drukcijih
-        pass
-        
 
 
     def handleMsg(self, msg, source):
@@ -269,19 +221,18 @@ class Engine( Thread ):
         xmldoc.unlink()
         
         notify.info( "Army lists loaded OK" )
-
-        self.turn_sequence = self.players
         
 
     def endTurn(self, source):
         
-        player = self.findPlayer( source )
-        
+#        player = self.findPlayer( source )       
 #        if player != self.active_player:
 #            EngMsg.error( "It's not your turn.", source)
 #            return
         
         if self.checkVictoryConditions():
+            EngMsg.error( "Server restarting" )
+            time.sleep(3)
             self.stop = True
             return
 
@@ -291,25 +242,67 @@ class Engine( Thread ):
         
     def checkVictoryConditions(self):
         
+        #mark all defeated players
         for p in self.players:
+            if p.defeated:
+                continue
             if not p.units:
-                p.addMsg( 'U have no more units... hahahhhah' )
+                p.addErrorMsg( 'U have no more units... hahahhhah' )
                 EngMsg.error( p.name + ' was defeated!!!' )
                 p.defeated = True
-                self.turn_sequence.remove( p )
                 
-        if len( self.turn_sequence ) == 1:            
-            #send derogatory messages to losers
-            for p in self.players:
-                if p == self.turn_sequence[0]:
-                    p.addMsg( 'U WIN!!!' )
+        
+        #find a player who is alive, and check if only he/his team are alive
+        for p in self.players:
+            if not p.defeated:                
+                for p2 in self.players:
+                    if p == p2 or p.team == p2.team:
+                        continue
+                    if not p2.defeated:
+                        return False
+                
+                
+        #if we came to here, than we have a winning player/team
+        #find a winner
+        winner = None
+        winning_team = None
+        for p in self.players:
+            if not p.defeated:
+                if not winner:
+                    winner = p
                 else:
-                    p.addMsg( self.turn_sequence[0].name + ' WINS! ...and you lose!' )
+                    winning_team = p.team
+                    break
 
-            print "winner:", self.turn_sequence[0].name
-            return True
-                            
-        return False
+        #draw!?
+        if not winner and not winning_team:
+            for p in self.players:
+                p.addErrorMsg( 'a draw.... pathetic...')
+                return True
+
+
+        #send derogatory messages to losers
+        for p in self.players:
+            
+            #a team won
+            if winning_team:            
+                if p.team == winning_team:
+                    p.addErrorMsg( 'YOU WIN!!!' )
+                else:
+                    p.addErrorMsg( 'team ' + winning_team + ' WINS! ...and you lose!' )
+            #just one player won
+            else:
+                if p == winner:
+                    p.addErrorMsg( 'YOU WIN!!!' )
+                else:
+                    p.addErrorMsg( 'player ' + winner.name + ' WINS! ...and you lose!' )
+
+        if winning_team:
+            print "winning team:", winning_team
+        else:
+            print "winner:", winner.name
+        return True
+
 
 
     def firstTurn(self):
@@ -334,14 +327,39 @@ class Engine( Thread ):
         
                              
 
+    def findNextPlayer(self):
+        
+        i = 0
+        
+        if self.active_player == self.players[-1]:
+            i = -1
+            self.turn += 1
+        else:
+            i = self.players.index( self.active_player )
+        
+        tmp_p = None
+
+        for p in self.players[i+1:]:
+            if p.defeated:
+                continue
+            tmp_p = p
+            break
+        
+        if not tmp_p:
+            self.turn += 1
+            for p in self.players:
+                if p.defeated:
+                    continue
+                self.active_player = p
+                return
+        else:
+            self.active_player = tmp_p
+        
+             
+
     def beginTurn(self):
 
-        #if this is last player in list
-        if self.active_player == self.turn_sequence[-1]:
-            self.active_player = self.turn_sequence[0]
-        else:                
-            i = self.turn_sequence.index( self.active_player )            
-            self.active_player = self.turn_sequence[ i + 1 ]
+        self.findNextPlayer()
 
         print "turn:", self.turn, "\tplayer:", self.active_player.name
 
@@ -1222,7 +1240,7 @@ class Engine( Thread ):
                 if enemy not in tmp_enemy_list:
                     p.addMsg( (VANISH, enemy.id) )
                     p.visible_enemies.remove( enemy )
-                    print p.name, (VANISH, enemy.id)
+                    
         
         #add new enemies
         for p in self.players:
