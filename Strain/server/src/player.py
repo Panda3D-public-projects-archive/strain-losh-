@@ -72,3 +72,15 @@ class Player:
             self.msg_lst.append( (CHAT, msg, sender) )
         
 
+    def saveMsgs(self):
+        f = open( self.name + '.log', 'w')
+        
+#        for msg in self.msg_lst:
+            
+#        f.writelines( self.msg_lst )
+        f.write( pickle.dumps(self.msg_lst, pickle.HIGHEST_PROTOCOL))
+            
+        f.close()
+            
+    
+
