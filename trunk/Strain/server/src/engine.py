@@ -222,9 +222,9 @@ class Engine( Thread ):
         
         notify.info( "Army lists loaded OK" )
         
-        self.players.append( self.observer )
-        for u in self.units.itervalues():
-            self.observer.units.append( u )
+        #self.players.append( self.observer )
+        #for u in self.units.itervalues():
+        #    self.observer.units.append( u )
         
         
 
@@ -237,6 +237,7 @@ class Engine( Thread ):
         
         if self.checkVictoryConditions():
             EngMsg.error( "Server restarting" )
+            self.observer.saveMsgs()
             time.sleep(3)
             self.stop = True
             return
