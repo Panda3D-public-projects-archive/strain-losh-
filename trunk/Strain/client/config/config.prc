@@ -10,6 +10,7 @@
 load-display pandagl
 #load-display pandadx9
 #load-display pandadx8
+#load-display tinydisplay
 
 window-type  none
 window-title Strain
