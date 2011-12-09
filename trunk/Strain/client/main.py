@@ -899,17 +899,17 @@ class Client(DirectObject):
                 shoot_tile = action[2] # (x,y) pos of targeted tile
                 weapon = action[3] # weapon id
                 damage_list = action[4] # list of all damaged/missed/bounced/killed units
-                #TODO: ogs: handle shooter_id = -1
-                shooter_model = self.sgm.unit_np_dict[shooter_id]
-                a = self.buildShootAnim(shooter_model, weapon)
-                shooter_pos =  Point3(self.units[shooter_id]['pos'][0] + utils.MODEL_OFFSET, 
-                                      self.units[shooter_id]['pos'][1] + utils.MODEL_OFFSET,
-                                      utils.GROUND_LEVEL
-                                      )
-                b = self.buildBulletAnim(shooter_pos, shoot_tile)
-                i = self.buildDamageAnim(damage_list)
-                bi = Sequence(b, i)
-                s.append(Parallel(a, bi))
+                if shooter_id >= 0:
+                    shooter_model = self.sgm.unit_np_dict[shooter_id]
+                    a = self.buildShootAnim(shooter_model, weapon)
+                    shooter_pos =  Point3(self.units[shooter_id]['pos'][0] + utils.MODEL_OFFSET, 
+                                          self.units[shooter_id]['pos'][1] + utils.MODEL_OFFSET,
+                                          utils.GROUND_LEVEL
+                                          )
+                    b = self.buildBulletAnim(shooter_pos, shoot_tile)
+                    i = self.buildDamageAnim(damage_list)
+                    bi = Sequence(b, i)
+                    s.append(Parallel(a, bi))
             elif action_type == "melee":
                 shooter_id = action[1] # unit_id of the shooter
                 shoot_tile = action[2] # (x,y) pos of targeted tile
