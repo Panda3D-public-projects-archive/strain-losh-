@@ -47,7 +47,7 @@ class Engine( Thread ):
         self.name = "EngineThread"
 
         self.observer = Player( OBSERVER_ID, 'observer', None )
-
+        self.observer.defeated = True
 
     def run(self):
         engine._instance = self
@@ -222,6 +222,11 @@ class Engine( Thread ):
         
         notify.info( "Army lists loaded OK" )
         
+        self.players.append( self.observer )
+        for u in self.units.itervalues():
+            self.observer.units.append( u )
+        
+        
 
     def endTurn(self, source):
         
@@ -378,6 +383,10 @@ class Engine( Thread ):
 
     def getLOS(self, beholder, target ):
         """0-cant see, 1-partial, 2-full"""
+        
+        if beholder.pos == target.pos:
+            return 2
+        
         b_pos = beholder.pos + ( ( self.level.tuppleGet( beholder.pos ) + beholder.height -1 ) , )
         #print "print "beh:", beholder.pos, "\ttar:", target.pos 
         seen = 0        
