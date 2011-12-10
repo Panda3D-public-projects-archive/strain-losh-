@@ -49,6 +49,7 @@ class Engine( Thread ):
         self.observer = Player( OBSERVER_ID, 'observer', None )
         self.observer.defeated = True
 
+
     def run(self):
         engine._instance = self
         print "Engine started"
@@ -161,6 +162,7 @@ class Engine( Thread ):
                     return
                     
         player.addUnitMsg( compileUnit(unit) )
+        self.observer.addUnitMsg( compileUnit(unit) )
         
         
         
@@ -176,6 +178,9 @@ class Engine( Thread ):
             else:                    
                 p.addChatMsg( msg, sender.name )
             
+        if not to_allies:
+            self.observer.addChatMsg( msg, sender.name )
+                
                 
     def loadArmyList(self):
         
@@ -221,12 +226,7 @@ class Engine( Thread ):
         xmldoc.unlink()
         
         notify.info( "Army lists loaded OK" )
-        
-        #self.players.append( self.observer )
-        #for u in self.units.itervalues():
-        #    self.observer.units.append( u )
-        
-        
+                
 
     def endTurn(self, source):
         
@@ -283,9 +283,10 @@ class Engine( Thread ):
         #draw!?
         if not winner and not winning_team:
             for p in self.players:
-                p.addErrorMsg( 'a draw.... pathetic...')
+                p.addErrorMsg( 'a draw.... pathetic...' )
                 return True
-
+                if p == self.players[-1]:
+                    self.observer.addErrorMsg( 'a draw.... pathetic...' )
 
         #send derogatory messages to losers
         for p in self.players:
@@ -305,8 +306,10 @@ class Engine( Thread ):
 
         if winning_team:
             print "winning team:", winning_team
+            self.observer.addErrorMsg( "winning team:" + str(winning_team) )
         else:
             print "winner:", winner.name
+            self.observer.addErrorMsg( "winner:" + winner.name )
         return True
 
 
@@ -330,8 +333,10 @@ class Engine( Thread ):
             p.msg_lst = []
             p.addEngineStateMsg( util.compileState(self, p) )
             p.addNewTurnMsg( util.compileNewTurn(self, p) )        
-        
-                             
+                                     
+        self.observer.addEngineStateMsg( util.compileState(self, p) )
+        self.observer.addNewTurnMsg( util.compileNewTurn(self, p) )        
+
 
     def findNextPlayer(self):
         
@@ -380,6 +385,7 @@ class Engine( Thread ):
         for p in self.players:
             p.addNewTurnMsg( util.compileNewTurn(self, p) )
         
+        self.observer.addNewTurnMsg( util.compileNewTurn(self, p) )
         
 
     def getLOS(self, beholder, target ):
@@ -529,87 +535,6 @@ class Engine( Thread ):
         return list_visible_tiles
 
                 
-    def getTiles2D(self, t1, t2 ):
-        """this method returns list of tuples( (x,y, visibility ); visibility = {0:clear, 1:partial, 2:not visible}"""    
-        #we can't look at ourselves
-        if( t1 == t2 ):
-            return []
-        
-        x1, y1 = t1
-        x2, y2 = t2
-        
-        absx0 = math.fabs(x2 - x1);
-        absy0 = math.fabs(y2 - y1);
-        
-        if( absx0 > absy0 ):
-            if x2 < x1:
-                x1, y1 = t2
-                x2, y2 = t1
-        else:
-            if y2 < y1:
-                x1, y1 = t2
-                x2, y2 = t1
-        
-        
-        x = int( x1 );
-        y = int( y1 );
-
-        #distance, in tiles, between t1 and currently tested tile
-        distance = 1
-
-        #this is the list we are going to return at the end
-        list_visible_tiles = []
-        
-        #we add tiles to list with this visibility, if we encounter a partial obstacle, we change this to 1
-        #so that all the next tiles we add are partial as well
-        visibility = 0
-        
-        if( absx0 > absy0 ):
-            sgny0 = util.signum( y2 - y1 );
-            y_x = absy0/absx0
-            D = y_x -0.5;
-
-            for i in xrange( int( absx0 ) ): #@UnusedVariable
-                lastx, lasty = x, y
-                
-                if( D > 0 ):
-                    y += sgny0
-                    D -= 1
-
-                x += 1
-                D += y_x
-                
-                #=========================TEST==========================================
-                list_visible_tiles, visibility = self.testTile( x, y, distance, list_visible_tiles, visibility, lastx, lasty )
-                
-                distance += 1
-            
-        #//(y0 >= x0)            
-        else:
-            sgnx0 = util.signum( x2 - x1 );
-            x_y = absx0/absy0
-            D = x_y -0.5;
-
-            for i in xrange( int( absy0 ) ): #@UnusedVariable
-                lastx, lasty = x, y
-        
-                if( D > 0 ):
-                    x += sgnx0
-                    D -= 1.0
-            
-                y += 1
-                D += x_y
-                
-                #=========================TEST==========================================
-                list_visible_tiles, visibility = self.testTile( x, y, distance, list_visible_tiles, visibility, lastx, lasty )
-                
-                distance += 1
-                
-                
-        return list_visible_tiles
-                
-
-    #tests the tile for visibility
     def testTile3D(self, pos, lastpos ):
         
         #level bounds
@@ -665,71 +590,13 @@ class Engine( Thread ):
                             return False
                 else:
                     return True
-
-            
-                
+        
         return True
         
-
-    #tests the tile for visibility
-    def testTile(self, x, y, distance, list_visible_tiles, visibility, lastx, lasty ):
-        
-        #level bounds
-        if( self.level.outOfBounds(x, y) ):
-            return( list_visible_tiles, visibility )
-        
-        #if we can't see here, set visibility to 2, and return
-        if( self.level._level_data[x][y] > 1 ):
-            visibility = 2
-            list_visible_tiles.append( ( (x,y), visibility) )                    
-            return( list_visible_tiles, visibility )
-        
-        #partial view, increase visibility by one 
-        if( self.level._level_data[x][y] == 1 ):
-            #if this is a tile next the origin, than ignore the partial
-            if distance > 1 and visibility < 2:
-                    visibility += 1
-    
-        #diagonal
-        if lastx != x and lasty != y:
-            
-            #if both side tiles are totally blocked, just set visibility to 2 and return
-            if self.level._level_data[x][lasty] > 1 and self.level._level_data[lastx][y] > 1:
-                visibility = 2
-                
-            #if both side tiles are partially blocked, set partial visibility
-            elif self.level._level_data[x][lasty] == 1 and self.level._level_data[lastx][y] == 1:
-                if distance > 1 and visibility < 2:                    
-                        visibility += 1
-                
-            #if one side tile is completely blocked
-            elif self.level._level_data[x][lasty] >= 2:
-                
-                #if other side tile is empty, or partial, treat it as partial cover
-                if self.level._level_data[lastx][y] <= 1:
-                    if distance > 1 and visibility < 2:                    
-                            visibility += 1
-                
-            #if one side tile is completely blocked
-            elif self.level._level_data[lastx][y] >= 2:
-                
-                #if other side tile is empty, or partial, treat it as partial cover
-                if self.level._level_data[x][lasty] <= 1:
-                    if distance > 1 and visibility < 2:                    
-                            visibility += 1
-                
-        
-        
-        list_visible_tiles.append( ( (x,y), visibility) )                    
-        return( list_visible_tiles, visibility )
-
-
-
 
     def getMoveDict(self, unit, returnOrigin = False ):    
                 
         final_dict = {}
-
         open_list = [(unit.pos,unit.ap)]
         
         for tile, actionpoints in open_list:
@@ -740,23 +607,18 @@ class Engine( Thread ):
                     if( dx == 0 and dy == 0):
                         continue
                     
-                    
                     #we can't check our starting position
                     if( tile[0] + dx == unit.pos[0] and tile[1] + dy == unit.pos[1] ):
                         continue
                     
-                    
                     x = int( tile[0] + dx )
                     y = int( tile[1] + dy )
-                    
                     
                     if( self.level.outOfBounds(x, y) ):
                         continue
                     
-                    
                     if( self.canIMoveHere(unit, tile, dx, dy) == False ):
                         continue                   
-                    
                     
                     #if we are checking diagonally
                     if( dx == dy or dx == -dy ):
@@ -783,8 +645,6 @@ class Engine( Thread ):
             return final_dict
         
         return final_dict
-  
- 
 
 
     def canIMoveHere(self, unit, position, dx, dy ):
@@ -829,8 +689,6 @@ class Engine( Thread ):
 
             
         return True
-        
-
 
     
     def getPath(self, unit, target_tile ):
@@ -838,25 +696,19 @@ class Engine( Thread ):
         #if we are trying to find a path to the tile we are on
         if( target_tile == unit.pos ):
             return[]
-            
         
         moveDict = self.getMoveDict(unit, True)
 
-        
         #if target_tile tile is not in the move list, then raise alarm
         if (target_tile in moveDict) == False:
             print "getPath() got an invalid target_tile"
             notify.critical("getPath() got an invalid target tile:%s", target_tile )
             raise Exception( "Trying to move to an invalid target_tile:%s", target_tile )
-            
-        
         
         x = target_tile[0]
         y = target_tile[1]
         
-        
         path_list = [ (target_tile, moveDict[target_tile]) ]
-        
         
         while( 1 ):
         
@@ -874,7 +726,6 @@ class Engine( Thread ):
                     #check if the point is even in the list
                     if (pt in moveDict) == False:
                         continue
-                    
                     
                     #if we can't move here just skip
                     if( self.canIMoveHere( unit, (x,y), dx, dy) == False ):
@@ -909,7 +760,7 @@ class Engine( Thread ):
         #check to see if this is the owner
         if unit.owner.connection != source:
             notify.critical( "Client:%s\ttried to do an action with unit that he does not own" % source.getAddress() )
-            EngMsg.error( "You cannot do this to a unit you do not own." )
+            EngMsg.error( "You cannot do this to a unit you do not own.", source )
             return None
 
         return unit
@@ -932,11 +783,12 @@ class Engine( Thread ):
         if not unit:
             return
         
-        
-        msg = unit.amIStuck()
-        if msg:
-            EngMsg.error( msg, source )            
-            return 
+        #this means we only need to rotate the unit
+        if unit.pos != new_position:
+            msg = unit.amIStuck()
+            if msg:
+                EngMsg.error( msg, source )            
+                return 
         
         #list that we will send to owning player        
         my_actions = []
@@ -987,7 +839,7 @@ class Engine( Thread ):
                  
                 self.checkEnemyVision( unit, actions_for_others )
                 
-                res_spot = self.checkMovementInterrupt( unit )
+                res_spot = self.didISpotAnyone( unit )
                 res_over = self.checkForOverwatch( unit ) 
                 if res_spot or res_over:
                     if res_spot:
@@ -1009,6 +861,7 @@ class Engine( Thread ):
             
         player = self.findPlayer( source )
         player.addMoveMsg( unit.id, my_actions )
+        self.observer.addMoveMsg( unit.id, my_actions )
         
         for plyr in actions_for_others:
             if actions_for_others[plyr]:
@@ -1016,6 +869,7 @@ class Engine( Thread ):
             
         #send this unit to owner    
         player.addUnitMsg( util.compileUnit(unit) )
+        self.observer.addUnitMsg( util.compileUnit(unit) )
         
         #send this unit to all others who see it, but not if the last message was vanish
         for plyr in actions_for_others:
@@ -1055,7 +909,7 @@ class Engine( Thread ):
             
         #go through all enemy players, if we see this unit we need to spot or vanish someone
         for p in self.players:
-            if p == unit.owner or p.id == OBSERVER_ID:
+            if p == unit.owner:
                 continue
             
             seen = 0
@@ -1076,7 +930,7 @@ class Engine( Thread ):
                 
     
     
-    def checkMovementInterrupt(self, unit ):
+    def didISpotAnyone(self, unit ):
         spotted = self.checkMyVision( unit )        
         ret_actions = []        
         
@@ -1084,7 +938,6 @@ class Engine( Thread ):
             for enemy in spotted:
                 unit.owner.visible_enemies.append( enemy )
                 ret_actions.append( ( SPOT, util.compileUnit(enemy)) )
-                
                         
         return ret_actions
     
@@ -1117,8 +970,8 @@ class Engine( Thread ):
             return
         
         if( target_id in self.units ) == False:
-            notify.critical( "Got wrong unit id:%s", target_id )
-            EngMsg.error( "Wrong unit id.", source )
+            notify.critical( "Got wrong target id:%s", target_id )
+            EngMsg.error( "Wrong target id.", source )
             return
 
         target = self.units[target_id]
@@ -1143,7 +996,6 @@ class Engine( Thread ):
         #---------------- main shoot event ------------------------
         shoot_msg = shooter.shoot( target, vis )
          
-               
         #if nothing happened, just return
         if not shoot_msg:
             return
@@ -1161,6 +1013,7 @@ class Engine( Thread ):
             #if this player is the one doing the shooting send him everything
             if shooter.owner == p:
                 p.addShootMsg( shoot_msg )
+                self.observer.addShootMsg( shoot_msg )
                 
             else:
                 #example message = [(ROTATE, 0, 3), (SHOOT, 0, (4, 7), u'Bolt Pistol', [('bounce', 6)])]
@@ -1194,7 +1047,7 @@ class Engine( Thread ):
                         p.addShootMsg( tmp_shoot_msg )
 
 
-        #find all units involved in shooting, shooter and (multiple) targets, and update them
+        #find all units involved in shooting: shooter and (multiple) targets, and update them
         unit_ids_involved = { shooter.id:0, target.id:0 }
         for cmd in shoot_msg:
             if cmd[0] == SHOOT: 
@@ -1208,17 +1061,16 @@ class Engine( Thread ):
                         for trgt in cmd2[4]:
                             unit_ids_involved[ trgt[1] ] = 0
                         
-                
-                
         for unit_id in unit_ids_involved:
+            unit = self.units[unit_id] 
             for p in self.players:
-                unit = self.units[unit_id] 
-                if unit.owner == p or unit.owner.team == p.team or p.id == OBSERVER_ID:
-                    p.addUnitMsg( util.compileUnit(unit) )
+                if unit.owner == p or unit.owner.team == p.team:
+                    p.addUnitMsg( util.compileUnit(unit) )                                        
                 else:
                     if unit in p.visible_enemies:
                         p.addUnitMsg( util.compileEnemyUnit(unit) )
                         
+            self.observer.addUnitMsg( util.compileUnit(unit) )
 
         self.checkForDeadUnits()
         
@@ -1231,10 +1083,6 @@ class Engine( Thread ):
         
         #remove enemies that we don't see anymore, and send vanish messages
         for p in self.players:
-            
-            #observer must always see all units
-            if p.id == OBSERVER_ID:
-                continue
             
             tmp_enemy_list = []
             for enemy in p.visible_enemies:

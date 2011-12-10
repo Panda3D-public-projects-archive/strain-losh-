@@ -105,33 +105,36 @@ class EngMsg:
                 
                 tmp_player = None
                 
-                #go through all players
-                for player in engine._instance.players:
-                    if player.name == player_name:
-                        
-                        #see if there is already a connection for this player, if yes than disconnect it
-                        if player.connection != None:
-                            EngMsg.error("Disconnecting because this player is connecting from other connection", player.connection )
-                            EngMsg.disconnect( player.connection, player.connection.getAddress(), player.name )
-                            EngMsg.log.info("Player %s disconnected because he was logging in from other connection", player.name)
+                if player_name == 'observer':
+                    tmp_player = engine._instance.observer
+                    tmp_player.connection = conn
+                else:
+                
+                    #go through all players
+                    for player in engine._instance.players:
+                        if player.name == player_name:
                             
-                        #remember this connection
-                        player.connection = conn
-                        tmp_player = player
+                            #see if there is already a connection for this player, if yes than disconnect it
+                            if player.connection != None:
+                                EngMsg.error("Disconnecting because this player is connecting from other connection", player.connection )
+                                EngMsg.disconnect( player.connection, player.connection.getAddress(), player.name )
+                                EngMsg.log.info("Player %s disconnected because he was logging in from other connection", player.name)
+                                
+                            #remember this connection
+                            player.connection = conn
+                            tmp_player = player
                 
                 EngMsg.cReader.addConnection(conn)
-                EngMsg.log.info("Client connected: %s @ %s", player_name, conn.getAddress() )
-                EngMsg.activeConnections.append( ( conn, conn.getAddress(), player_name ) )
-                
-                #send engine_state to this new connection
-                #EngMsg.sendState( util.compileState(engine._instance, tmp_player), conn )
+                EngMsg.log.info("Client connected: %s @ %s", tmp_player.name, conn.getAddress() )
+                EngMsg.activeConnections.append( ( conn, conn.getAddress(), tmp_player.name ) )
                 
                 #send all backlogged messages to this player
                 for msg in tmp_player.msg_lst:
                     EngMsg.sendMsg( msg, conn )
                 
-                #clear all messages because we sent them
-                tmp_player.msg_lst = []
+                #clear all messages because we sent them, but not if this is observer
+                if tmp_player.name != 'observer':
+                    tmp_player.msg_lst = []
                 
             else:
                 #in this case, address and name parameter don't matter, cause there is nothing in activeConnections yet
@@ -199,6 +202,13 @@ class EngMsg:
         #check to see if there is a player with that name
         name = EngMsg.getData(s, 3)
         found = False        
+        
+        if name == 'observer':
+            print "observer connected"
+            EngMsg.handshakedConnections.append( (connection, True, name) )
+            s.SendData('Welcome')
+            return
+                
         for player in players:
             if name == player.name:
                 found = True
@@ -223,6 +233,8 @@ class EngMsg:
             if EngMsg.cWriter.send(netDatagram, client):
                 EngMsg.log.debug( "Sent client: %s @ %s\tmessage:%s" , name, address, msg )
         
+        #send it to observer as well
+        engine._instance.observer.addMsg( msg )
     
     @staticmethod
     def readMsg():
