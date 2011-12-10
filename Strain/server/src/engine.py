@@ -1040,8 +1040,7 @@ class Engine( Thread ):
             for enemy in p.units:
                 vis = self.getLOS( enemy, unit ) 
                 if vis:
-                    if enemy.overwatch and enemy.inFront( unit.pos ):
-
+                    if enemy.overwatch and enemy.inFront( unit.pos ) and enemy.alive:
                         res = enemy.doOverwatch( unit, vis )
                         if res:
                             ret_actions.append( ('overwatch', res ) )
