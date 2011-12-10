@@ -74,12 +74,7 @@ class Player:
 
     def saveMsgs(self):
         f = open( self.name + '.log', 'w')
-        
-#        for msg in self.msg_lst:
-            
-#        f.writelines( self.msg_lst )
-        f.write( pickle.dumps(self.msg_lst, pickle.HIGHEST_PROTOCOL))
-            
+        f.write( pickle.dumps(self.msg_lst, pickle.HIGHEST_PROTOCOL))            
         f.close()
             
     
