@@ -1,19 +1,8 @@
 <units>
-	<unit name="marine_common" 	m="4" ws="4" bs="4" s="4" t="4" w="5" i="4" a="1" ld="8" ap="5" 
-					armour="Tactical" weapons="Bolter"/>
-					
-	<unit name="marine_hb"	 	m="4" ws="4" bs="4" s="4" t="4" w="5" i="4" a="1" ld="8" ap="5" 
-					armour="Devastator" weapons="Heavy Bolter"/>
-					
-	<unit name="marine_epic" 	m="4" ws="4" bs="4" s="4" t="4" w="6" i="4" a="1" ld="8" ap="6"
-					armour="Assault" weapons="Bolt Pistol,Power Glove"/>
-					
-	<unit name="commissar" 		m="4" ws="4" bs="4" s="3" t="3" w="5" i="4" a="1" ld="9" ap="5"
-					armour="Flak" weapons="Bolt Pistol,Sword"/>
-					
-	<unit name="terminator" 	m="4" ws="5" bs="5" s="4" t="4" w="6" i="5" a="1" ld="9" ap="6" 
-					armour="Terminator"	weapons="Storm Bolter,Power Glove"/>
-					
-	<unit name="scout" 	m="4" ws="4" bs="3" s="4" t="3" w="6" i="4" a="1" ld="7" ap="6" 
-					armour="Scout"	weapons="Bolter"/>
+	<unit name="marine_common" 	ws="4" s="4" hp="10" armour="Tactical" weapons="Bolter"/>
+	<unit name="marine_hb"	 	ws="4" s="4" hp="10" armour="Devastator" weapons="Heavy Bolter"/>
+	<unit name="marine_epic" 	ws="4" s="4" hp="10" armour="Assault" weapons="Bolt Pistol,Power Glove"/>
+	<unit name="commissar" 		ws="4" s="3" hp="10" armour="Flak" weapons="Bolt Pistol,Sword"/>
+	<unit name="terminator" 	ws="5" s="4" hp="10" armour="Terminator"	weapons="Storm Bolter,Power Glove"/>
+	<unit name="scout" 			ws="4" s="4" hp="10" armour="Scout"	weapons="Bolter"/>
 </units>

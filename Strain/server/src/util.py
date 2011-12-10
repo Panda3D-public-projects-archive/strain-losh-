@@ -141,7 +141,6 @@ def compileEnemyUnit(unit):
      
     del ret['resting']
     del ret['last_action']
-    del ret['m']
     del ret['hp']
     del ret['ap']
     

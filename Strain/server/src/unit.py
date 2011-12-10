@@ -40,14 +40,14 @@ class Unit():
         self.ap, self.default_ap = 0, 0
         self.hp, self.default_hp = 0, 0
         
-        self.m = -1
+        #self.m = -1
         self.ws = -1
-        self.bs = -1
+        #self.bs = -1
         self.s = -1
-        self.t = -1
-        self.w = -1
-        self.i = -1
-        self.ld = -1 
+        #self.t = -1
+        #self.w = -1
+        #self.i = -1
+        #self.ld = -1 
         
     def init(self, in_id, owner, x, y ):
         
@@ -133,6 +133,7 @@ class Unit():
         
         if not w:
             w = weapon.loadWeapon("Karate")
+            w.owner = self
             w.str = self.s
             if w.str > 3:
                 w.ap = w.str - 3 
@@ -209,14 +210,19 @@ class Unit():
         return False
 
 
-    def hit(self, weapon):
+    def hit(self, weapon, dmg_saved):
         
-        #TODO: krav: ovdje ufurat oklope
-        self.hp -= weapon.str
+        dmg_received = weapon.str - dmg_saved
+        
+        if dmg_received:
+            self.hp -= dmg_received
+        else:
+            return [('bounce', self.id)]
+                
         if self.hp <= 0:
             self.die( weapon )
-            return [('kill', self.id, weapon.str )]
-        return [('damage',self.id, weapon.str)]
+            return [('kill', self.id, dmg_received )]
+        return [('damage',self.id, dmg_received)]
 
 
     def save(self, enemy_weapon):
@@ -322,6 +328,7 @@ def loadUnit( name ):
         #load armour                     
         unit.armour =  armour.loadArmour( p.attributes['armour'].value )
         unit.armour.owner = unit
+        unit.default_ap = unit.armour.ap
         
         #add all weapons, and try to set first ranged weapon as active
         wpns = p.attributes['weapons'].value.split(',')
@@ -338,19 +345,17 @@ def loadUnit( name ):
         if unit.hasHeavyWeapon():
             unit.set_up = False
 
-        unit.default_ap = int( p.attributes['ap'].value )
-        unit.default_hp = int( p.attributes['w'].value )
+        unit.default_hp = int( p.attributes['hp'].value )
         
-        
-        unit.m = int( p.attributes['m'].value )
+        #unit.m = int( p.attributes['m'].value )
         unit.ws = int( p.attributes['ws'].value )
-        unit.bs = int( p.attributes['bs'].value )
+        #unit.bs = int( p.attributes['bs'].value )
         unit.s = int( p.attributes['s'].value )
-        unit.t = int( p.attributes['t'].value )
-        unit.w = int( p.attributes['w'].value )
-        unit.i = int( p.attributes['i'].value )
-        unit.a = int( p.attributes['a'].value )
-        unit.ld = int( p.attributes['ld'].value )
+        #unit.t = int( p.attributes['t'].value )
+        #unit.w = int( p.attributes['w'].value )
+        #unit.i = int( p.attributes['i'].value )
+        #unit.a = int( p.attributes['a'].value )
+        #unit.ld = int( p.attributes['ld'].value )
 
     xmldoc.unlink()
     

@@ -33,6 +33,7 @@ class Weapon():
         self.special = None
         self.blast = None
         self.parry = None
+        self.power = None
     
     def givePercent( self, distance, bs, visibility ):
         
@@ -96,24 +97,20 @@ class Weapon():
     
     
     def hit(self, target):
-        if target.save( self ):
-            return [('bounce', target.id)]
-        return target.hit( self )
+        return target.hit( self, target.save( self ) )
 
         
     def hitInMelee(self, attacker, target):
-        if target.save( self ):
-            return [('bounce', target.id)]
         
         res = None
         
         if attacker.s > self.str:
             orig_str = self.str
             self.str = attacker.s
-            res = target.hit( self )
+            res = target.hit( self, target.save( self ) )
             self.str = orig_str
         else:
-            res = target.hit( self )
+            res = target.hit( self, target.save( self ) )
             
         return res
 
@@ -138,6 +135,8 @@ def loadWeapon( name ):
         try:wpn.ap = int(p.attributes['AP'].value)
         except:pass
         try:wpn.range = int(p.attributes['range'].value)
+        except:pass
+        try:wpn.power = int(p.attributes['power'].value)
         except:pass
         try:wpn.sustained = float(p.attributes['sustained'].value)
         except:pass
