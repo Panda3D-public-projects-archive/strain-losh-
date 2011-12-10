@@ -9,39 +9,21 @@ class Armour():
     def __init__(self):
         self.name = None
         self.front = None
-        self.head = None
+        self.side = None
         self.owner = None
+        self.ap = None
         
     
     def save( self, enemy_weapon ):
-        
-        effective_armour = self.front
-        effective_ap = 0
-        
-        if enemy_weapon.ap:
-            effective_ap = enemy_weapon.ap
-        
-        #see if i have a storm shield, if so raise my effective armour by 1 if attack is from front
-        for wpn in self.owner.weapons:
-            if wpn.special == weapon.SPECIAL_STORM_SHIELD:
-                if self.owner.inFront( enemy_weapon.owner.pos ):
-                    effective_armour += 1
-        
-        percent_to_save = 100
-        
-        if effective_ap > effective_armour:
-            return False
-        elif effective_ap == effective_armour:
-            percent_to_save = 20
-        elif effective_ap == effective_armour - 1:
-            percent_to_save = 50
-        elif effective_ap == effective_armour - 2:
-            percent_to_save = 90
 
-        if util.d100() <= percent_to_save:
-            return True
-        
-        return False
+        if enemy_weapon.power:
+            return 0
+
+        if self.owner.inFront( enemy_weapon.owner.pos ):
+            return self.front
+
+        return self.side
+ 
 
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -58,7 +40,8 @@ def loadArmour( name ):
         armr = Armour()            
         armr.name = p.attributes['name'].value            
         armr.front = int( p.attributes['front'].value )
-        armr.head = int( p.attributes['head'].value )
+        armr.side = int( p.attributes['sides_back'].value )
+        armr.ap = int( p.attributes['ap'].value )
         
     xmldoc.unlink()
     if not armr:

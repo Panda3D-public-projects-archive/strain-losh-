@@ -10,13 +10,16 @@
 	</player>
 
 	<player name="ultramarines" team = "2" id="2">
-		<unit x="12" y="15" type="marine_common"/>
+<!-- 		<unit x="12" y="15" type="marine_common"/>
 		<unit x="13" y="15" type="marine_epic"/>
-		<unit x="13" y="13" type="marine_common"/>
+		<unit x="13" y="13" type="marine_common"/> -->
 	 	<unit x="4" y="7" type="marine_epic"/>				
 	</player>
 
-<!--
+	<player name="meta" team = "3" id="3">
+		<unit x="0" y="0" type="marine_common"/>
+	</player>
+<!-- 
 	<player name="nevidi_nikog" team = "3" id="3">
 		<unit x="19" y="19" type="marine_common"/>
 	</player>
