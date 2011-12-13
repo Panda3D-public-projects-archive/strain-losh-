@@ -311,8 +311,6 @@ class Unit():
 
         d = math.fabs( angle1-angle2 ) 
 
-        print "fabs:", d / util._2_PI * 360
-
         if d <= util._PI_4:
             return True
         elif d >= util._7_PI_4:
