@@ -83,6 +83,7 @@ class Unit():
         if self.hasHeavyWeapon() and self.set_up:
                 return None 
         
+        #TODO: krav: melee bi trebao obojici trosit ap, i da bude contest of skill - dakle bilo ko moze dobit
         self.ap -= 1
         
         base = 90
@@ -95,10 +96,10 @@ class Unit():
         if self.rotate( target.pos ):
             ret_lst.append( ( ROTATE, self.id, self.heading) )
             
-        #TODO: krav: ovdje stavit da ak nema dovoljno ap-a da se protivnik ne okrene prema tebi?
-        #rotate opponent to us
-        if target.rotate( self.pos ):
-            ret_lst.append( ( ROTATE, target.id, target.heading) )
+        #rotate opponent to us, if he has any ap left
+        if target.ap > 0:
+            if target.rotate( self.pos ):
+                ret_lst.append( ( ROTATE, target.id, target.heading) )
          
         
         base -= 10 * target.numberOfMeleeWeapons() 
