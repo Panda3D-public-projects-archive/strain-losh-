@@ -10,25 +10,26 @@
 	</player>
 
 	<player name="ultramarines" team = "2" id="2">
-<!-- 		<unit x="12" y="15" type="marine_common"/>
+		<unit x="12" y="15" type="marine_common"/>
 		<unit x="13" y="15" type="marine_epic"/>
-		<unit x="13" y="13" type="marine_common"/> -->
-	 	<unit x="4" y="7" type="marine_epic"/>				
+		<unit x="13" y="13" type="marine_common"/>
+		<unit x="13" y="16" type="marine_hb"/>			
+<!-- 	 	<unit x="4" y="7" type="marine_epic"/> 				-->
 	</player>
-
+<!-- 
 	<player name="meta" team = "3" id="3">
 		<unit x="0" y="0" type="marine_common"/>
 	</player>
-<!-- 
-	<player name="nevidi_nikog" team = "3" id="3">
+
+	<player name="nevidi_nikog" team = "6" id="6">
 		<unit x="19" y="19" type="marine_common"/>
 	</player>
 
-	<player name="vidi_ultra" team = "3" id="3">
+	<player name="vidi_ultra" team = "4" id="4">
 		<unit x="10" y="6" type="marine_common"/>
 	</player>
 
-	<player name="vidi_blood" team = "3" id="3">
+	<player name="vidi_blood" team = "5" id="5">
 		<unit x="10" y="3" type="marine_common"/>
 	</player>
 -->
