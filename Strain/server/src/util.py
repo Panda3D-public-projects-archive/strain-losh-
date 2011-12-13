@@ -3,6 +3,8 @@ import math
 import unit
 import logging.handlers
 import cPickle as pickle
+import datetime
+import os
 
 
 OBSERVER_ID = -666
@@ -259,3 +261,14 @@ def distance( x1, y1, x2, y2 ):
     return math.sqrt( math.pow( (x2-x1) , 2) +  math.pow( (y2-y1) , 2) )
     
     
+def getReplayName():
+    today = datetime.date.today()    
+    i = 1
+    
+    while True:
+        fname = "replay_%s_%d.rpl" %(today,i)
+        if not os.path.exists(fname):
+            break
+        i+=1
+    
+    return fname
