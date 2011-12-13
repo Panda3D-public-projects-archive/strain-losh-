@@ -1,4 +1,5 @@
 from server_messaging import *
+import datetime
 
 
 class Player:
@@ -62,7 +63,7 @@ class Player:
         if self.connection:
             EngMsg.error( msg, self.connection )
         else:
-            self.msg_lst.append( msg )
+            self.msg_lst.append( (ERROR, msg) )
 
 
     def addChatMsg(self, msg, sender):
@@ -73,8 +74,13 @@ class Player:
         
 
     def saveMsgs(self):
-        f = open( self.name + '.log', 'w')
-        f.write( pickle.dumps(self.msg_lst, pickle.HIGHEST_PROTOCOL))            
+        fname = util.getReplayName()
+        print "saving replay to:", fname
+        f = open( util.getReplayName(), 'w')
+        
+        for msg in self.msg_lst:
+            f.write( str(msg) + '\n')
+                    
         f.close()
             
     
