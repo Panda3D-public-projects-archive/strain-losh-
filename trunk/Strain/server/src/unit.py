@@ -79,6 +79,10 @@ class Unit():
         if self.ap < 1:
             return None
         
+        #set up heavy weapons cannot do melee
+        if self.hasHeavyWeapon() and self.set_up:
+                return None 
+        
         self.ap -= 1
         
         base = 90
@@ -198,8 +202,10 @@ class Unit():
         rot.append( (SHOOT, self.id, target.pos, self.active_weapon.name, self.active_weapon.shoot( self, target, visibility ) ) )
         return rot
 
+
     def _shoot(self, target):
         pass
+
 
     def setOverwatch(self):
         #check if there are enough AP
@@ -245,6 +251,7 @@ class Unit():
             self.last_action = 'setup'
             return None
         
+        
     def tearDown(self):
         if self.set_up:
             if self.ap < 2:
@@ -257,8 +264,7 @@ class Unit():
         else:
             return "This unit is not set-up."
        
-    #mora vratit rezultat koji ce ic u actions u movementu
-    #lista akcija koja se dogodila na overatchu
+       
     def doOverwatch(self, target, visibility ):
         return self.shoot( target, visibility, True )
         
@@ -302,8 +308,17 @@ class Unit():
         angle1 = math.atan2( tile[1] - self.pos[1] , tile[0] - self.pos[0] )
         angle2 = util.headingToAngle(self.heading)
 
-        if math.fabs( angle1-angle2 ) <= util._PI_4:
+        d = math.fabs( angle1-angle2 ) 
+
+        print "fabs:", d / util._2_PI * 360
+
+        if d <= util._PI_4:
             return True
+        elif d >= util._7_PI_4:
+            return True
+        
+        return False
+        
 
     def amIStuck(self):
         if self.hasHeavyWeapon() and self.set_up:
