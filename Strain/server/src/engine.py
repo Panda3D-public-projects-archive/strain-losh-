@@ -408,13 +408,6 @@ class Engine( Thread ):
         t2 = target.pos + ( self.level.tuppleGet( target.pos ) , )
         if self.getTiles3D( b_pos, t2 ):
             seen += 1
-
-        #TODO: krav: ovo stavit da vraca za oboje
-        #check if target sees beholders feet
-        #b2 = beholder.pos + ( ( self.level.tuppleGet( beholder.pos ) ) , )        
-        #if self.getTiles3D( t1, b2 ):
-        #    seen_back += 1
-        #return ( seen, seen_back )
     
         return seen
     
