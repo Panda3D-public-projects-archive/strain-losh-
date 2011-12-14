@@ -121,27 +121,20 @@ class Unit():
         
     def chooseMeleeWeapon(self, target):
         dmg = 0
-        pen = -1
+
         w = None
         for wpn in self.weapons:
             if wpn.type != weapon.TYPE_MELEE:
                 continue
             
-            if wpn.ap > pen:
-                w = wpn
-                pen = wpn.ap
+            if wpn.str > dmg:
                 dmg = wpn.str
-            elif wpn.ap == pen:
-                if wpn.str > dmg:
-                    dmg = wpn.str
-                    w = wpn
-        
+                w = wpn
+    
         if not w:
             w = weapon.loadWeapon("Karate")
             w.owner = self
             w.str = self.s
-            if w.str > 3:
-                w.ap = w.str - 3 
                 
         return w
 
