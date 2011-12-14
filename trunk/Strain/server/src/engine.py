@@ -394,18 +394,18 @@ class Engine( Thread ):
         if beholder.pos == target.pos:
             return 2
         
-        b_pos = beholder.pos + ( ( self.level.tuppleGet( beholder.pos ) + beholder.height -1 ) , )
+        b_pos = beholder.pos + ( ( self.level.getHeight( beholder.pos ) + beholder.height -1 ) , )
         #print "print "beh:", beholder.pos, "\ttar:", target.pos 
         seen = 0        
         seen_back = 0        
         #check if we see target's head
-        t1 = target.pos + ( ( self.level.tuppleGet( target.pos ) + target.height -1 ) , )        
+        t1 = target.pos + ( ( self.level.getHeight( target.pos ) + target.height -1 ) , )        
         if self.getTiles3D( b_pos, t1 ):
             seen += 1
             seen_back += 1
         
         #check if we see target's feet
-        t2 = target.pos + ( self.level.tuppleGet( target.pos ) , )
+        t2 = target.pos + ( self.level.getHeight( target.pos ) , )
         if self.getTiles3D( b_pos, t2 ):
             seen += 1
     
@@ -422,7 +422,7 @@ class Engine( Thread ):
         x2, y2, z2 = t2
         
         #if one of our end points is not empty space, return false
-        if self.level.test3D( x1, y1, z1 ) or self.level.test3D( x2, y2, z2 ):
+        if self.level.opaque( x1, y1, z1 ) or self.level.opaque( x2, y2, z2 ):
             return False
         
         absx0 = math.fabs(x2 - x1);
@@ -537,7 +537,7 @@ class Engine( Thread ):
             return False
         
         #if we can't see here
-        if self.level.test3D( pos[0], pos[1], pos[2] ):
+        if self.level.opaque( pos[0], pos[1], pos[2] ):
             return False
         
         #moved along x
@@ -547,29 +547,29 @@ class Engine( Thread ):
                 
                 #moved along z - diagonal x-y-z
                 if pos[2] != lastpos[2]:
-                        if( self.level.test3D( lastpos[0], lastpos[1], pos[2] ) and
-                            self.level.test3D( lastpos[0], pos[1], lastpos[2] ) and
-                            self.level.test3D( pos[0], lastpos[1], lastpos[2] ) ):                             
+                        if( self.level.opaque( lastpos[0], lastpos[1], pos[2] ) and
+                            self.level.opaque( lastpos[0], pos[1], lastpos[2] ) and
+                            self.level.opaque( pos[0], lastpos[1], lastpos[2] ) ):                             
                                 return False
                          
-                        if ( self.level.test3D( lastpos[0], pos[1], lastpos[2] ) and
-                              self.level.test3D( lastpos[0], pos[1], pos[2] ) and
-                              self.level.test3D( pos[0], lastpos[1], lastpos[2] ) and
-                              self.level.test3D( pos[0], lastpos[1], pos[2] ) ): 
+                        if ( self.level.opaque( lastpos[0], pos[1], lastpos[2] ) and
+                              self.level.opaque( lastpos[0], pos[1], pos[2] ) and
+                              self.level.opaque( pos[0], lastpos[1], lastpos[2] ) and
+                              self.level.opaque( pos[0], lastpos[1], pos[2] ) ): 
                             return False
                 
                         return True
                 #diagonal x-y
-                if ( self.level.test3D( pos[0], lastpos[1], pos[2] ) and
-                     self.level.test3D( lastpos[0], pos[1], pos[2] ) ):  
+                if ( self.level.opaque( pos[0], lastpos[1], pos[2] ) and
+                     self.level.opaque( lastpos[0], pos[1], pos[2] ) ):  
                             return False
                 else:
                     return True
 
             #moved along z - diagonal x-z
             if pos[2] != lastpos[2]:
-                if ( self.level.test3D( pos[0], pos[1], lastpos[2] ) and
-                     self.level.test3D( lastpos[0], pos[1], pos[2] ) ):  
+                if ( self.level.opaque( pos[0], pos[1], lastpos[2] ) and
+                     self.level.opaque( lastpos[0], pos[1], pos[2] ) ):  
                             return False
                 else:
                     return True
@@ -578,8 +578,8 @@ class Engine( Thread ):
         if pos[1] != lastpos[1]:
             #moved along z - diagonal y-z
             if pos[2] != lastpos[2]:
-                if ( self.level.test3D( pos[0], pos[1], lastpos[2] ) and
-                     self.level.test3D( pos[0], lastpos[1], pos[2] ) ):  
+                if ( self.level.opaque( pos[0], pos[1], lastpos[2] ) and
+                     self.level.opaque( pos[0], lastpos[1], pos[2] ) ):  
                             return False
                 else:
                     return True
@@ -661,11 +661,11 @@ class Engine( Thread ):
         #check diagonal if it is clear
         if( dx != 0 and dy != 0 ):
 
-            if self.level.tuppleGet( (ptx + dx, pty) ) or self.level.tuppleGet( (ptx, pty + dy) ):
+            if self.level.getHeight( (ptx + dx, pty) ) or self.level.getHeight( (ptx, pty + dy) ):
                 return False
                 
             #check if there is a dynamic thing in the way 
-            if( self.level._dynamics[ ptx + dx ][ pty ][0] != level.DYNAMICS_EMPTY ):
+            if self.level._dynamics[ ptx + dx ][ pty ]:
                 #see if it is a unit
                 if( self.level._dynamics[ ptx + dx ][ pty ][0] == level.DYNAMICS_UNIT ):
                     #so its a unit, see if it is friendly
@@ -674,7 +674,7 @@ class Engine( Thread ):
                         return False
                     
 
-            if( self.level._dynamics[ ptx ][ pty + dy ][0] != level.DYNAMICS_EMPTY ):
+            if self.level._dynamics[ ptx ][ pty + dy ]:
                 if( self.level._dynamics[ ptx ][ pty + dy ][0] == level.DYNAMICS_UNIT ):
                     unit_id = self.level._dynamics[ ptx ][ pty + dy ][1] 
                     if( self.units[unit_id].owner != unit.owner ):
