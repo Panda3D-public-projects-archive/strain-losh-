@@ -46,7 +46,7 @@ class Level:
         self._level_data = tmp 
 
         #we make this so its size is the same as level 
-        self._dynamics = [[(0,0)] * self.maxY for i in xrange(self.maxX)] #@UnusedVariable
+        self._dynamics = [[ None ] * self.maxY for i in xrange(self.maxX)] #@UnusedVariable
 
 
     def outOfBounds( self, x, y ):
@@ -54,10 +54,9 @@ class Level:
             return True
         else: 
             return False
-        
 
 
-    #TODO: krav: spojit ovo i test3D()
+    #TODO: krav: spojit ovo i opaque()
     def canUnitFitHere(self, unit):
 
         x, y = int(unit.pos[0]), int(unit.pos[1])
@@ -68,7 +67,7 @@ class Level:
             return False
         
         #check to see if the tile is already occupied
-        if( self._dynamics[x][y][0] != DYNAMICS_EMPTY ):
+        if self._dynamics[x][y]:
             print "This tile already occupied, unit cannot deploy here", x, y, unit.type
             return False
             
@@ -81,18 +80,17 @@ class Level:
         return False
         
     def removeUnit(self, unit ):
-        self._dynamics[ int(unit.pos[0]) ][ int(unit.pos[1]) ] = ( DYNAMICS_EMPTY, 0 )
+        self._dynamics[ int(unit.pos[0]) ][ int(unit.pos[1]) ] = None
         
         
         
     def tileClearForMoving(self, unit, x, y):
         #check if the level is clear at that tile
-        if self.tuppleGet( (x, y) ):
+        if self.getHeight( (x, y) ):
             return False
         
-        #TODO: krav: stavit da je dynmics prazan a ne tupple sa 0-om ko prvim parametrom
         ret = self._dynamics[x][y] 
-        if  ret[0] != DYNAMICS_EMPTY:
+        if ret:
             if ret[0] == DYNAMICS_UNIT:
                 if ret[1] != unit.id:
                     return False
@@ -101,12 +99,16 @@ class Level:
         
         return True
 
-    #TODO: krav: hrpa citanja iz _level_data[][] koje bi sve trebalo svest na ovo dole
-    def tuppleGet(self, pos ):
+
+#    def boxEmpty(self, x, y, z):
+#        if self.getHeight( (x,y) ) >
+
+    
+    def getHeight(self, pos ):
         return self._level_data[ int(pos[0]) ][ int(pos[1]) ]
 
-    #TODO: krav: napravit da vrati false ak je prazno, inace da vrati sta je u tom boxu
-    def test3D(self, x, y, z):
+
+    def opaque(self, x, y, z):
         if self._level_data[ int(x) ][ int(y) ] <= z: 
             return False
         return True
