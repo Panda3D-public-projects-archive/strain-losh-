@@ -27,8 +27,8 @@ class Weapon():
         self.name = None
         self.range = None
         self.str = None
+        self.ap_cost = None
         self.type = None
-        self.sustained = None
         self.special = None
         self.blast = None
         self.parry = None
@@ -133,9 +133,9 @@ def loadWeapon( name ):
         except:pass
         try:wpn.range = int(p.attributes['range'].value)
         except:pass
-        try:wpn.power = int(p.attributes['power'].value)
+        try:wpn.ap_cost = int(p.attributes['ap_cost'].value)
         except:pass
-        try:wpn.sustained = float(p.attributes['sustained'].value)
+        try:wpn.power = int(p.attributes['power'].value)
         except:pass
         try:wpn.special = p.attributes['special'].value
         except:pass
