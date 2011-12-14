@@ -1047,7 +1047,7 @@ class Engine( Thread ):
                  
         
         if shooter.hasHeavyWeapon() and shooter.set_up == False:
-            if util.distance(shooter.pos[0], shooter.pos[1], target.pos[0], target.pos[1]) > 2:
+            if util.distanceTupple(shooter.pos, target.pos) > 2:
                 EngMsg.error( "Need to set up heavy weapon before shooting.", source )
                 return
         

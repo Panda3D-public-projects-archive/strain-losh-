@@ -175,15 +175,9 @@ class Unit():
                 return None
             
         #check if there is enough ap to fire
-        if self.active_weapon.sustained and self.last_action == 'shoot':
-            if self.ap >= self.active_weapon.sustained:
-                self.ap -= self.active_weapon.sustained
-            else:
-                return None
-        else:
-            if self.ap < 1:
-                return None
-            self.ap -= 1
+        if self.ap < self.active_weapon.ap_cost:
+            return None
+        self.ap -= self.active_weapon.ap_cost
                         
         #check to see if we need to rotate unit before shooting, but if we are on overwatch, we cant rotate
         rot = [] 
