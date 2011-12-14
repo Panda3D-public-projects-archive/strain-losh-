@@ -27,7 +27,6 @@ class Weapon():
         self.name = None
         self.range = None
         self.str = None
-        self.ap = None
         self.type = None
         self.sustained = None
         self.special = None
@@ -131,8 +130,6 @@ def loadWeapon( name ):
         try:wpn.type = p.attributes['type'].value 
         except:pass
         try:wpn.str = int(p.attributes['Str'].value)
-        except:pass
-        try:wpn.ap = int(p.attributes['AP'].value)
         except:pass
         try:wpn.range = int(p.attributes['range'].value)
         except:pass
