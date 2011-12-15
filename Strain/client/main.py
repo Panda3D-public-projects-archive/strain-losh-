@@ -475,7 +475,7 @@ class SceneGraph():
 #========================================================================
 #
 class Client(DirectObject):
-    def __init__(self, parent, player):
+    def __init__(self, parent, player, type="Game"):
         self.parent = parent
         self.player = player
         self.player_id = None
@@ -512,9 +512,9 @@ class Client(DirectObject):
         # This handles interface interactions - we will not allow interaction if current animation is not done
         self._anim_in_process = False 
 
-        self.net = Net(self)
-        self.net.startNet()
-        
+        #Initialize game mode (network)
+        self.fsm.request('GameMode')
+        #self.fsm.request('ReplayMode', "replay_2011-12-13_1.rpl")
         # Turn number and player on turn
         self.turn_number = 0
         self.turn_player = None
@@ -1041,11 +1041,14 @@ class Net():
     def startNet(self):
         # Create main network messaging task which initiates connection
         taskMgr.add(self.msgTask, "msg_task") 
+        
+    def startReplay(self, replay):
+        self.replay = open(replay, 'r')
+        taskMgr.add(self.replayMsgTask, "replay_msg_task")
 
     def handleMsg(self, msg):
         """Handles incoming messages."""
         self.log.info("Received message: %s", msg[0])
-        #print msg
         #print self.parent.sel_unit_id
         #========================================================================
         #
@@ -1123,6 +1126,18 @@ class Net():
             self.log.error("Unknown message Type: %s", msg[0])
             self.parent._message_in_process = False
     
+    def replayMsgTask(self, task):
+        # Read msg from file and send to handleMsg
+        if self.parent._message_in_process == False:
+            line = self.replay.readline()
+            line = line.rstrip("\n")
+            tline =  utils.str2tuple(line)
+            print tline
+            if tline:
+                self.handleMsg(tline)
+        return task.cont
+    
+    
     def msgTask(self, task):
         """Task that listens for messages on client queue."""
         # Needs to be called every frame, this takes care of connection
@@ -1143,10 +1158,18 @@ class ClientFSM(FSM.FSM):
         FSM.FSM.__init__(self, name)
         self.parent = parent
 
-    def enterLoginScreen(self):
+    def enterReplayMode(self, replay):
+        self.parent.net = Net(self.parent)
+        self.parent.net.startReplay(replay)
+        
+    def exitReplayMode(self):
         None
+
+    def enterGameMode(self):
+        self.parent.net = Net(self.parent)
+        self.parent.net.startNet()
     
-    def exitLoginScreen(self):
+    def exitGameMode(self):
         None
 
     def enterGraphicsInit(self):
