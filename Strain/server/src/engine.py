@@ -664,23 +664,17 @@ class Engine( Thread ):
             if self.level.getHeight( (ptx + dx, pty) ) or self.level.getHeight( (ptx, pty + dy) ):
                 return False
                 
-            #check if there is a dynamic thing in the way 
-            if self.level._dynamics[ ptx + dx ][ pty ]:
-                #see if it is a unit
-                if( self.level._dynamics[ ptx + dx ][ pty ][0] == level.DYNAMICS_UNIT ):
-                    #so its a unit, see if it is friendly
-                    unit_id = self.level._dynamics[ ptx + dx ][ pty ][1] 
-                    if( self.units[unit_id].owner != unit.owner ):
-                        return False
+            #check if there is a dynamic thing in the way and see if it is a unit, if it is friendly than ok
+            stuff = self.level.getDynamic( ptx + dx, pty ) 
+            if stuff and stuff[0] == level.DYNAMICS_UNIT:
+                if( self.units[ stuff[1] ].owner != unit.owner ):
+                    return False
                     
-
-            if self.level._dynamics[ ptx ][ pty + dy ]:
-                if( self.level._dynamics[ ptx ][ pty + dy ][0] == level.DYNAMICS_UNIT ):
-                    unit_id = self.level._dynamics[ ptx ][ pty + dy ][1] 
-                    if( self.units[unit_id].owner != unit.owner ):
-                        return False
-
-            
+            stuff = self.level.getDynamic( ptx, pty + dy ) 
+            if stuff and stuff[0] == level.DYNAMICS_UNIT:
+                if( self.units[ stuff[1] ].owner != unit.owner ):
+                    return False
+                    
         return True
 
     

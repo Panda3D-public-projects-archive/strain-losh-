@@ -100,8 +100,8 @@ class Level:
         return True
 
 
-#    def boxEmpty(self, x, y, z):
-#        if self.getHeight( (x,y) ) >
+    def getDynamic(self, x, y):
+        return self._dynamics[int(x)][int(y)]
 
     
     def getHeight(self, pos ):
