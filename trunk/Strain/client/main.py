@@ -386,7 +386,7 @@ class SceneGraph():
         if self.parent.turn_player != self.parent.player:
             return
         if unit:
-            self.parent.units[unit_id]['move_dict'] = self.parent.getMoveDict(unit_id)
+            #self.parent.units[unit_id]['move_dict'] = self.parent.getMoveDict(unit_id)
             move_dict = unit['move_dict']
             self.movetext_np = NodePath("movetext_np")
             for tile in move_dict:
