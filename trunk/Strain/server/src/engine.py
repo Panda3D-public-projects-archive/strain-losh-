@@ -321,14 +321,14 @@ class Engine( Thread ):
 
         print "turn:", self.turn, "\tplayer:", self.active_player.name
 
+        #check visibility
+        self.updateVisibilityAndSendVanishAndSpotMessages()
+
         #go through all units of active player and reset them
         for unit in self.units.itervalues():   
             if unit.owner == self.active_player:            
                 unit.newTurn( self.turn )
-          
-        #check visibility
-        self.updateVisibilityAndSendVanishAndSpotMessages()
-
+                
         for p in self.players:
             #delete all previous msgs (like vanish and spot)
             p.msg_lst = []
@@ -375,12 +375,12 @@ class Engine( Thread ):
 
         print "turn:", self.turn, "\tplayer:", self.active_player.name
 
+        #check visibility
+        self.updateVisibilityAndSendVanishAndSpotMessages()
+        
         #go through all units of active player and reset them
         for unit in self.active_player.units:               
             unit.newTurn( self.turn )
-          
-        #check visibility
-        self.updateVisibilityAndSendVanishAndSpotMessages()
 
         #send new turn messages       
         for p in self.players:
@@ -398,12 +398,11 @@ class Engine( Thread ):
         b_pos = beholder.pos + ( ( self.level.getHeight( beholder.pos ) + beholder.height -1 ) , )
         #print "print "beh:", beholder.pos, "\ttar:", target.pos 
         seen = 0        
-        seen_back = 0        
+        
         #check if we see target's head
         t1 = target.pos + ( ( self.level.getHeight( target.pos ) + target.height -1 ) , )        
         if self.getTiles3D( b_pos, t1 ):
             seen += 1
-            seen_back += 1
         
         #check if we see target's feet
         t2 = target.pos + ( self.level.getHeight( target.pos ) , )
@@ -415,9 +414,9 @@ class Engine( Thread ):
     
     def getTiles3D(self, t1, t2 ):
 
-        #we can't look at ourselves
+        #we see ourself
         if( t1 == t2 ):
-            return []
+            return [ t1 ]
         
         x1, y1, z1 = t1
         x2, y2, z2 = t2
@@ -586,7 +585,24 @@ class Engine( Thread ):
                     return True
         
         return True
+
+
+    def getMyShootDict(self, unit):        
+        # key : value
+        # unit_id : ( visibility, to_hit, dmg ) 
+        shoot_dict = {}
         
+        for enemy in unit.owner.visible_enemies:
+            vis = self.getLOS( unit, enemy )
+            if vis:
+                wpn = unit.active_weapon
+                
+                if util.distanceTupple(unit.pos, enemy.pos) < 2:
+                    wpn = unit.chooseMeleeWeapon( enemy )                
+                
+                shoot_dict[enemy.id] = ( vis, wpn.givePercent( enemy, vis ), wpn.str - enemy.armour.save( wpn ) )
+        
+        return shoot_dict
         
 
     def getMyMoveDict(self, unit):

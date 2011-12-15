@@ -28,7 +28,6 @@ class Unit():
         self.name = name     
         self.heading = HEADING_N      
         self.resting = False
-        self.bs = -1
         self.weapons = []
         self.active_weapon = None
         self.overwatch = False
@@ -41,7 +40,9 @@ class Unit():
         self.hp, self.default_hp = 0, 0
         
         self.move_dict = {}
+        self.shoot_dict = {}
         
+        self.bs = -1
         self.ws = -1
         self.s = -1
         
@@ -52,14 +53,6 @@ class Unit():
         
         self.pos = ( x, y )
            
-        if self.name == 'marine_common':
-            self.soundtype = '02'
-        elif self.name == 'marine_epic':
-            self.soundtype = '01'
-        elif self.name == 'commissar':
-            self.soundtype = '01'                                                   
-
-
         self.ap = self.default_ap
         self.hp = self.default_hp
 
@@ -73,7 +66,7 @@ class Unit():
 
     def refreshDicts(self):
         self.move_dict = engine._instance.getMyMoveDict( self )
-        
+        self.shoot_dict = engine._instance.getMyShootDict( self )
 
         
 
@@ -196,7 +189,7 @@ class Unit():
                         
         self.last_action = 'shoot'
         
-        rot.append( (SHOOT, self.id, target.pos, self.active_weapon.name, self.active_weapon.shoot( self, target, visibility ) ) )
+        rot.append( (SHOOT, self.id, target.pos, self.active_weapon.name, self.active_weapon.shoot( target, visibility ) ) )
         return rot
 
 
