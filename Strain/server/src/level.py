@@ -83,23 +83,6 @@ class Level:
         self._dynamics[ int(unit.pos[0]) ][ int(unit.pos[1]) ] = None
         
         
-        
-    def tileClearForMoving(self, unit, x, y):
-        #check if the level is clear at that tile
-        if self.getHeight( (x, y) ):
-            return False
-        
-        ret = self._dynamics[x][y] 
-        if ret:
-            if ret[0] == DYNAMICS_UNIT:
-                if ret[1] != unit.id:
-                    return False
-            else:
-                return False
-        
-        return True
-
-
     def getDynamic(self, x, y):
         return self._dynamics[int(x)][int(y)]
 

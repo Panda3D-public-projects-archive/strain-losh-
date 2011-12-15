@@ -40,14 +40,10 @@ class Unit():
         self.ap, self.default_ap = 0, 0
         self.hp, self.default_hp = 0, 0
         
-        #self.m = -1
+        self.move_dict = {}
+        
         self.ws = -1
-        #self.bs = -1
         self.s = -1
-        #self.t = -1
-        #self.w = -1
-        #self.i = -1
-        #self.ld = -1 
         
     def init(self, in_id, owner, x, y ):
         
@@ -66,6 +62,19 @@ class Unit():
 
         self.ap = self.default_ap
         self.hp = self.default_hp
+
+
+    def doIKnowAboutThisUnit(self, tmp_unit ):
+        if tmp_unit.owner == self.owner or tmp_unit.owner.team == self.owner.team or tmp_unit in self.owner.visible_enemies:
+                return True
+        return False
+        
+
+
+    def refreshDicts(self):
+        self.move_dict = engine._instance.getMyMoveDict( self )
+        
+
         
 
     def setActiveWeapon(self, weapon):
@@ -283,6 +292,9 @@ class Unit():
         if self.resting:
             self.ap += 1
             self.resting = False
+
+        self.refreshDicts()
+        
 
     def hasHeavyWeapon(self):
         for w in self.weapons:

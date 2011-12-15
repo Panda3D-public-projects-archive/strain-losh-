@@ -161,6 +161,7 @@ class Engine( Thread ):
                     EngMsg.error( msg, source )
                     return
                     
+        unit.refreshDicts()
         player.addUnitMsg( compileUnit(unit) )
         self.observer.addUnitMsg( compileUnit(unit) )
         
@@ -586,8 +587,13 @@ class Engine( Thread ):
         
         return True
         
+        
 
-    def getMoveDict(self, unit, returnOrigin = False ):    
+    def getMyMoveDict(self, unit):
+        return self.getMoveDict( unit, real = False )
+        
+
+    def getMoveDict(self, unit, returnOrigin = False, real = True ):    
                 
         final_dict = {}
         open_list = [(unit.pos,unit.ap)]
@@ -610,7 +616,7 @@ class Engine( Thread ):
                     if( self.level.outOfBounds(x, y) ):
                         continue
                     
-                    if( self.canIMoveHere(unit, tile, dx, dy) == False ):
+                    if( self.canIMoveHere(unit, tile, dx, dy, real) == False ):
                         continue                   
                     
                     #if we are checking diagonally
@@ -640,7 +646,34 @@ class Engine( Thread ):
         return final_dict
 
 
-    def canIMoveHere(self, unit, position, dx, dy ):
+
+    def tileClearForMoving(self, unit, x, y, real):
+        #check if the level is clear at that tile
+        if self.level.getHeight( (x, y) ):
+            return False
+        
+        ret = self.level.getDynamic( x, y ) 
+        if ret:
+            if ret[0] == level.DYNAMICS_UNIT:
+                tmp_unit = self.units[ ret[1] ]
+                
+                if not real:
+                    #if this is us, we can move here                    
+                    if tmp_unit == unit:
+                        return True
+                    
+                    if unit.doIKnowAboutThisUnit( tmp_unit ):
+                        return False
+                    
+                else:
+                    #this is for real, so if tmp_unit is any unit other than the one moving, we cannot move there 
+                    if tmp_unit != unit:
+                        return False
+        
+        return True
+
+
+    def canIMoveHere(self, unit, position, dx, dy, real ):
               
         dx = int( dx )
         dy = int( dy )
@@ -654,7 +687,7 @@ class Engine( Thread ):
         pty = int( position[1] )
 
 
-        if not self.level.tileClearForMoving( unit, ptx + dx, pty + dy ):
+        if not self.tileClearForMoving( unit, ptx + dx, pty + dy, real ):
             return False
 
       
@@ -664,6 +697,7 @@ class Engine( Thread ):
             if self.level.getHeight( (ptx + dx, pty) ) or self.level.getHeight( (ptx, pty + dy) ):
                 return False
                 
+            #no need to check for 'real variable here, if we are this close to enemy, we MUST know he is there                
             #check if there is a dynamic thing in the way and see if it is a unit, if it is friendly than ok
             stuff = self.level.getDynamic( ptx + dx, pty ) 
             if stuff and stuff[0] == level.DYNAMICS_UNIT:
@@ -714,7 +748,7 @@ class Engine( Thread ):
                         continue
                     
                     #if we can't move here just skip
-                    if( self.canIMoveHere( unit, (x,y), dx, dy) == False ):
+                    if( self.canIMoveHere( unit, (x,y), dx, dy, False) == False ):
                         continue
                     
                     #if we are looking at the origin, and we can move there, we just checked that, stop
@@ -915,6 +949,7 @@ class Engine( Thread ):
         
         for tmp_unit_id in unit_ids_involved:
             tmp_unit = self.units[tmp_unit_id] 
+            tmp_unit.refreshDicts()
             for p in self.players:
                 if tmp_unit.owner == p or tmp_unit.owner.team == p.team:
                     p.addUnitMsg( util.compileUnit(tmp_unit) )                                        
@@ -981,7 +1016,7 @@ class Engine( Thread ):
         if spotted:
             for enemy in spotted:
                 unit.owner.visible_enemies.append( enemy )
-                ret_actions.append( ( SPOT, util.compileUnit(enemy)) )
+                ret_actions.append( ( SPOT, util.compileEnemyUnit(enemy)) )
                         
         return ret_actions
     
@@ -1108,6 +1143,7 @@ class Engine( Thread ):
                         
         for unit_id in unit_ids_involved:
             unit = self.units[unit_id] 
+            unit.refreshDicts()
             for p in self.players:
                 if unit.owner == p or unit.owner.team == p.team:
                     p.addUnitMsg( util.compileUnit(unit) )                                        
