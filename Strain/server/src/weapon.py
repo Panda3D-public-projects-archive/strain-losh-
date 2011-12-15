@@ -34,8 +34,10 @@ class Weapon():
         self.parry = None
         self.power = None
     
-    def givePercent( self, distance, bs, visibility ):
+    def givePercent( self, target, visibility ):
         
+        distance = util.distanceTupple( self.owner.pos, target.pos)
+        bs = self.owner.bs
         #TODO: krav: razlika izmedju ws-ova oba lika da se gleda
         if self.type == TYPE_MELEE:
             if distance > 1:
@@ -78,16 +80,13 @@ class Weapon():
         if visibility == 1:
             res *= 0.5
         
-        return res
+        return int(res)
         
         
-    def shoot(self, shooter, target, visibility ):
+    def shoot(self, target, visibility ):
 
-        #when we are here, we are certain that the target is in los
-        #check range
-        distance = util.distanceTupple(shooter.pos, target.pos)
-        
-        to_hit = self.givePercent(distance, shooter.bs, visibility)       
+        #when we are here, we are certain that the target is in los        
+        to_hit = self.givePercent( target, visibility)       
                 
         if util.d100() <= to_hit:
             return self.hit( target )
