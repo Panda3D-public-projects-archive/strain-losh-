@@ -1,6 +1,6 @@
 from server_messaging import *
 import datetime
-
+import cPickle as pickle
 
 class Player:
     
@@ -78,8 +78,7 @@ class Player:
         print "saving replay to:", fname
         f = open( util.getReplayName(), 'w')
         
-        for msg in self.msg_lst:
-            f.write( str(msg) + '\n')
+        pickle.dump( self.msg_lst, f, pickle.HIGHEST_PROTOCOL )
                     
         f.close()
             
