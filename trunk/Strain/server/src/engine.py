@@ -719,11 +719,15 @@ class Engine( Thread ):
             return[]
         
         moveDict = self.getMoveDict(unit, True)
+        moveDictSubjective = self.getMoveDict(unit, True, False)
 
-        #if target_tile tile is not in the move list, then raise alarm
-        if (target_tile in moveDict) == False:
-            notify.critical("getPath() got an invalid target tile:%s", target_tile )
-            raise Exception( "Trying to move to an invalid target_tile:%s", target_tile )
+        #if target_tile tile is not in the move list, or my subjective move list then raise alarm
+        if target_tile not in moveDict:
+            if target_tile in moveDictSubjective:
+                moveDict = moveDictSubjective
+            else:
+                notify.critical("getPath() got an invalid target tile:%s", target_tile )
+                raise Exception( "Trying to move to an invalid target_tile:%s", target_tile )
         
         x = target_tile[0]
         y = target_tile[1]
