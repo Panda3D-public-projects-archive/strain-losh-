@@ -271,4 +271,15 @@ def initAnims(model, unit_type, wpns):
     for anim in anim_dict.iterkeys():
         model.anims[anim] = prefix+anim_dict[anim]
     model.loadAnims(model.anims)
+    
+def str2tuple(s):
+    """Convert tuple-like strings to real tuples.
+    eg '(1,2,3,4)' -> (1, 2, 3, 4)
+    """
+    if s[0] + s[-1] != "()":
+        raise ValueError("Badly formatted string (missing brackets).")
+    items = s[1:-1] # removes the leading and trailing brackets
+    items = items.split(',')
+    L = [x.strip() for x in items] # clean up spaces
+    return tuple(L)    
 
