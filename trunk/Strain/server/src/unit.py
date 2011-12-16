@@ -42,9 +42,7 @@ class Unit():
         self.move_dict = {}
         self.shoot_dict = {}
         
-        self.bs = -1
         self.ws = -1
-        self.s = -1
         
     def init(self, in_id, owner, x, y ):
         
@@ -136,7 +134,6 @@ class Unit():
         if not w:
             w = weapon.loadWeapon("Karate")
             w.owner = self
-            w.str = self.s
                 
         return w
 
@@ -352,16 +349,7 @@ def loadUnit( name ):
             unit.set_up = False
 
         unit.default_hp = int( p.attributes['hp'].value )
-        
-        #unit.m = int( p.attributes['m'].value )
         unit.ws = int( p.attributes['ws'].value )
-        #unit.bs = int( p.attributes['bs'].value )
-        unit.s = int( p.attributes['s'].value )
-        #unit.t = int( p.attributes['t'].value )
-        #unit.w = int( p.attributes['w'].value )
-        #unit.i = int( p.attributes['i'].value )
-        #unit.a = int( p.attributes['a'].value )
-        #unit.ld = int( p.attributes['ld'].value )
 
     xmldoc.unlink()
     

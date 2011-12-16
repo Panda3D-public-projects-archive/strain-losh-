@@ -12,15 +12,13 @@ TYPE_HEAVY = 'heavy'
 TYPE_MELEE = 'melee'
 
 SPECIAL_FLAMER = 'flamer'
-SPECIAL_STORM_SHIELD = 'storm_shield'
+
 
 
 
     
     
 class Weapon():
-
-
 
     def __init__(self):
         self.owner = None
@@ -37,10 +35,9 @@ class Weapon():
     def givePercent( self, target, visibility ):
         
         distance = util.distanceTupple( self.owner.pos, target.pos)
-        bs = self.owner.bs
-        #TODO: krav: razlika izmedju ws-ova oba lika da se gleda
+
         if self.type == TYPE_MELEE:
-            if distance > 1:
+            if distance >= 2:
                 return 0
             else:
                 return 100
@@ -51,34 +48,27 @@ class Weapon():
             else:
                 return 0
         
-        factor = bs * 7
-        
         #trivial check if we are out of range
         if distance > self.range:
             return 0
     
-        #TODO: krav: ufurat bs kod hevij wepona
-        if self.type == TYPE_HEAVY:
-            x = distance * 95 / self.range
-            return -x + 69 + factor
-    
-        point_blank = (bs-1)
-        if distance <= point_blank:
-            return 100
+        #for every tile of distance, accuracy drops for this factor
+        factor = 5
         
-        t = math.pi / (self.range-point_blank) 
-        x = (distance-point_blank) * t - math.pi / 2
-        sin = math.sin(-x)    
-    
-        if sin > 0:
-            res = sin * (70 - factor) 
-        else:
-            res = sin * (25 + factor ) 
-        
-        res += 30 + factor    
-        
+        #TODO: krav: a mozda da svako oruzje ima svoj accuracy
+        if self.type == TYPE_RIFLE:
+            factor = 5
+        elif self.type == TYPE_ASSAULT:
+            factor = 6
+        elif self.type == TYPE_HEAVY:
+            factor = 5
+        elif self.type == TYPE_PISTOL:
+            factor = 7
+            
+        res = 100 - (distance * factor)  
+
         if visibility == 1:
-            res *= 0.5
+            res *= 0.6
         
         return int(res)
         
@@ -99,18 +89,7 @@ class Weapon():
 
         
     def hitInMelee(self, attacker, target):
-        
-        res = None
-        
-        if attacker.s > self.str:
-            orig_str = self.str
-            self.str = attacker.s
-            res = target.hit( self, target.save( self ) )
-            self.str = orig_str
-        else:
-            res = target.hit( self, target.save( self ) )
-            
-        return res
+        return target.hit( self, target.save( self ) )
 
         
 def loadWeapon( name ):     
@@ -146,5 +125,6 @@ def loadWeapon( name ):
     if not wpn:
         raise Exception("Weapon:%s not found in database." % name)
     return wpn
+
 
 
