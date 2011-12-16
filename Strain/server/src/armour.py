@@ -41,7 +41,7 @@ def loadArmour( name ):
         armr.name = p.attributes['name'].value            
         armr.front = int( p.attributes['front'].value )
         armr.side = int( p.attributes['sides_back'].value )
-        armr.ap = int( p.attributes['ap'].value )
+        armr.ap = int( p.attributes['action_points'].value )
         
     xmldoc.unlink()
     if not armr:
