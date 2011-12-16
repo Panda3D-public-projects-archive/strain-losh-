@@ -123,7 +123,7 @@ class Engine( Thread ):
             self.unitUpdate( msg[1], SET_UP, source)
                         
         elif( msg[0] == SHOOT ):
-            self.shoot( msg[1]['shooter_id'], msg[1]['target_id'], source )
+            self.handleShoot( msg[1]['shooter_id'], msg[1]['target_id'], source )
                         
         else:
             notify.error( "Unknown message Type: %s", msg )
@@ -600,7 +600,7 @@ class Engine( Thread ):
                 if util.distanceTupple(unit.pos, enemy.pos) < 2:
                     wpn = unit.chooseMeleeWeapon( enemy )                
                 
-                shoot_dict[enemy.id] = ( vis, wpn.givePercent( enemy, vis ), wpn.str - enemy.armour.save( wpn ) )
+                shoot_dict[enemy.id] = ( vis, wpn.givePercent( enemy, vis ), wpn.str - enemy.armour.reduceDmg( wpn ) )
         
         return shoot_dict
         
@@ -1058,7 +1058,7 @@ class Engine( Thread ):
         return spotted
             
 
-    def shoot(self, shooter_id, target_id, source ):
+    def handleShoot(self, shooter_id, target_id, source ):
         
         if not self.validatePlayer( source ):
             return

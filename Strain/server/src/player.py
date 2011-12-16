@@ -26,7 +26,7 @@ class Player:
             
     def addShootMsg(self, shoot_actions):
         if self.connection:
-            EngMsg.shoot( shoot_actions, self.connection )
+            EngMsg.shootMsg( shoot_actions, self.connection )
         else:
             self.msg_lst.append( (SHOOT, shoot_actions) )
             

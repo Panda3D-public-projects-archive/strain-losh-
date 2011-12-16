@@ -14,7 +14,7 @@ class Armour():
         self.ap = None
         
     
-    def save( self, enemy_weapon ):
+    def reduceDmg( self, enemy_weapon ):
 
         if enemy_weapon.power:
             return 0
