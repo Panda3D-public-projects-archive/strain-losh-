@@ -113,9 +113,9 @@ class Unit():
         #roll to hit
         if util.d100() > base:
             ret_lst.append( ('melee', self.id, target.pos, wpn.name, [('miss', target.id)] ) )
-            return ret_lst        
+        else:
+            ret_lst.append( ('melee', self.id, target.pos, wpn.name, wpn.hitTarget( target ) ) )
             
-        ret_lst.append(  ('melee', self.id, target.pos, wpn.name, wpn.hitInMelee( self, target ) ) )
         return ret_lst
 
         
@@ -153,7 +153,6 @@ class Unit():
 
                 
     def shoot(self, target, visibility, overwatch = False):
-        #TODO: krav: stavit da se moze gadjat i tile?
                 
         if not visibility:
             return None
@@ -179,19 +178,15 @@ class Unit():
         self.ap -= self.active_weapon.ap_cost
                         
         #check to see if we need to rotate unit before shooting, but if we are on overwatch, we cant rotate
-        rot = [] 
+        ret = [] 
         if not overwatch:
             if self.rotate( target.pos ):
-                rot.append( ( ROTATE, self.id, self.heading) ) 
+                ret.append( ( ROTATE, self.id, self.heading) ) 
                         
         self.last_action = 'shoot'
         
-        rot.append( (SHOOT, self.id, target.pos, self.active_weapon.name, self.active_weapon.shoot( target, visibility ) ) )
-        return rot
-
-
-    def _shoot(self, target):
-        pass
+        ret.append( (SHOOT, self.id, target.pos, self.active_weapon.name, self.active_weapon.fire( target, visibility ) ) )
+        return ret
 
 
     def setOverwatch(self):
@@ -203,7 +198,7 @@ class Unit():
         return False
 
 
-    def hit(self, weapon, dmg_saved):
+    def iAmHit(self, weapon, dmg_saved):
         
         dmg_received = weapon.str - dmg_saved
         
@@ -216,10 +211,6 @@ class Unit():
             self.die( weapon )
             return [('kill', self.id, dmg_received )]
         return [('damage',self.id, dmg_received)]
-
-
-    def save(self, enemy_weapon):
-        return self.armour.save( enemy_weapon )
 
 
     def die(self, weapon ):

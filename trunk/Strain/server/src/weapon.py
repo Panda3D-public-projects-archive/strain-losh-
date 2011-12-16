@@ -73,23 +73,21 @@ class Weapon():
         return int(res)
         
         
-    def shoot(self, target, visibility ):
+    def fire(self, target, visibility ):
 
         #when we are here, we are certain that the target is in los        
-        to_hit = self.givePercent( target, visibility)       
+        to_hit = self.givePercent( target, visibility )       
                 
         if util.d100() <= to_hit:
-            return self.hit( target )
+            return self.hitTarget( target )
         else:
             return [('miss', target.id)]
     
     
-    def hit(self, target):
-        return target.hit( self, target.save( self ) )
+    def hitTarget(self, target):
+        return target.iAmHit( self, target.armour.reduceDmg( self ) )
 
         
-    def hitInMelee(self, attacker, target):
-        return target.hit( self, target.save( self ) )
 
         
 def loadWeapon( name ):     

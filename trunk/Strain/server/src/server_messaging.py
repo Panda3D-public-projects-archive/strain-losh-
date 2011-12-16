@@ -273,7 +273,7 @@ class EngMsg:
         EngMsg._sendMsg((MOVE, (unit_id, move_actions)), source) 
                                                                       
     @staticmethod
-    def shoot( shoot_actions, source = None):
+    def shootMsg( shoot_actions, source = None):
         EngMsg._sendMsg( (SHOOT, shoot_actions), source )
         print shoot_actions 
                                                                       
