@@ -56,7 +56,6 @@ class Level:
             return False
 
 
-    #TODO: krav: spojit ovo i opaque()
     def canUnitFitHere(self, unit):
 
         x, y = int(unit.pos[0]), int(unit.pos[1])
@@ -71,9 +70,11 @@ class Level:
             print "This tile already occupied, unit cannot deploy here", x, y, unit.type
             return False
             
+        return True
+    
         
     def putUnit(self, unit ):
-        if not self.canUnitFitHere(unit):
+        if self.canUnitFitHere(unit):
             self._dynamics[ int(unit.pos[0]) ][ int(unit.pos[1]) ] = ( DYNAMICS_UNIT, unit.id )
             return True
         
