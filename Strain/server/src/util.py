@@ -130,7 +130,7 @@ def compileLevel(level):
 
 
 def compileUnit(unit):
-    ret = compileTarget( unit, ['owner', 'weapons', 'active_weapon', 'armour'] )
+    ret = compileTarget( unit, ['owner', 'weapons', 'active_weapon', 'armour', 'dynamics'] )
      
     ret['owner_id'] = unit.owner.id             
     ret['weapons'] = compileWeaponList( unit.weapons )
