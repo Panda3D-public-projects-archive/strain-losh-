@@ -65,9 +65,9 @@ class App():
         #go to login screen
         self.fsm.request('LoginScreen')
         
-    def startClient(self):
+    def startClient(self, type):
         #start client
-        self.fsm.request('Client')
+        self.fsm.request('Client', type)
 #========================================================================
 #
 class AppFSM(FSM.FSM):
@@ -88,6 +88,7 @@ class AppFSM(FSM.FSM):
         self.parent.login.button.remove()
         self.parent.login.button_ultras.remove()
         self.parent.login.button_obs.remove()
+        self.parent.login.button_replay.remove()
         self.parent.login.commoner1.delete()
         self.parent.login.commoner2.delete()
         self.parent.login.commander.delete()
@@ -98,9 +99,9 @@ class AppFSM(FSM.FSM):
         self.parent.login.textObject.remove()       
         del self.parent.login
 
-    def enterClient(self):
+    def enterClient(self, type):
         base.win.setClearColor(VBase4(0.5, 0.5, 0.5, 0))
-        self.parent.client = Client(self.parent, self.parent.player)
+        self.parent.client = Client(self.parent, self.parent.player, type=type)
         
     def exitClient(self):
         None
@@ -134,8 +135,11 @@ class LoginScreen():
         
         self.button_obs = DirectButton(text = ("Login as Berserker"),scale=.02,command=self.loginButObsPressed, text_font=font, text_align=TextNode.ACenter)
         self.button_obs.reparentTo(aspect2d)
-        self.button_obs.setPos(0.5, 0, -0.7) 
+        self.button_obs.setPos(0.5, 0, -0.7)
         
+        self.button_replay = DirectButton(text = ("Replay Viewer"),scale=.04,command=self.loginReplayPressed, text_font=font, text_align=TextNode.ACenter)
+        self.button_replay.reparentTo(aspect2d)
+        self.button_replay.setPos(0.5, 0, -0.8)        
         
         ground_level = -1.6
         self.commoner1 = utils.loadUnit('common', 'Bolter')
@@ -166,15 +170,19 @@ class LoginScreen():
         self.parent.player = self.entry_username.get()
         if self.parent.player != "ultramarines" and self.parent.player != "blood angels":
             self.parent.player = "blood angels"
-        self.parent.startClient()
+        self.parent.startClient(type="Game")
         
     def loginButUltrasPressed(self, text=None):
         self.parent.player = "ultramarines"
-        self.parent.startClient()
+        self.parent.startClient(type="Game")
         
     def loginButObsPressed(self, text=None):
         self.parent.player = "observer"
-        self.parent.startClient()        
+        self.parent.startClient(type="Game")    
+        
+    def loginReplayPressed(self, text=None):
+        self.parent.player = "observer"
+        self.parent.startClient(type="Replay")    
 #========================================================================
 #
 class SceneGraph():
@@ -513,8 +521,11 @@ class Client(DirectObject):
         self._anim_in_process = False 
 
         #Initialize game mode (network)
-        self.fsm.request('GameMode')
-        #self.fsm.request('ReplayMode', "replay_2011-12-13_1.rpl")
+        if type == "Game":
+            self.fsm.request('GameMode')
+        elif type == "Replay":
+            self.fsm.request('ReplayMode', "replay_2011-12-19_1.rpl")
+            
         # Turn number and player on turn
         self.turn_number = 0
         self.turn_player = None
@@ -1043,7 +1054,8 @@ class Net():
         taskMgr.add(self.msgTask, "msg_task") 
         
     def startReplay(self, replay):
-        self.replay = open(replay, 'r')
+        self.replay_msg_list = pickle.load(open(replay, 'r'))
+        self.replay_msg_num = 0
         taskMgr.add(self.replayMsgTask, "replay_msg_task")
 
     def handleMsg(self, msg):
@@ -1063,7 +1075,11 @@ class Net():
                     self.parent.player_id = p['id']
             self.parent.turn_player = self.parent.getPlayerName(msg[1]['active_player_id'])                    
             self.parent.setupUnitLists(pickle.loads(msg[1]['units']))
-            self.parent.fsm.request('EngineState')
+            self.parent.clearState()
+            self.parent.sgm.deleteLevel()
+            self.parent.sgm.deleteUnits()
+            self.parent.sgm.loadLevel(self.parent.level)
+            self.parent.sgm.loadUnits()
             self.parent._message_in_process = False
         #========================================================================
         #
@@ -1129,12 +1145,10 @@ class Net():
     def replayMsgTask(self, task):
         # Read msg from file and send to handleMsg
         if self.parent._message_in_process == False:
-            line = self.replay.readline()
-            line = line.rstrip("\n")
-            tline =  utils.str2tuple(line)
-            print tline
-            if tline:
-                self.handleMsg(tline)
+            if self.replay_msg_num <= len(self.replay_msg_list)-1:
+                msg = self.replay_msg_list[self.replay_msg_num]
+                self.handleMsg(msg)
+                self.replay_msg_num += 1
         return task.cont
     
     
@@ -1146,9 +1160,7 @@ class Net():
         if self.parent._message_in_process == False:
             msg = ClientMsg.readMsg()        
             if msg:
-                self.handleMsg(msg)      
-        
-        #print self.parent._message_in_process      
+                self.handleMsg(msg)         
         return task.cont
 
 #========================================================================
@@ -1178,16 +1190,6 @@ class ClientFSM(FSM.FSM):
         self.parent.sgm.initCollisions()
     
     def exitGraphicsInit(self):
-        None
-        
-    def enterEngineState(self):
-        self.parent.clearState()
-        self.parent.sgm.deleteLevel()
-        self.parent.sgm.deleteUnits()
-        self.parent.sgm.loadLevel(self.parent.level)
-        self.parent.sgm.loadUnits()
-
-    def exitEngineState(self):
         None
         
 #========================================================================
