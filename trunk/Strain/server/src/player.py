@@ -77,8 +77,8 @@ class Player:
         fname = util.getReplayName()
         print "saving replay to:", fname
         f = open( util.getReplayName(), 'w')
-        
-        pickle.dump( self.msg_lst, f, pickle.HIGHEST_PROTOCOL )
+        print self.msg_lst
+        pickle.dump( self.msg_lst, f )
                     
         f.close()
             
