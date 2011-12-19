@@ -102,15 +102,12 @@ def loadWeapon( name ):
         
         wpn = Weapon()            
         wpn.name = p.attributes['name'].value
-        
-        try:wpn.type = p.attributes['type'].value 
-        except:pass
-        try:wpn.str = int(p.attributes['Str'].value)
-        except:pass
+        wpn.type = p.attributes['type'].value 
+        wpn.str = int(p.attributes['Str'].value)
         try:wpn.range = int(p.attributes['range'].value)
-        except:pass
-        try:wpn.ap_cost = int(p.attributes['ap_cost'].value)
-        except:pass
+        except: pass
+        wpn.ap_cost = float(p.attributes['ap_cost'].value)
+        
         try:wpn.power = int(p.attributes['power'].value)
         except:pass
         try:wpn.special = p.attributes['special'].value
