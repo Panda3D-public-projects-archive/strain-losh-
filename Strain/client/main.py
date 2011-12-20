@@ -27,7 +27,7 @@ from strain.client_messaging import *
 #from strain.camera import Camera
 from strain.cam2 import Camera
 from strain.voxelgen import VoxelGenerator
-from strain.unitmodel import UnitModel
+from strain.unitmodel import UnitModel, LegoUnitModel
 from strain.interface import Interface
 import strain.utils as utils
 
@@ -318,7 +318,10 @@ class SceneGraph():
         self.comp_inited['units'] = True  
         
     def loadUnit(self, unit_id, wpn_list):
-        um = UnitModel(self, unit_id, wpn_list)
+        if unit_id == 1:
+            um = LegoUnitModel(self, unit_id)
+        else:
+            um = UnitModel(self, unit_id, wpn_list)
         # Keep unit nodepath in dictionary of all unit nodepaths
         self.unit_np_dict[unit_id] = um
         return um
@@ -383,9 +386,12 @@ class SceneGraph():
         if not self.comp_inited['alt_render']:
             return
         wpn_list = utils.getUnitWeapons(self.parent.units[unit_id])
-        self.off_model = UnitModel(self, unit_id, wpn_list, off=True)
+        if unit_id == 1:
+            self.off_model = LegoUnitModel(self, unit_id, off=True)
+        else:
+            self.off_model = UnitModel(self, unit_id, wpn_list, off=True)
         self.off_model.reparentTo(self.alt_render)
-        self.off_model.model.play('idle_stand01')
+        #self.off_model.model.play('idle_stand01')
         
     def showUnitAvailMove(self, unit_id):
         """Displays visual indicator of tiles which are in movement range of the selected unit."""
@@ -840,9 +846,9 @@ class Client(DirectObject):
                 action_list = action[1]
                 i = self.buildOverwatchAnim(action_list)
                 s.append(i)
-                    
-        anim = ActorInterval(unit_model.model, 'run', loop = 1, duration = d)
-        anim_end = ActorInterval(unit_model.model, 'idle_stand01', startFrame=1, endFrame=1)
+        
+        anim = unit_model.getActorInterval('run', loop = 1, duration = d)
+        anim_end = unit_model.getActorInterval('idle_stand01', startFrame=1, endFrame=1)
         move = Sequence(Parallel(anim, s), Sequence(anim_end))
         return move
         
@@ -948,7 +954,7 @@ class Client(DirectObject):
     
     def buildShootAnim(self, unit_model, weapon):
         # Unit shooting animation
-        shoot_anim = ActorInterval(unit_model.model, 'shoot')
+        shoot_anim = unit_model.getActorInterval('shoot')
         return shoot_anim
     
     def buildBulletAnim(self, start_pos, target_tile):
@@ -970,7 +976,7 @@ class Client(DirectObject):
 
     def buildMeleeAnim(self, unit_model, target_tile, weapon):
         # Unit melee animation
-        melee_anim = ActorInterval(unit_model.model, 'melee')
+        melee_anim = unit_model.getActorInterval('melee')
         return melee_anim
     
     def buildDamageAnim(self, damage_list):
@@ -982,16 +988,16 @@ class Client(DirectObject):
             target_unit = self.sgm.unit_np_dict[target_unit_id]
             t = TextNode('dmg')
             if damage_type == "bounce":
-                target_anim = ActorInterval(target_unit.model, "damage", startFrame=1, endFrame=1)
+                target_anim = target_unit.getActorInterval("damage", startFrame=1, endFrame=1)
                 dmg = 'bounce'
             elif damage_type == "miss":
-                target_anim = ActorInterval(target_unit.model, "damage", startFrame=1, endFrame=1)
+                target_anim = target_unit.getActorInterval("damage", startFrame=1, endFrame=1)
                 dmg = 'miss'                
             elif damage_type == "damage":
-                target_anim = ActorInterval(target_unit.model, "damage", startFrame=1, endFrame=1)
+                target_anim = target_unit.getActorInterval("damage", startFrame=1, endFrame=1)
                 dmg = str(action[2])
             elif damage_type == "kill":
-                target_anim = Sequence(ActorInterval(target_unit.model, "die"))
+                target_anim = Sequence(target_unit.getActorInterval("die"))
                 dmg = str(action[2])
             t.setText( "%s" % dmg)
             t.setTextColor(1, 0, 0, 1)

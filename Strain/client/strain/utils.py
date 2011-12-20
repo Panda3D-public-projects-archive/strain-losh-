@@ -6,7 +6,7 @@
 import string
 
 # panda3D imports
-from pandac.PandaModules import GeomNode, NodePath
+from panda3d.core import GeomNode, NodePath, TextureStage
 from direct.actor.Actor import Actor
 
 # strain related imports
@@ -208,6 +208,33 @@ def getUnitWeapons(unit):
 def parseUnitWeapons(weapons):
     return string.split(weapons,',')
 
+def loadLegoUnit():
+    model = loader.loadModel('gunny')
+    model_parts = []
+    model_np = NodePath("pico")
+    for part in model.findAllMatches('**/+Character'):
+        actor = Actor(part, {'walk': 'gunny-walk', 
+                             'run':'gunny-walk', 
+                             'idle_stand01':'gunny-walk', 
+                             'shoot':'gunny-walk', 
+                             'melee':'gunny-walk',
+                             'damage':'gunny-walk', 
+                             'die':'gunny-walk'})
+        if actor.getName() == 'Gunny.001':
+            ts = TextureStage('ts')
+            ts.setTexcoordName('BodyUV')
+            tex = loader.loadTexture('bodyuv.png')
+            actor.setTexture(ts, tex)
+        elif actor.getName() == 'Gunny':
+            ts = TextureStage('ts')
+            tex = loader.loadTexture('gun.png')
+            actor.setTexture(ts, tex)
+        actor.reparentTo(model_np)
+        model_parts.append(actor)
+        part.removeNode()
+    model_np.setScale(5, 5, 5)
+    return model_np, model_parts 
+
 def loadUnit(unit_type, weapons):
     model = Actor('marine') 
     model.reparentTo(render)
@@ -271,15 +298,5 @@ def initAnims(model, unit_type, wpns):
     for anim in anim_dict.iterkeys():
         model.anims[anim] = prefix+anim_dict[anim]
     model.loadAnims(model.anims)
-    
-def str2tuple(s):
-    """Convert tuple-like strings to real tuples.
-    eg '(1,2,3,4)' -> (1, 2, 3, 4)
-    """
-    if s[0] + s[-1] != "()":
-        raise ValueError("Badly formatted string (missing brackets).")
-    items = s[1:-1] # removes the leading and trailing brackets
-    items = items.split(',')
-    L = [x.strip() for x in items] # clean up spaces
-    return tuple(L)    
+       
 

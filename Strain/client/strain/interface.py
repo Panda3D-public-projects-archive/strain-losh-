@@ -1,10 +1,9 @@
 from direct.showbase import DirectObject
-from panda3d.core import Plane, Vec3, Vec4, Point4, Point3, Point2, NodePath#@UnresolvedImport
+from panda3d.core import Plane, Vec3, Point4, Point3, Point2, NodePath#@UnresolvedImport
 from panda3d.core import GeomNode, CardMaker, TextNode#@UnresolvedImport
-from panda3d.core import TextureStage, TransparencyAttrib#@UnresolvedImport
+from panda3d.core import TransparencyAttrib#@UnresolvedImport
 from direct.gui.DirectGui import DirectFrame, DGG
 from direct.gui.OnscreenText import OnscreenText
-from unitmodel import UnitModel
 from console import GuiConsole
 from client_messaging import *
 #===============================================================================
