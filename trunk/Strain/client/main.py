@@ -113,6 +113,7 @@ class LoginScreen():
     def __init__(self, parent):
         self.parent = parent
         font = loader.loadFont('frizqt__.ttf')
+        legofont = loader.loadFont('legothick.ttf')
         self.label_username = DirectLabel(text = "Username:", scale=.05, frameColor=(0,0,0,0), text_font=font, text_align=TextNode.ARight, text_fg=(1,1,1,1))
         self.label_password = DirectLabel(text = "Password:", scale=.05, frameColor=(0,0,0,0), text_font=font, text_align=TextNode.ARight, text_fg=(1,1,1,1))
         self.button = DirectButton(text = ("Login"),scale=.05,command=self.loginButPressed, text_font=font, text_align=TextNode.ACenter)
@@ -164,7 +165,7 @@ class LoginScreen():
         self.assault3.setPos(6, 23, ground_level)
         self.assault3.loop('idle_stand03')  
         
-        self.textObject = OnscreenText(text = 'STRAIN', pos = (0, 0.4), scale = 0.2, font=font, fg = (1,0,0,1))
+        self.textObject = OnscreenText(text = 'STRAIN', pos = (0, 0.4), scale = 0.2, font=legofont, fg = (1,0,0,1))
     
     def loginButPressed(self, text=None):
         self.parent.player = self.entry_username.get()
