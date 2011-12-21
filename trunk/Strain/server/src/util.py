@@ -5,7 +5,8 @@ import logging.handlers
 import cPickle as pickle
 import datetime
 import os
-
+from strain.share import *
+import copy
 
 OBSERVER_ID = -666
 
@@ -126,7 +127,10 @@ def compileAllDetectedUnits(units):
 
 
 def compileLevel(level):
-    return compileTarget( level,['_dynamics'] )
+    #return compileTarget( level,['_dynamics'] )
+    lvl = copy.deepcopy( level )
+    lvl._dynamics = None
+    return lvl
 
 
 def compileUnit(unit):
@@ -236,13 +240,6 @@ def headingToAngle( heading ):
 
     
 
-def signum( num ):
-    if( num < 0 ): 
-        return -1
-    elif( num >= 0 ):
-        return 1
-
-
 
 def d( num, dice ):
     ret = 0
@@ -258,10 +255,6 @@ def d100():
 def distanceTupple( t1, t2  ):
     return distance( t1[0], t1[1], t2[0], t2[1] )
 
-
-def distance( x1, y1, x2, y2 ):    
-    return math.sqrt( math.pow( (x2-x1) , 2) +  math.pow( (y2-y1) , 2) )
-    
     
 def getReplayName():
     today = datetime.date.today()    

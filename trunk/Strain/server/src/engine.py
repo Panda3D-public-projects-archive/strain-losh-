@@ -1,7 +1,7 @@
 from xml.dom import minidom
 import unit
-from level import Level
-import level
+#from level import Level
+#import level
 import math
 from server_messaging import *
 from threading import Thread
@@ -15,7 +15,7 @@ from player import Player
 from util import compileEnemyUnit, compileUnit, compileState
 import copy
 from util import OBSERVER_ID
-
+from strain.share import *
 
 notify = util.Notify()
 
@@ -94,8 +94,6 @@ class Engine( Thread ):
 
     def handleMsg(self, msg, source):
         """This method is the main method for handling incoming messages to the Engine"""     
-        
-        #TODO: krav: ovdje na pocetak stavit validate player
         
         if( msg[0] == ENGINE_SHUTDOWN ):
             EngMsg.error("Server is shutting down")
@@ -390,202 +388,8 @@ class Engine( Thread ):
         
 
     def getLOS(self, beholder, target ):
-        """0-cant see, 1-partial, 2-full"""
+        return getLOSOnLevel( beholder.__dict__, target.__dict__, self.level )
         
-        if beholder.pos == target.pos:
-            return 2
-        
-        b_pos = beholder.pos + ( ( self.level.getHeight( beholder.pos ) + beholder.height -1 ) , )
-        #print "print "beh:", beholder.pos, "\ttar:", target.pos 
-        seen = 0        
-        
-        #check if we see target's head
-        t1 = target.pos + ( ( self.level.getHeight( target.pos ) + target.height -1 ) , )        
-        if self.getTiles3D( b_pos, t1 ):
-            seen += 1
-        
-        #check if we see target's feet
-        t2 = target.pos + ( self.level.getHeight( target.pos ) , )
-        if self.getTiles3D( b_pos, t2 ):
-            seen += 1
-    
-        return seen
-    
-    
-    def getTiles3D(self, t1, t2 ):
-
-        #we see ourself
-        if( t1 == t2 ):
-            return [ t1 ]
-        
-        x1, y1, z1 = t1
-        x2, y2, z2 = t2
-        
-        #if one of our end points is not empty space, return false
-        if self.level.opaque( x1, y1, z1 ) or self.level.opaque( x2, y2, z2 ):
-            return False
-        
-        absx0 = math.fabs(x2 - x1);
-        absy0 = math.fabs(y2 - y1);
-        absz0 = math.fabs(z2 - z1);
-        
-        dist = int( util.distance(x1, y1, x2, y2) )
-
-        list_visible_tiles = [ t1 ]
-        rev = False
-        
-        if( absx0 > absy0 ):
-            if x2 < x1:
-                x1, y1, z1 = t2
-                x2, y2, z2 = t1
-                list_visible_tiles[0] = t2
-                rev = True
-        else:
-            if y2 < y1:
-                x1, y1, z1 = t2
-                x2, y2, z2 = t1
-                list_visible_tiles[0] = t2
-                rev = True
-        
-        
-        x = int( x1 );
-        y = int( y1 );
-        z = int( z1 )
-
-        
-        sgnz0 = util.signum(z2 - z1)
-        z_d = absz0/dist
-        
-        if( absx0 > absy0 ):
-            sgny0 = util.signum( y2 - y1 );
-            y_x = absy0/absx0            
-            D = y_x -0.5
-
-            if dist > absz0:
-                Dz = z_d - 0.5
-            
-            for i in xrange( int( absx0 ) ): #@UnusedVariable
-                lastx, lasty, lastz = x, y, z
-                
-                if( D > 0 ):
-                    y += sgny0
-                    D -= 1
-
-                if dist > absz0:
-                    if Dz > 0:
-                        z += sgnz0
-                        Dz -= 1
-                    Dz += z_d
-                else: 
-                    z = z + z_d * sgnz0
-
-                x += 1
-                D += y_x
-                
-                #=========================TEST==========================================
-                if self.testTile3D( (x, y, int(z)), (lastx, lasty, int(lastz)) ):
-                    list_visible_tiles.append( (x, y, int(z)) )
-                else:
-                    return False
-                    break
-                
-        #//(y0 >= x0)            
-        else:
-            sgnx0 = util.signum( x2 - x1 );
-            x_y = absx0/absy0
-            D = x_y -0.5;
-            
-            if( dist > absz0 ):
-                Dz = z_d - 0.5
-
-            for i in xrange( int( absy0 ) ): #@UnusedVariable
-                lastx, lasty, lastz = x, y, z
-        
-                if( D > 0 ):
-                    x += sgnx0
-                    D -= 1.0
-
-                if dist > absz0:
-                    if Dz > 0:
-                        z += sgnz0
-                        Dz -= 1
-                    Dz += z_d 
-                else:
-                    z = z + z_d * sgnz0
-                    
-                y += 1
-                D += x_y
-                
-                #=========================TEST==========================================
-                if self.testTile3D( (x, y, int(z)), (lastx, lasty, int(lastz)) ):
-                    list_visible_tiles.append( (x, y, int(z)) )
-                else:
-                    return False
-                    break
-
-        if rev:
-            list_visible_tiles.reverse()
-        return list_visible_tiles
-
-                
-    def testTile3D(self, pos, lastpos ):
-        
-        #level bounds
-        if( self.level.outOfBounds( pos[0], pos[1] ) ):
-            return False
-        if( self.level.outOfBounds( lastpos[0], lastpos[1] ) ):
-            return False
-        
-        #if we can't see here
-        if self.level.opaque( pos[0], pos[1], pos[2] ):
-            return False
-        
-        #moved along x
-        if pos[0] != lastpos[0]:
-            #moved along y
-            if pos[1] != lastpos[1]:
-                
-                #moved along z - diagonal x-y-z
-                if pos[2] != lastpos[2]:
-                        if( self.level.opaque( lastpos[0], lastpos[1], pos[2] ) and
-                            self.level.opaque( lastpos[0], pos[1], lastpos[2] ) and
-                            self.level.opaque( pos[0], lastpos[1], lastpos[2] ) ):                             
-                                return False
-                         
-                        if ( self.level.opaque( lastpos[0], pos[1], lastpos[2] ) and
-                              self.level.opaque( lastpos[0], pos[1], pos[2] ) and
-                              self.level.opaque( pos[0], lastpos[1], lastpos[2] ) and
-                              self.level.opaque( pos[0], lastpos[1], pos[2] ) ): 
-                            return False
-                
-                        return True
-                #diagonal x-y
-                if ( self.level.opaque( pos[0], lastpos[1], pos[2] ) and
-                     self.level.opaque( lastpos[0], pos[1], pos[2] ) ):  
-                            return False
-                else:
-                    return True
-
-            #moved along z - diagonal x-z
-            if pos[2] != lastpos[2]:
-                if ( self.level.opaque( pos[0], pos[1], lastpos[2] ) and
-                     self.level.opaque( lastpos[0], pos[1], pos[2] ) ):  
-                            return False
-                else:
-                    return True
-                    
-        #moved along y 
-        if pos[1] != lastpos[1]:
-            #moved along z - diagonal y-z
-            if pos[2] != lastpos[2]:
-                if ( self.level.opaque( pos[0], pos[1], lastpos[2] ) and
-                     self.level.opaque( pos[0], lastpos[1], pos[2] ) ):  
-                            return False
-                else:
-                    return True
-        
-        return True
-
 
     def getMyShootDict(self, unit):        
         # key : value
@@ -609,7 +413,7 @@ class Engine( Thread ):
         return self.getMoveDict( unit, real = False )
         
 
-    def getMoveDict(self, unit, returnOrigin = False, real = True ):    
+    def getMoveDict(self, unit, returnOriginTile = False, real = True ):    
                 
         final_dict = {}
         open_list = [(unit.pos,unit.ap)]
@@ -655,7 +459,7 @@ class Engine( Thread ):
                             open_list.append( ( pt, ap ) )
                         
                     
-        if( returnOrigin ):
+        if( returnOriginTile ):
             final_dict[unit.pos] = unit.ap
             return final_dict
         
@@ -670,7 +474,7 @@ class Engine( Thread ):
         
         ret = self.level.getDynamic( x, y ) 
         if ret:
-            if ret[0] == level.DYNAMICS_UNIT:
+            if ret[0] == DYNAMICS_UNIT:
                 tmp_unit = self.units[ ret[1] ]
                 
                 if not real:
@@ -716,12 +520,12 @@ class Engine( Thread ):
             #no need to check for 'real variable here, if we are this close to enemy, we MUST know he is there                
             #check if there is a dynamic thing in the way and see if it is a unit, if it is friendly than ok
             stuff = self.level.getDynamic( ptx + dx, pty ) 
-            if stuff and stuff[0] == level.DYNAMICS_UNIT:
+            if stuff and stuff[0] == DYNAMICS_UNIT:
                 if( self.units[ stuff[1] ].owner != unit.owner ):
                     return False
                     
             stuff = self.level.getDynamic( ptx, pty + dy ) 
-            if stuff and stuff[0] == level.DYNAMICS_UNIT:
+            if stuff and stuff[0] == DYNAMICS_UNIT:
                 if( self.units[ stuff[1] ].owner != unit.owner ):
                     return False
                     
