@@ -232,7 +232,6 @@ def loadLegoUnit():
         actor.reparentTo(model_np)
         model_parts.append(actor)
         part.removeNode()
-    #model_np.setScale(5, 5, 5)
     return model_np, model_parts 
 
 def loadUnit(unit_type, weapons):
