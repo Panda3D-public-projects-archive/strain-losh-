@@ -31,6 +31,7 @@ from strain.voxelgen import VoxelGenerator
 from strain.unitmodel import UnitModel, LegoUnitModel
 from strain.interface import Interface
 import strain.utils as utils
+from strain.share import *
 
 #############################################################################
 # GLOBALS
@@ -232,9 +233,9 @@ class SceneGraph():
             return
         
         levelMesh = VoxelGenerator('level', 1, 0.3)
-        for x in xrange(0, level['maxX']):
-            for y in xrange(0, level['maxY']):
-                for i in xrange(0, level['_level_data'][x][y]+1):
+        for x in xrange(0, level.maxX):
+            for y in xrange(0, level.maxY):
+                for i in xrange(0, level.getHeight( (x, y) ) +1):
                     if i == 0:
                         id = 1
                     else:
@@ -254,7 +255,7 @@ class SceneGraph():
         self.level_node.setTexture(t)
         self.comp_inited['level'] = True
         
-        for i in xrange(0, level['maxX']):
+        for i in xrange(0, level.maxX):
             t = TextNode('node name')
             t.setText( "%s" % i)
             tnp = self.level_node.attachNewNode(t)
@@ -263,7 +264,7 @@ class SceneGraph():
             tnp.setPos(i+0.3, -0.3, 0.5)
             tnp.setBillboardPointEye()
             tnp.setLightOff()
-        for i in xrange(0, level['maxY']):
+        for i in xrange(0, level.maxY):
             t = TextNode('node name')
             t.setText( "%s" % i)
             tnp = self.level_node.attachNewNode(t)
@@ -683,7 +684,7 @@ class Client(DirectObject):
         return None
 
     def outOfLevelBounds(self, x, y):
-        if(x < 0 or y < 0 or x >= self.level['maxX'] or y >= self.level['maxY']):
+        if(x < 0 or y < 0 or x >= self.level.maxX or y >= self.level.maxY):
             return True
         else:
             return False
@@ -703,7 +704,7 @@ class Client(DirectObject):
             return False
 
         #check if the level is clear at that tile
-        if(self.level['_level_data'][ptx + dx][pty + dy] != 0):
+        if(self.level.getHeight( (ptx + dx), (pty + dy) ) != 0):
             return False
         
         #check if there is a dynamic obstacle in the way
@@ -715,13 +716,13 @@ class Client(DirectObject):
         if( dx != 0 and dy != 0 ):
             
             #if there is something in level in the way
-            if( self.level['_level_data'][ ptx + dx ][ pty ] != 0 or 
-                self.level['_level_data'][ ptx ][ pty + dy ] != 0 ):
+            if( self.level.getHeight( (ptx + dx), (pty) ) != 0 or 
+                self.level.getHeight( (ptx), (pty + dy) ) != 0 ):
                 return False
             
         return True
         
-    def getMoveDict(self, unit_id, returnOrigin=False):
+    def getMoveDict(self, unit_id, returnOriginTile=False):
         unit = self.units[unit_id]
         final_dict = {}
         open_list = [(unit['pos'], unit['ap'])]
@@ -757,7 +758,7 @@ class Client(DirectObject):
                     else: 
                             final_dict[pt] = ap
                             open_list.append( ( pt, ap ) )
-        if( returnOrigin ):
+        if( returnOriginTile ):
             final_dict[unit.pos] = unit.ap
             return final_dict
         
