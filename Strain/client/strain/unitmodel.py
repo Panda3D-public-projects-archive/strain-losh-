@@ -157,8 +157,7 @@ class LegoUnitModel:
             self.team_color = Vec4(0, 1, 0, 1)        
         self.model, self.parts = utils.loadLegoUnit()
         
-        self.model.reparentTo(self.node)       
-        
+        self.model.reparentTo(self.node)
         if not off:
             scale = 0.25
             h = 180
@@ -174,6 +173,7 @@ class LegoUnitModel:
         self.model.setH(h)
         self.model.flattenLight() 
         self.node.setPos(pos)
+        #self.model.setShaderAuto()
 
         #self.model.setLightOff()
         self.node.setTag("type", "unit")

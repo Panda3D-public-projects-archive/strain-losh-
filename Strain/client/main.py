@@ -10,11 +10,12 @@ from random import randint
 
 # panda3D imports
 from direct.showbase.ShowBase import ShowBase
-from panda3d.core import loadPrcFile, WindowProperties, Texture, OrthographicLens, PerspectiveLens#@UnresolvedImport
+from panda3d.core import loadPrcFile, WindowProperties, Texture, OrthographicLens, PerspectiveLens, SceneGraphAnalyzerMeter#@UnresolvedImport
 from panda3d.core import TextNode, NodePath, Point2, Point3, VBase4, GeomNode, Vec3, Vec4#@UnresolvedImport
 from panda3d.core import ShadeModelAttrib, DirectionalLight, AmbientLight#@UnresolvedImport
 from panda3d.core import CollisionTraverser, CollisionRay, CollisionHandlerQueue, CollisionNode#@UnresolvedImport
 from panda3d.core import ConfigVariableString, ConfigVariableInt#@UnresolvedImport
+from panda3d.core import CullBinManager, CullBinEnums, CardMaker, ColorBlendAttrib
 from direct.interval.IntervalGlobal import Sequence, ActorInterval, Parallel, Func, Interval, Wait#@UnresolvedImport
 from direct.showbase.DirectObject import DirectObject
 from direct.fsm import FSM
@@ -216,7 +217,13 @@ class SceneGraph():
         self.movetext_np = None
         
         # Create main update task
-        taskMgr.add(self.animTask, "anim_task")        
+        taskMgr.add(self.animTask, "anim_task")  
+        
+        #meter = SceneGraphAnalyzerMeter('meter', render.node())
+        #meter.setupWindow(base.win)      
+        
+        bins = CullBinManager.getGlobalPtr()
+        bins.addBin('highlight', CullBinEnums.BTStateSorted, 25)
         
         #print "base.win.getGsg().getMaxTextureStages() = "+str(base.win.getGsg().getMaxTextureStages())
     
@@ -264,7 +271,16 @@ class SceneGraph():
             tnp.setScale(0.5, 0.5, 0.5)
             tnp.setPos(-0.3, i+0.3, 0.5)
             tnp.setBillboardPointEye()
-            tnp.setLightOff()         
+            tnp.setLightOff()
+            
+        cm = CardMaker('cm') 
+        cpos = render.attachNewNode(cm.generate()) 
+        cpos.setP(-90)
+        cpos.setPos(0,0,0.3)
+        cpos.setColor(0.12, 0.12, 0.12)
+        cpos.node().setAttrib(ColorBlendAttrib.make(ColorBlendAttrib.MAdd))
+        cpos.setBin('highlight', 25)
+        cpos.setDepthTest(False)
         
     def deleteLevel(self):
         if self.comp_inited['level'] == False:
