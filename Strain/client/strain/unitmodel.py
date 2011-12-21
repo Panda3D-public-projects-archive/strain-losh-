@@ -160,14 +160,14 @@ class LegoUnitModel:
         self.model.reparentTo(self.node)       
         
         if not off:
-            scale = 0.4
+            scale = 0.25
             h = 180
             pos = Point3(int(unit['pos'][0]), int(unit['pos'][1]), 0)
             pos = self.calcWorldPos(pos)
         else:
-            scale = 1.1
+            scale = 1
             h = 0
-            pos = Point3(0, 1.7, -2.1)
+            pos = Point3(0, 4.1, -1)
         
         # Bake in rotation transform because model is created facing towards screen (h=180)
         self.model.setScale(scale)
