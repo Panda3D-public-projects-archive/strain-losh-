@@ -7,10 +7,11 @@ import math
 #===============================================================================
 class Camera(DirectObject.DirectObject):    
     
-    def __init__(self, maxX, maxY):
+    def __init__(self, parent, maxX, maxY):
         base.disableMouse()
         self.camera = base.camera
         self.mwn = base.mouseWatcherNode
+        self.parent = parent
         
         self.mx = 0
         self.my = 0
@@ -53,7 +54,13 @@ class Camera(DirectObject.DirectObject):
            1 = pressed
            0 = depressed
         """
-        self.keys[button] = value
+        if self.parent.interface.console.consoleEntry['focus'] == 1:
+            self.keys['up'] = 0
+            self.keys['down'] = 0
+            self.keys['left'] = 0
+            self.keys['right'] = 0
+        else:
+            self.keys[button] = value
     
     def setTarget(self, x, y, z):
         """Sets the target point which will be the center of camera view.""" 
