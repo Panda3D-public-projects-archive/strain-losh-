@@ -18,6 +18,7 @@ class UnitModel:
         #self.dummy_node = NodePath("dummy_unit_"+self.id)
         #self.dest_node = NodePath("dest_unit_"+self.id)
         
+        
         # Get unit data from the Client
         unit = self.parent.parent.getUnitData(unit_id)
         if unit['owner_id'] == "1":

@@ -216,6 +216,7 @@ class SceneGraph():
         self.unit_move_orientation = utils.HEADING_NONE
         self.move_timer = 0
         self.movetext_np = None
+        self.enemyunittiles_np = None
         
         # Create main update task
         taskMgr.add(self.animTask, "anim_task")  
@@ -273,15 +274,6 @@ class SceneGraph():
             tnp.setPos(-0.3, i+0.3, 0.5)
             tnp.setBillboardPointEye()
             tnp.setLightOff()
-            
-        cm = CardMaker('cm') 
-        cpos = render.attachNewNode(cm.generate()) 
-        cpos.setP(-90)
-        cpos.setPos(0,0,0.3)
-        cpos.setColor(0.12, 0.12, 0.12)
-        cpos.node().setAttrib(ColorBlendAttrib.make(ColorBlendAttrib.MAdd))
-        cpos.setBin('highlight', 25)
-        cpos.setDepthTest(False)
         
     def deleteLevel(self):
         if self.comp_inited['level'] == False:
@@ -436,6 +428,29 @@ class SceneGraph():
         if self.movetext_np:
             self.movetext_np.removeNode() 
     
+    def showVisibleEnemies(self, unit_id):
+        self.hideVisibleEnemies()
+        unit = self.unit_np_dict[unit_id]
+        self.enemyunittiles_np = NodePath("enemyunittiles_np")        
+        for u in self.parent.units.itervalues():
+            if self.parent.isThisEnemyUnit(u['id']):
+                if getLOSOnLevel(self.parent.units[unit_id], u, self.parent.level) > 0:
+                    cm = CardMaker('cm') 
+                    cpos = self.enemyunittiles_np.attachNewNode(cm.generate()) 
+                    cpos.setP(render, -90)
+                    cpos.setPos(render, u['pos'][0], u['pos'][1], utils.GROUND_LEVEL)
+                    cpos.setColor(0.12, 0.12, 0.12)
+                    cpos.node().setAttrib(ColorBlendAttrib.make(ColorBlendAttrib.MAdd))
+                    cpos.setBin('highlight', 25)
+                    cpos.setDepthTest(False)
+                #print unit['id'], getLOSOnLevel(self.units[unit_id], unit, self.level)
+        self.enemyunittiles_np.flattenStrong()
+        self.enemyunittiles_np.reparentTo(self.node)
+        
+    def hideVisibleEnemies(self):
+        if self.enemyunittiles_np:
+            self.enemyunittiles_np.removeNode() 
+            
     def setBullet(self, b):
         b.reparentTo(render)
     
@@ -582,7 +597,7 @@ class Client(DirectObject):
             # If it is our turn, display available move tiles
             if self.player == self.turn_player:
                 self.sgm.showUnitAvailMove(unit_id)
-
+                self.sgm.showVisibleEnemies(unit_id)
             
     def selectNextUnit(self):
         if self.sel_unit_id == None:
@@ -778,6 +793,7 @@ class Client(DirectObject):
     def clearState(self):
         self.sgm.clearAltRenderModel()
         self.sgm.hideUnitAvailMove()
+        self.sgm.hideVisibleEnemies()
         self.interface.clearUnitData()
         self.sel_unit_id = None
     
@@ -1130,6 +1146,7 @@ class Net():
             if self.parent.sel_unit_id == unit['id']:
                 self.parent.interface.refreshUnitData( unit['id'] )
                 self.parent.sgm.showUnitAvailMove( unit['id'] )
+                self.parent.sgm.showVisibleEnemies(unit['id'])
                 #self.parent.sgm.playUnitStateAnim( unit['id'] )
             self.parent._message_in_process = False
         #========================================================================
