@@ -398,6 +398,7 @@ class Interface(DirectObject.DirectObject):
                 o = Point2(x+1, y-1)
             ClientMsg.move(self.parent.sel_unit_id, (x, y), (o.x, o.y))
         self.unit_move_destination = None
+        self.unit_move_orientation = HEADING_NONE
         self.move_timer = 0
         self.removeTurnArrows()
 
