@@ -438,12 +438,11 @@ class SceneGraph():
                     cm = CardMaker('cm') 
                     cpos = self.enemyunittiles_np.attachNewNode(cm.generate()) 
                     cpos.setP(render, -90)
-                    cpos.setPos(render, u['pos'][0], u['pos'][1], utils.GROUND_LEVEL)
+                    cpos.setPos(render, u['pos'][0], u['pos'][1], utils.GROUND_LEVEL+0.01)
                     cpos.setColor(0.12, 0.12, 0.12)
                     cpos.node().setAttrib(ColorBlendAttrib.make(ColorBlendAttrib.MAdd))
                     cpos.setBin('highlight', 25)
                     cpos.setDepthTest(False)
-                #print unit['id'], getLOSOnLevel(self.units[unit_id], unit, self.level)
         self.enemyunittiles_np.flattenStrong()
         self.enemyunittiles_np.reparentTo(self.node)
         
