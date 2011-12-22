@@ -416,12 +416,19 @@ class SceneGraph():
             for tile in move_dict:
                 text = TextNode('node name')
                 text.setText( "%s" % move_dict[tile])
+                text.setAlign(TextNode.ACenter)
+                if move_dict[tile] >= 2:
+                    text.setCardColor(0.2, 0.7, 0.2, 0.3)
+                else:
+                    text.setCardColor(0.7, 0.2, 0.2, 0.3)
+                text.setCardAsMargin(0, 0, 0, 0)
+                text.setCardDecal(True)
                 textNodePath = self.movetext_np.attachNewNode(text)
+                textNodePath.setPos(render, tile[0]+0.45, tile[1]+0.45, 0.33)
                 textNodePath.setColor(0, 0, 0)
                 textNodePath.setScale(0.4, 0.4, 0.4)
-                textNodePath.setPos(tile[0]+0.2, tile[1]+0.2, 0.5)
-                textNodePath.lookAt(tile[0]+0.2, tile[1]+0.2, -100)
-            self.movetext_np.flattenStrong()
+                textNodePath.setBillboardPointEye()                
+            #self.movetext_np.flattenStrong()
             self.movetext_np.reparentTo(self.node)  
 
     def hideUnitAvailMove(self):
