@@ -6,6 +6,8 @@ from direct.gui.DirectGui import DirectFrame, DGG
 from direct.gui.OnscreenText import OnscreenText
 from console import GuiConsole
 from client_messaging import *
+from gui_elements import *
+
 #===============================================================================
 # GLOBAL DEFINITIONS
 #===============================================================================
@@ -63,27 +65,39 @@ class Interface(DirectObject.DirectObject):
         self.dummy_turn_pos_node = NodePath("dummy_turn_pos_node")
         self.dummy_turn_dest_node = NodePath("dummy_turn_dest_node")
         
+        self.init_gui()
+        
+        self.accept('escape', self.escapeEvent)
+        self.accept("mouse1", self.mouseLeftClick)
+        self.accept("mouse1-up", self.mouseLeftClickUp)
+        
+        taskMgr.add(self.processGui, 'processGui_task')#@UndefinedVariable
+        taskMgr.add(self.hover, 'hover_task') #@UndefinedVariable
+        taskMgr.add(self.turnUnit, 'turnUnit_task')     #@UndefinedVariable  
+    
+    def init_gui(self):
         wp = base.win.getProperties() #@UndefinedVariable
         aspect = float(wp.getXSize()) / wp.getYSize()
         plane = loader.loadModel('plane')#@UndefinedVariable
         plane.setScale(2)
         plane.flattenLight()
-        self.unit_card = GuiCard(0.3, 0.3, 0.01, None, "topleft", Point4(0, 0, 0, 0))
-        self.deselect_button = GuiButton("topleft", Point3(0.2, 0, -0.3), aspect, plane, "deselect_unit")
-        self.punit_button = GuiButton("topleft", Point3(0.0, 0, -0.3), aspect, plane, "prev_unit")
-        self.nunit_button = GuiButton("topleft", Point3(0.1, 0, -0.3), aspect, plane, "next_unit")
-        self.endturn_button = GuiButton("topleft", Point3(0.0, 0, -0.5), aspect, plane, "end_turn")
-        self.action_a = GuiButton("topleft", Point3(0.0, 0, -0.6), aspect, plane, "action_a")
-        self.action_b = GuiButton("topleft", Point3(0.0, 0, -0.7), aspect, plane, "action_b")
-        self.action_c = GuiButton("topleft", Point3(0.0, 0, -0.8), aspect, plane, "action_c")
-        self.action_d = GuiButton("topleft", Point3(0.0, 0, -0.9), aspect, plane, "action_d")
         
-        self.overwatch = GuiButton("topleft", Point3(1.5+0.01, 0, -0.09), aspect, plane, "overwatch")
-        self.set_up = GuiButton("topleft", Point3(1.6+0.02, 0, -0.09), aspect, plane, "set_up")
-        self.action_3 = GuiButton("topleft", Point3(1.7+0.03, 0, -0.09), aspect, plane, "empty")
-        self.action_4 = GuiButton("topleft", Point3(1.5+0.01, 0, -0.2), aspect, plane, "empty")
-        self.action_5 = GuiButton("topleft", Point3(1.6+0.02, 0, -0.2), aspect, plane, "empty")
-        self.action_6 = GuiButton("topleft", Point3(1.7+0.03, 0, -0.2), aspect, plane, "empty")
+        self.unit_card = GuiCard(0.3, 0.3, 0.01, None, "topleft", Point4(0, 0, 0, 0))
+        self.deselect_button = GuiButton2("topleft", Point3(0.2, 0, -0.3), aspect, plane, "deselect_unit")
+        self.punit_button = GuiButton2("topleft", Point3(0.0, 0, -0.3), aspect, plane, "prev_unit")
+        self.nunit_button = GuiButton2("topleft", Point3(0.1, 0, -0.3), aspect, plane, "next_unit")
+        self.endturn_button = GuiButton2("topleft", Point3(0.0, 0, -0.5), aspect, plane, "end_turn")
+        self.action_a = GuiButton2("topleft", Point3(0.0, 0, -0.6), aspect, plane, "action_a")
+        self.action_b = GuiButton2("topleft", Point3(0.0, 0, -0.7), aspect, plane, "action_b")
+        self.action_c = GuiButton2("topleft", Point3(0.0, 0, -0.8), aspect, plane, "action_c")
+        self.action_d = GuiButton2("topleft", Point3(0.0, 0, -0.9), aspect, plane, "action_d")
+        
+        self.overwatch = GuiButton2("topleft", Point3(1.5+0.01, 0, -0.09), aspect, plane, "overwatch")
+        self.set_up = GuiButton2("topleft", Point3(1.6+0.02, 0, -0.09), aspect, plane, "set_up")
+        self.action_3 = GuiButton2("topleft", Point3(1.7+0.03, 0, -0.09), aspect, plane, "empty")
+        self.action_4 = GuiButton2("topleft", Point3(1.5+0.01, 0, -0.2), aspect, plane, "empty")
+        self.action_5 = GuiButton2("topleft", Point3(1.6+0.02, 0, -0.2), aspect, plane, "empty")
+        self.action_6 = GuiButton2("topleft", Point3(1.7+0.03, 0, -0.2), aspect, plane, "empty")
         
         self.buttons["deselect"] = self.deselect_button
         self.buttons["prev_unit"] = self.punit_button
@@ -116,14 +130,6 @@ class Interface(DirectObject.DirectObject):
         player = self.parent.player
         self.status_bar.write(1, "Player: "+player+"     Server: Online")
 
-        self.accept('escape', self.escapeEvent)
-        self.accept("mouse1", self.mouseLeftClick)
-        self.accept("mouse1-up", self.mouseLeftClickUp)
-        
-        taskMgr.add(self.processGui, 'processGui_task')#@UndefinedVariable
-        taskMgr.add(self.hover, 'hover_task') #@UndefinedVariable
-        taskMgr.add(self.turnUnit, 'turnUnit_task')     #@UndefinedVariable  
-    
     def redraw(self):
         wp = base.win.getProperties() #@UndefinedVariable
         aspect = float(wp.getXSize()) / wp.getYSize()
@@ -461,7 +467,7 @@ class Interface(DirectObject.DirectObject):
             
             #Vidi me kako iteriram kroz dictionary
             for button in self.buttons.values():
-                button.frame.setAlphaScale(0.5)
+                button.frame.setAlphaScale(0.8)
                 if mpos.x >= button.pos_min_x and mpos.x <= button.pos_max_x and mpos.y >= button.pos_min_y and mpos.y <= button.pos_max_y:
                     self.hovered_gui = button
                     button.frame.setAlphaScale(1)
@@ -555,192 +561,3 @@ class Interface(DirectObject.DirectObject):
         for button in self.action_buttons.itervalues():
             button.disable()
 
-#===============================================================================
-# CLASS GuiCard --- DEFINITION
-#===============================================================================
-class GuiCard:
-    def __init__(self, width, height, border_size, pos, hugpos, color):
-        self.hugpos = hugpos
-        self.width = width
-        self.height = height
-        self.border_size = border_size
-        self.pos = pos
-        self.node = NodePath("guicard")
-        self.frame_node = NodePath("frame")
-        cm = CardMaker("cm_left")
-        cm.setFrame(0, border_size, 0, height)
-        n = self.frame_node.attachNewNode(cm.generate())
-        n.setPos(0, 0, 0)
-        cm = CardMaker("cm_right")
-        cm.setFrame(0, border_size, 0, height)
-        n = self.frame_node.attachNewNode(cm.generate())
-        n.setPos(width - border_size, 0, 0)
-        cm = CardMaker("cm_top")
-        cm.setFrame(0, width, height - border_size, width)
-        n = self.frame_node.attachNewNode(cm.generate())
-        n.setPos(0, 0, 0)
-        cm = CardMaker("cm_bottom")
-        cm.setFrame(0, width, 0, border_size)
-        n = self.frame_node.attachNewNode(cm.generate())
-        n.setPos(0, 0, 0)
-        self.frame_node.setColor(color)
-        self.frame_node.flattenStrong()
-        self.frame_node.reparentTo(self.node)
-        cm = CardMaker("cm_back")
-        cm.setFrame(0+border_size, width-border_size, 0+border_size, height-border_size)
-        self.back_node = self.node.attachNewNode(cm.generate())
-        self.back_node.setPos(0, 0, 0)
-        self.back_node.setTransparency(1)
-        self.node.reparentTo(aspect2d)#@UndefinedVariable
-        self.redraw()
-    
-    def setTexture(self, tex):
-        self.back_node.setTexture(tex)
-    
-    def redraw(self):
-        if self.hugpos == "topleft":
-            p = base.a2dTopLeft.getPos()#@UndefinedVariable
-            p.setZ(p.getZ() - self.height)
-        elif self.hugpos == "topright":
-            p = base.a2dTopRight.getPos()#@UndefinedVariable
-            p.setZ(p.getZ() - self.height)
-        elif self.hugpos == None:
-            p = self.pos
-        self.node.setPos(p)
-    
-    def removeNode(self):
-        self.node.removeNode()
-
-#===============================================================================
-# CLASS GuiButton --- DEFINITION
-#===============================================================================
-class GuiButton:
-    def __init__(self, hugpos, offset, aspect, plane, name):
-        self.enabled = True
-        self.name = name
-        self.node = aspect2d.attachNewNode("guibutton")#@UndefinedVariable
-        self.node.setTransparency(TransparencyAttrib.MAlpha)
-        self.node.setAlphaScale(0.5) 
-        geom = GeomNode('plane')
-        geom.addGeomsFrom(plane.getChild(0).getChild(0).node())
-        self.frame = self.node.attachNewNode(geom) 
-        self.frame.setScale(0.05)
-        self.node.setTexture(loader.loadTexture(name+".png"))#@UndefinedVariable
-        self.hugpos = hugpos
-        self.offset = offset
-        self.redraw(aspect)
-
-    def redraw(self, aspect, flag="wide"):
-        if self.hugpos == "topleft":
-            p = base.a2dTopLeft.getPos()#@UndefinedVariable
-            p.setX(p.getX() + self.offset.getX() + 0.05)
-            p.setZ(p.getZ() + self.offset.getZ() - 0.05)
-        self.frame.setPos(p)
-        if flag == "wide":
-            posx, posy = self.frame.getTightBounds()
-            self.pos_min_x = posx.getX() / aspect
-            self.pos_min_y = posx.getZ()
-            self.pos_max_x = posy.getX() / aspect
-            self.pos_max_y = posy.getZ()
-        elif flag == "tall":
-            posx, posy = self.frame.getTightBounds()
-            self.pos_min_x = posx.getX()
-            self.pos_min_y = posx.getZ() / aspect
-            self.pos_max_x = posy.getX()
-            self.pos_max_y = posy.getZ() / aspect
-            
-    def turnOn(self):
-        self.node.setTexture(loader.loadTexture(self.name+"_on.png"))#@UndefinedVariable
-        
-    def turnOff(self):
-        self.node.setTexture(loader.loadTexture(self.name+".png"))#@UndefinedVariable    
-            
-    def enable(self):
-        self.node.setTexture(loader.loadTexture(self.name+".png"))#@UndefinedVariable
-        self.enabled = True
-        
-    def disable(self):
-        self.node.setTexture(loader.loadTexture("empty.png"))#@UndefinedVariable
-        self.enabled = False
-            
-    def removeNode(self):
-            self.node.removeNode()   
-                  
-class GuiTextFrame:
-    def __init__(self, offset, h_size, v_size, numLines, parent):
-        self.numLines = numLines
-        self.frame = DirectFrame(   relief = DGG.FLAT
-                                  , frameColor = (0, 0, 0, 0.2)
-                                  , scale = 1
-                                  , frameSize = (0, h_size, 0, -v_size) )
-        
-        self.frame.reparentTo(parent)#@UndefinedVariable
-        self.offset = offset
-        self.frame.setPos(self.offset.getX(), 0, self.offset.getZ())
-
-        fixedWidthFont = loader.loadFont("monommm_5.ttf")#@UndefinedVariable
-        if not fixedWidthFont.isValid():
-            print "pandaInteractiveConsole.py :: could not load the defined font %s" % str(self.font)
-            fixedWidthFont = DGG.getDefaultFont()
-        
-        if numLines == 1:
-            self.lineHeight = 0.05
-        else:
-            self.lineHeight = v_size*0.9 / numLines
-            
-        # output lines
-        self.frameOutputList = list()
-        for i in xrange( self.numLines ):
-            label = OnscreenText( parent = self.frame
-                              , text = ""
-                              , pos = (0.005, -(i+1)*self.lineHeight)
-                              , align=TextNode.ALeft
-                              , mayChange=1
-                              , scale=0.04
-                              , fg = (1,1,1,1)
-                              , shadow = (0, 0, 0, 1))
-                              #, frame = (200,0,0,1) )
-            label.setFont( fixedWidthFont )
-            self.frameOutputList.append( label )
-
-    def write(self, lineNumber, text):
-        if lineNumber > self.numLines:
-            return
-        self.frameOutputList[lineNumber - 1].setText(text)
-        
-    def redraw(self):
-        p = base.a2dTopLeft.getPos()#@UndefinedVariable
-        p.setX(p.getX() + self.offset.getX())
-        p.setZ(p.getZ() - 0.05)
-        self.frame.setPos(p)
-
-class GuiUnitInfo:
-    def __init__(self, offset, parent):
-
-        fixedWidthFont = loader.loadFont("monommm_5.ttf")#@UndefinedVariable
-        if not fixedWidthFont.isValid():
-            print "pandaInteractiveConsole.py :: could not load the defined font %s" % str(self.font)
-            fixedWidthFont = DGG.getDefaultFont()
-        
-        self.label = OnscreenText( parent = parent
-                              , text = ""
-                              , pos = (offset.getX(),offset.getZ())
-                              , align=TextNode.ACenter
-                              , mayChange=True
-                              , scale=0.14
-                              , fg = (1,0,0,1)
-                              #, shadow = (0, 0, 0, 1)
-                              #, frame = (200,0,0,1) 
-                              )
-        self.label.setFont( fixedWidthFont )
-        self.label.setLightOff()
-
-
-    def write(self, text):
-        self.label.setText(text)
-        
-    def redraw(self):
-        return
-
-    def remove(self):
-        self.label.remove()
