@@ -221,8 +221,8 @@ class SceneGraph():
         # Create main update task
         taskMgr.add(self.animTask, "anim_task")  
         
-        #meter = SceneGraphAnalyzerMeter('meter', render.node())
-        #meter.setupWindow(base.win)      
+        meter = SceneGraphAnalyzerMeter('meter', render.node())
+        meter.setupWindow(base.win)      
         
         bins = CullBinManager.getGlobalPtr()
         bins.addBin('highlight', CullBinEnums.BTStateSorted, 25)
@@ -233,27 +233,11 @@ class SceneGraph():
         if self.comp_inited['level']:
             return
         
-        levelMesh = VoxelGenerator('level', 1, 0.3)
-        for x in xrange(0, level.maxX):
-            for y in xrange(0, level.maxY):
-                for i in xrange(0, level.getHeight( (x, y) ) +1):
-                    if i == 0:
-                        id = 1
-                    else:
-                        id = 2 
-                    levelMesh.makeLeftFace(x, y, i, id)
-                    levelMesh.makeRightFace(x, y, i, id)
-                    levelMesh.makeBackFace(x, y, i, id)
-                    levelMesh.makeFrontFace(x, y, i, id)
-                    levelMesh.makeBottomFace(x, y, i, id) 
-                    levelMesh.makeTopFace(x, y, i, id)
-
-        self.level_node = self.node.attachNewNode(levelMesh.getGeomNode())
-        self.level_node.setTag('type', 'level')
-        t = loader.loadTexture('tex3.png')
-        t.setMagfilter(Texture.FTLinearMipmapLinear)
-        t.setMinfilter(Texture.FTLinearMipmapLinear)
-        self.level_node.setTexture(t)
+        self.level_node = self.node.attachNewNode("level_node")
+        self.level_node.setTag('type', 'level')        
+        self.level_mesh = VoxelGenerator(self, level)
+        self.level_mesh.createLevel()
+        base.accept('q', self.level_mesh.switchNodes)
         self.comp_inited['level'] = True
         
         for i in xrange(0, level.maxX):
