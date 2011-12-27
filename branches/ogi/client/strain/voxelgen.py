@@ -24,16 +24,21 @@ class VoxelGenerator():
         self.tile_list = [[None] * level.maxY for i in xrange(level.maxX)]
 
     def createLevel(self):
-        tex = loader.loadTexture("blacktex.png")
+        tex = loader.loadTexture("tiletex.png")
         tex2 = loader.loadTexture("blacktex-glow.png")
-        tex.setMagfilter(Texture.FTLinearMipmapLinear)
-        tex.setMinfilter(Texture.FTLinearMipmapLinear)
-        ts = TextureStage('ts')
+        #tex.setMagfilter(Texture.FTLinearMipmapLinear)
+        #tex.setMinfilter(Texture.FTLinearMipmapLinear)
+        ts = TextureStage('ts')        
+        #ts.setTexcoordName("Tex02")
         ts2 = TextureStage('ts2')
         ts2.setMode(TextureStage.MGlow)
         for x in xrange(0, self.level.maxX):
             for y in xrange(0, self.level.maxY):
                 for i in xrange(0, self.level.getHeight( (x, y) )+1):
+                    if self.level.getHeight( (x, y) ) > 0:
+                        ts.setTexcoordName("Tex02")
+                    else:
+                        ts.setTexcoordName("Tex01")
                     model = loader.loadModel('tile')
                     model.setPos(x, y, i*utils.GROUND_LEVEL)
                     model.setTexture(ts, tex)   
