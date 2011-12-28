@@ -16,6 +16,7 @@ from panda3d.core import ShadeModelAttrib, DirectionalLight, AmbientLight#@Unres
 from panda3d.core import CollisionTraverser, CollisionRay, CollisionHandlerQueue, CollisionNode#@UnresolvedImport
 from panda3d.core import ConfigVariableString, ConfigVariableInt#@UnresolvedImport
 from panda3d.core import CullBinManager, CullBinEnums, CardMaker, ColorBlendAttrib
+from panda3d.core import PandaNode
 from direct.interval.IntervalGlobal import Sequence, ActorInterval, Parallel, Func, Interval, Wait#@UnresolvedImport
 from direct.showbase.DirectObject import DirectObject
 from direct.fsm import FSM
@@ -102,7 +103,7 @@ class AppFSM(FSM.FSM):
         del self.parent.login
 
     def enterClient(self, type):
-        base.win.setClearColor(VBase4(0.5, 0.5, 0.5, 0))
+        #base.win.setClearColor(VBase4(0.5, 0.5, 0.5, 0))
         self.parent.client = Client(self.parent, self.parent.player, type=type)
         
     def exitClient(self):
@@ -221,12 +222,14 @@ class SceneGraph():
         # Create main update task
         taskMgr.add(self.animTask, "anim_task")  
         
-        meter = SceneGraphAnalyzerMeter('meter', render.node())
-        meter.setupWindow(base.win)      
+        #meter = SceneGraphAnalyzerMeter('meter', render.node())
+        #meter.setupWindow(base.win)      
         
         bins = CullBinManager.getGlobalPtr()
         bins.addBin('highlight', CullBinEnums.BTStateSorted, 25)
         
+        render.setShaderInput('glow', Vec4(0,0,0,0))
+        self.createGlow()
         #print "base.win.getGsg().getMaxTextureStages() = "+str(base.win.getGsg().getMaxTextureStages())
     
     def loadLevel(self, level):
@@ -297,7 +300,63 @@ class SceneGraph():
         self.coll_ray = CollisionRay()
         self.coll_node.addSolid(self.coll_ray)
         self.coll_trav.addCollider(self.coll_nodepath, self.coll_queue)
+
+    def clearGlow(self):
+        render.setShaderInput('glow', Vec4(0,0,0,0))
+   
+    def makeFilterBuffer(self, srcbuffer, name, sort, prog):
+        blurBuffer=base.win.makeTextureBuffer(name, 512, 512)
+        blurBuffer.setSort(sort)
+        blurBuffer.setClearColor(Vec4(1,0,0,1))
+        blurCamera=base.makeCamera2d(blurBuffer)
+        blurScene=NodePath("new Scene")
+        blurCamera.node().setScene(blurScene)
+        shader = loader.loadShader(prog)
+        card = srcbuffer.getTextureCard()
+        card.reparentTo(blurScene)
+        card.setShader(shader)
+        return blurBuffer
     
+    def createGlow(self):
+        glowShader=loader.loadShader("glowShader.sha")
+        # create the glow buffer. This buffer renders like a normal scene,
+        # except that only the glowing materials should show up nonblack.
+        glowBuffer=base.win.makeTextureBuffer("Glow scene", 512, 512)
+        glowBuffer.setSort(-3)
+        glowBuffer.setClearColor(Vec4(0,0,0,1))
+
+        # We have to attach a camera to the glow buffer. The glow camera
+        # must have the same frustum as the main camera. As long as the aspect
+        # ratios match, the rest will take care of itself.
+        glowCamera=base.makeCamera(glowBuffer, lens=base.cam.node().getLens())
+
+        # Tell the glow camera to use the glow shader
+        tempnode = NodePath(PandaNode("temp node"))
+        tempnode.setShader(glowShader)
+        glowCamera.node().setInitialState(tempnode.getState())
+        
+        # set up the pipeline: from glow scene to blur x to blur y to main window.
+        
+        blurXBuffer=self.makeFilterBuffer(glowBuffer,  "Blur X", -2, "XBlurShader.sha")
+        blurYBuffer=self.makeFilterBuffer(blurXBuffer, "Blur Y", -1, "YBlurShader.sha")
+        self.finalcard = blurYBuffer.getTextureCard()
+        self.finalcard.reparentTo(render2d)
+        self.finalcard.setAttrib(ColorBlendAttrib.make(ColorBlendAttrib.MAdd))
+        
+        # Panda contains a built-in viewer that lets you view the results of
+        # your render-to-texture operations.  This code configures the viewer.
+
+        base.accept("v", base.bufferViewer.toggleEnable)
+        base.accept("V", base.bufferViewer.toggleEnable)
+        base.bufferViewer.setPosition("llcorner")
+        base.bufferViewer.setLayout("hline")
+        base.bufferViewer.setCardSize(0.652,0)
+
+        # event handling
+        #base.accept("space", self.toggleGlow)
+
+        self.glowOn=True;        
+        
     def loadUnits(self):
         if self.comp_inited['units']:
             return
@@ -401,19 +460,16 @@ class SceneGraph():
                 text = TextNode('node name')
                 text.setText( "%s" % move_dict[tile])
                 text.setAlign(TextNode.ACenter)
-                if move_dict[tile] >= 2:
-                    text.setCardColor(0.2, 0.7, 0.2, 0.3)
-                else:
-                    text.setCardColor(0.7, 0.2, 0.2, 0.3)
-                text.setCardAsMargin(0, 0, 0, 0)
-                text.setCardDecal(True)
                 textNodePath = self.movetext_np.attachNewNode(text)
                 textNodePath.setPos(render, tile[0]+0.45, tile[1]+0.45, 0.33)
                 textNodePath.setColor(0, 0, 0)
                 textNodePath.setScale(0.4, 0.4, 0.4)
                 textNodePath.setBillboardPointEye()                
             #self.movetext_np.flattenStrong()
-            self.movetext_np.reparentTo(self.node)  
+            self.movetext_np.reparentTo(self.node) 
+            self.clearGlow() 
+            self.level_mesh.highlightTiles(move_dict)
+            self.level_mesh.switchNodes()
 
     def hideUnitAvailMove(self):
         if self.movetext_np:

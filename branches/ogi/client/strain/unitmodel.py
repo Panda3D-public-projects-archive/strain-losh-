@@ -174,7 +174,8 @@ class LegoUnitModel:
         self.model.setH(h)
         self.model.flattenLight() 
         self.node.setPos(pos)
-        self.model.setShaderAuto()
+        self.model.setShaderInput('glow', Vec4(0,0,0,0))
+        #self.model.setShaderAuto()
 
         #self.model.setLightOff()
         self.node.setTag("type", "unit")
