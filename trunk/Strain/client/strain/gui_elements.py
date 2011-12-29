@@ -3,10 +3,11 @@ Created on 26. pro. 2011.
 
 @author: Vjeko
 '''
-from panda3d.core import NodePath, CardMaker, GeomNode, TransparencyAttrib, TextNode#@UnresolvedImport
+from panda3d.core import NodePath, CardMaker, GeomNode, TransparencyAttrib, TextNode, TextFont#@UnresolvedImport
 from direct.gui.DirectGui import DirectFrame, DGG
 from direct.gui.OnscreenText import OnscreenText
 from direct.gui.OnscreenImage import OnscreenImage
+from utils import *
 
 #===============================================================================
 # CLASS GuiCard --- DEFINITION
@@ -21,21 +22,21 @@ class GuiCard:
         self.node = NodePath("guicard")
         self.frame_node = NodePath("frame")
         cm = CardMaker("cm_left")
-        cm.setFrame(0, border_size, 0, height)
+        cm.setFrame(0, width, 0, height)
         n = self.frame_node.attachNewNode(cm.generate())
         n.setPos(0, 0, 0)
-        cm = CardMaker("cm_right")
-        cm.setFrame(0, border_size, 0, height)
-        n = self.frame_node.attachNewNode(cm.generate())
-        n.setPos(width - border_size, 0, 0)
-        cm = CardMaker("cm_top")
-        cm.setFrame(0, width, height - border_size, width)
-        n = self.frame_node.attachNewNode(cm.generate())
-        n.setPos(0, 0, 0)
-        cm = CardMaker("cm_bottom")
-        cm.setFrame(0, width, 0, border_size)
-        n = self.frame_node.attachNewNode(cm.generate())
-        n.setPos(0, 0, 0)
+        #cm = CardMaker("cm_right")
+        #cm.setFrame(0, border_size, 0, height)
+        #n = self.frame_node.attachNewNode(cm.generate())
+        #n.setPos(width - border_size, 0, 0)
+        #cm = CardMaker("cm_top")
+        #cm.setFrame(0, width, height - border_size, width)
+        #n = self.frame_node.attachNewNode(cm.generate())
+        #n.setPos(0, 0, 0)
+        #cm = CardMaker("cm_bottom")
+        #cm.setFrame(0, width, 0, border_size)
+        #n = self.frame_node.attachNewNode(cm.generate())
+        #n.setPos(0, 0, 0)
         self.frame_node.setColor(color)
         self.frame_node.flattenStrong()
         self.frame_node.reparentTo(self.node)
@@ -44,6 +45,7 @@ class GuiCard:
         self.back_node = self.node.attachNewNode(cm.generate())
         self.back_node.setPos(0, 0, 0)
         self.back_node.setTransparency(1)
+        
         self.node.reparentTo(aspect2d)#@UndefinedVariable
         self.redraw()
     
@@ -53,13 +55,20 @@ class GuiCard:
     def redraw(self):
         if self.hugpos == "topleft":
             p = base.a2dTopLeft.getPos()#@UndefinedVariable
+            print p
             p.setZ(p.getZ() - self.height)
         elif self.hugpos == "topright":
             p = base.a2dTopRight.getPos()#@UndefinedVariable
             p.setZ(p.getZ() - self.height)
+        elif self.hugpos == "bottomleft":
+            p = base.a2dBottomLeft.getPos()#@UndefinedVariable
+            print p
+            p.setX(p.getX() + 0.107)
+            p.setZ(p.getZ())
         elif self.hugpos == None:
             p = self.pos
         self.node.setPos(p)
+        print p
     
     def removeNode(self):
         self.node.removeNode()
@@ -143,10 +152,14 @@ class GuiButton2:
         self.redraw(aspect)
 
     def redraw(self, aspect, flag="wide"):
-        if self.hugpos == "topleft":
+        if self.hugpos == "top":
             p = base.a2dTopLeft.getPos()#@UndefinedVariable
             p.setX(p.getX() + self.offset.getX() + 0.05)
-            p.setZ(p.getZ() + self.offset.getZ() - 0.05)
+            p.setZ(p.getZ() + self.offset.getZ() - GUI_TOP_OFFSET - 0.05)
+        elif self.hugpos == "bottom":
+            p = base.a2dBottomLeft.getPos()#@UndefinedVariable
+            p.setX(p.getX() + self.offset.getX() + 0.05)
+            p.setZ(p.getZ() + self.offset.getZ() + GUI_BOTTOM_OFFSET - 0.05)
         self.frame.setPos(p)
         if flag == "wide":
             posx, posy = self.frame.getTightBounds()
@@ -183,16 +196,30 @@ class GuiButton2:
         self.frame.removeNode()   
                       
 class GuiTextFrame:
-    def __init__(self, offset, h_size, v_size, numLines, parent):
+    def __init__(self, offset, h_size, v_size, numLines, hugpos):
         self.numLines = numLines
+        #if hugpos == "statusbar":
+        #    color = (0,0,0,1)
+        #else:
+        #    color = (0.2, 0.2, 0.2, 0.8)
+        color = (0.2, 0.2, 0.2, 0.9)
         self.frame = DirectFrame(   relief = DGG.FLAT
-                                  , frameColor = (0.2, 0.2, 0.2, 0.8)
+                                  , frameColor = color
                                   , scale = 1
                                   , frameSize = (0, h_size, 0, -v_size) )
         
-        self.frame.reparentTo(parent)#@UndefinedVariable
+        self.hugpos = hugpos
         self.offset = offset
-        self.frame.setPos(self.offset.getX(), 0, self.offset.getZ())
+        
+        if hugpos == "top":
+            self.frame.reparentTo(base.a2dTopLeft)#@UndefinedVariable
+            self.frame.setPos(self.offset.getX(), 0, self.offset.getZ() - GUI_TOP_OFFSET)
+        elif hugpos == "bottom":
+            self.frame.reparentTo(base.a2dBottomLeft)#@UndefinedVariable
+            self.frame.setPos(self.offset.getX(), 0, self.offset.getZ() + GUI_BOTTOM_OFFSET -0.085)
+        elif hugpos == "statusbar":
+            self.frame.reparentTo(base.a2dTopLeft)#@UndefinedVariable
+            self.frame.setPos(self.offset.getX(), 0, self.offset.getZ())
 
         fixedWidthFont = loader.loadFont("monommm_5.ttf")#@UndefinedVariable
         if not fixedWidthFont.isValid():
@@ -225,15 +252,22 @@ class GuiTextFrame:
         self.frameOutputList[lineNumber - 1].setText(text)
         
     def redraw(self):
-        p = base.a2dTopLeft.getPos()#@UndefinedVariable
-        p.setX(p.getX() + self.offset.getX())
-        p.setZ(p.getZ() - 0.05)
+        if self.hugpos == "top":
+            p = base.a2dTopLeft.getPos()#@UndefinedVariable
+            p.setX(p.getX() + self.offset.getX() + 0.05)
+            p.setZ(p.getZ() + self.offset.getZ() - GUI_TOP_OFFSET - 0.05)
+        elif self.hugpos == "bottom":
+            p = base.a2dBottomLeft.getPos()#@UndefinedVariable
+            p.setX(p.getX() + self.offset.getX() + 0.05)
+            p.setZ(p.getZ() + self.offset.getZ() + GUI_BOTTOM_OFFSET - 0.05)
         self.frame.setPos(p)
 
 class GuiUnitInfo:
     def __init__(self, offset, parent):
 
-        fixedWidthFont = loader.loadFont("monommm_5.ttf")#@UndefinedVariable
+        fixedWidthFont = loader.loadFont("monommm_5.ttf")#@UndefinedVariable        
+        #fixedWidthFont.setPixelsPerUnit(60)
+        #fixedWidthFont.setRenderMode(fontt.RMSolid)
         if not fixedWidthFont.isValid():
             print "pandaInteractiveConsole.py :: could not load the defined font %s" % str(self.font)
             fixedWidthFont = DGG.getDefaultFont()
