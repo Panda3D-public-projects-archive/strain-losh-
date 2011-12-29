@@ -55,20 +55,17 @@ class GuiCard:
     def redraw(self):
         if self.hugpos == "topleft":
             p = base.a2dTopLeft.getPos()#@UndefinedVariable
-            print p
             p.setZ(p.getZ() - self.height)
         elif self.hugpos == "topright":
             p = base.a2dTopRight.getPos()#@UndefinedVariable
             p.setZ(p.getZ() - self.height)
         elif self.hugpos == "bottomleft":
             p = base.a2dBottomLeft.getPos()#@UndefinedVariable
-            print p
             p.setX(p.getX() + 0.107)
             p.setZ(p.getZ())
         elif self.hugpos == None:
             p = self.pos
         self.node.setPos(p)
-        print p
     
     def removeNode(self):
         self.node.removeNode()
@@ -221,7 +218,7 @@ class GuiTextFrame:
             self.frame.reparentTo(base.a2dTopLeft)#@UndefinedVariable
             self.frame.setPos(self.offset.getX(), 0, self.offset.getZ())
 
-        fixedWidthFont = loader.loadFont("monommm_5.ttf")#@UndefinedVariable
+        fixedWidthFont = loader.loadFont("mono.egg")#@UndefinedVariable
         if not fixedWidthFont.isValid():
             print "pandaInteractiveConsole.py :: could not load the defined font %s" % str(self.font)
             fixedWidthFont = DGG.getDefaultFont()
@@ -239,7 +236,7 @@ class GuiTextFrame:
                               , pos = (0.005, -(i+1)*self.lineHeight)
                               , align=TextNode.ALeft
                               , mayChange=1
-                              , scale=0.04
+                              , scale=0.1
                               , fg = (1,1,1,1)
                               , shadow = (0, 0, 0, 1))
                               #, frame = (200,0,0,1) )
@@ -265,7 +262,7 @@ class GuiTextFrame:
 class GuiUnitInfo:
     def __init__(self, offset, parent):
 
-        fixedWidthFont = loader.loadFont("monommm_5.ttf")#@UndefinedVariable        
+        fixedWidthFont = loader.loadFont("mono.egg")#@UndefinedVariable        
         #fixedWidthFont.setPixelsPerUnit(60)
         #fixedWidthFont.setRenderMode(fontt.RMSolid)
         if not fixedWidthFont.isValid():
@@ -277,7 +274,7 @@ class GuiUnitInfo:
                               , pos = (offset.getX(),offset.getZ())
                               , align=TextNode.ACenter
                               , mayChange=True
-                              , scale=0.14
+                              , scale=0.1
                               , fg = (1,0,0,1)
                               #, shadow = (0, 0, 0, 1)
                               #, frame = (200,0,0,1) 
