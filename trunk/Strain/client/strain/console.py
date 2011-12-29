@@ -4,7 +4,7 @@ from direct.gui.OnscreenText import OnscreenText
 from panda3d.core import Point3#@UnresolvedImport
 from pandac.PandaModules import TextNode#@UnresolvedImport
 import textwrap, re, string
-
+from utils import *
 import utils
 from strain.client_messaging import ClientMsg
 
@@ -12,7 +12,7 @@ from strain.client_messaging import ClientMsg
 
 class GuiConsole(DirectObject.DirectObject):
     
-    def __init__(self, parent, h_size, v_size, aspect):
+    def __init__(self, parent, h_size, v_size, aspect, hugpos):
         self.h_size = h_size
         self.v_size = v_size
         self.scale = 0.04
@@ -21,7 +21,7 @@ class GuiConsole(DirectObject.DirectObject):
         self.pos_min_x = 0
         self.pos_min_y = 0
         self.pos_max_x = self.h_size
-        self.pos_max_y = self.v_size
+        self.pos_max_y = 0.7
         
         if aspect > 0:
             self.pos_max_x /= aspect
@@ -29,17 +29,26 @@ class GuiConsole(DirectObject.DirectObject):
             self.pos_max_y *= aspect
 
         self.consoleFrame = DirectFrame( relief = DGG.RIDGE
-                                         , frameColor = (0, 0, 0, 0.2)
+                                         , frameColor = (0, 0, 0, 0)
                                          , scale = self.scale
                                          , frameSize = (0, self.h_size / self.scale, 0, self.v_size / self.scale) )
         
-        if parent == base.a2dBottomLeft:
+        if parent == base.a2dBottomLeft:#@UndefinedVariable
             self.pos_min_x -= 1
             self.pos_min_y -= 1
             self.pos_max_x -= 1 
             self.pos_max_y -= 1
       
-        fixedWidthFont = loader.loadFont("monommm_5.ttf")
+        if hugpos == "bottom":
+            self.consoleFrame.setPos(0, 0, GUI_BOTTOM_OFFSET - 0.085)
+            self.pos_min_x = 0
+            self.pos_min_y = GUI_BOTTOM_OFFSET - 0.085 - 0.07
+            self.pos_max_x = self.h_size
+            self.pos_max_y = GUI_BOTTOM_OFFSET - 0.085
+        
+        fixedWidthFont = loader.loadFont("monommm_5.ttf")#@UndefinedVariable
+        #fixedWidthFont.setPixelsPerUnit(60)
+        #fixedWidthFont.setRenderMode(fixedWidthFont.RMSolid)
         if not fixedWidthFont.isValid():
             print "pandaInteractiveConsole.py :: could not load the defined font %s" % str(self.font)
             fixedWidthFont = DGG.getDefaultFont()
@@ -72,7 +81,7 @@ class GuiConsole(DirectObject.DirectObject):
         self.consoleFrame.reparentTo(parent)
         
         self.textBuffer = list()
-        self.textBufferLength = 10
+        self.textBufferLength = 100
         for i in xrange(self.textBufferLength):
             self.textBuffer.append(['', (100,100,100,1)])
         self.textBufferPos = self.textBufferLength-self.numlines
