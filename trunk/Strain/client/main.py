@@ -538,6 +538,7 @@ class Client(DirectObject):
         self.units = {}
         self.players = {}
         self.sel_unit_id = None
+        self.turn_number = None
         
         # Init Client FSM
         self.fsm = ClientFSM(self, 'ClientFSM')
@@ -1046,6 +1047,7 @@ class Net():
             self.parent.sgm.deleteUnits()
             self.parent.sgm.loadLevel(self.parent.level)
             self.parent.sgm.loadUnits()
+            self.parent.interface.refreshStatusBar()
             self.parent._message_in_process = False
         #========================================================================
         #
@@ -1060,6 +1062,7 @@ class Net():
             self.parent.turn_number = msg[1]['turn']
             self.parent.turn_player = self.parent.getPlayerName(msg[1]['active_player_id'])
             units = pickle.loads(msg[1]['units'])
+            self.parent.interface.refreshStatusBar()
             for unit in units.itervalues():
                 self.parent.refreshUnit(unit)
             self.parent.handleNewTurn()
