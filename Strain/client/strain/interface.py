@@ -82,25 +82,25 @@ class Interface(DirectObject.DirectObject):
         plane.setScale(2)
         plane.flattenLight()
         
-        self.unit_card = GuiCard(0.3, 0.3, 0.01, None, "topleft", Point4(0, 0, 0, 0))
-        self.deselect_button = GuiButton2("topleft", Point3(0.2, 0, -0.3), aspect, plane, "deselect_unit")
-        self.punit_button = GuiButton2("topleft", Point3(0.0, 0, -0.3), aspect, plane, "prev_unit")
-        self.nunit_button = GuiButton2("topleft", Point3(0.1, 0, -0.3), aspect, plane, "next_unit")
-        self.endturn_button = GuiButton2("topleft", Point3(0.0, 0, -0.5), aspect, plane, "end_turn")
-        self.action_a = GuiButton2("topleft", Point3(0.0, 0, -0.6), aspect, plane, "action_a")
-        self.action_b = GuiButton2("topleft", Point3(0.0, 0, -0.7), aspect, plane, "action_b")
-        self.action_c = GuiButton2("topleft", Point3(0.0, 0, -0.8), aspect, plane, "action_c")
-        self.action_d = GuiButton2("topleft", Point3(0.0, 0, -0.9), aspect, plane, "action_d")
+        self.unit_card = GuiCard(0.19, 0.215, 0, None, "bottomleft", Point4(0.2, 0.2, 0.2, 0.8))
+        self.deselect_button = GuiButton2("bottom", Point3(0.0, 0, -0.2), aspect, plane, "deselect_unit")
+        #self.punit_button = GuiButton2("top", Point3(0.0, 0, -0.3), aspect, plane, "prev_unit")
+        self.nunit_button = GuiButton2("bottom", Point3(0.0, 0, -0.09), aspect, plane, "next_unit")
+        self.endturn_button = GuiButton2("bottom", Point3(2*aspect - 0.1, 0, 0.24), aspect, plane, "end_turn")
+        self.action_a = GuiButton2("bottom", Point3(2*aspect - 0.1, 0, 0.13), aspect, plane, "empty")
+        self.action_b = GuiButton2("bottom", Point3(2*aspect - 0.1, 0, 0.02), aspect, plane, "empty")
+        self.action_c = GuiButton2("bottom", Point3(2*aspect - 0.1, 0, -0.09), aspect, plane, "empty")
+        self.action_d = GuiButton2("bottom", Point3(2*aspect - 0.1, 0, -0.2), aspect, plane, "empty")
         
-        self.overwatch = GuiButton2("topleft", Point3(1.5+0.01, 0, -0.09), aspect, plane, "overwatch")
-        self.set_up = GuiButton2("topleft", Point3(1.6+0.02, 0, -0.09), aspect, plane, "set_up")
-        self.action_3 = GuiButton2("topleft", Point3(1.7+0.03, 0, -0.09), aspect, plane, "empty")
-        self.action_4 = GuiButton2("topleft", Point3(1.5+0.01, 0, -0.2), aspect, plane, "empty")
-        self.action_5 = GuiButton2("topleft", Point3(1.6+0.02, 0, -0.2), aspect, plane, "empty")
-        self.action_6 = GuiButton2("topleft", Point3(1.7+0.03, 0, -0.2), aspect, plane, "empty")
+        self.overwatch = GuiButton2("bottom", Point3(1.5+0.01, 0, -0.09), aspect, plane, "overwatch")
+        self.set_up = GuiButton2("bottom", Point3(1.6+0.02, 0, -0.09), aspect, plane, "set_up")
+        self.action_3 = GuiButton2("bottom", Point3(1.7+0.03, 0, -0.09), aspect, plane, "empty")
+        self.action_4 = GuiButton2("bottom", Point3(1.5+0.01, 0, -0.2), aspect, plane, "empty")
+        self.action_5 = GuiButton2("bottom", Point3(1.6+0.02, 0, -0.2), aspect, plane, "empty")
+        self.action_6 = GuiButton2("bottom", Point3(1.7+0.03, 0, -0.2), aspect, plane, "empty")
         
         self.buttons["deselect"] = self.deselect_button
-        self.buttons["prev_unit"] = self.punit_button
+        #self.buttons["prev_unit"] = self.punit_button
         self.buttons["next_unit"] = self.nunit_button
         self.buttons["end_turn"] = self.endturn_button
         self.buttons["action_a"] = self.action_a
@@ -122,13 +122,11 @@ class Interface(DirectObject.DirectObject):
         
         self.unit_info = None
         
-        self.console = GuiConsole(base.a2dBottomLeft, 1.5, 0.4, aspect)#@UndefinedVariable
-        self.stats = GuiTextFrame(Point3(0.3, 0, 0), 0.4, 0.3, 5, base.a2dTopLeft)#@UndefinedVariable
-        self.stats2 = GuiTextFrame(Point3(0.7, 0, 0), 0.4, 0.3, 5, base.a2dTopLeft)#@UndefinedVariable
-        self.stats3 = GuiTextFrame(Point3(1.1, 0, 0), 0.4, 0.3, 5, base.a2dTopLeft)#@UndefinedVariable
-        self.status_bar = GuiTextFrame(Point3(1.5 + 0.01, 0, 0), 0.85, 0.08, 1, base.a2dTopLeft)#@UndefinedVariable
-        player = self.parent.player
-        self.status_bar.write(1, "Player: "+player+"     Server: Online")
+        self.console = GuiConsole(base.a2dBottomLeft, 1.503, 0.8, aspect, "bottom")#@UndefinedVariable
+        self.stats = GuiTextFrame(Point3(0.3, 0, 0), 0.4, 0.22, 4, "bottom")#@UndefinedVariable
+        self.stats2 = GuiTextFrame(Point3(0.7, 0, 0), 0.4, 0.22, 4, "bottom")#@UndefinedVariable
+        self.stats3 = GuiTextFrame(Point3(1.1, 0, 0), 0.405, 0.22, 4, "bottom")#@UndefinedVariable
+        self.status_bar = GuiTextFrame(Point3(0, 0, 0), 2 * aspect, GUI_TOP_OFFSET, 1, "statusbar")#@UndefinedVariable
 
     def redraw(self):
         wp = base.win.getProperties() #@UndefinedVariable
@@ -239,7 +237,9 @@ class Interface(DirectObject.DirectObject):
         else:
             messenger.send("shutdown-event")#@UndefinedVariable
       
-
+    def refreshStatusBar(self):
+       self.status_bar.write(1, "Player: "+self.parent.player+"     Turn:" + str(self.parent.turn_number))
+       
     def refreshUnitData(self, unit_id):
         if unit_id != None:
             self.processUnitData(unit_id)
@@ -267,16 +267,21 @@ class Interface(DirectObject.DirectObject):
         unit_default_HP = unit['default_hp']
         unit_default_AP = unit['default_ap']
         unit_weapon = ''
+        i = 3
         for w in unit['weapons']:
-            unit_weapon = unit_weapon+'/'+w['name']
+            #unit_weapon = unit_weapon+'/'+w['name']
+            self.stats.write(i, w['name'])
+            i = i + 1
         self.stats.write(1, unit_type)
-        self.stats.write(5, unit_weapon)
+        
         self.stats2.write(2, "HP: " + str(unit_HP) + "/" + str(unit_default_HP))
         self.stats2.write(3, "AP: " + str(unit_AP) + "/" + str(unit_default_AP))
         self.stats2.write(4, "stat3: XX/YY")
         self.stats3.write(2, "stat4: XX/YY")
         self.stats3.write(3, "stat5: XX/YY")
         self.stats3.write(4, "stat6: XX/YY")
+        
+        self.status_bar.write(1, "Player: "+self.parent.player+"     Turn:" + str(self.parent.turn_number))
         
         if not self.unit_info:
             self.unit_info = GuiUnitInfo(Point3(0, 0, 0.9), self.parent.sgm.unit_np_dict[unit_id].node)
@@ -288,13 +293,15 @@ class Interface(DirectObject.DirectObject):
 
     def clearUnitData(self):
         self.stats.write(1, "")
-        self.stats.write(5, "")
+        self.stats.write(3, "")
+        self.stats.write(4, "")
         self.stats2.write(2, "")
         self.stats2.write(3, "")
         self.stats2.write(4, "")
         self.stats3.write(2, "")
         self.stats3.write(3, "")
         self.stats3.write(4, "")
+        
         if self.unit_info:
             self.unit_info.label.hide()
         self.clearButtons()        
@@ -312,9 +319,9 @@ class Interface(DirectObject.DirectObject):
         if self.hovered_gui == self.deselect_button:
             self.parent.deselectUnit()
             self.console.unfocus()
-        elif self.hovered_gui == self.punit_button:
-            self.parent.selectPrevUnit()
-            self.console.unfocus()
+        #elif self.hovered_gui == self.punit_button:
+        #    self.parent.selectPrevUnit()
+        #    self.console.unfocus()
         elif self.hovered_gui == self.nunit_button:
             self.parent.selectNextUnit()
             self.console.unfocus() 
