@@ -16,7 +16,9 @@ from panda3d.core import ShadeModelAttrib, DirectionalLight, AmbientLight#@Unres
 from panda3d.core import CollisionTraverser, CollisionRay, CollisionHandlerQueue, CollisionNode#@UnresolvedImport
 from panda3d.core import ConfigVariableString, ConfigVariableInt#@UnresolvedImport
 from panda3d.core import CullBinManager, CullBinEnums, CardMaker, ColorBlendAttrib
+from panda3d.core import LineSegs, TransparencyAttrib
 from direct.interval.IntervalGlobal import Sequence, ActorInterval, Parallel, Func, Interval, Wait#@UnresolvedImport
+from direct.interval.IntervalGlobal import LerpColorScaleInterval
 from direct.showbase.DirectObject import DirectObject
 from direct.fsm import FSM
 from direct.gui.DirectGui import DirectButton, DirectEntry, DirectLabel, DGG
@@ -413,11 +415,12 @@ class SceneGraph():
     
     def showVisibleEnemies(self, unit_id):
         self.hideVisibleEnemies()
-        unit = self.unit_np_dict[unit_id]
+        unit = self.parent.units[unit_id]
         self.enemyunittiles_np = NodePath("enemyunittiles_np")        
         for u in self.parent.units.itervalues():
             if self.parent.isThisEnemyUnit(u['id']):
-                if getLOSOnLevel(self.parent.units[unit_id], u, self.parent.level) > 0:
+                if getLOSOnLevel(unit, u, self.parent.level) > 0:
+                    """
                     cm = CardMaker('cm') 
                     cpos = self.enemyunittiles_np.attachNewNode(cm.generate()) 
                     cpos.setP(render, -90)
@@ -426,6 +429,17 @@ class SceneGraph():
                     cpos.node().setAttrib(ColorBlendAttrib.make(ColorBlendAttrib.MAdd))
                     cpos.setBin('highlight', 25)
                     cpos.setDepthTest(False)
+                    """
+                    ls = LineSegs()
+                    ls.moveTo(unit['pos'][0] + utils.MODEL_OFFSET, unit['pos'][1] + utils.MODEL_OFFSET, utils.GROUND_LEVEL+0.5)
+                    ls.drawTo(u['pos'][0] + utils.MODEL_OFFSET, u['pos'][1] + utils.MODEL_OFFSET, utils.GROUND_LEVEL+0.5)
+                    lines = self.enemyunittiles_np.attachNewNode(ls.create())
+                    lines.setColorScale(1,0,0,1)
+                    # Set a looping interval to fade them both in and out together
+                    self.enemyunittiles_np.setTransparency(TransparencyAttrib.MAlpha)
+        i = Sequence(LerpColorScaleInterval(self.enemyunittiles_np, 2, (1, 0, 0, 0.1)),
+                     LerpColorScaleInterval(self.enemyunittiles_np, 0.5, (1, 0, 0, 1)))
+        i.loop()
         self.enemyunittiles_np.flattenStrong()
         self.enemyunittiles_np.reparentTo(self.node)
         
