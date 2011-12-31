@@ -35,9 +35,9 @@ class VoxelGenerator():
                 for i in xrange(0, self.level.getHeight( (x, y) )+1):
                     model = loader.loadModel('tile')
                     if self.level.getHeight( (x, y) ) > 0:
-                        model.setTexOffset(ts, 0.5, 0)
+                        model.setTexOffset(ts, 0.5, 0.0)
                     else:
-                        model.setTexOffset(ts, 0, 0)                   
+                        model.setTexOffset(ts, 0.0, 0.0)                   
                     model.setPos(x, y, i*utils.GROUND_LEVEL)
                     model.setTexture(ts, tex)   
                     #model.setTexture(ts2, tex2, 2)

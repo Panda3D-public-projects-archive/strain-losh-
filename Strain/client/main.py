@@ -433,12 +433,13 @@ class SceneGraph():
                     ls = LineSegs()
                     ls.moveTo(unit['pos'][0] + utils.MODEL_OFFSET, unit['pos'][1] + utils.MODEL_OFFSET, utils.GROUND_LEVEL+0.5)
                     ls.drawTo(u['pos'][0] + utils.MODEL_OFFSET, u['pos'][1] + utils.MODEL_OFFSET, utils.GROUND_LEVEL+0.5)
+                    ls.setThickness(2)
                     lines = self.enemyunittiles_np.attachNewNode(ls.create())
-                    lines.setColorScale(1,0,0,1)
+                    lines.setColorScale(1,0,0,0.7)
                     # Set a looping interval to fade them both in and out together
                     self.enemyunittiles_np.setTransparency(TransparencyAttrib.MAlpha)
         i = Sequence(LerpColorScaleInterval(self.enemyunittiles_np, 2, (1, 0, 0, 0.1)),
-                     LerpColorScaleInterval(self.enemyunittiles_np, 0.5, (1, 0, 0, 1)))
+                     LerpColorScaleInterval(self.enemyunittiles_np, 0.5, (1, 0, 0, 0.7)))
         i.loop()
         self.enemyunittiles_np.flattenStrong()
         self.enemyunittiles_np.reparentTo(self.node)
