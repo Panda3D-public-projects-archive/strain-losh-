@@ -47,7 +47,7 @@ class Camera(DirectObject.DirectObject):
         self.keys['wheel_up'] = 0
         self.keys['wheel_down'] = 0
         
-        base.taskMgr.add(self.updateCamera, 'updateCamera_task')
+        taskMgr.add(self.updateCamera, 'updateCamera_task')
 
     def setKey(self, button, value):
         """Sets the state of keyboard.
