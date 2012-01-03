@@ -218,7 +218,7 @@ class GuiTextFrame:
             self.frame.reparentTo(base.a2dTopLeft)#@UndefinedVariable
             self.frame.setPos(self.offset.getX(), 0, self.offset.getZ())
 
-        fixedWidthFont = loader.loadFont("mono.egg")#@UndefinedVariable
+        fixedWidthFont = loader.loadFont(GUI_FONT)#@UndefinedVariable
         if not fixedWidthFont.isValid():
             print "pandaInteractiveConsole.py :: could not load the defined font %s" % str(self.font)
             fixedWidthFont = DGG.getDefaultFont()
@@ -236,7 +236,7 @@ class GuiTextFrame:
                               , pos = (0.005, -(i+1)*self.lineHeight)
                               , align=TextNode.ALeft
                               , mayChange=1
-                              , scale=0.1
+                              , scale=0.04
                               , fg = (1,1,1,1)
                               , shadow = (0, 0, 0, 1))
                               #, frame = (200,0,0,1) )
@@ -262,7 +262,7 @@ class GuiTextFrame:
 class GuiUnitInfo:
     def __init__(self, offset, parent):
 
-        fixedWidthFont = loader.loadFont("mono.egg")#@UndefinedVariable        
+        fixedWidthFont = loader.loadFont(GUI_FONT)#@UndefinedVariable        
         #fixedWidthFont.setPixelsPerUnit(60)
         #fixedWidthFont.setRenderMode(fontt.RMSolid)
         if not fixedWidthFont.isValid():
@@ -274,7 +274,7 @@ class GuiUnitInfo:
                               , pos = (offset.getX(),offset.getZ())
                               , align=TextNode.ACenter
                               , mayChange=True
-                              , scale=0.1
+                              , scale=0.04
                               , fg = (1,0,0,1)
                               #, shadow = (0, 0, 0, 1)
                               #, frame = (200,0,0,1) 
