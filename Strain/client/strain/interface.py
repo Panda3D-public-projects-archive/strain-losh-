@@ -120,7 +120,7 @@ class Interface(DirectObject.DirectObject):
         
         self.hovered_gui = None
         
-        self.unit_info = None
+        self.unit_info = {}
         
         self.console = GuiConsole(base.a2dBottomLeft, 1.503, 0.8, aspect, "bottom")#@UndefinedVariable
         self.stats = GuiTextFrame(Point3(0.3, 0, 0), 0.4, 0.22, 4, "bottom")#@UndefinedVariable
@@ -249,14 +249,18 @@ class Interface(DirectObject.DirectObject):
         self.setButtons(unit_id)
         if self.parent.units[unit_id]['overwatch'] == True:
             self.overwatch.turnOn()
+            self.unit_info[unit_id].showOverwatch()
         else:
             self.overwatch.turnOff()
+            self.unit_info[unit_id].hideOverwatch()
         
         if 'set_up' in self.parent.units[unit_id]:
             if self.parent.units[unit_id]['set_up'] == True:
                 self.set_up.turnOn()
+                self.unit_info[unit_id].showSetUp()
             else:
                 self.set_up.turnOff()
+                self.unit_info[unit_id].hideSetUp()
             
         
     def printUnitData(self, unit_id):
@@ -283,13 +287,13 @@ class Interface(DirectObject.DirectObject):
         
         self.status_bar.write(1, "Player: "+self.parent.player+"     Turn:" + str(self.parent.turn_number))
         
-        if not self.unit_info:
-            self.unit_info = GuiUnitInfo(Point3(0, 0, 0.9), self.parent.sgm.unit_np_dict[unit_id].node)
-            self.unit_info.label.setBillboardPointEye()
+        if unit_id not in self.unit_info:
+            self.unit_info[unit_id] = GuiUnitInfo(Point3(0, 0, 0.9), self.parent.sgm.unit_np_dict[unit_id].node)
         else:
-            self.unit_info.label.reparentTo(self.parent.sgm.unit_np_dict[unit_id].node)
-            self.unit_info.label.show()    
-        self.unit_info.write(unit_type)
+            self.unit_info[unit_id].reparentTo(self.parent.sgm.unit_np_dict[unit_id].node)
+            self.unit_info[unit_id].show()
+                
+        self.unit_info[unit_id].write(unit_type)
 
     def clearUnitData(self):
         self.stats.write(1, "")
@@ -302,8 +306,8 @@ class Interface(DirectObject.DirectObject):
         self.stats3.write(3, "")
         self.stats3.write(4, "")
         
-        if self.unit_info:
-            self.unit_info.label.hide()
+        for unit_id in self.unit_info:
+            self.unit_info[unit_id].hide()
         self.clearButtons()        
         
     def endTurn(self):
