@@ -261,7 +261,13 @@ class GuiTextFrame:
 
 class GuiUnitInfo:
     def __init__(self, offset, parent):
-
+            
+        self.offset = offset
+        self.frame = DirectFrame(   relief = DGG.FLAT
+                                  , scale = 1
+                                  , frameSize = (-0.5, 0.5, 0, -0.5)
+                                  , parent = parent )
+        self.frame.setBillboardPointEye()
         fixedWidthFont = loader.loadFont(GUI_FONT)#@UndefinedVariable        
         #fixedWidthFont.setPixelsPerUnit(60)
         #fixedWidthFont.setRenderMode(fontt.RMSolid)
@@ -269,20 +275,33 @@ class GuiUnitInfo:
             print "pandaInteractiveConsole.py :: could not load the defined font %s" % str(self.font)
             fixedWidthFont = DGG.getDefaultFont()
         
-        self.label = OnscreenText( parent = parent
+        self.label = OnscreenText( parent = self.frame
                               , text = ""
-                              , pos = (offset.getX(),offset.getZ())
+                              , pos = (offset.getX(),offset.getZ()+0.1)
                               , align=TextNode.ACenter
                               , mayChange=True
-                              , scale=0.04
+                              , scale=0.1
                               , fg = (1,0,0,1)
                               #, shadow = (0, 0, 0, 1)
                               #, frame = (200,0,0,1) 
                               )
         self.label.setFont( fixedWidthFont )
-        self.label.setLightOff()
+        #self.label.setLightOff()
 
-
+        self.all_icons = {}
+        self.visible_icons = {}
+        self.addIcon("overwatch")
+        self.addIcon("set_up")
+        
+    def addIcon(self, name):
+        self.all_icons[name] = OnscreenImage(parent = self.frame
+                                            ,image = name + "_icon.png"
+                                           #,pos = offset + (0,0,-0.1)
+                                            ,scale = 0.125)
+        
+        self.all_icons[name].setTransparency(TransparencyAttrib.MAlpha)
+        self.all_icons[name].hide()
+        
     def write(self, text):
         self.label.setText(text)
         
@@ -290,4 +309,43 @@ class GuiUnitInfo:
         return
 
     def remove(self):
-        self.label.remove()
+        self.frame.remove()
+        
+    def reparentTo(self, parent):
+        self.frame.reparentTo(parent)
+        
+    def hide(self):
+        self.label.hide()
+        
+    def show(self):
+        self.label.show()
+            
+    def refreshIcons(self):
+        count = len(self.visible_icons)
+        start_pos =  (1 - count) * 0.25 / 2
+        print count, start_pos
+        for icon in self.all_icons:
+            if icon in self.visible_icons:
+                self.visible_icons[icon].setPos(self.offset + (start_pos, 0, -0.05))
+                self.visible_icons[icon].show()
+                start_pos += 0.25
+            else:
+                self.all_icons[icon].hide()
+            
+    def hideOverwatch(self):
+        if "overwatch" in self.visible_icons:
+            self.visible_icons.pop("overwatch")
+        self.refreshIcons()
+
+    def showOverwatch(self):
+        self.visible_icons["overwatch"] = self.all_icons["overwatch"]
+        self.refreshIcons()
+    
+    def hideSetUp(self):
+        if "set_up" in self.visible_icons:
+            self.visible_icons.pop("set_up")
+        self.refreshIcons()
+
+    def showSetUp(self):
+        self.visible_icons["set_up"] = self.all_icons["set_up"]
+        self.refreshIcons()
