@@ -4,7 +4,7 @@ Created on 26. pro. 2011.
 @author: Vjeko
 '''
 from panda3d.core import NodePath, CardMaker, GeomNode, TransparencyAttrib, TextNode, TextFont#@UnresolvedImport
-from direct.gui.DirectGui import DirectFrame, DGG
+from direct.gui.DirectGui import DirectFrame, DGG, DirectWaitBar
 from direct.gui.OnscreenText import OnscreenText
 from direct.gui.OnscreenImage import OnscreenImage
 from utils import *
@@ -260,7 +260,7 @@ class GuiTextFrame:
         self.frame.setPos(p)
 
 class GuiUnitInfo:
-    def __init__(self, offset, parent):
+    def __init__(self, offset, parent, default_hp, hp, default_ap, ap):
             
         self.offset = offset
         self.frame = DirectFrame(   relief = DGG.FLAT
@@ -293,6 +293,24 @@ class GuiUnitInfo:
         self.addIcon("overwatch")
         self.addIcon("set_up")
         
+        self.ap_bar = DirectWaitBar(parent = self.frame
+                                  , text = ""
+                                  , range = default_ap
+                                  , value = ap
+                                  , pos = (offset.getX(),0,offset.getZ()-0.2)
+                                  , barColor = (0,0,1,1)
+                                  , frameColor = (0,0,0.5,0.2)
+                                  , scale = (0.3,0.5,0.3))
+        
+        self.hp_bar = DirectWaitBar(parent = self.frame
+                                  , text = ""
+                                  , range = default_hp
+                                  , value = hp
+                                  , pos = (offset.getX(),0,offset.getZ()-0.27)
+                                  , barColor = (0,1,0,1)
+                                  , frameColor = (1,0,0,0.9)
+                                  , scale = (0.3,0.5,0.3))
+
     def addIcon(self, name):
         self.all_icons[name] = OnscreenImage(parent = self.frame
                                             ,image = name + "_icon.png"
@@ -319,11 +337,16 @@ class GuiUnitInfo:
         
     def show(self):
         self.label.show()
-            
+    
+    def refreshBars(self, hp, ap):
+        self.ap_bar['value'] = ap
+        self.hp_bar['value'] = hp
+        self.ap_bar.setValue()
+        self.hp_bar.setValue()
+        
     def refreshIcons(self):
         count = len(self.visible_icons)
         start_pos =  (1 - count) * 0.25 / 2
-        print count, start_pos
         for icon in self.all_icons:
             if icon in self.visible_icons:
                 self.visible_icons[icon].setPos(self.offset + (start_pos, 0, -0.05))
