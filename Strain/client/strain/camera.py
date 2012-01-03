@@ -32,7 +32,7 @@ class Camera(DirectObject):
         self.rightMouseIsDown = False
         
         self.mPos=[0,0]
-        self.mInc=[0,0]        
+        self.mInc=[0,0]   
 
         self.node = render.attachNewNode('camera_target_node')
         self.node.setPos(5, 5, 0.3)
@@ -41,11 +41,18 @@ class Camera(DirectObject):
         base.camera.setPos(-15, -15, 18)
         base.camera.lookAt(self.node)
 
+        self.zoom_velocity = 0.75  
+        self.dist = base.camera.getDistance(self.node)
+        self.distmax = 30
+        self.distmin = 5
+
         self.setupKeys()
         
         self.camTask = taskMgr.add(self.update, 'camera_update_task') 
 
     def update(self, task):
+        cam_pos = Vec3(0,0,0)
+        
         if self.middleMouseIsDown or self.rightMouseIsDown: 
             newPos=[base.win.getPointer(0).getX(), base.win.getPointer(0).getY()]
             self.mInc=[newPos[0] - self.mPos[0], newPos[1] - self.mPos[1]]
@@ -66,7 +73,14 @@ class Camera(DirectObject):
             new_pos = Vec3(new_pos_up + new_pos_right)
             new_pos *= 0.7
             self.node.setPos(self.node.getPos() + new_pos)
-            #self.node.setPos(self.node.getPos() + Vec3(diffPos.getX() * self.mInc[0]* 0.05, diffPos.getY() * self.mInc[0] * 0.05, 0))
+            
+        # zoom
+        up_vec = render.getRelativeVector(base.camera, (0, 1, 0))
+        dist = base.camera.getDistance(self.node) 
+        cam_pos += up_vec * (dist - self.dist) * 0.25
+        
+        base.camera.setPos(render, base.camera.getPos(render) + cam_pos)
+        
         return task.cont
 
     #-----------------------------------------------------------------
@@ -101,17 +115,12 @@ class Camera(DirectObject):
         self.rightMouseIsDown = False        
 
     def wheelMouseDown(self):
-        None
-        """
-        self.dist += self.zoomvel
+        self.dist += self.zoom_velocity
         if self.dist > self.distmax: 
             self.dist = self.distmax
-        """
         
     def wheelMouseUp(self):
-        None
-        """
-        self.dist -= self.zoomvel
+        self.dist -= self.zoom_velocity
         if self.dist < self.distmin: 
             self.dist = self.distmin
-        """
+        
