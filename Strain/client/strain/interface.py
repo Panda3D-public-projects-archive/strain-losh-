@@ -1,6 +1,6 @@
 from direct.showbase import DirectObject
 from panda3d.core import Plane, Vec3, Point4, Point3, Point2, NodePath#@UnresolvedImport
-from panda3d.core import GeomNode, CardMaker, TextNode#@UnresolvedImport
+from panda3d.core import GeomNode, CardMaker, TextNode, Texture, TextureStage#@UnresolvedImport
 from panda3d.core import TransparencyAttrib#@UnresolvedImport
 from direct.gui.DirectGui import DirectFrame, DGG
 from direct.gui.OnscreenText import OnscreenText
@@ -55,6 +55,9 @@ class Interface(DirectObject.DirectObject):
         self.selected_unit_tile = None
         
         self.movetext_np = None       
+        
+        b=OnscreenImage(parent=render2d, image="galaxy1.jpg") 
+        base.cam.node().getDisplayRegion(0).setSort(20)
         
         self.move_timer = 0
         self.unit_move_destination = None
@@ -127,7 +130,7 @@ class Interface(DirectObject.DirectObject):
         self.stats2 = GuiTextFrame(Point3(0.7, 0, 0), 0.4, 0.22, 4, "bottom")#@UndefinedVariable
         self.stats3 = GuiTextFrame(Point3(1.1, 0, 0), 0.405, 0.22, 4, "bottom")#@UndefinedVariable
         self.status_bar = GuiTextFrame(Point3(0, 0, 0), 2 * aspect, GUI_TOP_OFFSET, 1, "statusbar")#@UndefinedVariable
-
+        
     def redraw(self):
         wp = base.win.getProperties() #@UndefinedVariable
         aspect = float(wp.getXSize()) / wp.getYSize()
