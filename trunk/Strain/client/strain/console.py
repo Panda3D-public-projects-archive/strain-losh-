@@ -46,7 +46,7 @@ class GuiConsole(DirectObject.DirectObject):
             self.pos_max_x = self.h_size
             self.pos_max_y = GUI_BOTTOM_OFFSET - 0.085
         
-        fixedWidthFont = loader.loadFont("monommm_5.ttf")#@UndefinedVariable
+        fixedWidthFont = loader.loadFont(GUI_FONT)#@UndefinedVariable
         #fixedWidthFont.setPixelsPerUnit(60)
         #fixedWidthFont.setRenderMode(fixedWidthFont.RMSolid)
         if not fixedWidthFont.isValid():
