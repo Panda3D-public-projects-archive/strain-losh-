@@ -287,14 +287,27 @@ class Interface(DirectObject.DirectObject):
         
         self.status_bar.write(1, "Player: "+self.parent.player+"     Turn:" + str(self.parent.turn_number))
         
+        self.refreshUnitInfo(unit_id)
+        
+    def refreshUnitInfo(self, unit_id):
+        unit = self.parent.getUnitData(unit_id)
+        unit_type = unit['name']
+        unit_HP = unit['hp']
+        unit_AP = unit['ap']
+        unit_default_HP = unit['default_hp']
+        unit_default_AP = unit['default_ap']
         if unit_id not in self.unit_info:
-            self.unit_info[unit_id] = GuiUnitInfo(Point3(0, 0, 0.9), self.parent.sgm.unit_np_dict[unit_id].node)
+            self.unit_info[unit_id] = GuiUnitInfo(Point3(0, 0, 0.9)
+                                                , self.parent.sgm.unit_np_dict[unit_id].node
+                                                , unit_default_HP, unit_HP
+                                                , unit_default_AP, unit_AP)
         else:
             self.unit_info[unit_id].reparentTo(self.parent.sgm.unit_np_dict[unit_id].node)
+            self.unit_info[unit_id].refreshBars(unit_HP, unit_AP)
             self.unit_info[unit_id].show()
                 
         self.unit_info[unit_id].write(unit_type)
-
+                
     def clearUnitData(self):
         self.stats.write(1, "")
         self.stats.write(3, "")
