@@ -56,9 +56,9 @@ class Interface(DirectObject.DirectObject):
         
         self.movetext_np = None       
         
-        #b=OnscreenImage(parent=render2d, image="galaxy1.jpg") 
-        #base.cam.node().getDisplayRegion(0).setSort(-20)
-        #base.cam2dp.node().getDisplayRegion(0).setSort(-20)
+        b=OnscreenImage(parent=render2dp, image="galaxy1.jpg") 
+        #base.cam.node().getDisplayRegion(0).setSort(20)
+        base.cam2dp.node().getDisplayRegion(0).setSort(-20)
         
         self.move_timer = 0
         self.unit_move_destination = None
