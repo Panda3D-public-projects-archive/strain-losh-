@@ -45,12 +45,20 @@ class VoxelGenerator():
                     self.tile_list[x][y] = model
         self.switchNodes()
                     
-    def switchNodes(self):
+    
+    def makeCopy(self):
         if self.node_usable != None:
             self.node_usable.removeNode()
         np = NodePath("new")
         np = self.node_original.copyTo(self.parent.level_node)
+        return np
+    
+    def flattenCopy(self, np):
         np.clearModelNodes()
         np.flattenStrong()
         self.node_usable = np
+    
+    def switchNodes(self):
+        np = self.makeCopy()
+        self.flattenCopy(np)
         

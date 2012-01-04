@@ -54,6 +54,9 @@ class Net():
             self.parent.sgm.loadLevel(self.parent.level)
             self.parent.sgm.loadUnits()
             self.parent.interface.refreshStatusBar()
+            for unit_id in self.parent.units.iterkeys():
+                if self.parent.isThisMyUnit(unit_id):
+                    self.parent.interface.refreshUnitInfo(unit_id)            
             self.parent._message_in_process = False
         #========================================================================
         #
@@ -71,6 +74,9 @@ class Net():
             self.parent.interface.refreshStatusBar()
             for unit in units.itervalues():
                 self.parent.refreshUnit(unit)
+            for unit_id in self.parent.units.iterkeys():
+                if self.parent.isThisMyUnit(unit_id):
+                    self.parent.interface.refreshUnitInfo(unit_id)
             self.parent.handleNewTurn()
         #========================================================================
         #
