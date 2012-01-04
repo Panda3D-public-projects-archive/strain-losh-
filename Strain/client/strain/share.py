@@ -17,6 +17,24 @@ DYNAMICS_EMPTY = 0
 DYNAMICS_UNIT = 1
 
 
+def levelVisibilityDict( unit_list, level ):
+    
+    vis_dict = {}
+    
+    tmp_target = { 'pos' : (0,0), 'height':1 }
+    
+    for x in xrange(level.maxX):
+        for y in xrange(level.maxY):
+            
+            vis_dict[(x,y)] = 0
+            
+            for unit in unit_list:
+                tmp_target['pos'] = (x,y)
+                if getLOSOnLevel( unit.__dict__, tmp_target, level):
+                    vis_dict[(x,y)] = 1
+                    break
+            
+    return vis_dict            
 
 
 def getMoveDict( unit, level, units, returnOriginTile = False ):    
