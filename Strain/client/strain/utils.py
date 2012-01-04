@@ -45,6 +45,10 @@ GROUND_LEVEL = 0.3
 MODEL_OFFSET = 0.5
 BULLET_SPEED = 10
 
+TILE_STYLE_NORMAL = 0
+TILE_STYLE_YELLOW = 1
+TILE_STYLE_RED = 2
+
 armour_dict = {}
 armour_dict['power_armour_common'] = ["power_armour_common"]
 armour_dict['power_armour_rare'] = ["power_armour_rare"]

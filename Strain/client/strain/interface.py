@@ -338,7 +338,7 @@ class Interface(DirectObject.DirectObject):
         """
         self.destination = None
         if self.hovered_gui == self.deselect_button:
-            self.parent.deselectUnit()
+            self.parent.deselectUnit(forceFlatten=True)
             self.console.unfocus()
         #elif self.hovered_gui == self.punit_button:
         #    self.parent.selectPrevUnit()

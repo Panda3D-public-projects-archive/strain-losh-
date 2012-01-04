@@ -10,6 +10,7 @@ from panda3d.core import ShadeModelAttrib, DirectionalLight, AmbientLight#@Unres
 from panda3d.core import CollisionTraverser, CollisionRay, CollisionHandlerQueue, CollisionNode#@UnresolvedImport
 from panda3d.core import CullBinManager, CullBinEnums#@UnresolvedImport
 from panda3d.core import LineSegs, TransparencyAttrib#@UnresolvedImport
+from panda3d.core import SceneGraphAnalyzerMeter#@UnresolvedImport
 from direct.interval.IntervalGlobal import Sequence, LerpColorScaleInterval#@UnresolvedImport
 
 
@@ -236,13 +237,20 @@ class SceneGraph():
                 textNodePath.setPos(render, tile[0]+0.45, tile[1]+0.45, 0.33)
                 textNodePath.setColor(0, 0, 0)
                 textNodePath.setScale(0.4, 0.4, 0.4)
-                textNodePath.setBillboardPointEye()                
-            #self.movetext_np.flattenStrong()
+                textNodePath.setBillboardPointEye()  
+                if move_dict[tile] >= 2:
+                    self.level_mesh.highlightTile(tile[0], tile[1], utils.TILE_STYLE_YELLOW)
+                else:
+                    self.level_mesh.highlightTile(tile[0], tile[1], utils.TILE_STYLE_RED)
             self.movetext_np.reparentTo(self.node)  
+            self.level_mesh.switchNodes()
 
-    def hideUnitAvailMove(self):
+    def hideUnitAvailMove(self,forceFlatten=False):
         if self.movetext_np:
             self.movetext_np.removeNode() 
+            self.level_mesh.clearHighlights()
+            if forceFlatten == True:
+                self.level_mesh.switchNodes()
     
     def showVisibleEnemies(self, unit_id):
         self.hideVisibleEnemies()

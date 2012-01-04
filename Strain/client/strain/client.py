@@ -73,15 +73,15 @@ class Client(DirectObject):
         self.turn_player = None
     
     def newTurn(self):
-        self.deselectUnit()
+        self.deselectUnit(forceFlatten=True)
         
     def getPlayerName(self, player_id):
         for p in self.players:
             if p['id'] == player_id:
                 return p['name']
     
-    def deselectUnit(self):
-        self.clearState()
+    def deselectUnit(self, forceFlatten=False):
+        self.clearState(forceFlatten)
         
     def selectUnit(self, unit_id):
         if self._anim_in_process == True:
@@ -200,7 +200,7 @@ class Client(DirectObject):
     
     def beforeAnimHook(self):
         self._anim_in_process = True
-        self.sgm.hideUnitAvailMove()
+        self.sgm.hideUnitAvailMove(forceFlatten=True)
         self.sgm.hideVisibleEnemies()
     
     def afterAnimHook(self):
@@ -210,9 +210,9 @@ class Client(DirectObject):
     def endTurn(self):
         ClientMsg.endTurn()
     
-    def clearState(self):
+    def clearState(self, forceFlatten=False):
         self.sgm.clearAltRenderModel()
-        self.sgm.hideUnitAvailMove()
+        self.sgm.hideUnitAvailMove(forceFlatten)
         self.sgm.hideVisibleEnemies()
         self.interface.clearUnitData()
         self.sel_unit_id = None
