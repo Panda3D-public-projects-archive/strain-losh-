@@ -56,9 +56,9 @@ class Interface(DirectObject.DirectObject):
         
         self.movetext_np = None       
         
-        b=OnscreenImage(parent=render2dp, image="galaxy1.jpg") 
+        b=OnscreenImage(parent=render2dp, image="galaxy1.jpg") #@UndefinedVariable
         #base.cam.node().getDisplayRegion(0).setSort(20)
-        base.cam2dp.node().getDisplayRegion(0).setSort(-20)
+        base.cam2dp.node().getDisplayRegion(0).setSort(-20)#@UndefinedVariable
         
         self.move_timer = 0
         self.unit_move_destination = None
@@ -251,7 +251,17 @@ class Interface(DirectObject.DirectObject):
     def processUnitData(self, unit_id):
         self.printUnitData(unit_id)
         self.setButtons(unit_id)
-
+        if self.parent.units[unit_id]['overwatch'] == True:
+            self.overwatch.turnOn()
+        else:
+            self.overwatch.turnOff()
+        
+        if 'set_up' in self.parent.units[unit_id]:
+            if self.parent.units[unit_id]['set_up'] == True:
+                self.set_up.turnOn()
+            else:
+                self.set_up.turnOff()
+                
     def printUnitData(self, unit_id):
         unit = self.parent.getUnitData(unit_id)
         unit_type = unit['name']
@@ -354,7 +364,9 @@ class Interface(DirectObject.DirectObject):
                 self.toggleOverwatch()
             self.console.unfocus()
         elif self.hovered_gui == self.set_up:
-            self.toggleSetUp()
+            if self.set_up.enabled:
+                self.toggleSetUp()
+            self.console.unfocus()
         elif self.hovered_gui == self.console:
             self.console.focus()
         else:
