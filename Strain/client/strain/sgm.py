@@ -139,8 +139,6 @@ class SceneGraph():
             wpn_list = utils.getUnitWeapons(self.parent.units[unit_id])
             unit_model = self.loadUnit(unit_id, wpn_list)
             self.showUnit(unit_model)
-            if self.parent.isThisMyUnit(unit_id):
-                self.parent.interface.refreshUnitInfo(unit_id)
                         
         self.comp_inited['units'] = True  
         
