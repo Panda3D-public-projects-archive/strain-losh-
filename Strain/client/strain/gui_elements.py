@@ -134,9 +134,9 @@ class GuiButton2:
         self.name = name
         
         self.frame = DirectFrame(   relief = DGG.FLAT
-                                  #, frameColor = (0.2, 0.2, 0.2, 0.8)
+                                  , frameColor = (0, 0, 0, 0)
                                   , scale = 1
-                                  , frameSize = (-0.0533, 0.0533, -0.0533, 0.0533) ) #32/600=0.05333
+                                  , frameSize = (-0.3, 0.3, -0.3, 0.3) ) #32/600=0.05333
         self.frame.setScale(0.0533)
         
         self.imageObject = OnscreenImage(image = name+".png", pos = (0, 0, 0))
