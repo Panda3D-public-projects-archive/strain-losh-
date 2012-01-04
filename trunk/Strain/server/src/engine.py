@@ -159,7 +159,6 @@ class Engine( Thread ):
                     EngMsg.error( msg, source )
                     return
                     
-        unit.refreshDicts()
         player.addUnitMsg( compileUnit(unit) )
         self.observer.addUnitMsg( compileUnit(unit) )
         
@@ -388,166 +387,28 @@ class Engine( Thread ):
         
 
     def getLOS(self, beholder, target ):
-        return getLOSOnLevel( beholder.__dict__, target.__dict__, self.level )
-        
-
-    def getMyShootDict(self, unit):        
-        # key : value
-        # unit_id : ( visibility, to_hit, dmg ) 
-        shoot_dict = {}
-        
-        for enemy in unit.owner.visible_enemies:
-            vis = self.getLOS( unit, enemy )
-            if vis:
-                wpn = unit.active_weapon
-                
-                if util.distanceTupple(unit.pos, enemy.pos) < 2:
-                    wpn = unit.chooseMeleeWeapon( enemy )                
-                
-                shoot_dict[enemy.id] = ( vis, wpn.givePercent( enemy, vis ), wpn.str - enemy.armour.reduceDmg( wpn ) )
-        
-        return shoot_dict
-        
-
-    def getMyMoveDict(self, unit):
-        return self.getMoveDict( unit, real = False )
-        
-
-    def getMoveDict(self, unit, returnOriginTile = False, real = True ):    
-                
-        final_dict = {}
-        open_list = [(unit.pos,unit.ap)]
-        
-        for tile, actionpoints in open_list:
-
-            for dx in xrange(-1,2):
-                for dy in xrange( -1,2 ):            
-                    
-                    if( dx == 0 and dy == 0):
-                        continue
-                    
-                    #we can't check our starting position
-                    if( tile[0] + dx == unit.pos[0] and tile[1] + dy == unit.pos[1] ):
-                        continue
-                    
-                    x = int( tile[0] + dx )
-                    y = int( tile[1] + dy )
-                    
-                    if( self.level.outOfBounds(x, y) ):
-                        continue
-                    
-                    if( self.canIMoveHere(unit, tile, dx, dy, real) == False ):
-                        continue                   
-                    
-                    #if we are checking diagonally
-                    if( dx == dy or dx == -dy ):
-                        ap = actionpoints - 1.5
-                    else:
-                        ap = actionpoints - 1
-                    
-                    if( ap < 0 ):
-                        continue
-                    
-                    pt = (x,y) 
-                    
-                    if pt in final_dict:
-                        if( final_dict[pt] < ap ):
-                            final_dict[pt] = ap
-                            open_list.append( ( pt, ap ) )
-                    else: 
-                            final_dict[pt] = ap
-                            open_list.append( ( pt, ap ) )
-                        
-                    
-        if( returnOriginTile ):
-            final_dict[unit.pos] = unit.ap
-            return final_dict
-        
-        return final_dict
+        return getLOSOnLevel( beholder.__dict__, target.__dict__, self.level )     
 
 
 
-    def tileClearForMoving(self, unit, x, y, real):
-        #check if the level is clear at that tile
-        if self.level.getHeight( (x, y) ):
-            return False
-        
-        ret = self.level.getDynamic( x, y ) 
-        if ret:
-            if ret[0] == DYNAMICS_UNIT:
-                tmp_unit = self.units[ ret[1] ]
-                
-                if not real:
-                    #if this is us, we can move here                    
-                    if tmp_unit == unit:
-                        return True
-                    
-                    if unit.doIKnowAboutThisUnit( tmp_unit ):
-                        return False
-                    
-                else:
-                    #this is for real, so if tmp_unit is any unit other than the one moving, we cannot move there 
-                    if tmp_unit != unit:
-                        return False
-        
-        return True
+
+    def _mvdict(self, unit, returnOriginTile):
+        return getMoveDict(unit, self.level, self.units, returnOriginTile)
 
 
-    def canIMoveHere(self, unit, position, dx, dy, real ):
-              
-        dx = int( dx )
-        dy = int( dy )
-              
-        if( (dx != 1 and dx != 0 and dx != -1) and 
-            (dy != 1 and dy != 0 and dy != -1) ):
-            notify.critical( "Exception: %s... %s", sys.exc_info()[1], traceback.extract_stack() )
-            raise Exception( "Invalid dx (%d) or dy (%d)" %(dy ,dy) )
-        
-        ptx = int( position[0] )
-        pty = int( position[1] )
 
-
-        if not self.tileClearForMoving( unit, ptx + dx, pty + dy, real ):
-            return False
-
-      
-        #check diagonal if it is clear
-        if( dx != 0 and dy != 0 ):
-
-            if self.level.getHeight( (ptx + dx, pty) ) or self.level.getHeight( (ptx, pty + dy) ):
-                return False
-                
-            #no need to check for 'real variable here, if we are this close to enemy, we MUST know he is there                
-            #check if there is a dynamic thing in the way and see if it is a unit, if it is friendly than ok
-            stuff = self.level.getDynamic( ptx + dx, pty ) 
-            if stuff and stuff[0] == DYNAMICS_UNIT:
-                if( self.units[ stuff[1] ].owner != unit.owner ):
-                    return False
-                    
-            stuff = self.level.getDynamic( ptx, pty + dy ) 
-            if stuff and stuff[0] == DYNAMICS_UNIT:
-                if( self.units[ stuff[1] ].owner != unit.owner ):
-                    return False
-                    
-        return True
-
-    
     def getPath(self, unit, target_tile ):
         
         #if we are trying to find a path to the tile we are on
         if( target_tile == unit.pos ):
             return[]
         
-        moveDict = self.getMoveDict(unit, True)
-        moveDictSubjective = self.getMoveDict(unit, True, False)
+        moveDict = self._mvdict(unit, True)
 
         #if target_tile tile is not in the move list, or my subjective move list then raise alarm
         if target_tile not in moveDict:
-            if target_tile in moveDictSubjective:
-                moveDict = moveDictSubjective
-            else:
-                notify.critical("getPath() got an invalid target tile:%s", target_tile )
-                raise Exception( "Trying to move to an invalid target_tile:%s", target_tile )
+            notify.critical("getPath() got an invalid target tile:%s", target_tile )
+            raise Exception( "Trying to move to an invalid target_tile:%s", target_tile )
         
         x = target_tile[0]
         y = target_tile[1]
@@ -572,7 +433,7 @@ class Engine( Thread ):
                         continue
                     
                     #if we can't move here just skip
-                    if( self.canIMoveHere( unit, (x,y), dx, dy, False) == False ):
+                    if( canIMoveHere( unit, (x,y), dx, dy, self.level, self.units ) == False ):
                         continue
                     
                     #if we are looking at the origin, and we can move there, we just checked that, stop
@@ -773,7 +634,6 @@ class Engine( Thread ):
         
         for tmp_unit_id in unit_ids_involved:
             tmp_unit = self.units[tmp_unit_id] 
-            tmp_unit.refreshDicts()
             for p in self.players:
                 if tmp_unit.owner == p or tmp_unit.owner.team == p.team:
                     p.addUnitMsg( util.compileUnit(tmp_unit) )                                        
@@ -967,7 +827,6 @@ class Engine( Thread ):
                         
         for unit_id in unit_ids_involved:
             unit = self.units[unit_id] 
-            unit.refreshDicts()
             for p in self.players:
                 if unit.owner == p or unit.owner.team == p.team:
                     p.addUnitMsg( util.compileUnit(unit) )                                        

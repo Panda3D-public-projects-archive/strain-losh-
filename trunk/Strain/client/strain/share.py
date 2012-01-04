@@ -19,6 +19,113 @@ DYNAMICS_UNIT = 1
 
 
 
+def getMoveDict( unit, level, units, returnOriginTile = False ):    
+    """returnOriginTile - if you need to get the tile the unit is standing on, set this to True"""        
+    final_dict = {}
+    open_list = [(unit.pos,unit.ap)]
+    
+    for tile, actionpoints in open_list:
+
+        for dx in xrange(-1,2):
+            for dy in xrange( -1,2 ):            
+                
+                if( dx == 0 and dy == 0):
+                    continue
+                
+                #we can't check our starting position
+                if( tile[0] + dx == unit.pos[0] and tile[1] + dy == unit.pos[1] ):
+                    continue
+                
+                x = int( tile[0] + dx )
+                y = int( tile[1] + dy )
+                
+                if( level.outOfBounds(x, y) ):
+                    continue
+                
+                if( canIMoveHere(unit, tile, dx, dy, level, units) == False ):
+                    continue                   
+                
+                #if we are checking diagonally
+                if( dx == dy or dx == -dy ):
+                    ap = actionpoints - 1.5
+                else:
+                    ap = actionpoints - 1
+                
+                if( ap < 0 ):
+                    continue
+                
+                pt = (x,y) 
+                
+                if pt in final_dict:
+                    if( final_dict[pt] < ap ):
+                        final_dict[pt] = ap
+                        open_list.append( ( pt, ap ) )
+                else: 
+                        final_dict[pt] = ap
+                        open_list.append( ( pt, ap ) )
+                    
+                
+    if( returnOriginTile ):
+        final_dict[unit.pos] = unit.ap
+        return final_dict
+    
+    return final_dict
+
+
+
+def canIMoveHere( unit, position, dx, dy, level, units ):
+          
+    dx = int( dx )
+    dy = int( dy )
+          
+    if( (dx != 1 and dx != 0 and dx != -1) and 
+        (dy != 1 and dy != 0 and dy != -1) ):
+        #notify.critical( "Exception: %s... %s", sys.exc_info()[1], traceback.extract_stack() )
+        raise Exception( "Invalid dx (%d) or dy (%d)" %(dy ,dy) )
+    
+    ptx = int( position[0] )
+    pty = int( position[1] )
+
+
+    if not tileClearForMoving( unit, ptx + dx, pty + dy, level, units ):
+        return False
+
+  
+    #check diagonal if it is clear
+    if( dx != 0 and dy != 0 ):
+
+        if level.getHeight( (ptx + dx, pty) ) or level.getHeight( (ptx, pty + dy) ):
+            return False
+            
+        #no need to check for 'real variable here, if we are this close to enemy, we MUST know he is there                
+        #check if there is a dynamic thing in the way and see if it is a unit, if it is friendly than ok
+        stuff = level.getDynamic( ptx + dx, pty ) 
+        if stuff and stuff[0] == DYNAMICS_UNIT:
+            if( units[ stuff[1] ].owner != unit.owner ):
+                return False
+                
+        stuff = level.getDynamic( ptx, pty + dy ) 
+        if stuff and stuff[0] == DYNAMICS_UNIT:
+            if( units[ stuff[1] ].owner != unit.owner ):
+                return False
+                
+    return True
+
+#TODO: krav: vidit jel treba bas units slat il semoze prek dynamicsa to pogeldat?
+def tileClearForMoving(unit, x, y, level, units):
+    #check if the level is clear at that tile
+    if level.getHeight( (x, y) ):
+        return False
+    
+    ret = level.getDynamic( x, y ) 
+    if ret:
+        if ret[0] == DYNAMICS_UNIT:
+            tmp_unit = units[ ret[1] ]
+                                
+            if tmp_unit != unit:
+                return False
+    
+    return True
 
 
 def getLOSOnLevel( beholder_dict, target_dict, level ):
