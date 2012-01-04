@@ -87,7 +87,7 @@ class AppFSM(FSM.FSM):
         del self.parent.login
 
     def enterClient(self, type):
-        base.win.setClearColor(VBase4(0.5, 0.5, 0.5, 0))
+        base.win.setClearColor(VBase4(0, 0, 0, 0))
         self.parent.client = Client(self.parent, self.parent.player, type=type)
         
     def exitClient(self):
