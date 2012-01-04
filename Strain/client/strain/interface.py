@@ -251,22 +251,7 @@ class Interface(DirectObject.DirectObject):
     def processUnitData(self, unit_id):
         self.printUnitData(unit_id)
         self.setButtons(unit_id)
-        if self.parent.units[unit_id]['overwatch'] == True:
-            self.overwatch.turnOn()
-            self.unit_info[unit_id].showOverwatch()
-        else:
-            self.overwatch.turnOff()
-            self.unit_info[unit_id].hideOverwatch()
-        
-        if 'set_up' in self.parent.units[unit_id]:
-            if self.parent.units[unit_id]['set_up'] == True:
-                self.set_up.turnOn()
-                self.unit_info[unit_id].showSetUp()
-            else:
-                self.set_up.turnOff()
-                self.unit_info[unit_id].hideSetUp()
-            
-        
+
     def printUnitData(self, unit_id):
         unit = self.parent.getUnitData(unit_id)
         unit_type = unit['name']
@@ -309,6 +294,21 @@ class Interface(DirectObject.DirectObject):
             self.unit_info[unit_id].reparentTo(self.parent.sgm.unit_np_dict[unit_id].node)
             self.unit_info[unit_id].refreshBars(unit_HP, unit_AP)
             self.unit_info[unit_id].show()
+        
+        if self.parent.units[unit_id]['overwatch'] == True:
+            self.overwatch.turnOn()
+            self.unit_info[unit_id].showOverwatch()
+        else:
+            self.overwatch.turnOff()
+            self.unit_info[unit_id].hideOverwatch()
+        
+        if 'set_up' in self.parent.units[unit_id]:
+            if self.parent.units[unit_id]['set_up'] == True:
+                self.set_up.turnOn()
+                self.unit_info[unit_id].showSetUp()
+            else:
+                self.set_up.turnOff()
+                self.unit_info[unit_id].hideSetUp()
                 
         self.unit_info[unit_id].write(unit_type)
                 
