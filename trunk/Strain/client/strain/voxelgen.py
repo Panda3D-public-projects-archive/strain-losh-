@@ -3,6 +3,7 @@
 #############################################################################
 
 # python imports
+from time import time
 
 # panda3D imports
 from panda3d.core import Texture, NodePath, TextureStage
@@ -44,7 +45,19 @@ class VoxelGenerator():
                     model.reparentTo(self.node_original)                 
                     self.tile_list[x][y] = model
         self.switchNodes()
-                    
+    
+    def clearHighlights(self):
+        for x in xrange(0, self.level.maxX):
+            for y in xrange(0, self.level.maxY):
+                self.tile_list[x][y].setColorScale(1,1,1,1)
+    
+    def highlightTile(self, x, y, style):
+        if style == utils.TILE_STYLE_NORMAL:
+            self.tile_list[x][y].setColorScale(1,1,1,1)
+        elif style == utils.TILE_STYLE_YELLOW:
+            self.tile_list[x][y].setColorScale(1, 0.6, 0.2, 1)
+        elif style == utils.TILE_STYLE_RED:
+            self.tile_list[x][y].setColorScale(0.8, 0.2, 0.2, 1)                
     
     def makeCopy(self):
         if self.node_usable != None:
@@ -54,11 +67,15 @@ class VoxelGenerator():
         return np
     
     def flattenCopy(self, np):
+        ftime = time()
         np.clearModelNodes()
         np.flattenStrong()
         self.node_usable = np
     
     def switchNodes(self):
+        #ftime = time()
         np = self.makeCopy()
+        #print time() - ftime, ' step1'
         self.flattenCopy(np)
+        #print time() - ftime, ' switched'
         
