@@ -14,6 +14,7 @@ from direct.showbase.DirectObject import *
 from direct.task import Task
 
 # strain related imports
+import utils as utils
 
 #############################################################################
 # CLASSES
@@ -47,6 +48,7 @@ class Camera(DirectObject):
         self.distmin = 5
 
         self.setupKeys()
+        self.isFollowing = False
         
         self.camTask = taskMgr.add(self.update, 'camera_update_task') 
 
@@ -83,10 +85,45 @@ class Camera(DirectObject):
         
         return task.cont
 
-    #-----------------------------------------------------------------
-    # Mouse and Key Routines
-    #-----------------------------------------------------------------
-    #
+    def toggleFollow(self):
+        if self.isFollowing:
+            self.setUnfollow()
+        else:
+            if self.parent.sel_unit_id != None:
+                self.setFollow(self.parent.sgm.unit_np_dict[self.parent.sel_unit_id].node)
+
+
+    def setFollow(self, node):
+        self.node.reparentTo(node)
+        self.node.setPos(0, 0, 0)
+        self.node.setH(0)
+        cam_pos = base.camera.getPos()
+        base.camera.setPos(0, cam_pos.getY(), cam_pos.getZ())
+        base.camera.lookAt(self.node)
+        self.dist = base.camera.getDistance(self.node)
+        self.ignore('mouse3')
+        self.ignore('mouse3-up')
+        self.ignore('mouse2')
+        self.ignore('mouse2-up')
+        self.parent.interface.console.consoleOutput('Camera type = FOLLOW', utils.CONSOLE_SYSTEM_MESSAGE)
+        self.parent.interface.console.show()
+        self.isFollowing = True        
+        
+    def setUnfollow(self):
+        pos = self.node.getPos(render)
+        self.node.reparentTo(render)
+        self.node.setPos(pos)
+        #cam_pos = base.camera.getPos()
+        #base.camera.setPos(cam_pos.getY(), cam_pos.getY(), cam_pos.getZ())
+        #self.dist = base.camera.getDistance(self.node)  
+        self.accept('mouse2', self.middleMouseDown, [])
+        self.accept('mouse2-up', self.middleMouseUp, [])              
+        self.accept('mouse3', self.rightMouseDown, [])
+        self.accept('mouse3-up', self.rightMouseUp, [])
+        self.parent.interface.console.consoleOutput('Camera type = FREE', utils.CONSOLE_SYSTEM_MESSAGE)
+        self.parent.interface.console.show()
+        self.isFollowing = False        
+
     def setKey(self, key, flag):
         self.keys[key] = flag    
     
@@ -97,6 +134,7 @@ class Camera(DirectObject):
         self.accept('wheel_up', self.wheelMouseUp, [])
         self.accept('mouse3', self.rightMouseDown, [])
         self.accept('mouse3-up', self.rightMouseUp, [])
+        self.accept('f5', self.toggleFollow)
 
     def middleMouseDown(self):
         if not self.rightMouseIsDown:
