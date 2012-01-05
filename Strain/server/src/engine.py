@@ -389,11 +389,18 @@ class Engine( Thread ):
     def getLOS(self, beholder, target ):
         return getLOSOnLevel( beholder.__dict__, target.__dict__, self.level )     
 
+    def _giveDictUnits(self):
+        tmp_units = {}
+        
+        for unt in self.units.itervalues():
+            tmp_units[unt.id] = unt.__dict__ 
 
+        return tmp_units
 
 
     def _mvdict(self, unit, returnOriginTile):
-        return getMoveDict(unit, self.level, self.units, returnOriginTile)
+        
+        return getMoveDict(unit.__dict__, self.level, self._giveDictUnits(), returnOriginTile)
 
 
 
@@ -415,6 +422,8 @@ class Engine( Thread ):
         
         path_list = [ (target_tile, moveDict[target_tile]) ]
         
+        tmp_dict_units = self._giveDictUnits()
+        
         while( 1 ):
         
             biggest_ap = ( 0, 0 )
@@ -433,7 +442,7 @@ class Engine( Thread ):
                         continue
                     
                     #if we can't move here just skip
-                    if( canIMoveHere( unit, (x,y), dx, dy, self.level, self.units ) == False ):
+                    if( canIMoveHere( unit.__dict__, (x,y), dx, dy, self.level, tmp_dict_units ) == False ):
                         continue
                     
                     #if we are looking at the origin, and we can move there, we just checked that, stop

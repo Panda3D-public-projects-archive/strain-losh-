@@ -21,7 +21,7 @@ def levelVisibilityDict( unit_list, level ):
     
     vis_dict = {}
     
-    tmp_target = { 'pos' : (0,0), 'height':1 }
+    tmp_target = { 'pos':(0,0), 'height':1 }
     
     for x in xrange(level.maxX):
         for y in xrange(level.maxY):
@@ -40,7 +40,7 @@ def levelVisibilityDict( unit_list, level ):
 def getMoveDict( unit, level, units, returnOriginTile = False ):    
     """returnOriginTile - if you need to get the tile the unit is standing on, set this to True"""        
     final_dict = {}
-    open_list = [(unit.pos,unit.ap)]
+    open_list = [(unit['pos'],unit['ap'])]
     
     for tile, actionpoints in open_list:
 
@@ -51,7 +51,7 @@ def getMoveDict( unit, level, units, returnOriginTile = False ):
                     continue
                 
                 #we can't check our starting position
-                if( tile[0] + dx == unit.pos[0] and tile[1] + dy == unit.pos[1] ):
+                if( tile[0] + dx == unit['pos'][0] and tile[1] + dy == unit['pos'][1] ):
                     continue
                 
                 x = int( tile[0] + dx )
@@ -84,7 +84,7 @@ def getMoveDict( unit, level, units, returnOriginTile = False ):
                     
                 
     if( returnOriginTile ):
-        final_dict[unit.pos] = unit.ap
+        final_dict[unit['pos']] = unit['ap']
         return final_dict
     
     return final_dict
@@ -119,12 +119,12 @@ def canIMoveHere( unit, position, dx, dy, level, units ):
         #check if there is a dynamic thing in the way and see if it is a unit, if it is friendly than ok
         stuff = level.getDynamic( ptx + dx, pty ) 
         if stuff and stuff[0] == DYNAMICS_UNIT:
-            if( units[ stuff[1] ].owner != unit.owner ):
+            if( units[ stuff[1] ]['owner'] != unit['owner'] ):
                 return False
                 
         stuff = level.getDynamic( ptx, pty + dy ) 
         if stuff and stuff[0] == DYNAMICS_UNIT:
-            if( units[ stuff[1] ].owner != unit.owner ):
+            if( units[ stuff[1] ]['owner'] != unit['owner'] ):
                 return False
                 
     return True
@@ -140,7 +140,7 @@ def tileClearForMoving(unit, x, y, level, units):
         if ret[0] == DYNAMICS_UNIT:
             tmp_unit = units[ ret[1] ]
                                 
-            if tmp_unit != unit:
+            if tmp_unit['id'] != unit['id']:
                 return False
     
     return True
