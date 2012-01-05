@@ -31,6 +31,9 @@ class Weapon():
         self.blast = None
         self.parry = None
         self.power = None
+        self.shots = None
+    
+    
     
     def givePercent( self, target, visibility ):
         
@@ -75,13 +78,18 @@ class Weapon():
         
     def fire(self, target, visibility ):
 
-        #when we are here, we are certain that the target is in los        
-        to_hit = self.givePercent( target, visibility )       
-                
-        if util.d100() <= to_hit:
-            return self.hitTarget( target )
-        else:
-            return [('miss', target.id)]
+        ret_list = []
+
+        for i in xrange(self.shots):
+            #when we are here, we are certain that the target is in los        
+            to_hit = self.givePercent( target, visibility )       
+                    
+            if util.d100() <= to_hit: 
+                ret_list.append( self.hitTarget( target ) )
+            else: 
+                ret_list.append( ('miss', target.id) )
+    
+        return ret_list
     
     
     def hitTarget(self, target):
@@ -111,6 +119,8 @@ def loadWeapon( name ):
         try:wpn.power = int(p.attributes['power'].value)
         except:pass
         try:wpn.special = p.attributes['special'].value
+        except:pass
+        try:wpn.shots = int(p.attributes['shots'].value)
         except:pass
         try:wpn.blast = int(p.attributes['blast'].value)
         except:pass
