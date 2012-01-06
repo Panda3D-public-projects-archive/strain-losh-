@@ -16,7 +16,8 @@ from direct.fsm import FSM
 # strain related imports
 from client_messaging import *
 from sgm import SceneGraph
-from camera import Camera
+#from camera import Camera
+from cam2 import Camera
 from net import Net
 from interface import Interface
 import utils as utils
@@ -44,7 +45,6 @@ class Client(DirectObject):
         
         # Init Camera
         self.camera = Camera(self, 20, 20)
-        #self.camera = thirdCameraClass()
         
         # Init Interface
         self.interface = Interface(self)
