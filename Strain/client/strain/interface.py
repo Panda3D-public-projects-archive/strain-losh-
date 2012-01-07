@@ -98,7 +98,7 @@ class Interface(DirectObject.DirectObject):
         
         self.overwatch = GuiButton2("bottom", Point3(1.5+0.01, 0, -0.09), aspect, plane, "overwatch")
         self.set_up = GuiButton2("bottom", Point3(1.6+0.02, 0, -0.09), aspect, plane, "set_up")
-        self.action_3 = GuiButton2("bottom", Point3(1.7+0.03, 0, -0.09), aspect, plane, "empty")
+        self.use = GuiButton2("bottom", Point3(1.7+0.03, 0, -0.09), aspect, plane, "use")
         self.action_4 = GuiButton2("bottom", Point3(1.5+0.01, 0, -0.2), aspect, plane, "empty")
         self.action_5 = GuiButton2("bottom", Point3(1.6+0.02, 0, -0.2), aspect, plane, "empty")
         self.action_6 = GuiButton2("bottom", Point3(1.7+0.03, 0, -0.2), aspect, plane, "empty")
@@ -113,7 +113,7 @@ class Interface(DirectObject.DirectObject):
         self.buttons["action_d"] = self.action_d
         self.buttons["overwatch"] = self.overwatch
         self.buttons["set_up"] = self.set_up
-        self.buttons["action_3"] = self.action_3
+        self.buttons["use"] = self.use
         self.buttons["action_4"] = self.action_4
         self.buttons["action_5"] = self.action_5
         self.buttons["action_6"] = self.action_6
@@ -121,6 +121,7 @@ class Interface(DirectObject.DirectObject):
         self.action_buttons = {}
         self.action_buttons["overwatch"] = self.overwatch
         self.action_buttons["set_up"] = self.set_up
+        self.action_buttons["use"] = self.use
         
         self.hovered_gui = None
         
