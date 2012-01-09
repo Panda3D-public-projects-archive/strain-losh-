@@ -119,12 +119,12 @@ def canIMoveHere( unit, position, dx, dy, level, units ):
         #check if there is a dynamic thing in the way and see if it is a unit, if it is friendly than ok
         stuff = level.getDynamic( ptx + dx, pty ) 
         if stuff and stuff[0] == DYNAMICS_UNIT:
-            if( units[ stuff[1] ]['owner'] != unit['owner'] ):
+            if( units[ stuff[1] ]['owner_id'] != unit['owner_id'] ):
                 return False
                 
         stuff = level.getDynamic( ptx, pty + dy ) 
         if stuff and stuff[0] == DYNAMICS_UNIT:
-            if( units[ stuff[1] ]['owner'] != unit['owner'] ):
+            if( units[ stuff[1] ]['owner_id'] != unit['owner_id'] ):
                 return False
                 
     return True
