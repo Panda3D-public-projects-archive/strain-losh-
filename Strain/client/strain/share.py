@@ -435,8 +435,16 @@ class Level:
         
     def removeUnit(self, unit ):
         self._dynamics[ int(unit.pos[0]) ][ int(unit.pos[1]) ] = None
+
+        
+    def putUnitDict(self, unit ):
+        self._dynamics[ int(unit['pos'][0]) ][ int(unit['pos'][1]) ] = ( DYNAMICS_UNIT, unit['id'] )
         
         
+    def removeUnitDict(self, unit ):
+        self._dynamics[ int(unit['pos'][0]) ][ int(unit['pos'][1]) ] = None
+        
+                
     def getDynamic(self, x, y):
         return self._dynamics[int(x)][int(y)]
 
