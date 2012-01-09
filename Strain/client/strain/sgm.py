@@ -227,7 +227,8 @@ class SceneGraph():
             return
         if unit:
             #self.parent.units[unit_id]['move_dict'] = self.parent.getMoveDict(unit_id)
-            move_dict = unit['move_dict']
+            #move_dict = unit['move_dict']
+            move_dict = getMoveDict(unit, self.parent.level, self.parent.units)
             self.movetext_np = NodePath("movetext_np")
             for tile in move_dict:
                 text = TextNode('node name')
