@@ -24,6 +24,7 @@ class Unit():
     def __init__( self, name ):        
         self.id = -1
         self.owner = None
+        self.owner_id = None
         self.pos = ( -1, -1 )
         self.name = name     
         self.heading = HEADING_N      
@@ -48,6 +49,7 @@ class Unit():
         
         self.id = in_id
         self.owner = owner
+        self.owner_id = owner.id
         
         self.pos = ( x, y )
            
