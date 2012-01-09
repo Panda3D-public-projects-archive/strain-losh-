@@ -129,7 +129,7 @@ def compileAllDetectedUnits(units):
 def compileLevel(level):
     #return compileTarget( level,['_dynamics'] )
     lvl = copy.deepcopy( level )
-    lvl._dynamics = None
+    lvl.clearDynamics()
     return lvl
 
 

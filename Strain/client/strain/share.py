@@ -368,7 +368,7 @@ class Level:
         self.maxX = 0
         self.maxY = 0
         self._level_data = []    
-        self.dynamics = []
+        self._dynamics = []
         
         self.load(self.name)        
 
@@ -400,7 +400,7 @@ class Level:
         self._level_data = tmp 
 
         #we make this so its size is the same as level 
-        self.dynamics = [[ None ] * self.maxY for i in xrange(self.maxX)] #@UnusedVariable
+        self._dynamics = [[ None ] * self.maxY for i in xrange(self.maxX)] #@UnusedVariable
 
 
     def outOfBounds( self, x, y ):
@@ -420,7 +420,7 @@ class Level:
             return False
         
         #check to see if the tile is already occupied
-        if self.dynamics[x][y]:
+        if self._dynamics[x][y]:
             print "This tile already occupied, unit cannot deploy here", x, y, unit.type
             return False
             
@@ -429,17 +429,24 @@ class Level:
         
     def putUnit(self, unit ):
         if self.canUnitFitHere(unit):
-            self.dynamics[ int(unit.pos[0]) ][ int(unit.pos[1]) ] = ( DYNAMICS_UNIT, unit.id )
+            self._dynamics[ int(unit.pos[0]) ][ int(unit.pos[1]) ] = ( DYNAMICS_UNIT, unit.id )
             return True
         
         return False
         
+        
     def removeUnit(self, unit ):
-        self.dynamics[ int(unit.pos[0]) ][ int(unit.pos[1]) ] = None
+        self._dynamics[ int(unit.pos[0]) ][ int(unit.pos[1]) ] = None
         
         
     def getDynamic(self, x, y):
-        return self.dynamics[int(x)][int(y)]
+        return self._dynamics[int(x)][int(y)]
+
+
+    def clearDynamics(self):
+        for i in range( 0, self.maxX ):
+            for j in range( 0, self.maxY ):
+                self._dynamics[i][j] = None
 
     
     def getHeight(self, pos ):
