@@ -105,7 +105,7 @@ def canIMoveHere( unit, position, dx, dy, level, units ):
     pty = int( position[1] )
 
 
-    if not tileClearForMoving( unit, ptx + dx, pty + dy, level, units ):
+    if not tileClearForMoving( unit, ptx + dx, pty + dy, level ):
         return False
 
   
@@ -130,7 +130,7 @@ def canIMoveHere( unit, position, dx, dy, level, units ):
     return True
 
 #TODO: krav: vidit jel treba bas units slat il semoze prek dynamicsa to pogeldat?
-def tileClearForMoving(unit, x, y, level, units):
+def tileClearForMoving(unit, x, y, level):
     #check if the level is clear at that tile
     if level.getHeight( (x, y) ):
         return False
@@ -138,9 +138,7 @@ def tileClearForMoving(unit, x, y, level, units):
     ret = level.getDynamic( x, y ) 
     if ret:
         if ret[0] == DYNAMICS_UNIT:
-            tmp_unit = units[ ret[1] ]
-                                
-            if tmp_unit['id'] != unit['id']:
+            if ret[1] != unit['id']:
                 return False
     
     return True
