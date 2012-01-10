@@ -276,16 +276,6 @@ class SceneGraph():
         for u in self.parent.units.itervalues():
             if self.parent.isThisEnemyUnit(u['id']):
                 if getLOSOnLevel(unit, u, self.parent.level) > 0:
-                    """
-                    cm = CardMaker('cm') 
-                    cpos = self.enemyunittiles_np.attachNewNode(cm.generate()) 
-                    cpos.setP(render, -90)
-                    cpos.setPos(render, u['pos'][0], u['pos'][1], utils.GROUND_LEVEL+0.01)
-                    cpos.setColor(0.12, 0.12, 0.12)
-                    cpos.node().setAttrib(ColorBlendAttrib.make(ColorBlendAttrib.MAdd))
-                    cpos.setBin('highlight', 25)
-                    cpos.setDepthTest(False)
-                    """
                     ls = LineSegs()
                     ls.moveTo(unit['pos'][0] + utils.MODEL_OFFSET, unit['pos'][1] + utils.MODEL_OFFSET, utils.GROUND_LEVEL+0.5)
                     ls.drawTo(u['pos'][0] + utils.MODEL_OFFSET, u['pos'][1] + utils.MODEL_OFFSET, utils.GROUND_LEVEL+0.5)
@@ -294,6 +284,10 @@ class SceneGraph():
                     lines.setColorScale(1,0,0,0.7)
                     # Set a looping interval to fade them both in and out together
                     self.enemyunittiles_np.setTransparency(TransparencyAttrib.MAlpha)
+                    unit_model = self.parent.sgm.unit_np_dict[u['id']]
+                    unit_model.marker.setTexture(loader.loadTexture('target.png'))
+                    unit_model.marker.setColor(1,0,0)
+                    unit_model.showMarker()
         i = Sequence(LerpColorScaleInterval(self.enemyunittiles_np, 2, (1, 0, 0, 0.1)),
                      LerpColorScaleInterval(self.enemyunittiles_np, 0.5, (1, 0, 0, 0.7)))
         i.loop()
@@ -302,7 +296,10 @@ class SceneGraph():
         
     def hideVisibleEnemies(self):
         if self.enemyunittiles_np:
-            self.enemyunittiles_np.removeNode() 
+            self.enemyunittiles_np.removeNode()
+        for u in self.parent.units.itervalues():
+            if self.parent.isThisEnemyUnit(u['id']):
+                self.parent.sgm.unit_np_dict[u['id']].hideMarker()   
             
     def setBullet(self, b):
         b.reparentTo(render)
