@@ -58,8 +58,8 @@ class SceneGraph():
         # Create main update task
         taskMgr.add(self.animTask, "anim_task")  
         
-        meter = SceneGraphAnalyzerMeter('meter', render.node())
-        meter.setupWindow(base.win)      
+        #meter = SceneGraphAnalyzerMeter('meter', render.node())
+        #meter.setupWindow(base.win)      
         
         bins = CullBinManager.getGlobalPtr()
         bins.addBin('highlight', CullBinEnums.BTStateSorted, 25)
@@ -259,15 +259,11 @@ class SceneGraph():
                 textNodePath.setColor(0, 0, 0)
                 textNodePath.setScale(0.4, 0.4, 0.4)
                 textNodePath.setBillboardPointEye()
-                if move_dict[tile] >= 2:
-                    self.tile_cards[tile[0]][tile[1]].setColor(1,1,0)
-                    self.tile_cards[tile[0]][tile[1]].reparentTo(self.tile_cards_np)
-                else:
-                    self.tile_cards[tile[0]][tile[1]].setColor(1,0,0)
-                    self.tile_cards[tile[0]][tile[1]].reparentTo(self.tile_cards_np)                    
+                self.tile_cards[tile[0]][tile[1]].setColor(0,1,0)
+                self.tile_cards[tile[0]][tile[1]].reparentTo(self.tile_cards_np)                  
             self.movetext_np.reparentTo(self.node)  
 
-    def hideUnitAvailMove(self,forceFlatten=False):
+    def hideUnitAvailMove(self):
         if self.movetext_np:
             self.movetext_np.removeNode() 
             for c in self.tile_cards_np.getChildren():

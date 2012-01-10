@@ -16,8 +16,8 @@ from direct.fsm import FSM
 # strain related imports
 from client_messaging import *
 from sgm import SceneGraph
-#from camera import Camera
-from cam2 import Camera
+from camera import Camera
+#from cam2 import Camera
 from net import Net
 from interface import Interface
 import utils as utils
@@ -73,15 +73,15 @@ class Client(DirectObject):
         self.turn_player = None
     
     def newTurn(self):
-        self.deselectUnit(forceFlatten=True)
+        self.deselectUnit()
         
     def getPlayerName(self, player_id):
         for p in self.players:
             if p['id'] == player_id:
                 return p['name']
     
-    def deselectUnit(self, forceFlatten=False):
-        self.clearState(forceFlatten)
+    def deselectUnit(self):
+        self.clearState()
         
     def selectUnit(self, unit_id):
         if self._anim_in_process == True:
@@ -90,12 +90,11 @@ class Client(DirectObject):
         if self.sel_unit_id != unit_id:
             self.deselectUnit()
             self.sel_unit_id = unit_id
-            #self.selected_unit.marker.loadAnims({"move":"ripple2"})  
-            #self.selected_unit.marker.loop("move")
             self.sgm.loadAltRenderModel(unit_id)
             self.interface.refreshUnitData(unit_id) 
             # If it is our turn, display available move tiles
             if self.player == self.turn_player:
+                self.sgm.unit_np_dict[unit_id].showMarker()
                 self.sgm.showUnitAvailMove(unit_id)
                 self.sgm.showVisibleEnemies(unit_id)
             
@@ -203,7 +202,7 @@ class Client(DirectObject):
     
     def beforeAnimHook(self):
         self._anim_in_process = True
-        self.sgm.hideUnitAvailMove(forceFlatten=True)
+        self.sgm.hideUnitAvailMove()
         self.sgm.hideVisibleEnemies()
     
     def afterAnimHook(self):
@@ -213,11 +212,13 @@ class Client(DirectObject):
     def endTurn(self):
         ClientMsg.endTurn()
     
-    def clearState(self, forceFlatten=False):
+    def clearState(self):
         self.sgm.clearAltRenderModel()
-        self.sgm.hideUnitAvailMove(forceFlatten)
+        self.sgm.hideUnitAvailMove()
         self.sgm.hideVisibleEnemies()
         self.interface.clearUnitData()
+        if self.sel_unit_id != None:
+            self.sgm.unit_np_dict[self.sel_unit_id].hideMarker()
         self.sel_unit_id = None
     
 #========================================================================

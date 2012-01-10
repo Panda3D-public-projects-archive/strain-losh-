@@ -1,5 +1,5 @@
 from direct.actor.Actor import Actor
-from panda3d.core import Vec4, Point4, Point3, Point2, NodePath, TextNode#@UnresolvedImport
+from panda3d.core import Vec4, Point4, Point3, Point2, NodePath, CardMaker#@UnresolvedImport
 from panda3d.core import PointLight#@UnresolvedImport
 from panda3d.core import TransparencyAttrib, TextureStage#@UnresolvedImport
 from direct.interval.IntervalGlobal import Sequence, ActorInterval, Parallel, Func
@@ -57,35 +57,37 @@ class UnitModel:
 
         # If unit model is not rendered for portrait, set its heading as received from server
         if not off:
-            self.setHeading(unit)
-            
-        self.marker = Actor("ripple2") 
-        self.marker.reparentTo(self.node)
-        self.marker.setP(-90)
-        self.marker.setScale(0.7, 0.7, 0.7)
-        self.marker.setColor(self.team_color)
-        
+            self.setHeading(unit)        
         
         plight = PointLight('plight')
         plight.setColor(Point4(0.2, 0.2, 0.2, 1))
         plnp = self.node.attachNewNode(plight)
-        plnp.setPos(0, 0, 0)
-        
-        self.marker.setLight(plnp)
-        self.marker.setTransparency(TransparencyAttrib.MAlpha)
-        self.marker.setAlphaScale(0.5) 
-        self.marker.setTag("type", "unit_marker")
-        
-        self.marker.setPos(0, 0, 0.02)
-        #self.marker.flattenLight()
-        #self.marker.hide()
+        plnp.setPos(0, 0, 0)        
         
         self.last_overwatch = False
         
         self.passtime = 0
         self.setIdleTime()
         
+        cm = CardMaker('cm') 
+        self.marker = self.node.attachNewNode(cm.generate()) 
+        self.marker.setP(render, -90)
+        self.marker.setPos(-0.5, -0.5, 0.01)
+        self.marker.setTexture(loader.loadTexture('circle.png'))
+        self.marker.setColor(0, 1, 0)
+        #cpos.node().setAttrib(ColorBlendAttrib.make(ColorBlendAttrib.MAdd))
+        self.marker.setTransparency(TransparencyAttrib.MAlpha)
+        self.marker.setBin('highlight', 25)
+        self.marker.setCollideMask(0)
+        self.marker.detachNode()        
+        
         self.target_unit = None
+
+    def showMarker(self):
+        self.marker.reparentTo(self.node)
+        
+    def hideMarker(self):
+        self.marker.detachNode()
     
     def setIdleTime(self):
         self.idletime = random.randint(10, 20)
@@ -186,12 +188,25 @@ class LegoUnitModel:
         if not off:
             self.setHeading(unit)
         
-        self.last_overwatch = False
-        
-        self.passtime = 0
-        self.setIdleTime()
-        
         self.target_unit = None
+        
+        cm = CardMaker('cm') 
+        self.marker = self.node.attachNewNode(cm.generate()) 
+        self.marker.setP(render, -90)
+        self.marker.setPos(-0.5, -0.5, 0.01)
+        self.marker.setTexture(loader.loadTexture('circle.png'))
+        self.marker.setColor(0, 1, 0)
+        #cpos.node().setAttrib(ColorBlendAttrib.make(ColorBlendAttrib.MAdd))
+        self.marker.setTransparency(TransparencyAttrib.MAlpha)
+        self.marker.setBin('highlight', 25)
+        self.marker.setCollideMask(0)
+        self.marker.detachNode()
+    
+    def showMarker(self):
+        self.marker.reparentTo(self.node)
+        
+    def hideMarker(self):
+        self.marker.detachNode()
     
     def setIdleTime(self):
         self.idletime = random.randint(10, 20)
