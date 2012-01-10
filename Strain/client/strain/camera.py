@@ -29,6 +29,9 @@ class Camera(DirectObject):
         self.parent = parent
         self.target = None
         
+        self.maxX = x
+        self.maxY = y
+        
         self.rightMouseIsDown = False
         
         self.mPos=[0,0]

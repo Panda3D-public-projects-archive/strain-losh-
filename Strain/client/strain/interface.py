@@ -417,7 +417,8 @@ class Interface(DirectObject.DirectObject):
                         if self.parent.sel_unit_id != None and self.parent.player == self.parent.turn_player:
                             # Remember movement tile so we can send movement message when mouse is depressed
                             # Do this only if it is our turn
-                            self.unit_move_destination = pickedCoord
+                            if self.parent.units[self.parent.sel_unit_id]['move_dict'].has_key(tuple(pickedCoord)):
+                                self.unit_move_destination = pickedCoord
                             
     def mouseLeftClickUp(self):
         """Handles left mouse click actions when mouse button is depressed.
