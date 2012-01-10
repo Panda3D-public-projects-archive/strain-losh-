@@ -444,6 +444,13 @@ class Level:
     def removeUnitDict(self, unit ):
         self._dynamics[ int(unit['pos'][0]) ][ int(unit['pos'][1]) ] = None
         
+    
+    def removeUnitId(self, unit_id):
+        for i in xrange(0, self.maxX):
+            for j in xrange(0, self.maxY):
+                if self._dynamics[i][j] == ( DYNAMICS_UNIT, unit_id ):
+                    self._dynamics[i][j] = None
+                    return
                 
     def getDynamic(self, x, y):
         return self._dynamics[int(x)][int(y)]
