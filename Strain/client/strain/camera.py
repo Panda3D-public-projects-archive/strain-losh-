@@ -29,33 +29,68 @@ class Camera(DirectObject):
         self.parent = parent
         self.target = None
         
-        self.middleMouseIsDown = False
         self.rightMouseIsDown = False
         
         self.mPos=[0,0]
         self.mInc=[0,0]   
 
-        self.node = render.attachNewNode('camera_target_node')
+        # self.node is used to manipulate position and heading
+        self.node = render.attachNewNode('cam_target_node')
         self.node.setPos(5, 5, 0.3)
+        self.node.setH(-45)
+        
+        # self.pitch_node is used to manipulate pitch
+        self.pitch_node = self.node.attachNewNode('cam_pitch_node')
+        self.pitch_node.setP(-45)
 
-        base.camera.reparentTo(self.node)        
-        base.camera.setPos(-15, -15, 18)
+        base.camera.reparentTo(self.pitch_node)        
+        base.camera.setPos(0, -24, 0)
         base.camera.lookAt(self.node)
 
-        self.zoom_velocity = 0.75  
+        self.zoom_velocity = 0.75
+        self.pan_velocity = 10  
+        self.anim_velocity = 15
         self.dist = base.camera.getDistance(self.node)
         self.distmax = 30
         self.distmin = 5
 
         self.setupKeys()
-        self.isFollowing = False
+        self.isFollowing = False   
         
         self.camTask = taskMgr.add(self.update, 'camera_update_task') 
 
+    def clamp(self, val, min_val, max_val):
+        """If val > min_val and val < max_val returns val
+           If val <= min_val returns min_val
+           If val >= max_val returns max_val
+        """
+        return min(max(val, min_val), max_val)
+    
+    def setKey(self, button, value):
+        """Sets the state of keyboard.
+           1 = pressed
+           0 = depressed
+        """
+        if self.parent.interface.console.consoleEntry['focus'] == 1:
+            self.keys['up'] = 0
+            self.keys['down'] = 0
+            self.keys['left'] = 0
+            self.keys['right'] = 0
+        else:
+            self.keys[button] = value    
+    
     def update(self, task):
-        cam_pos = Vec3(0,0,0)
         
-        if self.middleMouseIsDown or self.rightMouseIsDown: 
+        # If our camera is following a unit and user presses move keys, change to free camera style
+        if self.keys['up'] == 1 or self.keys['down'] == 1 or self.keys['left'] == 1 or self.keys['right'] == 1:
+            if self.isFollowing:
+                self.toggleFollow()
+                
+        cam_pos = Vec3(0,0,0)
+        dx = 0
+        dy = 0
+        
+        if self.rightMouseIsDown: 
             newPos=[base.win.getPointer(0).getX(), base.win.getPointer(0).getY()]
             self.mInc=[newPos[0] - self.mPos[0], newPos[1] - self.mPos[1]]
         else:
@@ -64,24 +99,28 @@ class Camera(DirectObject):
         self.mPos[0] += self.mInc[0] * 0.2
         self.mPos[1] += self.mInc[1] * 0.2
         
-        if self.middleMouseIsDown:
+        if self.rightMouseIsDown:
             self.node.setH(self.node.getH() - self.mInc[0] * 0.06)
+            self.pitch_node.setP(self.clamp(self.pitch_node.getP() - self.mInc[1] * 0.06, -85, -10)) 
         
-        if self.rightMouseIsDown: 
-            up_vec = render.getRelativeVector(base.camera, (0, 1, 0))             
-            right_vec = render.getRelativeVector(base.camera, (1, 0, 0))
-            new_pos_up = Vec3(up_vec.getX() * self.mInc[1]* 0.01, up_vec.getY() * self.mInc[1] * 0.01, 0)
-            new_pos_right = Vec3(right_vec.getX() * -self.mInc[0]* 0.01, right_vec.getY() * -self.mInc[0] * 0.01, 0)
-            new_pos = Vec3(new_pos_up + new_pos_right)
-            new_pos *= 0.7
-            self.node.setPos(self.node.getPos() + new_pos)
-            
+        if self.keys['up'] == 1:
+            dy = globalClock.getDt() * self.pan_velocity
+        if self.keys['down'] == 1:
+            dy = -globalClock.getDt() * self.pan_velocity
+        if self.keys['left'] == 1:
+            dx = -globalClock.getDt() * self.pan_velocity
+        if self.keys['right'] == 1:
+            dx = globalClock.getDt() * self.pan_velocity
+        
+        self.node.setPos(self.node, dx, dy, 0)
+
         # zoom
         up_vec = render.getRelativeVector(base.camera, (0, 1, 0))
         dist = base.camera.getDistance(self.node) 
         cam_pos += up_vec * (dist - self.dist) * 0.25
         
         base.camera.setPos(render, base.camera.getPos(render) + cam_pos)
+        
         
         return task.cont
 
@@ -101,53 +140,56 @@ class Camera(DirectObject):
         base.camera.setPos(0, cam_pos.getY(), cam_pos.getZ())
         base.camera.lookAt(self.node)
         self.dist = base.camera.getDistance(self.node)
-        self.ignore('mouse3')
-        self.ignore('mouse3-up')
-        self.ignore('mouse2')
-        self.ignore('mouse2-up')
         self.parent.interface.console.consoleOutput('Camera type = FOLLOW', utils.CONSOLE_SYSTEM_MESSAGE)
         self.parent.interface.console.show()
         self.isFollowing = True        
         
     def setUnfollow(self):
         pos = self.node.getPos(render)
+        h = self.node.getH(render)
         self.node.reparentTo(render)
-        self.node.setPos(pos)
-        #cam_pos = base.camera.getPos()
-        #base.camera.setPos(cam_pos.getY(), cam_pos.getY(), cam_pos.getZ())
-        #self.dist = base.camera.getDistance(self.node)  
-        self.accept('mouse2', self.middleMouseDown, [])
-        self.accept('mouse2-up', self.middleMouseUp, [])              
-        self.accept('mouse3', self.rightMouseDown, [])
-        self.accept('mouse3-up', self.rightMouseUp, [])
+        self.node.setPos(pos) 
+        self.node.setH(h)
         self.parent.interface.console.consoleOutput('Camera type = FREE', utils.CONSOLE_SYSTEM_MESSAGE)
         self.parent.interface.console.show()
         self.isFollowing = False        
 
+    def animate(self):
+        if self.parent.sel_unit_id != None:
+            node = self.parent.sgm.unit_np_dict[self.parent.sel_unit_id].node
+            dist = self.node.getDistance(node)
+            duration = self.clamp(dist/self.anim_velocity, 0.2, 2)
+            i = self.node.posInterval(duration = duration, pos = node.getPos(), blendType = 'easeInOut')
+            i.start()
+    
     def setKey(self, key, flag):
         self.keys[key] = flag    
     
     def setupKeys(self):
-        self.accept('mouse2', self.middleMouseDown, [])
-        self.accept('mouse2-up', self.middleMouseUp, [])
+        self.accept('w', self.setKey, ['up', 1])
+        self.accept('w-up', self.setKey, ['up', 0])
+        self.accept('s', self.setKey, ['down', 1])
+        self.accept('s-up', self.setKey, ['down', 0])                   
+        self.accept('a', self.setKey, ['left', 1])
+        self.accept('a-up', self.setKey, ['left', 0])
+        self.accept('d', self.setKey, ['right', 1])
+        self.accept('d-up', self.setKey, ['right', 0])
         self.accept('wheel_down', self.wheelMouseDown, [])
         self.accept('wheel_up', self.wheelMouseUp, [])
         self.accept('mouse3', self.rightMouseDown, [])
         self.accept('mouse3-up', self.rightMouseUp, [])
+        self.accept('space', self.animate, [])
         self.accept('f5', self.toggleFollow)
 
-    def middleMouseDown(self):
-        if not self.rightMouseIsDown:
-            self.middleMouseIsDown = True
-            self.mPos = [base.win.getPointer(0).getX(), base.win.getPointer(0).getY()]
-
-    def middleMouseUp(self):
-        self.middleMouseIsDown = False
+        self.keys = {}
+        self.keys['up'] = 0
+        self.keys['down'] = 0        
+        self.keys['left'] = 0
+        self.keys['right'] = 0  
         
     def rightMouseDown(self):
-        if not self.middleMouseIsDown:
-            self.rightMouseIsDown = True
-            self.mPos = [base.win.getPointer(0).getX(), base.win.getPointer(0).getY()]
+        self.rightMouseIsDown = True
+        self.mPos = [base.win.getPointer(0).getX(), base.win.getPointer(0).getY()]
 
     def rightMouseUp(self):
         self.rightMouseIsDown = False        
