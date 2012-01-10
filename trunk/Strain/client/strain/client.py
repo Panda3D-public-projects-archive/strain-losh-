@@ -160,7 +160,7 @@ class Client(DirectObject):
             self.level.removeUnitDict(unit)
         else:
             self.units[unit['id']] = unit
-            self.level.removeUnitDict(unit)
+            self.level.removeUnitId(unit['id'])
             self.level.putUnitDict(unit)
     
     def deleteUnit(self, unit_id):
