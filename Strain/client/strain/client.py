@@ -224,8 +224,7 @@ class Client(DirectObject):
 # Client animation handler methods
     def handleMove(self, move_msg):
         move = self.buildMove(move_msg)
-        #TODO: ogs: Dodan ovaj wait jer flatten ne zavrsi na vrijeme i iz nekog razloga pojede dio move animacije - potrebno ipak blendati texture
-        s = Sequence(Func(self.beforeAnimHook), Wait(0.2), move, Func(self.afterAnimHook))
+        s = Sequence(Func(self.beforeAnimHook), move, Func(self.afterAnimHook))
         s.start()
     
     def buildMove(self, move_msg):

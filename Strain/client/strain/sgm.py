@@ -5,11 +5,11 @@
 # python imports
 
 # panda3D imports
-from panda3d.core import TextNode, NodePath, VBase4, GeomNode#@UnresolvedImport
+from panda3d.core import TextNode, NodePath, VBase4, GeomNode, CardMaker, Texture#@UnresolvedImport
 from panda3d.core import ShadeModelAttrib, DirectionalLight, AmbientLight#@UnresolvedImport
 from panda3d.core import CollisionTraverser, CollisionRay, CollisionHandlerQueue, CollisionNode#@UnresolvedImport
 from panda3d.core import CullBinManager, CullBinEnums#@UnresolvedImport
-from panda3d.core import LineSegs, TransparencyAttrib#@UnresolvedImport
+from panda3d.core import LineSegs, TransparencyAttrib, ColorBlendAttrib#@UnresolvedImport
 from panda3d.core import SceneGraphAnalyzerMeter#@UnresolvedImport
 from direct.interval.IntervalGlobal import Sequence, LerpColorScaleInterval#@UnresolvedImport
 
@@ -52,11 +52,14 @@ class SceneGraph():
         self.movetext_np = None
         self.enemyunittiles_np = None
         
+        self.tile_cards = []
+        self.tile_cards_np = render.attachNewNode('tile_cards_np')
+        
         # Create main update task
         taskMgr.add(self.animTask, "anim_task")  
         
-        #meter = SceneGraphAnalyzerMeter('meter', render.node())
-        #meter.setupWindow(base.win)      
+        meter = SceneGraphAnalyzerMeter('meter', render.node())
+        meter.setupWindow(base.win)      
         
         bins = CullBinManager.getGlobalPtr()
         bins.addBin('highlight', CullBinEnums.BTStateSorted, 25)
@@ -72,6 +75,25 @@ class SceneGraph():
         self.level_mesh.createLevel()
         self.comp_inited['level'] = True
         
+        grid_tex = loader.loadTexture('grid.png')
+        #grid_tex.setMagfilter(Texture.FTLinearMipmapLinear)
+        #grid_tex.setMinfilter(Texture.FTLinearMipmapLinear)
+        for i in xrange(0, level.maxX):
+            l = []
+            for j in xrange(0, level.maxY):
+                cm = CardMaker('cm') 
+                cpos = self.tile_cards_np.attachNewNode(cm.generate()) 
+                cpos.setP(render, -90)
+                cpos.setPos(render, i, j, utils.GROUND_LEVEL+0.01)
+                cpos.setTexture(grid_tex)
+                #cpos.node().setAttrib(ColorBlendAttrib.make(ColorBlendAttrib.MAdd))
+                cpos.setTransparency(TransparencyAttrib.MAlpha)
+                cpos.setBin('highlight', 25)
+                cpos.setCollideMask(0)
+                cpos.detachNode()
+                l.append(cpos)
+            self.tile_cards.append(l)
+            
         for i in xrange(0, level.maxX):
             t = TextNode('node name')
             t.setText( "%s" % i)
@@ -226,8 +248,6 @@ class SceneGraph():
         if self.parent.turn_player != self.parent.player:
             return
         if unit:
-            #self.parent.units[unit_id]['move_dict'] = self.parent.getMoveDict(unit_id)
-            #move_dict = unit['move_dict']
             move_dict = getMoveDict(unit, self.parent.level, self.parent.units)
             self.movetext_np = NodePath("movetext_np")
             for tile in move_dict:
@@ -238,20 +258,20 @@ class SceneGraph():
                 textNodePath.setPos(render, tile[0]+0.45, tile[1]+0.45, 0.33)
                 textNodePath.setColor(0, 0, 0)
                 textNodePath.setScale(0.4, 0.4, 0.4)
-                textNodePath.setBillboardPointEye()  
+                textNodePath.setBillboardPointEye()
                 if move_dict[tile] >= 2:
-                    self.level_mesh.highlightTile(tile[0], tile[1], utils.TILE_STYLE_YELLOW)
+                    self.tile_cards[tile[0]][tile[1]].setColor(1,1,0)
+                    self.tile_cards[tile[0]][tile[1]].reparentTo(self.tile_cards_np)
                 else:
-                    self.level_mesh.highlightTile(tile[0], tile[1], utils.TILE_STYLE_RED)
+                    self.tile_cards[tile[0]][tile[1]].setColor(1,0,0)
+                    self.tile_cards[tile[0]][tile[1]].reparentTo(self.tile_cards_np)                    
             self.movetext_np.reparentTo(self.node)  
-            self.level_mesh.switchNodes()
 
     def hideUnitAvailMove(self,forceFlatten=False):
         if self.movetext_np:
             self.movetext_np.removeNode() 
-            self.level_mesh.clearHighlights()
-            if forceFlatten == True:
-                self.level_mesh.switchNodes()
+            for c in self.tile_cards_np.getChildren():
+                c.detachNode()
     
     def showVisibleEnemies(self, unit_id):
         self.hideVisibleEnemies()
