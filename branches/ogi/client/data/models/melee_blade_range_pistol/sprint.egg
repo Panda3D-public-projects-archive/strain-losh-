@@ -1,0 +1,1108 @@
+<CoordinateSystem> { Z-Up }
+
+<Comment> {
+  "egg-optchar -inplace -flag power_armour_common -flag power_armour_rare -flag power_armour_epic -flag power_armour_commander -flag space_marine_head -flag space_marine_backpack -flag gabriel_head -flag gabriel_backpack -flag avitus_head -flag avitus_backpack -flag assault_marine_backpack=assault_marine_jumppack -flag assault_marine_head -flag power_axe_common -flag bolt_pistol_common -flag chainsword_common -flag power_fist_common -flag knife_common -flag doublehand_hammer_common -flag bolter_common -flag flamer_common -flag heavy_bolter_common -flag lascannon_common -flag meltagun_common -flag missile_launcher_common -flag plasma_cannon_common -flag plasma_gun_common -flag plasma_pistol_common marine.egg melee_axe_range_pistol/aim_crouch.egg melee_axe_range_pistol/aim_run.egg melee_axe_range_pistol/aim_stand.egg melee_axe_range_pistol/die_normal01.egg melee_axe_range_pistol/die_normal02.egg melee_axe_range_pistol/die_normal03.egg melee_axe_range_pistol/die_normal04.egg melee_axe_range_pistol/die_sync01.egg melee_axe_range_pistol/die_sync02.egg melee_axe_range_pistol/fire_crouch.egg melee_axe_range_pistol/fire_stand.egg melee_axe_range_pistol/grenade.egg melee_axe_range_pistol/idle_combat_crouch01.egg melee_axe_range_pistol/idle_combat_crouch02.egg melee_axe_range_pistol/idle_combat_crouch03.egg melee_axe_range_pistol/idle_combat_stand01.egg melee_axe_range_pistol/idle_combat_stand02.egg melee_axe_range_pistol/idle_combat_stand03.egg melee_axe_range_pistol/idle_crouch01.egg melee_axe_range_pistol/idle_crouch02.egg melee_axe_range_pistol/idle_crouch03.egg melee_axe_range_pistol/idle_stand01.egg melee_axe_range_pistol/idle_stand02.egg melee_axe_range_pistol/idle_stand03.egg melee_axe_range_pistol/kill_sync01.egg melee_axe_range_pistol/kill_sync02.egg melee_axe_range_pistol/knocked_out.egg melee_axe_range_pistol/melee_attack01.egg melee_axe_range_pistol/melee_attack02.egg melee_axe_range_pistol/melee_attack03.egg melee_axe_range_pistol/melee_leap_fly.egg melee_axe_range_pistol/melee_leap_land.egg melee_axe_range_pistol/pinned_idle.egg melee_axe_range_pistol/pinned_run.egg melee_axe_range_pistol/pivot_crouch_l.egg melee_axe_range_pistol/pivot_crouch_r.egg melee_axe_range_pistol/pivot_stand_l.egg melee_axe_range_pistol/pivot_stand_r.egg melee_axe_range_pistol/run.egg melee_axe_range_pistol/sprint.egg melee_axe_range_pistol/sync_killed_idle.egg melee_axe_range_pistol/thrown_fly_far.egg melee_axe_range_pistol/thrown_getup.egg melee_axe_range_pistol/thrown_slide_far.egg melee_axe_range_pistol/thrown_slide_near.egg melee_axe_range_pistol/weaponskill.egg melee_blade_range_pistol/aim_crouch.egg melee_blade_range_pistol/aim_crouch_combat_idle01.egg melee_blade_range_pistol/aim_crouch_combat_idle02.egg melee_blade_range_pistol/aim_run.egg melee_blade_range_pistol/aim_stand.egg melee_blade_range_pistol/aim_stand_combat_idle01.egg melee_blade_range_pistol/aim_stand_combat_idle02.egg melee_blade_range_pistol/chainsword_attacking.egg melee_blade_range_pistol/chainsword_idle.egg melee_blade_range_pistol/die_normal_b.egg melee_blade_range_pistol/die_normal_f.egg melee_blade_range_pistol/die_normal_l.egg melee_blade_range_pistol/die_normal_r.egg melee_blade_range_pistol/die_sync_01.egg melee_blade_range_pistol/die_sync_02.egg melee_blade_range_pistol/fire_crouch.egg melee_blade_range_pistol/fire_stand.egg melee_blade_range_pistol/grenade.egg melee_blade_range_pistol/idle_combat_crouch01.egg melee_blade_range_pistol/idle_combat_crouch02.egg melee_blade_range_pistol/idle_combat_crouch03.egg melee_blade_range_pistol/idle_combat_stand01.egg melee_blade_range_pistol/idle_combat_stand02.egg melee_blade_range_pistol/idle_combat_stand03.egg melee_blade_range_pistol/idle_crouch01.egg melee_blade_range_pistol/idle_crouch02.egg melee_blade_range_pistol/idle_crouch03.egg melee_blade_range_pistol/idle_stand01.egg melee_blade_range_pistol/idle_stand02.egg melee_blade_range_pistol/idle_stand03.egg melee_blade_range_pistol/idle_stand04.egg melee_blade_range_pistol/idle_stand05.egg melee_blade_range_pistol/idle_stand06.egg melee_blade_range_pistol/jump_fly01.egg melee_blade_range_pistol/jump_fly02.egg melee_blade_range_pistol/jump_land01.egg melee_blade_range_pistol/jump_land02.egg melee_blade_range_pistol/kill_sync01.egg melee_blade_range_pistol/kill_sync02.egg melee_blade_range_pistol/knocked_out.egg melee_blade_range_pistol/melee_attack01.egg melee_blade_range_pistol/melee_attack02.egg melee_blade_range_pistol/melee_attack03.egg melee_blade_range_pistol/melee_idle.egg melee_blade_range_pistol/melee_leap_fly.egg melee_blade_range_pistol/melee_leap_land.egg melee_blade_range_pistol/melee_weaponskill.egg melee_blade_range_pistol/pinned_idle.egg melee_blade_range_pistol/pinned_run.egg melee_blade_range_pistol/reload_crouch.egg melee_blade_range_pistol/reload_stand.egg melee_blade_range_pistol/run01.egg melee_blade_range_pistol/run02.egg melee_blade_range_pistol/sprint.egg melee_blade_range_pistol/sync_kill01.egg melee_blade_range_pistol/sync_kill02.egg melee_blade_range_pistol/sync_kill11.egg melee_blade_range_pistol/sync_killed_idle01.egg melee_blade_range_pistol/sync_killed_idle02.egg melee_blade_range_pistol/thrown_fly_far.egg melee_blade_range_pistol/thrown_getup.egg melee_blade_range_pistol/thrown_slide_far.egg melee_blade_range_pistol/thrown_slide_near.egg melee_blade_range_pistol/weaponskill.egg range_burst/aim_crouch.egg range_burst/aim_run.egg range_burst/aim_stand.egg range_burst/die_normal_b.egg range_burst/die_normal_f.egg range_burst/die_normal_l.egg range_burst/die_normal_r.egg range_burst/die_sync01.egg range_burst/die_sync02.egg range_burst/fire_crouch01.egg range_burst/fire_crouch02.egg range_burst/fire_crouch03.egg range_burst/fire_crouch_energy.egg range_burst/fire_crouch_flamer.egg range_burst/fire_stand01.egg range_burst/fire_stand02.egg range_burst/fire_stand03.egg range_burst/fire_stand_energy.egg range_burst/fire_stand_flamer.egg range_burst/grenade.egg range_burst/idle_combat_crouch01.egg range_burst/idle_combat_crouch02.egg range_burst/idle_combat_crouch03.egg range_burst/idle_combat_stand01.egg range_burst/idle_combat_stand02.egg range_burst/idle_combat_stand03.egg range_burst/idle_crouch01.egg range_burst/idle_crouch02.egg range_burst/idle_crouch03.egg range_burst/idle_stand01.egg range_burst/idle_stand02.egg range_burst/idle_stand03.egg range_burst/knocked_out.egg range_burst/melee_attack01.egg range_burst/melee_attack02.egg range_burst/melee_attack03.egg range_burst/melee_leap_fly.egg range_burst/melee_leap_land.egg range_burst/pinned_idle.egg range_burst/pinned_run.egg range_burst/pivot_crouch_l.egg range_burst/pivot_crouch_r.egg range_burst/pivot_stand_l.egg range_burst/pivot_stand_r.egg range_burst/reload_crouch.egg range_burst/reload_stand.egg range_burst/run.egg range_burst/sprint.egg range_burst/sync_killed_idle.egg range_burst/tech_active.egg range_burst/tech_end.egg range_burst/tech_start.egg range_burst/thrown_fly_far.egg range_burst/thrown_getup.egg range_burst/thrown_slide_far.egg range_burst/thrown_slide_near.egg twohand_hammer/die_normal_b.egg twohand_hammer/die_normal_f.egg twohand_hammer/die_normal_l.egg twohand_hammer/die_normal_r.egg twohand_hammer/die_sync01.egg twohand_hammer/die_sync02.egg twohand_hammer/grenade.egg twohand_hammer/idle_crouch01.egg twohand_hammer/idle_crouch02.egg twohand_hammer/idle_stand01.egg twohand_hammer/idle_stand02.egg twohand_hammer/idle_stand03.egg twohand_hammer/kill_sync01.egg twohand_hammer/kill_sync02.egg twohand_hammer/knocked_out.egg twohand_hammer/melee_attack.egg twohand_hammer/melee_leap_fly.egg twohand_hammer/melee_leap_land.egg twohand_hammer/melee_weaponskill.egg twohand_hammer/pinned_idle.egg twohand_hammer/pinned_run.egg twohand_hammer/pivot_crouch_l.egg twohand_hammer/pivot_crouch_r.egg twohand_hammer/pivot_stand_l.egg twohand_hammer/pivot_stand_r.egg twohand_hammer/run.egg twohand_hammer/sprint.egg twohand_hammer/sync_kill.egg twohand_hammer/sync_killed_idle.egg twohand_hammer/thrown_fly_far.egg twohand_hammer/thrown_getup.egg twohand_hammer/thrown_slide_far.egg twohand_hammer/thrown_slide_near.egg"
+}
+<Table> {
+  <Bundle> character {
+    <Table> "<skeleton>" {
+      <Table> "bip01 pelvis" {
+        <Xfm$Anim_S$> xform {
+          <Scalar> fps { 30 }
+          <Char*> order { srpht }
+          <S$Anim> h { <V> { -180 } }
+          <S$Anim> p { <V> { -25.4091 } }
+          <S$Anim> r { <V> { -89.9999 } }
+          <S$Anim> y { <V> { 0.00958137 } }
+          <S$Anim> z {
+            <V> {
+              1.32278 1.30418 1.28558 1.27121 1.25683 1.26624 1.27565
+              1.29073 1.30582 1.3143 1.32278 1.30762 1.29245 1.27451
+              1.25657 1.26605 1.27552 1.27846 1.28139 1.28327 1.28514
+            }
+          }
+        }
+        <Table> "bip01 l thigh" {
+          <Xfm$Anim_S$> xform {
+            <Scalar> fps { 30 }
+            <Char*> order { srpht }
+            <S$Anim> h {
+              <V> {
+                15.592 13.8648 12.1395 0.434896 -11.2017 -22.8165
+                -34.4042 -48.5373 -62.7467 -73.9749 -85.2112 -85.245
+                -85.2532 -70.4915 -55.7269 -22.2984 11.1734 11.7951
+                12.4062 12.6872 12.9495
+              }
+            }
+            <S$Anim> p {
+              <V> {
+                7.17058 7.01652 6.84828 5.18739 3.29561 1.24668
+                -0.869555 -3.20558 -5.2983 -5.82435 -5.99213 -4.16317
+                -2.33456 -2.33248 -2.16119 0.140774 2.30898 3.25808
+                4.21507 5.49358 6.77629
+              }
+            }
+            <S$Anim> r {
+              <V> {
+                -173.234 -172.758 -172.286 -170.968 -170.017 -169.468
+                -169.343 -170.052 -171.315 -173.11 -174.973 -175.769
+                -176.561 -175.896 -175.254 -174.809 -175.707 -175.018
+                -174.338 -173.476 -172.618
+              }
+            }
+            <S$Anim> z { <V> { 0.223067 } }
+          }
+          <Table> "bip01 l calf" {
+            <Xfm$Anim_S$> xform {
+              <Scalar> fps { 30 }
+              <Char*> order { srpht }
+              <S$Anim> h {
+                <V> {
+                  -26.2198 -30.9426 -35.6647 -50.5261 -65.3841 -80.2843
+                  -95.1795 -100.225 -105.27 -101.802 -98.3363 -76.4531
+                  -54.5698 -61.9533 -69.3338 -37.2724 -5.1482 -14.4516
+                  -23.7539 -28.7075 -33.6632
+                }
+              }
+              <S$Anim> x { <V> { 0.566578 } }
+            }
+            <Table> "bip01 l foot" {
+              <Xfm$Anim_S$> xform {
+                <Scalar> fps { 30 }
+                <Char*> order { srpht }
+                <S$Anim> h {
+                  <V> {
+                    -6.92623 -13.2013 -19.4938 -12.4201 -5.34007 1.70439
+                    8.7516 11.7809 14.7944 12.5684 10.3668 13.0946
+                    15.895 27.3941 38.8764 30.1711 21.4599 6.98681
+                    -7.47942 -4.65611 -1.80829
+                  }
+                }
+                <S$Anim> p {
+                  <V> {
+                    3.16967 3.79335 4.28076 4.59714 4.81523 5.02091
+                    5.12793 3.97028 2.78359 1.18943 -0.436467 -2.00095
+                    -3.43416 -3.62074 -4.25743 -4.00487 -3.78148
+                    -1.64872 0.442974 1.8838 3.2806
+                  }
+                }
+                <S$Anim> r {
+                  <V> {
+                    -5.93498 -4.72103 -3.4449 -4.22552 -5.03957 -5.83424
+                    -6.6483 -7.23242 -7.75383 -6.90041 -6.10979 -3.43513
+                    -0.686626 -2.97054 -5.17133 -4.99571 -4.78367
+                    -4.88853 -4.457 -5.31266 -6.23937
+                  }
+                }
+                <S$Anim> x { <V> { 0.661624 } }
+              }
+              <Table> "bip01 l toe0" {
+                <Xfm$Anim_S$> xform {
+                  <Scalar> fps { 30 }
+                  <Char*> order { srpht }
+                  <S$Anim> h {
+                    <V> {
+                      90 89.9807 89.9614 89.9421 89.9228 89.9035 89.8842
+                      89.8649 89.8456 89.8262 89.807 89.7877 89.7684
+                      89.749 89.7297 99.8297 109.936 109.913 109.888
+                      99.9708 90.0538
+                    }
+                  }
+                  <S$Anim> p {
+                    <V> {
+                      4.5505e-007 0.000374492 0.000731577 0.00112313
+                      0.00147602 0.0018634 0.0022247 0.00257324
+                      0.00296997 0.00330824 0.0037048 0.0040587
+                      0.0044358 0.00481393 0.00520382 -0.827315 -1.63325
+                      -1.9119 -2.19035 -1.08473 -0.000597131
+                    }
+                  }
+                  <S$Anim> r {
+                    <V> {
+                      -2.01514e-007 -0.00107216 -0.00217409 -0.00327085
+                      -0.00431779 -0.00542626 -0.00649967 -0.00761515
+                      -0.00871041 -0.00979257 -0.0108562 -0.0119136
+                      -0.0130107 -0.0141192 -0.0152143 0.0634628
+                      0.287046 0.019559 -0.248104 -0.218748 0.000606305
+                    }
+                  }
+                  <S$Anim> x { <V> { 0.255024 } }
+                  <S$Anim> y { <V> { 0.265273 } }
+                }
+              }
+            }
+            <Table> "bip01 l kneepad" {
+              <Xfm$Anim_S$> xform {
+                <Scalar> fps { 30 }
+                <Char*> order { srpht }
+                <S$Anim> h {
+                  <V> {
+                    -18.0978 -17.17 -16.3959 -16.4241 -16.9284 -17.4112
+                    -17.6636 -17.6052 -17.4718 -17.2979 -17.1098
+                    -16.9931 -16.8773 -17.6151 -18.0461 -18.5238
+                    -18.9462 -18.9382 -18.8956 -18.5959 -18.2353
+                  }
+                }
+                <S$Anim> p {
+                  <V> {
+                    -83.3017 -83.5689 -83.8437 -84.0982 -84.3475
+                    -84.1933 -84.0338 -83.8442 -83.655 -83.5068 -83.3589
+                    -83.3033 -83.2478 -83.5119 -83.7852 -83.8259
+                    -83.8733 -83.8156 -83.7581 -83.6326 -83.5093
+                  }
+                }
+                <S$Anim> r {
+                  <V> {
+                    -120.513 -124.927 -129.495 -140.098 -151.174
+                    -159.454 -167.505 -170.077 -172.575 -173.401
+                    -174.214 -174.255 -174.297 -166.486 -158.371
+                    -150.247 -142.074 -145.845 -149.583 -153.061
+                    -156.479
+                  }
+                }
+                <S$Anim> x { <V> { 0.00930589 } }
+                <S$Anim> y { <V> { 0.0339509 } }
+                <S$Anim> z { <V> { -0.00201121 } }
+              }
+            }
+          }
+        }
+        <Table> "bip01 r thigh" {
+          <Xfm$Anim_S$> xform {
+            <Scalar> fps { 30 }
+            <Char*> order { srpht }
+            <S$Anim> h {
+              <V> {
+                -85.8978 -85.6195 -85.3135 -70.3679 -55.4354 -21.2298
+                12.9983 14.6886 16.3701 16.3335 16.2794 14.2346 12.1931
+                0.496353 -11.1362 -22.6751 -34.1963 -49.8681 -65.6465
+                -77.1387 -88.6487
+              }
+            }
+            <S$Anim> p {
+              <V> {
+                6.15143 4.20848 2.26906 2.10798 1.80017 -0.408011
+                -2.46886 -3.57727 -4.70231 -6.01092 -7.31866 -7.1466
+                -6.95824 -5.35501 -3.52744 -1.58216 0.432783 3.42435
+                6.19874 6.64829 6.70445
+              }
+            }
+            <S$Anim> r {
+              <V> {
+                175.028 175.856 176.692 176.101 175.571 175.154 176.051
+                175.472 174.925 174.164 173.401 172.934 172.474 171.194
+                170.269 169.729 169.588 169.989 171.191 173.131 175.124
+              }
+            }
+            <S$Anim> z { <V> { -0.223067 } }
+          }
+          <Table> "bip01 r calf" {
+            <Xfm$Anim_S$> xform {
+              <Scalar> fps { 30 }
+              <Char*> order { srpht }
+              <S$Anim> h {
+                <V> {
+                  -99.618 -77.2442 -54.8484 -61.937 -69.0176 -35.2645
+                  -1.48941 -8.14273 -14.7925 -19.5429 -24.2899 -29.8631
+                  -35.4336 -50.1928 -64.9511 -79.6254 -94.3199 -102.954
+                  -111.585 -107.841 -104.098
+                }
+              }
+              <S$Anim> x { <V> { 0.566578 } }
+            }
+            <Table> "bip01 r foot" {
+              <Xfm$Anim_S$> xform {
+                <Scalar> fps { 30 }
+                <Char*> order { srpht }
+                <S$Anim> h {
+                  <V> {
+                    10.4672 12.9912 15.5932 27.0077 38.4174 28.9659
+                    19.5186 3.32585 -12.8613 -10.6707 -8.46016 -14.3274
+                    -20.2116 -13.2839 -6.34787 0.636797 7.62456 12.6746
+                    17.7038 14.8224 11.9713
+                  }
+                }
+                <S$Anim> p {
+                  <V> {
+                    0.392588 2.03 3.54481 3.67053 4.19802 3.92268
+                    3.63212 1.49767 -0.540198 -1.8841 -3.19733 -3.87107
+                    -4.41351 -4.73093 -4.95452 -5.15776 -5.26562
+                    -4.37486 -3.40123 -1.64442 0.157305
+                  }
+                }
+                <S$Anim> r {
+                  <V> {
+                    6.20038 3.49391 0.714216 2.7605 4.74257 4.85849
+                    4.92752 4.88551 4.25017 5.02235 5.84616 4.5964
+                    3.28329 4.04443 4.83897 5.6137 6.40754 7.39195
+                    8.29301 7.35193 6.50067
+                  }
+                }
+                <S$Anim> x { <V> { 0.661624 } }
+              }
+              <Table> "bip01 r toe0" {
+                <Xfm$Anim_S$> xform {
+                  <Scalar> fps { 30 }
+                  <Char*> order { srpht }
+                  <S$Anim> h {
+                    <V> {
+                      90 89.9748 89.9496 89.9243 89.8991 99.8249 109.757
+                      109.728 109.697 99.7982 89.9026 89.8774 89.8522
+                      89.827 89.8018 89.9009 90 89.9748 89.9496 89.9244
+                      89.8991
+                    }
+                  }
+                  <S$Anim> p {
+                    <V> {
+                      1.86957e-007 0.000195766 0.000414575 0.000622136
+                      0.000802724 0.825985 1.6266 1.90492 2.1831 1.07834
+                      -0.00412636 -0.00389988 -0.00370722 -0.00349201
+                      -0.00330079 -0.00166075 6.6948e-008 0.000185787
+                      0.000409218 0.000611235 0.000808306
+                    }
+                  }
+                  <S$Anim> r {
+                    <V> {
+                      -3.98378e-007 -0.000924726 -0.00186335 -0.00280398
+                      -0.00371498 -0.0753687 -0.288308 -0.0184637
+                      0.251519 0.218873 -0.00311343 -0.00405931
+                      -0.00497409 -0.00589898 -0.00683212 -0.00342678
+                      -1.30527e-007 -0.000929629 -0.00187316 -0.00279889
+                      -0.00368439
+                    }
+                  }
+                  <S$Anim> x { <V> { 0.255024 } }
+                  <S$Anim> y { <V> { 0.265273 } }
+                }
+              }
+            }
+            <Table> "bip01 r kneepad" {
+              <Xfm$Anim_S$> xform {
+                <Scalar> fps { 30 }
+                <Char*> order { srpht }
+                <S$Anim> h {
+                  <V> {
+                    89.5929 79.9532 70.3122 60.6948 51.2503 52.8654
+                    54.4816 56.0877 57.6952 53.9798 50.2932 42.0668
+                    33.7262 36.2237 38.7352 43.7781 48.856 55.4116
+                    62.0085 67.954 73.9058
+                  }
+                }
+                <S$Anim> p {
+                  <V> {
+                    -89.2721 -89.273 -89.272 -89.2608 -89.2479 -89.2481
+                    -89.2482 -89.2479 -89.2474 -89.2402 -89.2337
+                    -89.2443 -89.255 -89.2589 -89.2626 -89.2673 -89.2721
+                    -89.2766 -89.2813 -89.2813 -89.2821
+                  }
+                }
+                <S$Anim> r {
+                  <V> {
+                    -69.7948 -70.7122 -71.6296 -72.4891 -73.1754
+                    -72.8963 -72.6156 -72.383 -72.1493 -71.3983 -70.6183
+                    -70.6115 -70.7213 -70.2648 -69.7945 -69.8101
+                    -69.7909 -69.846 -69.8613 -70.5108 -71.153
+                  }
+                }
+                <S$Anim> x { <V> { -0.00863397 } }
+                <S$Anim> y { <V> { 0.0348591 } }
+                <S$Anim> z { <V> { 0.00209639 } }
+              }
+            }
+          }
+        }
+      }
+      <Table> "bip01 spine" {
+        <Xfm$Anim_S$> xform {
+          <Scalar> fps { 30 }
+          <Char*> order { srpht }
+          <S$Anim> h {
+            <V> {
+              172.074 172.007 171.941 172.403 172.866 176.208 179.558
+              -178.454 -176.466 -175.223 -173.981 -173.71 -173.439
+              -174.14 -174.841 -178.182 178.474 176.511 174.551 173.329
+              172.109
+            }
+          }
+          <S$Anim> p {
+            <V> {
+              -29.529 -29.5247 -29.5205 -29.5494 -29.5768 -29.7298
+              -29.8023 -29.8042 -29.7774 -29.7496 -29.7108 -29.6964
+              -29.6815 -29.7074 -29.7299 -29.7995 -29.7882 -29.7402
+              -29.6644 -29.6038 -29.5325
+            }
+          }
+          <S$Anim> r {
+            <V> {
+              -94.2468 -94.2782 -94.3097 -94.091 -93.872 -92.2869
+              -90.6923 -89.7408 -88.7899 -88.1988 -87.6086 -87.4759
+              -87.3435 -87.6758 -88.0088 -89.6076 -91.2089 -92.143
+              -93.0741 -93.6533 -94.2307
+            }
+          }
+          <S$Anim> y { <V> { -0.082831 } }
+          <S$Anim> z {
+            <V> {
+              1.51763 1.49903 1.48043 1.46606 1.45168 1.46109 1.4705
+              1.48558 1.50067 1.50915 1.51763 1.50247 1.4873 1.46936
+              1.45142 1.4609 1.47037 1.47331 1.47624 1.47812 1.47999
+            }
+          }
+        }
+        <Table> "bip01 spine3" {
+          <Xfm$Anim_S$> xform {
+            <Scalar> fps { 30 }
+            <Char*> order { srpht }
+            <S$Anim> h {
+              <V> {
+                3.26305 2.7435 2.22371 2.65733 3.08967 8.77291 14.4264
+                13.4335 12.4566 10.6295 8.79757 8.32146 7.84476 8.18873
+                8.53256 11.4461 14.3852 11.7662 9.14794 6.24611 3.32604
+              }
+            }
+            <S$Anim> p {
+              <V> {
+                -9.23842 -9.31307 -9.3869 -8.84107 -8.29463 -4.27518
+                -0.285785 2.11372 4.52704 6.07194 7.62267 7.95624
+                8.28992 7.41783 6.54646 2.47094 -1.55361 -3.89504
+                -6.25921 -7.74602 -9.21939
+              }
+            }
+            <S$Anim> r {
+              <V> {
+                -3.55248 -3.63906 -3.72708 -3.6465 -3.57424 -3.10776
+                -3.43952 -3.86394 -4.20533 -4.25116 -4.19879 -4.16365
+                -4.12299 -4.10217 -4.07075 -3.8399 -3.19614 -2.93028
+                -2.87994 -3.13473 -3.54212
+              }
+            }
+            <S$Anim> x { <V> { 0.195883 } }
+            <S$Anim> y { <V> { 0.00253829 } }
+            <S$Anim> z {
+              <V> {
+                0.000144825 0.000143564 0.000142279 0.000150902
+                0.000159497 0.000222882 0.000285795 0.00032318
+                0.000360366 0.000383569 0.000406692 0.00041162
+                0.000416564 0.000403341 0.000390093 0.000328245
+                0.000265875 0.000228963 0.000191903 0.000168535
+                0.000145135
+              }
+            }
+          }
+          <Table> "bip01 neck" {
+            <Xfm$Anim_S$> xform {
+              <Scalar> fps { 30 }
+              <Char*> order { srpht }
+              <S$Anim> h { <V> { 19.1934 } }
+              <S$Anim> x { <V> { 0.417362 } }
+              <S$Anim> y { <V> { -0.0614216 } }
+            }
+            <Table> "bip01 head" {
+              <Xfm$Anim_S$> xform {
+                <Scalar> fps { 30 }
+                <Char*> order { srpht }
+                <S$Anim> h {
+                  <V> {
+                    -15.6184 -14.4751 -13.3301 -13.3885 -13.4464
+                    -20.1639 -26.6633 -25.2589 -23.8191 -21.53 -19.2083
+                    -19.0543 -18.9002 -19.8486 -20.7856 -24.3289
+                    -27.7748 -25.0015 -22.1827 -18.9583 -15.6821
+                  }
+                }
+                <S$Anim> p {
+                  <V> {
+                    16.3462 16.5405 16.731 15.7507 14.7703 7.55047
+                    0.235195 -3.82856 -7.88233 -10.3099 -12.7238
+                    -13.2966 -13.8694 -12.461 -11.0486 -4.32557 2.43019
+                    6.65447 10.865 13.5955 16.31
+                  }
+                }
+                <S$Anim> r {
+                  <V> {
+                    2.50296 2.31138 2.11567 2.13261 2.14844 3.41735
+                    3.82465 4.17717 4.63265 4.92794 5.32496 5.30362
+                    5.28382 5.02364 4.78855 4.02302 3.67539 3.4917
+                    3.09818 2.888 2.51549
+                  }
+                }
+                <S$Anim> x { <V> { 0.130693 } }
+              }
+            }
+          }
+          <Table> "bip01 r upperarm" {
+            <Xfm$Anim_S$> xform {
+              <Scalar> fps { 30 }
+              <Char*> order { srpht }
+              <S$Anim> h {
+                <V> {
+                  -152.817 -148.163 -143.44 -142 -140.497 -152.907
+                  -165.318 -172.443 -179.497 -177.907 -176.309 -173.541
+                  -170.755 -168.887 -167.021 -168.448 -169.734 -165.751
+                  -161.748 -157.297 -152.842
+                }
+              }
+              <S$Anim> p {
+                <V> {
+                  5.60962 9.52039 13.4151 15.8244 18.2079 18.0453
+                  18.4819 16.596 14.709 16.2677 17.8305 19.0552 20.2871
+                  19.9199 19.5667 15.3851 11.1692 8.96243 6.83363
+                  6.18866 5.59975
+                }
+              }
+              <S$Anim> r {
+                <V> {
+                  30.1145 30.0752 29.7095 28.7195 27.6536 24.7391
+                  21.8537 21.984 21.8702 22.0426 22.171 22.359 22.4853
+                  22.9357 23.3975 24.957 26.3835 27.4395 28.6417 29.3449
+                  30.0957
+                }
+              }
+              <S$Anim> x { <V> { 0.402479 } }
+              <S$Anim> y { <V> { -0.0209552 } }
+              <S$Anim> z { <V> { -0.410179 } }
+            }
+            <Table> "bip01 r forearm" {
+              <Xfm$Anim_S$> xform {
+                <Scalar> fps { 30 }
+                <Char*> order { srpht }
+                <S$Anim> h {
+                  <V> {
+                    -70.4912 -75.4931 -80.4929 -81.8038 -83.1149 -70.882
+                    -58.6419 -47.524 -36.4081 -38.0239 -39.6392 -45.4613
+                    -51.2836 -56.6924 -62.1013 -63.757 -65.413 -66.6539
+                    -67.8945 -69.1793 -70.4646
+                  }
+                }
+                <S$Anim> x { <V> { 0.441395 } }
+              }
+              <Table> "bip01 r hand" {
+                <Xfm$Anim_S$> xform {
+                  <Scalar> fps { 30 }
+                  <Char*> order { srpht }
+                  <S$Anim> h {
+                    <V> {
+                      171.346 172.03 172.678 172.987 173.285 172.569
+                      171.966 171.297 170.715 170.129 169.537 168.981
+                      168.464 168.151 167.88 168.502 169.169 169.702
+                      170.231 170.799 171.346
+                    }
+                  }
+                  <S$Anim> p {
+                    <V> {
+                      77.4902 77.2486 77.0037 76.9303 76.8552 77.3834
+                      77.9199 78.4592 79.0038 79.0461 79.0859 78.9501
+                      78.8098 78.6477 78.483 78.2765 78.0774 77.9321
+                      77.7871 77.6376 77.4855
+                    }
+                  }
+                  <S$Anim> r {
+                    <V> {
+                      -141.134 -142.389 -143.609 -145.155 -146.692
+                      -149.955 -153.327 -155.738 -158.233 -157.034
+                      -155.828 -153.255 -150.72 -148.047 -145.415
+                      -142.189 -139.006 -138.856 -138.702 -139.922
+                      -141.12
+                    }
+                  }
+                  <S$Anim> x { <V> { 0.418189 } }
+                }
+                <Table> "bip01 r finger0" {
+                  <Xfm$Anim_S$> xform {
+                    <Scalar> fps { 30 }
+                    <Char*> order { srpht }
+                    <S$Anim> h { <V> { -110.874 } }
+                    <S$Anim> p { <V> { -75.5605 } }
+                    <S$Anim> r { <V> { -157.966 } }
+                    <S$Anim> x { <V> { 0.0684348 } }
+                    <S$Anim> y { <V> { 0.0065498 } }
+                    <S$Anim> z { <V> { 0.0905886 } }
+                  }
+                  <Table> "bip01 r finger01" {
+                    <Xfm$Anim_S$> xform {
+                      <Scalar> fps { 30 }
+                      <Char*> order { srpht }
+                      <S$Anim> h { <V> { 25.8605 } }
+                      <S$Anim> x { <V> { 0.114747 } }
+                    }
+                  }
+                }
+                <Table> "bip01 r finger1" {
+                  <Xfm$Anim_S$> xform {
+                    <Scalar> fps { 30 }
+                    <Char*> order { srpht }
+                    <S$Anim> h { <V> { 55.1167 } }
+                    <S$Anim> p { <V> { -5.45248 } }
+                    <S$Anim> r { <V> { -1.2895 } }
+                    <S$Anim> x { <V> { 0.189132 } }
+                    <S$Anim> y { <V> { -0.0201725 } }
+                    <S$Anim> z { <V> { 0.0709367 } }
+                  }
+                  <Table> "bip01 r finger11" {
+                    <Xfm$Anim_S$> xform {
+                      <Scalar> fps { 30 }
+                      <Char*> order { srpht }
+                      <S$Anim> h { <V> { 87.1245 } }
+                      <S$Anim> x { <V> { 0.0772662 } }
+                    }
+                  }
+                }
+                <Table> "bip01 r finger2" {
+                  <Xfm$Anim_S$> xform {
+                    <Scalar> fps { 30 }
+                    <Char*> order { srpht }
+                    <S$Anim> h { <V> { 57.5011 } }
+                    <S$Anim> p { <V> { 4.11281 } }
+                    <S$Anim> r { <V> { -1.50322 } }
+                    <S$Anim> x { <V> { 0.183344 } }
+                    <S$Anim> y { <V> { -0.0183057 } }
+                    <S$Anim> z { <V> { -0.0175363 } }
+                  }
+                  <Table> "bip01 r finger21" {
+                    <Xfm$Anim_S$> xform {
+                      <Scalar> fps { 30 }
+                      <Char*> order { srpht }
+                      <S$Anim> h { <V> { 78.3946 } }
+                      <S$Anim> x { <V> { 0.0755991 } }
+                    }
+                  }
+                }
+                <Table> "bip01 r weapon" {
+                  <Xfm$Anim_S$> xform {
+                    <Scalar> fps { 30 }
+                    <Char*> order { srpht }
+                  }
+                  <Table> chainsword_teeth_01 {
+                    <Xfm$Anim_S$> xform {
+                      <Scalar> fps { 30 }
+                      <Char*> order { srpht }
+                      <S$Anim> h { <V> { 90.0005 } }
+                      <S$Anim> p { <V> { 64.8657 } }
+                      <S$Anim> r { <V> { 0.00414291 } }
+                      <S$Anim> x { <V> { 0.103789 } }
+                      <S$Anim> y { <V> { 0.0352355 } }
+                      <S$Anim> z { <V> { 1.2604 } }
+                    }
+                  }
+                  <Table> chainsword_teeth_02 {
+                    <Xfm$Anim_S$> xform {
+                      <Scalar> fps { 30 }
+                      <Char*> order { srpht }
+                      <S$Anim> h {
+                        <V> {
+                          -89.9919 -89.9921 -89.9919 -89.992 -89.9917
+                          -89.992 -89.992 -89.9918 -89.9917 -89.9918
+                          -89.9919 -89.9918 -89.9918 -89.9919 -89.9918
+                          -89.9919 -89.9917 -89.9917 -89.992 -89.9917
+                          -89.992
+                        }
+                      }
+                      <S$Anim> p { <V> { 89.3181 } }
+                      <S$Anim> r { <V> { 179.991 } }
+                      <S$Anim> x { <V> { 0.150785 } }
+                      <S$Anim> y { <V> { 0.0352355 } }
+                      <S$Anim> z { <V> { 1.27517 } }
+                    }
+                  }
+                  <Table> chainsword_teeth_03 {
+                    <Xfm$Anim_S$> xform {
+                      <Scalar> fps { 30 }
+                      <Char*> order { srpht }
+                      <S$Anim> h { <V> { -89.9992 } }
+                      <S$Anim> p { <V> { 31.095 } }
+                      <S$Anim> r { <V> { 179.999 } }
+                      <S$Anim> x { <V> { 0.191009 } }
+                      <S$Anim> y { <V> { 0.0352355 } }
+                      <S$Anim> z { <V> { 1.24972 } }
+                    }
+                  }
+                  <Table> chainsword_teeth_04 {
+                    <Xfm$Anim_S$> xform {
+                      <Scalar> fps { 30 }
+                      <Char*> order { srpht }
+                      <S$Anim> h { <V> { -89.9992 } }
+                      <S$Anim> p { <V> { -0.000116194 } }
+                      <S$Anim> r { <V> { 180 } }
+                      <S$Anim> x { <V> { 0.202175 } }
+                      <S$Anim> y { <V> { 0.0352354 } }
+                      <S$Anim> z { <V> { 1.20197 } }
+                    }
+                  }
+                  <Table> chainsword_teeth_05 {
+                    <Xfm$Anim_S$> xform {
+                      <Scalar> fps { 30 }
+                      <Char*> order { srpht }
+                      <S$Anim> h { <V> { -89.9992 } }
+                      <S$Anim> p { <V> { -0.000116194 } }
+                      <S$Anim> r { <V> { 180 } }
+                      <S$Anim> x { <V> { 0.202175 } }
+                      <S$Anim> y { <V> { 0.0352355 } }
+                      <S$Anim> z { <V> { 1.15229 } }
+                    }
+                  }
+                  <Table> chainsword_teeth_06 {
+                    <Xfm$Anim_S$> xform {
+                      <Scalar> fps { 30 }
+                      <Char*> order { srpht }
+                      <S$Anim> h { <V> { -89.9992 } }
+                      <S$Anim> p { <V> { -0.000228209 } }
+                      <S$Anim> r { <V> { -180 } }
+                      <S$Anim> x { <V> { 0.202175 } }
+                      <S$Anim> y { <V> { 0.0352355 } }
+                      <S$Anim> z { <V> { 1.10261 } }
+                    }
+                  }
+                  <Table> chainsword_teeth_07 {
+                    <Xfm$Anim_S$> xform {
+                      <Scalar> fps { 30 }
+                      <Char*> order { srpht }
+                      <S$Anim> h { <V> { -89.9992 } }
+                      <S$Anim> p { <V> { -0.000116194 } }
+                      <S$Anim> r { <V> { 180 } }
+                      <S$Anim> x { <V> { 0.202175 } }
+                      <S$Anim> y { <V> { 0.0352355 } }
+                      <S$Anim> z { <V> { 1.05293 } }
+                    }
+                  }
+                  <Table> chainsword_teeth_08 {
+                    <Xfm$Anim_S$> xform {
+                      <Scalar> fps { 30 }
+                      <Char*> order { srpht }
+                      <S$Anim> h { <V> { -89.9992 } }
+                      <S$Anim> p { <V> { -0.000280917 } }
+                      <S$Anim> r { <V> { -180 } }
+                      <S$Anim> x { <V> { 0.202175 } }
+                      <S$Anim> y { <V> { 0.0352355 } }
+                      <S$Anim> z { <V> { 1.00325 } }
+                    }
+                  }
+                  <Table> chainsword_teeth_09 {
+                    <Xfm$Anim_S$> xform {
+                      <Scalar> fps { 30 }
+                      <Char*> order { srpht }
+                      <S$Anim> h { <V> { -89.9992 } }
+                      <S$Anim> p { <V> { 0.00201291 } }
+                      <S$Anim> r { <V> { -180 } }
+                      <S$Anim> x { <V> { 0.202175 } }
+                      <S$Anim> y { <V> { 0.0352356 } }
+                      <S$Anim> z { <V> { 0.953574 } }
+                    }
+                  }
+                  <Table> chainsword_teeth_10 {
+                    <Xfm$Anim_S$> xform {
+                      <Scalar> fps { 30 }
+                      <Char*> order { srpht }
+                      <S$Anim> h { <V> { -89.9992 } }
+                      <S$Anim> p { <V> { -0.000280917 } }
+                      <S$Anim> r { <V> { -180 } }
+                      <S$Anim> x { <V> { 0.202175 } }
+                      <S$Anim> y { <V> { 0.0352357 } }
+                      <S$Anim> z { <V> { 0.903896 } }
+                    }
+                  }
+                  <Table> chainsword_teeth_11 {
+                    <Xfm$Anim_S$> xform {
+                      <Scalar> fps { 30 }
+                      <Char*> order { srpht }
+                      <S$Anim> h { <V> { -89.9992 } }
+                      <S$Anim> p { <V> { -0.000116194 } }
+                      <S$Anim> r { <V> { 180 } }
+                      <S$Anim> x { <V> { 0.202175 } }
+                      <S$Anim> y { <V> { 0.0352355 } }
+                      <S$Anim> z { <V> { 0.854216 } }
+                    }
+                  }
+                  <Table> chainsword_teeth_12 {
+                    <Xfm$Anim_S$> xform {
+                      <Scalar> fps { 30 }
+                      <Char*> order { srpht }
+                      <S$Anim> h { <V> { -89.9992 } }
+                      <S$Anim> p { <V> { -0.000228209 } }
+                      <S$Anim> r { <V> { -180 } }
+                      <S$Anim> x { <V> { 0.202175 } }
+                      <S$Anim> y { <V> { 0.0352356 } }
+                      <S$Anim> z { <V> { 0.804537 } }
+                    }
+                  }
+                  <Table> chainsword_teeth_13 {
+                    <Xfm$Anim_S$> xform {
+                      <Scalar> fps { 30 }
+                      <Char*> order { srpht }
+                      <S$Anim> h { <V> { -89.9992 } }
+                      <S$Anim> p { <V> { -0.000116194 } }
+                      <S$Anim> r { <V> { 180 } }
+                      <S$Anim> x { <V> { 0.202175 } }
+                      <S$Anim> y { <V> { 0.0352357 } }
+                      <S$Anim> z { <V> { 0.754858 } }
+                    }
+                  }
+                  <Table> chainsword_teeth_14 {
+                    <Xfm$Anim_S$> xform {
+                      <Scalar> fps { 30 }
+                      <Char*> order { srpht }
+                      <S$Anim> h { <V> { -89.9992 } }
+                      <S$Anim> p { <V> { -0.000228209 } }
+                      <S$Anim> r { <V> { -180 } }
+                      <S$Anim> x { <V> { 0.202175 } }
+                      <S$Anim> y { <V> { 0.0352357 } }
+                      <S$Anim> z { <V> { 0.705179 } }
+                    }
+                  }
+                  <Table> chainsword_teeth_15 {
+                    <Xfm$Anim_S$> xform {
+                      <Scalar> fps { 30 }
+                      <Char*> order { srpht }
+                      <S$Anim> h { <V> { -89.9992 } }
+                      <S$Anim> p { <V> { -0.000116194 } }
+                      <S$Anim> r { <V> { 180 } }
+                      <S$Anim> x { <V> { 0.202175 } }
+                      <S$Anim> y { <V> { 0.0352357 } }
+                      <S$Anim> z { <V> { 0.6555 } }
+                    }
+                  }
+                  <Table> chainsword_teeth_16 {
+                    <Xfm$Anim_S$> xform {
+                      <Scalar> fps { 30 }
+                      <Char*> order { srpht }
+                      <S$Anim> h { <V> { -89.9992 } }
+                      <S$Anim> p { <V> { -0.000116194 } }
+                      <S$Anim> r { <V> { 180 } }
+                      <S$Anim> x { <V> { 0.202175 } }
+                      <S$Anim> y { <V> { 0.0352357 } }
+                      <S$Anim> z { <V> { 0.605821 } }
+                    }
+                  }
+                  <Table> chainsword_teeth_17 {
+                    <Xfm$Anim_S$> xform {
+                      <Scalar> fps { 30 }
+                      <Char*> order { srpht }
+                      <S$Anim> h { <V> { -89.9992 } }
+                      <S$Anim> p { <V> { -0.000274516 } }
+                      <S$Anim> r { <V> { -179.999 } }
+                      <S$Anim> x { <V> { 0.202175 } }
+                      <S$Anim> y { <V> { 0.0352356 } }
+                      <S$Anim> z { <V> { 0.556141 } }
+                    }
+                  }
+                  <Table> chainsword_teeth_18 {
+                    <Xfm$Anim_S$> xform {
+                      <Scalar> fps { 30 }
+                      <Char*> order { srpht }
+                      <S$Anim> h { <V> { -89.9992 } }
+                      <S$Anim> r { <V> { 179.999 } }
+                      <S$Anim> x { <V> { 0.202175 } }
+                      <S$Anim> y { <V> { 0.0352356 } }
+                      <S$Anim> z { <V> { 0.506462 } }
+                    }
+                  }
+                  <Table> chainsword_teeth_19 {
+                    <Xfm$Anim_S$> xform {
+                      <Scalar> fps { 30 }
+                      <Char*> order { srpht }
+                      <S$Anim> h { <V> { -89.9992 } }
+                      <S$Anim> p { <V> { -0.359701 } }
+                      <S$Anim> r { <V> { -180 } }
+                      <S$Anim> x { <V> { 0.20217 } }
+                      <S$Anim> y { <V> { 0.0352356 } }
+                      <S$Anim> z { <V> { 0.456783 } }
+                    }
+                  }
+                  <Table> chainsword_teeth_20 {
+                    <Xfm$Anim_S$> xform {
+                      <Scalar> fps { 30 }
+                      <Char*> order { srpht }
+                      <S$Anim> h { <V> { -89.9992 } }
+                      <S$Anim> p { <V> { -28.1075 } }
+                      <S$Anim> r { <V> { 179.999 } }
+                      <S$Anim> x { <V> { 0.192448 } }
+                      <S$Anim> y { <V> { 0.0352356 } }
+                      <S$Anim> z { <V> { 0.408549 } }
+                    }
+                  }
+                }
+              }
+            }
+            <Table> "bip01 r elbowpad" {
+              <Xfm$Anim_S$> xform {
+                <Scalar> fps { 30 }
+                <Char*> order { srpht }
+                <S$Anim> h {
+                  <V> {
+                    50.2601 47.7493 45.2387 44.5895 43.9404 50.041
+                    56.1434 61.7 67.2569 66.4629 65.6689 62.7593 59.8499
+                    57.1332 54.4163 53.6077 52.7993 52.1718 51.5443
+                    50.881 50.2177
+                  }
+                }
+                <S$Anim> p {
+                  <V> {
+                    -1.45038 -1.4387 -1.42686 -1.42391 -1.42093 -1.45093
+                    -1.47959 -1.50989 -1.53826 -1.53397 -1.52965 -1.5145
+                    -1.49886 -1.48512 -1.47104 -1.46694 -1.46282
+                    -1.45979 -1.45681 -1.45375 -1.45069
+                  }
+                }
+                <S$Anim> r {
+                  <V> {
+                    0.0188776 0.0143208 0.0103187 0.00950214 0.00866945
+                    0.0195488 0.0335533 0.0519594 0.0732599 0.0697828
+                    0.0664308 0.0550856 0.0445407 0.0362596 0.0286125
+                    0.0265048 0.0244949 0.0231549 0.0218596 0.0201095
+                    0.0184248
+                  }
+                }
+                <S$Anim> x { <V> { 0.429319 } }
+                <S$Anim> y { <V> { 0.00456746 } }
+                <S$Anim> z { <V> { -0.0195764 } }
+              }
+            }
+          }
+          <Table> "bip01 l shoulderpad" {
+            <Xfm$Anim_S$> xform {
+              <Scalar> fps { 30 }
+              <Char*> order { srpht }
+              <S$Anim> h {
+                <V> {
+                  -158.004 -154.221 -150.422 -147.749 -145.072 -144.966
+                  -144.862 -145.772 -146.679 -147.627 -148.57 -149.219
+                  -149.866 -150.667 -151.468 -152.471 -153.475 -154.604
+                  -155.735 -156.86 -157.985
+                }
+              }
+              <S$Anim> p {
+                <V> {
+                  -18.613 -19.0622 -19.4566 -19.7015 -19.935 -19.9637
+                  -19.9947 -19.9172 -19.8109 -19.6763 -19.5177 -19.4138
+                  -19.3029 -19.1815 -19.0632 -18.924 -18.8028 -18.7119
+                  -18.6492 -18.6151 -18.6092
+                }
+              }
+              <S$Anim> r {
+                <V> {
+                  -97.0637 -96.2035 -95.3116 -95.0578 -94.792 -96.1398
+                  -97.4879 -99.4182 -101.346 -102.906 -104.462 -105.12
+                  -105.776 -105.542 -105.306 -104.215 -103.122 -101.611
+                  -100.1 -98.5845 -97.0687
+                }
+              }
+              <S$Anim> x { <V> { 0.400929 } }
+              <S$Anim> y { <V> { -0.0230304 } }
+              <S$Anim> z { <V> { 0.404049 } }
+            }
+          }
+          <Table> "bip01 l upperarm" {
+            <Xfm$Anim_S$> xform {
+              <Scalar> fps { 30 }
+              <Char*> order { srpht }
+              <S$Anim> h {
+                <V> {
+                  -165.44 -160.501 -155.479 -151.458 -147.422 -150.838
+                  -153.845 -152.355 -150.755 -149.565 -148.32 -148.339
+                  -148.355 -149.587 -150.808 -155.47 -159.854 -160.789
+                  -161.676 -163.546 -165.431
+                }
+              }
+              <S$Anim> p {
+                <V> {
+                  -18.5038 -20.0906 -21.5795 -21.9711 -22.3099 -17.5786
+                  -12.6526 -9.69461 -6.79973 -4.39495 -2.01984 -1.26331
+                  -0.506627 -1.19712 -1.90621 -6.6626 -11.7127 -14.1003
+                  -16.5085 -17.5117 -18.507
+                }
+              }
+              <S$Anim> r {
+                <V> {
+                  -24.2285 -23.1044 -21.8262 -21.0342 -20.2124 -24.0582
+                  -27.5223 -29.8641 -32.2652 -33.6439 -35.069 -35.3608
+                  -35.6522 -34.7755 -33.9137 -29.9974 -26.4332 -25.0792
+                  -23.7502 -23.9802 -24.2457
+                }
+              }
+              <S$Anim> x { <V> { 0.402478 } }
+              <S$Anim> y { <V> { -0.0209599 } }
+              <S$Anim> z { <V> { 0.410178 } }
+            }
+            <Table> "bip01 l forearm" {
+              <Xfm$Anim_S$> xform {
+                <Scalar> fps { 30 }
+                <Char*> order { srpht }
+                <S$Anim> h {
+                  <V> {
+                    -50.6137 -52.2831 -53.9524 -55.6148 -57.2769
+                    -57.2845 -57.292 -52.2 -47.1076 -42.1195 -37.1321
+                    -37.4378 -37.7435 -39.7778 -41.8122 -43.8034
+                    -45.7948 -47.038 -48.2813 -49.4493 -50.6173
+                  }
+                }
+                <S$Anim> x { <V> { 0.441395 } }
+              }
+              <Table> "bip01 l hand" {
+                <Xfm$Anim_S$> xform {
+                  <Scalar> fps { 30 }
+                  <Char*> order { srpht }
+                  <S$Anim> h {
+                    <V> {
+                      159.98 159.992 160.004 160.001 159.998 159.999
+                      160.001 160.04 160.08 160.114 160.148 160.151
+                      160.155 160.121 160.088 159.955 159.825 159.894
+                      159.966 160.022 160.079
+                    }
+                  }
+                  <S$Anim> p {
+                    <V> {
+                      -85.5701 -85.5695 -85.5688 -85.5689 -85.5691
+                      -85.57 -85.5709 -85.5709 -85.571 -85.5713 -85.5717
+                      -85.5717 -85.5716 -85.5708 -85.5699 -85.5666
+                      -85.5631 -85.5666 -85.5697 -85.5707 -85.5713
+                    }
+                  }
+                  <S$Anim> r {
+                    <V> {
+                      158.752 160.704 162.656 164.594 166.532 167.414
+                      168.297 166.631 164.966 161.954 158.942 155.473
+                      152.004 148.374 144.746 142.921 141.097 144.444
+                      147.795 153.301 158.809
+                    }
+                  }
+                  <S$Anim> x { <V> { 0.418189 } }
+                }
+                <Table> "bip01 l finger0" {
+                  <Xfm$Anim_S$> xform {
+                    <Scalar> fps { 30 }
+                    <Char*> order { srpht }
+                    <S$Anim> h { <V> { -110.874 } }
+                    <S$Anim> p { <V> { 75.5605 } }
+                    <S$Anim> r { <V> { 157.966 } }
+                    <S$Anim> x { <V> { 0.0684348 } }
+                    <S$Anim> y { <V> { 0.00654984 } }
+                    <S$Anim> z { <V> { -0.0905886 } }
+                  }
+                  <Table> "bip01 l finger01" {
+                    <Xfm$Anim_S$> xform {
+                      <Scalar> fps { 30 }
+                      <Char*> order { srpht }
+                      <S$Anim> h { <V> { 25.8605 } }
+                      <S$Anim> x { <V> { 0.114746 } }
+                    }
+                  }
+                }
+                <Table> "bip01 l finger1" {
+                  <Xfm$Anim_S$> xform {
+                    <Scalar> fps { 30 }
+                    <Char*> order { srpht }
+                    <S$Anim> h { <V> { 9.05772 } }
+                    <S$Anim> p { <V> { 2.85973 } }
+                    <S$Anim> r { <V> { 4.81959 } }
+                    <S$Anim> x { <V> { 0.189132 } }
+                    <S$Anim> y { <V> { -0.0201724 } }
+                    <S$Anim> z { <V> { -0.0709368 } }
+                  }
+                  <Table> "bip01 l finger11" {
+                    <Xfm$Anim_S$> xform {
+                      <Scalar> fps { 30 }
+                      <Char*> order { srpht }
+                      <S$Anim> h { <V> { 87.1245 } }
+                      <S$Anim> x { <V> { 0.0772661 } }
+                    }
+                  }
+                }
+                <Table> "bip01 l finger2" {
+                  <Xfm$Anim_S$> xform {
+                    <Scalar> fps { 30 }
+                    <Char*> order { srpht }
+                    <S$Anim> h { <V> { 57.5011 } }
+                    <S$Anim> p { <V> { -4.11283 } }
+                    <S$Anim> r { <V> { 1.50321 } }
+                    <S$Anim> x { <V> { 0.183344 } }
+                    <S$Anim> y { <V> { -0.0183056 } }
+                    <S$Anim> z { <V> { 0.0175361 } }
+                  }
+                  <Table> "bip01 l finger21" {
+                    <Xfm$Anim_S$> xform {
+                      <Scalar> fps { 30 }
+                      <Char*> order { srpht }
+                      <S$Anim> h { <V> { 78.3946 } }
+                      <S$Anim> x { <V> { 0.0755989 } }
+                    }
+                  }
+                }
+                <Table> "bip01 l weapon" {
+                  <Xfm$Anim_S$> xform {
+                    <Scalar> fps { 30 }
+                    <Char*> order { srpht }
+                  }
+                }
+              }
+            }
+            <Table> "bip01 l elbowpad" {
+              <Xfm$Anim_S$> xform {
+                <Scalar> fps { 30 }
+                <Char*> order { srpht }
+                <S$Anim> h {
+                  <V> {
+                    60.1987 59.3684 58.538 57.7008 56.8636 56.8495
+                    56.8354 59.3797 61.9242 64.4203 66.9165 66.7577
+                    66.5989 65.5828 64.5667 63.5876 62.6086 61.9887
+                    61.369 60.7849 60.2007
+                  }
+                }
+                <S$Anim> p {
+                  <V> {
+                    1.47068 1.4708 1.47072 1.47068 1.47045 1.47048
+                    1.47048 1.47122 1.4705 1.46978 1.46764 1.46779
+                    1.46793 1.46877 1.46937 1.46984 1.47012 1.47033
+                    1.4704 1.4706 1.47069
+                  }
+                }
+                <S$Anim> r {
+                  <V> {
+                    -0.0114329 -0.000748899 0.00988795 0.0206181
+                    0.0314195 0.0315465 0.031752 -0.00087806 -0.0334999
+                    -0.0656007 -0.0975088 -0.0955367 -0.0934664
+                    -0.0804637 -0.0674819 -0.0548587 -0.042337
+                    -0.0343873 -0.0263934 -0.0189163 -0.011423
+                  }
+                }
+                <S$Anim> x { <V> { 0.429322 } }
+                <S$Anim> y { <V> { 0.00456755 } }
+                <S$Anim> z { <V> { 0.0195753 } }
+              }
+            }
+          }
+          <Table> "bip01 r shoulderpad" {
+            <Xfm$Anim_S$> xform {
+              <Scalar> fps { 30 }
+              <Char*> order { srpht }
+              <S$Anim> h {
+                <V> {
+                  37.4961 43.906 50.3936 53.6432 56.9176 41.7056 26.5384
+                  24.0763 21.6113 22.3567 23.1059 25.3819 27.6569 30.252
+                  32.8437 33.8855 34.9252 35.5877 36.2466 36.9155
+                  37.5795
+                }
+              }
+              <S$Anim> p {
+                <V> {
+                  -5.83429 -7.72848 -9.45339 -10.1462 -10.7483 -7.12662
+                  -3.81911 -3.62379 -3.48066 -3.82763 -4.16645 -4.36279
+                  -4.57198 -4.78757 -5.04719 -5.14553 -5.26998 -5.38642
+                  -5.52161 -5.67894 -5.8545
+                }
+              }
+              <S$Anim> r {
+                <V> {
+                  70.726 72.1386 73.7622 75.3679 77.0152 77.7415 79.3895
+                  80.5913 81.8001 82.3841 82.9726 82.632 82.2993 81.3202
+                  80.3513 78.8848 77.4194 75.7579 74.0966 72.4371
+                  70.7788
+                }
+              }
+              <S$Anim> x { <V> { 0.402206 } }
+              <S$Anim> y { <V> { -0.0275168 } }
+              <S$Anim> z { <V> { -0.405931 } }
+            }
+          }
+        }
+      }
+    }
+  }
+}
