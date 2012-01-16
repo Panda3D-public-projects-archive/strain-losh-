@@ -305,8 +305,8 @@ class Client(DirectObject):
                 i = self.buildOverwatchAnim(action_list)
                 s.append(i)
         
-        anim = unit_model.getActorInterval('run', loop = 1, duration = d)
-        anim_end = unit_model.getActorInterval('idle_stand01', startFrame=1, endFrame=1)
+        anim = unit_model.model.actorInterval('walk', loop = 1, duration = d)
+        anim_end = unit_model.model.actorInterval('idle', startFrame=1, endFrame=1)
         move = Sequence(Parallel(anim, s), Sequence(anim_end))
         return move
         
@@ -416,7 +416,7 @@ class Client(DirectObject):
     
     def buildShootAnim(self, unit_model, weapon):
         # Unit shooting animation
-        shoot_anim = unit_model.getActorInterval('shoot')
+        shoot_anim = unit_model.model.actorInterval('shoot')
         return shoot_anim
     
     def buildBulletAnim(self, start_pos, target_tile):
@@ -450,16 +450,16 @@ class Client(DirectObject):
             target_unit = self.sgm.unit_np_dict[target_unit_id]
             t = TextNode('dmg')
             if damage_type == "bounce":
-                target_anim = target_unit.getActorInterval("damage", startFrame=1, endFrame=1)
+                target_anim = target_unit.model.actorInterval("get_hit")
                 dmg = 'bounce'
             elif damage_type == "miss":
-                target_anim = target_unit.getActorInterval("damage", startFrame=1, endFrame=1)
+                target_anim = target_unit.model.actorInterval("get_hit")
                 dmg = 'miss'                
             elif damage_type == "damage":
-                target_anim = target_unit.getActorInterval("damage", startFrame=1, endFrame=1)
+                target_anim = target_unit.model.actorInterval("get_hit")
                 dmg = str(action[2])
             elif damage_type == "kill":
-                target_anim = Sequence(target_unit.getActorInterval("die"))
+                target_anim = Sequence(target_unit.model.actorInterval("die"))
                 dmg = str(action[2])
             t.setText( "%s" % dmg)
             t.setTextColor(1, 0, 0, 1)
@@ -472,7 +472,7 @@ class Client(DirectObject):
             start_pos = Point3(0, 0, 0.9)
             end_pos = start_pos + Point3(0, 0, 3)
             damage_text_sequence = Sequence(Func(self.sgm.setDamageNode, textNodePath, target_unit.node),
-                                            textNodePath.posInterval(1.5, end_pos, start_pos),
+                                            textNodePath.posInterval(1, end_pos, start_pos),
                                             Func(self.sgm.deleteDamageNode, textNodePath)
                                             ) 
             damage_parallel = Parallel(damage_text_sequence, target_anim)       

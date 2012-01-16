@@ -8,7 +8,7 @@ import logging
 # panda3D imports
 from direct.showbase.ShowBase import ShowBase
 from panda3d.core import loadPrcFile, WindowProperties#@UnresolvedImport
-from panda3d.core import TextNode, VBase4#@UnresolvedImport
+from panda3d.core import TextNode, VBase4, AntialiasAttrib#@UnresolvedImport
 from direct.showbase.DirectObject import DirectObject
 from direct.fsm import FSM
 from direct.gui.DirectGui import DirectButton, DirectEntry, DirectLabel
@@ -76,13 +76,7 @@ class AppFSM(FSM.FSM):
         self.parent.login.button_ultras.remove()
         self.parent.login.button_obs.remove()
         self.parent.login.button_replay.remove()
-        self.parent.login.commoner1.delete()
-        self.parent.login.commoner2.delete()
         self.parent.login.commander.delete()
-        self.parent.login.heavy.delete()
-        self.parent.login.assault.delete()
-        self.parent.login.assault2.delete()
-        self.parent.login.assault3.delete() 
         self.parent.login.textObject.remove()       
         del self.parent.login
 
@@ -129,28 +123,17 @@ class LoginScreen():
         self.button_replay.reparentTo(aspect2d)
         self.button_replay.setPos(0.5, 0, -0.8)        
         
-        ground_level = -1.6
-        self.commoner1 = utils.loadUnit('common', 'Bolter')
-        self.commoner1.setPos(-3, 25, ground_level)
-        self.commoner1.loop('idle_combat01')
-        self.commoner2 = utils.loadUnit('common', 'Bolter')
-        self.commoner2.setPos(-4.5, 23.5, ground_level)
-        self.commoner2.loop('idle_combat02')           
-        self.heavy = utils.loadUnit('heavy', 'Heavy Bolter')
-        self.heavy.setPos(-2, 27, ground_level)
-        self.heavy.loop('idle_stand03')             
-        self.commander = utils.loadUnit('commander', 'Thunder Hammer')
-        self.commander.setPos(0, 20, ground_level)
-        self.commander.loop('idle_stand02') 
-        self.assault = utils.loadUnit('assault', 'Chain Sword,Bolt Pistol')
-        self.assault.setPos(4, 25, ground_level)
-        self.assault.loop('idle_stand01')
-        self.assault2 = utils.loadUnit('assault', 'Power Axe,Bolt Pistol')
-        self.assault2.setPos(2.5, 23, ground_level)
-        self.assault2.loop('idle_stand02')  
-        self.assault3 = utils.loadUnit('assault', 'Chain Sword,Plasma Pistol')
-        self.assault3.setPos(6, 23, ground_level)
-        self.assault3.loop('idle_stand03')  
+        ground_level = 0
+        self.commander = utils.loadUnit('marine', 'sergeant')
+        self.commander.setPos(0, 20, -2)
+        self.commander.reparentTo(render)
+        self.commander.loop('overwatch')  
+        
+        self.jumper = utils.loadUnit('marine', 'sergeant')
+        self.jumper.setPos(2, 20, -2)
+        self.jumper.reparentTo(render)
+        self.jumper.loop('overwatch')   
+        #self.jumper.setAntialias(AntialiasAttrib.MMultisample)       
         
         self.textObject = OnscreenText(text = 'STRAIN', pos = (0, 0.4), scale = 0.2, font=legofont, fg = (1,0,0,1))
     

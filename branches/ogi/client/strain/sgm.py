@@ -16,7 +16,7 @@ from direct.interval.IntervalGlobal import Sequence, LerpColorScaleInterval#@Unr
 
 # strain related imports
 from strain.voxelgen import VoxelGenerator
-from strain.unitmodel import UnitModel, LegoUnitModel
+from strain.unitmodel import UnitModel
 import strain.utils as utils
 from strain.share import *
 
@@ -166,10 +166,7 @@ class SceneGraph():
         self.comp_inited['units'] = True  
         
     def loadUnit(self, unit_id, wpn_list):
-        if unit_id == 1:
-            um = LegoUnitModel(self, unit_id)
-        else:
-            um = UnitModel(self, unit_id, wpn_list)
+        um = UnitModel(self, unit_id)
         # Keep unit nodepath in dictionary of all unit nodepaths
         self.unit_np_dict[unit_id] = um
         return um
@@ -234,12 +231,8 @@ class SceneGraph():
         if not self.comp_inited['alt_render']:
             return
         wpn_list = utils.getUnitWeapons(self.parent.units[unit_id])
-        if unit_id == 1:
-            self.off_model = LegoUnitModel(self, unit_id, off=True)
-        else:
-            self.off_model = UnitModel(self, unit_id, wpn_list, off=True)
+        self.off_model = UnitModel(self, unit_id, off=True)
         self.off_model.reparentTo(self.alt_render)
-        #self.off_model.model.play('idle_stand01')
         
     def showUnitAvailMove(self, unit_id):
         """Displays visual indicator of tiles which are in movement range of the selected unit."""
