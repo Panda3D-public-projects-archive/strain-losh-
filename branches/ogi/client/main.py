@@ -77,6 +77,7 @@ class AppFSM(FSM.FSM):
         self.parent.login.button_obs.remove()
         self.parent.login.button_replay.remove()
         self.parent.login.commander.delete()
+        self.parent.login.jumper.delete()
         self.parent.login.textObject.remove()       
         del self.parent.login
 
@@ -159,7 +160,7 @@ class LoginScreen():
 #
 class Screen(DirectObject):
     """The Screen Class manages window."""
-    def __init__(self, parent, res=(800,600)):
+    def __init__(self, parent, res=(1024,768)):
         self.parent = parent
         # Init pipe
         ShowBase()
@@ -171,8 +172,6 @@ class Screen(DirectObject):
         win.setFullscreen(False)
         base.openDefaultWindow(win)        
         #base.setBackgroundColor(.05,.05,.05)
-        # TODO: ogs: enableati auto shader samo na odredjenim nodepathovima
-        #render.setShaderAuto()
         self.setupKeys()
 
     def setupKeys(self):

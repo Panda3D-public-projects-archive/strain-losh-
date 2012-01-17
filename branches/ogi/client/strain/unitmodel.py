@@ -23,7 +23,6 @@ class UnitModel:
             self.team_color = Vec4(0.106, 0.467, 0.878, 1)
         else:
             self.team_color = Vec4(0, 1, 0, 1)
-        print unit
         if unit['name'] == 'marine_common':        
             self.model = utils.loadUnit('marine', 'standard') 
         elif unit['name'] == 'marine_epic': 
@@ -63,9 +62,10 @@ class UnitModel:
         cm = CardMaker('cm') 
         self.marker = self.node.attachNewNode(cm.generate()) 
         self.marker.setP(render, -90)
-        self.marker.setPos(-0.5, -0.5, 0.01)
+        self.marker.setPos(-0.5, -0.5, 0)
         self.marker.setTexture(loader.loadTexture('circle.png'))
         self.marker.setColor(0, 1, 0)
+        self.marker.setDepthOffset(1)
         #cpos.node().setAttrib(ColorBlendAttrib.make(ColorBlendAttrib.MAdd))
         self.marker.setTransparency(TransparencyAttrib.MAlpha)
         self.marker.setBin('highlight', 25)
@@ -85,7 +85,7 @@ class UnitModel:
         self.node.reparentTo(node)  
         
     def calcWorldPos(self, pos):
-        return pos + Point3(0.5, 0.5, 0.3)  
+        return pos + Point3(0.5, 0.5, utils.GROUND_LEVEL)  
         
     def getHeadingTile(self, unit):
         x = int(unit['pos'][0])
@@ -113,7 +113,7 @@ class UnitModel:
     def setHeading(self, heading):
         tile_pos = self.getHeadingTile(heading)
         dest_node = NodePath("dest_node")
-        dest_node.setPos(render, tile_pos.getX()+0.5, tile_pos.getY()+0.5, 0.3)
+        dest_node.setPos(render, tile_pos.getX()+0.5, tile_pos.getY()+0.5, utils.GROUND_LEVEL)
         self.node.lookAt(dest_node)
         
     def cleanup(self):
