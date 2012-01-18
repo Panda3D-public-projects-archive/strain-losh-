@@ -16,7 +16,7 @@ from direct.interval.IntervalGlobal import Sequence, LerpColorScaleInterval#@Unr
 
 # strain related imports
 from strain.voxelgen import VoxelGenerator
-from strain.unitmodel import UnitModel, LegoUnitModel
+from strain.unitmodel import UnitModel
 import strain.utils as utils
 from strain.share import *
 
@@ -84,7 +84,8 @@ class SceneGraph():
                 cm = CardMaker('cm') 
                 cpos = self.tile_cards_np.attachNewNode(cm.generate()) 
                 cpos.setP(render, -90)
-                cpos.setPos(render, i, j, utils.GROUND_LEVEL+0.01)
+                cpos.setPos(render, i, j, utils.GROUND_LEVEL)
+                cpos.setDepthOffset(1)
                 cpos.setTexture(grid_tex)
                 #cpos.node().setAttrib(ColorBlendAttrib.make(ColorBlendAttrib.MAdd))
                 cpos.setTransparency(TransparencyAttrib.MAlpha)
@@ -130,7 +131,7 @@ class SceneGraph():
         dlight1.setColor(VBase4(1.0, 1.0, 1.0, 1.0))
         dlnp1 = render.attachNewNode(dlight1)
         dlnp1.setPos(10, 10, 5)
-        dlnp1.lookAt(10, 10, 0.3)
+        dlnp1.lookAt(10, 10, utils.GROUND_LEVEL)
         #a = loader.loadModel("camera")
         #a.reparentTo(dlnp1)
         #a.setScale(0.4, 0.4, 0.4)
@@ -166,10 +167,7 @@ class SceneGraph():
         self.comp_inited['units'] = True  
         
     def loadUnit(self, unit_id, wpn_list):
-        if unit_id == 1:
-            um = LegoUnitModel(self, unit_id)
-        else:
-            um = UnitModel(self, unit_id, wpn_list)
+        um = UnitModel(self, unit_id)
         # Keep unit nodepath in dictionary of all unit nodepaths
         self.unit_np_dict[unit_id] = um
         return um
@@ -234,12 +232,8 @@ class SceneGraph():
         if not self.comp_inited['alt_render']:
             return
         wpn_list = utils.getUnitWeapons(self.parent.units[unit_id])
-        if unit_id == 1:
-            self.off_model = LegoUnitModel(self, unit_id, off=True)
-        else:
-            self.off_model = UnitModel(self, unit_id, wpn_list, off=True)
+        self.off_model = UnitModel(self, unit_id, off=True)
         self.off_model.reparentTo(self.alt_render)
-        #self.off_model.model.play('idle_stand01')
         
     def showUnitAvailMove(self, unit_id):
         """Displays visual indicator of tiles which are in movement range of the selected unit."""
@@ -256,8 +250,8 @@ class SceneGraph():
                 text.setText( "%s" % move_dict[tile])
                 text.setAlign(TextNode.ACenter)
                 textNodePath = self.movetext_np.attachNewNode(text)
-                textNodePath.setPos(render, tile[0]+0.45, tile[1]+0.45, 0.33)
-                textNodePath.setColor(0, 0, 0)
+                textNodePath.setPos(render, tile[0]+0.45, tile[1]+0.45, utils.GROUND_LEVEL+0.03)
+                textNodePath.setColor(1, 1, 1)
                 textNodePath.setScale(0.4, 0.4, 0.4)
                 textNodePath.setBillboardPointEye()
                 self.tile_cards[tile[0]][tile[1]].setColor(0,1,0)
@@ -273,27 +267,27 @@ class SceneGraph():
     def showVisibleEnemies(self, unit_id):
         self.hideVisibleEnemies()
         unit = self.parent.units[unit_id]
-        self.enemyunittiles_np = NodePath("enemyunittiles_np")        
+        #self.enemyunittiles_np = NodePath("enemyunittiles_np")        
         for u in self.parent.units.itervalues():
             if self.parent.isThisEnemyUnit(u['id']):
                 if getLOSOnLevel(unit, u, self.parent.level) > 0:
-                    ls = LineSegs()
-                    ls.moveTo(unit['pos'][0] + utils.MODEL_OFFSET, unit['pos'][1] + utils.MODEL_OFFSET, utils.GROUND_LEVEL+0.5)
-                    ls.drawTo(u['pos'][0] + utils.MODEL_OFFSET, u['pos'][1] + utils.MODEL_OFFSET, utils.GROUND_LEVEL+0.5)
-                    ls.setThickness(1)
-                    lines = self.enemyunittiles_np.attachNewNode(ls.create())
-                    lines.setColorScale(1,0,0,0.7)
+                    #ls = LineSegs()
+                    #ls.moveTo(unit['pos'][0] + utils.MODEL_OFFSET, unit['pos'][1] + utils.MODEL_OFFSET, utils.GROUND_LEVEL+0.5)
+                    #ls.drawTo(u['pos'][0] + utils.MODEL_OFFSET, u['pos'][1] + utils.MODEL_OFFSET, utils.GROUND_LEVEL+0.5)
+                    #ls.setThickness(1)
+                    #lines = self.enemyunittiles_np.attachNewNode(ls.create())
+                    #lines.setColorScale(1,0,0,0.7)
                     # Set a looping interval to fade them both in and out together
-                    self.enemyunittiles_np.setTransparency(TransparencyAttrib.MAlpha)
+                    #self.enemyunittiles_np.setTransparency(TransparencyAttrib.MAlpha)
                     unit_model = self.parent.sgm.unit_np_dict[u['id']]
                     unit_model.marker.setTexture(loader.loadTexture('target.png'))
                     unit_model.marker.setColor(1,0,0)
                     unit_model.showMarker()
-        i = Sequence(LerpColorScaleInterval(self.enemyunittiles_np, 2, (1, 0, 0, 0.1)),
-                     LerpColorScaleInterval(self.enemyunittiles_np, 0.5, (1, 0, 0, 0.7)))
-        i.loop()
-        self.enemyunittiles_np.flattenStrong()
-        self.enemyunittiles_np.reparentTo(self.node)
+        #i = Sequence(LerpColorScaleInterval(self.enemyunittiles_np, 2, (1, 0, 0, 0.1)),
+        #             LerpColorScaleInterval(self.enemyunittiles_np, 0.5, (1, 0, 0, 0.7)))
+        #i.loop()
+        #self.enemyunittiles_np.flattenStrong()
+        #self.enemyunittiles_np.reparentTo(self.node)
         
     def hideVisibleEnemies(self):
         if self.enemyunittiles_np:
