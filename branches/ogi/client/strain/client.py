@@ -484,6 +484,11 @@ class Client(DirectObject):
         s.start()
         
     def handleNewTurn(self):
+        if self.turn_player == 'blood angels':
+            self.sgm.level_mesh.setFloorTex('RED')
+        else:
+            self.sgm.level_mesh.setFloorTex('BLUE')
+        self.sgm.level_mesh.switchNodes()
         text = TextNode('new turn node')
         text.setText("TURN: "+self.turn_player)
         textnp = NodePath("textnp")
