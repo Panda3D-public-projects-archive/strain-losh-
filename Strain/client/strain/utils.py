@@ -41,80 +41,42 @@ HEADING_SW        = 6
 HEADING_S         = 7
 HEADING_SE        = 8
 
-GROUND_LEVEL = 0.3
+GROUND_LEVEL = 0.5
 MODEL_OFFSET = 0.5
-BULLET_SPEED = 10
+BULLET_SPEED = 15
 
-TILE_STYLE_NORMAL = 0
-TILE_STYLE_YELLOW = 1
-TILE_STYLE_RED = 2
-
-armour_dict = {}
-armour_dict['power_armour_common'] = ["power_armour_common"]
-armour_dict['power_armour_rare'] = ["power_armour_rare"]
-armour_dict['power_armour_epic'] = ["power_armour_epic"]
-armour_dict['power_armour_commander'] = ["power_armour_commander"]
-
-head_dict = {}
-head_dict['space_marine_head'] = ["space_marine_head"]
-head_dict['assault_marine_head'] = ["assault_marine_head"]        
-head_dict['gabriel_head'] = ["gabriel_head"]
-head_dict['avitus_head'] = ["avitus_head"]
-
-backpack_dict = {}
-backpack_dict['space_marine_backpack'] = ["space_marine_backpack"]
-backpack_dict['assault_marine_jumppack'] = ["assault_marine_jumppack"]        
-backpack_dict['gabriel_backpack'] = [("gabriel_backpack", "fc_backpack")]
-backpack_dict['avitus_backpack'] = [("avitus_backpack", "space_marine_backpack")]
-
-melee_weapon_dict = {}
-melee_weapon_dict['Power Axe'] = ["power_axe_common"]
-melee_weapon_dict['Chain Sword'] = ["chainsword_common"]
-melee_weapon_dict['Power Glove'] = ["power_fist_common"]     
-melee_weapon_dict['Knife'] = ["knife_common"]    
-
-melee_2h_weapon_dict = {}
-melee_2h_weapon_dict['Thunder Hammer'] = ["doublehand_hammer_common"]
-
-pistol_dict = {}
-pistol_dict['Bolt Pistol'] = ["bolt_pistol_common"] 
-pistol_dict['Plasma Pistol'] = ["plasma_pistol_common"]    
-
-weapon_dict = {}
-weapon_dict['Bolter'] = ["bolter_common"]  
-weapon_dict['Heavy Bolter'] = ["heavy_bolter_common"] 
-weapon_dict['Flamer'] = ["flamer_common"]       
-weapon_dict['Lascannon'] = ["lascannon_common"]   
-weapon_dict['Meltagun'] = ["meltagun_common"]     
-weapon_dict['Missile Launcher'] = ["missile_launcher_common"]                
-weapon_dict['Plasma Cannon'] = ["plasma_cannon_common"]               
-weapon_dict['Plasma Gun'] = ["plasma_gun_common"]               
-
-gear_list = [armour_dict, head_dict, backpack_dict] 
-weapon_gear_list = [weapon_dict, pistol_dict, melee_weapon_dict, melee_2h_weapon_dict]    
+marine_anim_dict = {}
+marine_anim_dict['crouch'] = 'marine-crouch'
+marine_anim_dict['die'] = 'marine-die'
+marine_anim_dict['get_hit'] = 'marine-gethit'
+marine_anim_dict['idle'] = 'marine-idle'
+marine_anim_dict['idle_lowergun'] = 'marine-idlelowergun'
+marine_anim_dict['jet_hover'] = 'marine-jethover'   
+marine_anim_dict['jet_jump'] = 'marine-jetjump' 
+marine_anim_dict['melee'] = 'marine-melee'
+marine_anim_dict['overwatch'] = 'marine-overwatch'
+marine_anim_dict['run'] = 'marine-run'
+marine_anim_dict['setup'] = 'marine-setup'
+marine_anim_dict['shoot'] = 'marine-shoot'
+marine_anim_dict['shoot_add'] = 'marine-shootadditive'
+marine_anim_dict['stand_up'] = 'marine-standup'
+marine_anim_dict['taunt'] = 'marine-taunt'
+marine_anim_dict['use'] = 'marine-use'
+marine_anim_dict['walk'] = 'marine-walk'
 
 anim_dict = {}
-anim_dict['idle_stand01'] = 'idle_stand01'
-anim_dict['idle_stand02'] = 'idle_stand02'
-anim_dict['idle_stand03'] = 'idle_stand03'
-anim_dict['idle_combat01'] = 'idle_combat_stand01'
-anim_dict['idle_combat02'] = 'idle_combat_stand02'
-anim_dict['idle_combat03'] = 'idle_combat_stand03'   
-anim_dict['run'] = 'run' 
-anim_dict['shoot'] = 'fire_stand'
-anim_dict['damage'] = 'pinned_idle'
-anim_dict['die'] = 'die_normal_f'
-anim_dict['overwatch'] = 'aim_stand'
-anim_dict['melee'] = 'melee_attack01'
+anim_dict['marine'] = marine_anim_dict
 
-unit_types = {}
-unit_types['marine_common'] = ['space_marine_head', 'power_armour_common', 'space_marine_backpack']
-unit_types['marine_hb'] = ['space_marine_head', 'power_armour_common', 'space_marine_backpack']
-unit_types['marine_epic'] = ['gabriel_head', 'power_armour_commander', 'gabriel_backpack']
-unit_types['common'] = ['power_armour_rare', 'space_marine_head', 'space_marine_backpack']
-unit_types['commander'] = ['power_armour_commander', 'gabriel_head', 'gabriel_backpack']
-unit_types['heavy'] = ['power_armour_rare', 'space_marine_head', 'space_marine_backpack']
-unit_types['assault'] = ['power_armour_common', 'assault_marine_head', 'assault_marine_jumppack']
+marine_unit_types = {}
+marine_unit_types['standard'] = 'marine_standard'
+marine_unit_types['heavy'] = 'marine_heavy'
+marine_unit_types['jumper'] = 'marine_jumper'
+marine_unit_types['scout'] = 'marine_scout'
+marine_unit_types['medic'] = 'marine_medic'
+marine_unit_types['sergeant'] = 'marine_sergeant'
+
+unit_type_dict = {}
+unit_type_dict['marine'] = marine_unit_types
 
 #############################################################################
 # METHODS
@@ -217,94 +179,9 @@ def getUnitWeapons(unit):
 def parseUnitWeapons(weapons):
     return string.split(weapons,',')
 
-def loadLegoUnit():
-    model = loader.loadModel('gunny')
-    model_parts = []
-    model_np = NodePath("pico")
-    for part in model.findAllMatches('**/+Character'):
-        actor = Actor(part, {'walk': 'gunny-walk', 
-                             'run':'gunny-walk', 
-                             'idle_stand01':'gunny-walk', 
-                             'shoot':'gunny-walk', 
-                             'melee':'gunny-walk',
-                             'damage':'gunny-walk', 
-                             'die':'gunny-walk'})
-        if actor.getName() == 'Gunny.001':
-            ts = TextureStage('ts')
-            ts.setTexcoordName('BodyUV')
-            tex = loader.loadTexture('bodyuv.png')
-            actor.setTexture(ts, tex)
-        elif actor.getName() == 'Gunny':
-            ts = TextureStage('ts')
-            tex = loader.loadTexture('gun.png')
-            actor.setTexture(ts, tex)
-        actor.reparentTo(model_np)
-        model_parts.append(actor)
-        part.removeNode()
-    return model_np, model_parts 
-
-def loadUnit(unit_type, weapons):
-    model = Actor('marine') 
-    model.reparentTo(render)
-    model.node_dict = {}
-    gear = gear_list + weapon_gear_list
-    for dict in gear:
-        for g in dict.itervalues():
-            for node in g:
-                if isinstance(node, tuple):
-                    model.node_dict[node[0]] = model.find("**/"+node[0])
-                    if node[1]:
-                        l = loader.loadTexture(node[1]+"_dif.dds")
-                        model.node_dict[node[0]].setTexture(l)
-                else:
-                    model.node_dict[node] = model.find("**/"+node)
-                    l = loader.loadTexture(node+"_dif.dds")
-                    model.node_dict[node].setTexture(l)
-    wpns = parseUnitWeapons(weapons)
-    initModels(model, unit_type, wpns)
-    initAnims(model, unit_type, wpns)
-    return model
-
-def initModels(model, unit_type, wpns):
-    # Parsing dictionaries for armour, head and backpack types
-    for gear in gear_list:
-        for item in gear.iterkeys():
-            if item not in unit_types[unit_type]:
-                for node in gear[item]:
-                    if isinstance(node, tuple):
-                        n = node[0]
-                    else:
-                        n = node
-                    model.node_dict[n] = model.find("**/"+n)
-                    model.node_dict[n].detachNode()
-                    #model.node_dict[n].remove()
-
-    # Parsing for weapons
-    d = dict(weapon_dict.items() + melee_2h_weapon_dict.items() + pistol_dict.items() + melee_weapon_dict.items())
-    for item in d.iterkeys():
-        if item not in wpns:
-            for node in d[item]:
-                if isinstance(node, tuple):
-                    n = node[0]
-                else:
-                    n = node
-                model.node_dict[n] = model.find("**/"+n)
-                model.node_dict[n].detachNode()
-
-    
-    
-def initAnims(model, unit_type, wpns):
-    model.anims = {}
-    if unit_type == 'common' or unit_type == 'marine_common' or unit_type == 'marine_hb':
-        prefix = 'range_burst/'
-    elif unit_type == 'commander':
-        prefix = 'twohand_hammer/'
-    elif unit_type == 'assault'  or unit_type == 'marine_epic':
-        prefix = 'melee_axe_range_pistol/'
-    elif unit_type == 'heavy':
-        prefix = 'range_burst/'
-    for anim in anim_dict.iterkeys():
-        model.anims[anim] = prefix+anim_dict[anim]
-    model.loadAnims(model.anims)
-       
-
+def loadUnit(race, type):
+    model = Actor(unit_type_dict[race][type])
+    model.loadAnims(anim_dict[race])
+    tex = loader.loadTexture(unit_type_dict[race][type] + ".png")
+    model.setTexture(tex)
+    return model 
