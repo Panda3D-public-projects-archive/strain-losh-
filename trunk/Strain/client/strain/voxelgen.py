@@ -63,7 +63,7 @@ class VoxelGenerator():
                     model2.setTexture(ts, tex1)
                     model2.reparentTo(self.node_original) 
                 else:
-                    for i in xrange(0, self.level.getHeight( (x, y) )-1):
+                    for i in xrange(0, self.level.getHeight( (x, y) )):
                         if i == 0:
                             model = loader.loadModel('halfcube')
                             model.setPos(x, y, 0)
