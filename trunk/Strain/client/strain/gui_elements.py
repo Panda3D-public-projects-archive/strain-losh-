@@ -321,6 +321,7 @@ class GuiUnitInfo:
         self.all_icons[name].hide()
         
     def write(self, text):
+        text = ""
         self.label.setText(text)
         
     def redraw(self):
