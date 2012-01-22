@@ -30,7 +30,7 @@ def levelVisibilityDict( unit_list, level ):
             
             for unit in unit_list:
                 tmp_target['pos'] = (x,y)
-                if getLOSOnLevel( unit.__dict__, tmp_target, level):
+                if getLOSOnLevel( unit, tmp_target, level):
                     vis_dict[(x,y)] = 1
                     break
             
@@ -129,7 +129,7 @@ def canIMoveHere( unit, position, dx, dy, level, units ):
                 
     return True
 
-#TODO: krav: vidit jel treba bas units slat il semoze prek dynamicsa to pogeldat?
+
 def tileClearForMoving(unit, x, y, level):
     #check if the level is clear at that tile
     if level.getHeight( (x, y) ):
