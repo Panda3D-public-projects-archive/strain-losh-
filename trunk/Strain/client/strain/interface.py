@@ -297,7 +297,7 @@ class Interface(DirectObject.DirectObject):
         unit_default_HP = unit['default_hp']
         unit_default_AP = unit['default_ap']
         if unit_id not in self.unit_info:
-            self.unit_info[unit_id] = GuiUnitInfo(Point3(0, 0, 0.9)
+            self.unit_info[unit_id] = GuiUnitInfo(Point3(0, 0, 1.1)
                                                 , self.parent.sgm.unit_np_dict[unit_id].node
                                                 , unit_default_HP, unit_HP
                                                 , unit_default_AP, unit_AP)
