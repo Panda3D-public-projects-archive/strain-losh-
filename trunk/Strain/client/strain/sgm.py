@@ -6,12 +6,12 @@
 
 # panda3D imports
 from panda3d.core import TextNode, NodePath, VBase4, GeomNode, CardMaker, Texture#@UnresolvedImport
-from panda3d.core import ShadeModelAttrib, DirectionalLight, AmbientLight#@UnresolvedImport
+from panda3d.core import ShadeModelAttrib, DirectionalLight, AmbientLight, PointLight#@UnresolvedImport
 from panda3d.core import CollisionTraverser, CollisionRay, CollisionHandlerQueue, CollisionNode#@UnresolvedImport
 from panda3d.core import CullBinManager, CullBinEnums#@UnresolvedImport
 from panda3d.core import LineSegs, TransparencyAttrib, ColorBlendAttrib#@UnresolvedImport
 from panda3d.core import SceneGraphAnalyzerMeter#@UnresolvedImport
-from direct.interval.IntervalGlobal import Sequence, LerpColorScaleInterval#@UnresolvedImport
+from direct.interval.IntervalGlobal import Sequence, LerpColorScaleInterval, LerpColorInterval, Wait#@UnresolvedImport
 
 
 # strain related imports
@@ -54,6 +54,7 @@ class SceneGraph():
         
         self.tile_cards = []
         self.tile_cards_np = render.attachNewNode('tile_cards_np')
+        self.tile_cards_np.setLightOff()
         
         # Create main update task
         taskMgr.add(self.animTask, "anim_task")  
@@ -75,7 +76,7 @@ class SceneGraph():
         self.level_mesh.createLevel()
         self.comp_inited['level'] = True
         
-        grid_tex = loader.loadTexture('grid.png')
+        grid_tex = loader.loadTexture('move.png')
         #grid_tex.setMagfilter(Texture.FTLinearMipmapLinear)
         #grid_tex.setMinfilter(Texture.FTLinearMipmapLinear)
         for i in xrange(0, level.maxX):
@@ -128,18 +129,25 @@ class SceneGraph():
         shade = ShadeModelAttrib.make(ShadeModelAttrib.MSmooth)
         render.setAttrib(shade)
         dlight1 = DirectionalLight("dlight1")
-        dlight1.setColor(VBase4(1.0, 1.0, 1.0, 1.0))
+        dlight1.setColor(VBase4(0.8, 0.8, 0.8, 1.0))
+        #dlight1.setShadowCaster(True, 512, 512)
         dlnp1 = render.attachNewNode(dlight1)
-        dlnp1.setPos(10, 10, 5)
-        dlnp1.lookAt(10, 10, utils.GROUND_LEVEL)
-        #a = loader.loadModel("camera")
-        #a.reparentTo(dlnp1)
-        #a.setScale(0.4, 0.4, 0.4)
+        dlnp1.setPos(5, 5, 3)
+        dlnp1.lookAt(1, 1, 0)
         render.setLight(dlnp1)
+        """
+        plight = PointLight('plight')
+        plight.setColor(VBase4(0.5, 0.5, 0.5, 1.2))
+        plnp = render.attachNewNode(plight)
+        plnp.setPos(5, 5, 1.5)
+        render.setLight(plnp)
+        a = loader.loadModel("camera")
+        a.reparentTo(plnp)
+        a.setScale(0.4, 0.4, 0.4)
+        """
         alight = AmbientLight("alight")
-        alight.setColor(VBase4(0.7, 0.7, 0.7, 1.0))
+        alight.setColor(VBase4(0.4, 0.4, 0.4, 1.0))
         alnp = render.attachNewNode(alight)
-        alnp.setPos(10, 10, 2)
         render.setLight(alnp) 
         self.comp_inited['lights'] = True
         
@@ -245,6 +253,7 @@ class SceneGraph():
             unit['move_dict'] = getMoveDict(unit, self.parent.level, self.parent.units)
             move_dict = unit['move_dict']
             self.movetext_np = NodePath("movetext_np")
+            self.movetext_np.setLightOff()
             for tile in move_dict:
                 text = TextNode('node name')
                 text.setText( "%s" % move_dict[tile])
@@ -254,7 +263,7 @@ class SceneGraph():
                 textNodePath.setColor(1, 1, 1)
                 textNodePath.setScale(0.4, 0.4, 0.4)
                 textNodePath.setBillboardPointEye()
-                self.tile_cards[tile[0]][tile[1]].setColor(0,1,0)
+                self.tile_cards[tile[0]][tile[1]].setColor(1, 1, 0.4)
                 self.tile_cards[tile[0]][tile[1]].reparentTo(self.tile_cards_np)                  
             self.movetext_np.reparentTo(self.node)  
 
@@ -283,6 +292,7 @@ class SceneGraph():
                     unit_model.marker.setTexture(loader.loadTexture('target.png'))
                     unit_model.marker.setColor(1,0,0)
                     unit_model.showMarker()
+                    unit_model.startMarkerInterval()
         #i = Sequence(LerpColorScaleInterval(self.enemyunittiles_np, 2, (1, 0, 0, 0.1)),
         #             LerpColorScaleInterval(self.enemyunittiles_np, 0.5, (1, 0, 0, 0.7)))
         #i.loop()
@@ -295,6 +305,8 @@ class SceneGraph():
         for u in self.parent.units.itervalues():
             if self.parent.isThisEnemyUnit(u['id']):
                 self.parent.sgm.unit_np_dict[u['id']].hideMarker()   
+                self.parent.sgm.unit_np_dict[u['id']].stopMarkerInterval()
+
             
     def setBullet(self, b):
         b.reparentTo(render)
