@@ -2,6 +2,7 @@ from direct.actor.Actor import Actor
 from panda3d.core import Vec4, Point4, Point3, Point2, NodePath, CardMaker#@UnresolvedImport
 from panda3d.core import PointLight#@UnresolvedImport
 from panda3d.core import TransparencyAttrib, AntialiasAttrib#@UnresolvedImport
+from direct.interval.IntervalGlobal import Sequence, LerpColorScaleInterval, LerpColorInterval, Wait#@UnresolvedImport
 import random
 import utils
     
@@ -71,6 +72,17 @@ class UnitModel:
         self.marker.setBin('highlight', 25)
         self.marker.setCollideMask(0)
         self.marker.detachNode()
+        self.marker.setLightOff()
+        self.marker_interval = Sequence(LerpColorInterval(self.marker, 0.5, (1, 0, 0, 1)),
+                                        Wait(0.5),
+                                        LerpColorInterval(self.marker, 0.5, (0, 0, 0, 1)),
+                                        )        
+        
+    def startMarkerInterval(self):
+        self.marker_interval.loop()
+        
+    def stopMarkerInterval(self):
+        self.marker_interval.pause()
     
     def showMarker(self):
         self.marker.reparentTo(self.node)

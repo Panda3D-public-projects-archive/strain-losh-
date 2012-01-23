@@ -83,11 +83,16 @@ class Net():
         elif msg[0] == UNIT:
             self.parent._message_in_process = True            
             unit = msg[1]
+            old_x = self.parent.units[unit['id']]['pos'][0]
+            old_y = self.parent.units[unit['id']]['pos'][1]
             self.parent.refreshUnit(unit)
             if self.parent.sel_unit_id == unit['id']:
                 self.parent.interface.refreshUnitData( unit['id'] )
                 self.parent.sgm.showUnitAvailMove( unit['id'] )
                 self.parent.sgm.showVisibleEnemies(unit['id'])
+                if unit['pos'][0] != old_x or unit['pos'][1] != old_y:
+                    self.parent.sgm.level_mesh.setInvisibleTiles(self.parent.getInvisibleTiles())
+                    self.parent.sgm.level_mesh.switchNodes()   
                 #self.parent.sgm.playUnitStateAnim( unit['id'] )
             self.parent._message_in_process = False
         #========================================================================

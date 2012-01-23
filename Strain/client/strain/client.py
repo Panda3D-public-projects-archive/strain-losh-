@@ -21,6 +21,7 @@ from camera import Camera
 from net import Net
 from interface import Interface
 import utils as utils
+from strain.share import *
 
 #========================================================================
 #
@@ -205,7 +206,7 @@ class Client(DirectObject):
         self.sgm.hideUnitAvailMove()
         self.sgm.hideVisibleEnemies()
     
-    def afterAnimHook(self):
+    def afterAnimHook(self):     
         self._anim_in_process = False
         self._message_in_process = False
         
@@ -484,10 +485,7 @@ class Client(DirectObject):
         s.start()
         
     def handleNewTurn(self):
-        if self.turn_player == 'blood angels':
-            self.sgm.level_mesh.setFloorTex('RED')
-        else:
-            self.sgm.level_mesh.setFloorTex('BLUE')
+        self.sgm.level_mesh.setInvisibleTiles(self.getInvisibleTiles())
         self.sgm.level_mesh.switchNodes()
         text = TextNode('new turn node')
         text.setText("TURN: "+self.turn_player)
@@ -504,6 +502,13 @@ class Client(DirectObject):
                      Func(self.afterAnimHook)
                      )
         s.start()
+        
+    def getInvisibleTiles(self):
+        a = []
+        for u in self.units:
+            if self.isThisMyUnit(u):
+                a.append(self.units[u])
+        return levelVisibilityDict(a, self.level)
 
 #========================================================================
 #

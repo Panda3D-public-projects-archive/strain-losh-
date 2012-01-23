@@ -220,6 +220,7 @@ class Interface(DirectObject.DirectObject):
             m.setPos(pos)
             m.setH(h)
             m.reparentTo(self.turn_np)
+            m.setLightOff()
             self.turn_arrow_dict[key] = m
         
     def removeTurnArrows(self):

@@ -268,6 +268,7 @@ class GuiUnitInfo:
                                   , frameSize = (-0.5, 0.5, 0, -0.5)
                                   , parent = parent )
         self.frame.setBillboardPointEye()
+        self.frame.setLightOff()
         fixedWidthFont = loader.loadFont(GUI_FONT)#@UndefinedVariable        
         #fixedWidthFont.setPixelsPerUnit(60)
         #fixedWidthFont.setRenderMode(fontt.RMSolid)
