@@ -3,7 +3,7 @@
 #############################################################################
 
 # python imports
-
+import time
 
 # panda3D imports
 from panda3d.core import TextNode, NodePath, Point2, Point3#@UnresolvedImport
