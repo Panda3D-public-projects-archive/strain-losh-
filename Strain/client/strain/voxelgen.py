@@ -3,7 +3,7 @@
 #############################################################################
 
 # python imports
-from time import time
+import time
 
 # panda3D imports
 from panda3d.core import Texture, NodePath, TextureStage
@@ -23,8 +23,8 @@ class VoxelGenerator():
         self.level = level
         self.node_original = NodePath("voxgen_original")
         self.node_floor_original = NodePath("voxgen_floor_original")
-        self.node_usable = None
-        self.node_floor_usable = None
+        self.node_usable = NodePath("voxgen_usable")
+        self.node_floor_usable = NodePath("voxgen_floor_usable")
         self.floor_tile_dict = {}
         self.wall_tile_dict = {}
 
@@ -85,39 +85,33 @@ class VoxelGenerator():
                             self.wall_tile_dict[(x, y)].append(model2)
         self.node_floor_original.setTexture(self.tex3)            
         self.switchNodes()              
-    
-    def makeFloorCopy(self):
-        if self.node_floor_usable != None:
-            self.node_floor_usable.removeNode()
-        np = NodePath("new")
-        np = self.node_floor_original.copyTo(self.parent.level_node)
-        return np
-    
-    def makeCopy(self):
-        if self.node_usable != None:
-            self.node_usable.removeNode()
-        np = NodePath("new")
-        np = self.node_original.copyTo(self.parent.level_node)
-        return np
-    
-    def flattenCopy(self, np):
-        np.clearModelNodes()
-        np.flattenStrong()
-    
-    def switchNodes(self):
-        np = self.makeCopy()
-        self.flattenCopy(np)
-        self.node_usable = np
         
-        np2 = self.makeFloorCopy()
-        self.flattenCopy(np2)
-        self.node_floor_usable = np2
+    def switchNodes(self):
+        np = self.node_original.copyTo(NodePath())
+        np.clearModelNodes()
+        loader.asyncFlattenStrong(np, inPlace=False, callback = self.callbackFlatten)
+        
+        np2 = self.node_floor_original.copyTo(NodePath())
+        np2.clearModelNodes()
+        loader.asyncFlattenStrong(np2, inPlace=False, callback = self.callbackFlattenFloor)
+        
+    def callbackFlatten(self, node):
+        self.node_usable.removeNode()
+        self.node_usable = node
+        self.node_usable.reparentTo(self.parent.level_node)
+
+        
+    def callbackFlattenFloor(self, node):      
+        self.node_floor_usable.removeNode()
+        self.node_floor_usable = node
+        self.node_floor_usable.reparentTo(self.parent.level_node)
         
     def setInvisibleTiles(self, tile_dict):
         for invisible_tile in tile_dict:
             if tile_dict[invisible_tile] == 0:
                 self.floor_tile_dict[invisible_tile].setTexture(self.tex_floor_transparent)
                 self.floor_tile_dict[invisible_tile].setTransparency(TransparencyAttrib.MAlpha)
+                
                 #if self.wall_tile_dict.has_key(invisible_tile):
                 #    for i in self.wall_tile_dict[invisible_tile]:
                 #        i.setTexture(self.tex_floor_transparent)
