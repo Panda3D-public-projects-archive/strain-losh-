@@ -2,6 +2,7 @@ from direct.actor.Actor import Actor
 from panda3d.core import Vec4, Point4, Point3, Point2, NodePath, CardMaker#@UnresolvedImport
 from panda3d.core import PointLight#@UnresolvedImport
 from panda3d.core import TransparencyAttrib, AntialiasAttrib#@UnresolvedImport
+from panda3d.core import CollisionTube, CollisionNode, CollisionPolygon, CollisionSphere#@UnresolvedImport
 from direct.interval.IntervalGlobal import Sequence, LerpColorScaleInterval, LerpColorInterval, Wait#@UnresolvedImport
 import random
 import utils
@@ -76,7 +77,23 @@ class UnitModel:
         self.marker_interval = Sequence(LerpColorInterval(self.marker, 0.5, (1, 0, 0, 1)),
                                         Wait(0.5),
                                         LerpColorInterval(self.marker, 0.5, (0, 0, 0, 1)),
-                                        )        
+                                        )  
+        
+        
+        cquad1 = CollisionPolygon(Point3(-0.5, -0.5, 0), Point3(-0.5, -0.5, 1), Point3(-0.5, 0.5, 1), Point3(-0.5, 0.5, 0))
+        cquad2 = CollisionPolygon(Point3(0.5, -0.5, 0), Point3(0.5, -0.5, 1), Point3(-0.5, -0.5, 1), Point3(-0.5, -0.5, 0))
+        cquad3 = CollisionPolygon(Point3(0.5, 0.5, 0), Point3(0.5, 0.5, 1), Point3(0.5, -0.5, 1), Point3(0.5, -0.5, 0))
+        cquad4 = CollisionPolygon(Point3(-0.5, 0.5, 0), Point3(-0.5, 0.5, 1), Point3(0.5, 0.5, 1), Point3(0.5, 0.5, 0))
+        cquad5 = CollisionPolygon(Point3(0.5, -0.5, 1), Point3(0.5, 0.5, 1), Point3(-0.5, 0.5, 1), Point3(-0.5, -0.5, 1))
+        
+        #cs = CollisionSphere(0, 0, 0.5, 0.5)
+        cnodePath = self.node.attachNewNode(CollisionNode('cnode'))
+        cnodePath.node().addSolid(cquad1)
+        cnodePath.node().addSolid(cquad2)
+        cnodePath.node().addSolid(cquad3)
+        cnodePath.node().addSolid(cquad4)  
+        cnodePath.node().addSolid(cquad5)    
+        #cnodePath.show()
         
     def startMarkerInterval(self):
         self.marker_interval.loop()
@@ -126,7 +143,7 @@ class UnitModel:
         tile_pos = self.getHeadingTile(heading)
         dest_node = NodePath("dest_node")
         dest_node.setPos(render, tile_pos.getX()+0.5, tile_pos.getY()+0.5, utils.GROUND_LEVEL)
-        self.node.lookAt(dest_node)
+        self.model.lookAt(dest_node)
         
     def cleanup(self):
         self.model.cleanup()

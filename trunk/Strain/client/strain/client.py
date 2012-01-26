@@ -72,6 +72,14 @@ class Client(DirectObject):
         # Turn number and player on turn
         self.turn_number = 0
         self.turn_player = None
+        
+        self.num = 0
+        taskMgr.add(self.clientTask, 'clientTask')#@UndefinedVariable
+    
+    def clientTask(self, task):
+        #self.num += 1
+        #print self.num
+        return task.cont
     
     def newTurn(self):
         self.deselectUnit()
@@ -323,7 +331,7 @@ class Client(DirectObject):
         # Model heading is different than movement heading, first create animation that turns model to his destination
         i_h = None
         if end_h != start_h:
-            i_h = unit_model.node.quatInterval(0.2, hpr = Point3(end_h, 0, 0), startHpr = Point3(start_h, 0, 0))
+            i_h = unit_model.model.quatInterval(0.2, hpr = Point3(end_h, 0, 0), startHpr = Point3(start_h, 0, 0))
         i = unit_model.node.posInterval(0.5, end_pos, start_pos)
         duration += 0.5
         if i_h:
@@ -342,7 +350,7 @@ class Client(DirectObject):
             end_h = dummy_start.getH(render)
         else:
             end_h = utils.getHeadingAngle(heading)
-        interval = unit_model.node.quatInterval(0.2, hpr = Point3(end_h, 0, 0), startHpr = Point3(start_h, 0, 0))
+        interval = unit_model.model.quatInterval(0.2, hpr = Point3(end_h, 0, 0), startHpr = Point3(start_h, 0, 0))
         duration = 0.2
         return interval, duration, start_pos, end_h          
     
@@ -508,7 +516,8 @@ class Client(DirectObject):
         for u in self.units:
             if self.isThisMyUnit(u):
                 a.append(self.units[u])
-        return levelVisibilityDict(a, self.level)
+        l = levelVisibilityDict(a, self.level)
+        return l
 
 #========================================================================
 #
