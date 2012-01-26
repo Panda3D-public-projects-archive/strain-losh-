@@ -82,7 +82,7 @@ class VoxelGenerator():
                             model.setPos(x, y, i-1+utils.GROUND_LEVEL)
                             model.setTexture(ts, self.tex2)
                             model.reparentTo(self.node_original) 
-                            self.wall_tile_dict[(x, y)].append(model2)
+                            self.wall_tile_dict[(x, y)].append(model)
         self.node_floor_original.setTexture(self.tex3)            
         self.switchNodes()              
         
@@ -112,13 +112,19 @@ class VoxelGenerator():
                 self.floor_tile_dict[invisible_tile].setTexture(self.tex_floor_transparent)
                 self.floor_tile_dict[invisible_tile].setTransparency(TransparencyAttrib.MAlpha)
                 
-                #if self.wall_tile_dict.has_key(invisible_tile):
-                #    for i in self.wall_tile_dict[invisible_tile]:
-                #        i.setTexture(self.tex_floor_transparent)
-                #        i.setTransparency(TransparencyAttrib.MAlpha)
+                if self.wall_tile_dict.has_key(invisible_tile):
+                    for i in self.wall_tile_dict[invisible_tile]:
+                        i.setTexture(self.tex_floor_transparent)
+                        i.setTransparency(TransparencyAttrib.MAlpha)
             else:
                 self.floor_tile_dict[invisible_tile].setTexture(self.tex3)
                 self.floor_tile_dict[invisible_tile].setTransparency(TransparencyAttrib.MNone)              
+    
+                if self.wall_tile_dict.has_key(invisible_tile):
+                    for i in self.wall_tile_dict[invisible_tile]:
+                        #print i
+                        i.setTexture(self.tex1)
+                        i.setTransparency(TransparencyAttrib.MNone)
     
     def setFloorTex(self, color):
         return
