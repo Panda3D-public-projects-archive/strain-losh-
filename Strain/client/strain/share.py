@@ -21,20 +21,33 @@ def levelVisibilityDict( unit_list, level ):
     
     vis_dict = {}
     
-    tmp_target = { 'pos':(0,0), 'height':1 }
-    
     for x in xrange(level.maxX):
         for y in xrange(level.maxY):
             
             vis_dict[(x,y)] = 0
             
             for unit in unit_list:
-                tmp_target['pos'] = (x,y)
-                if getLOSOnLevel( unit, tmp_target, level):
+                if getLOSOnLevel2( unit, (x,y), level):
                     vis_dict[(x,y)] = 1
                     break
             
     return vis_dict            
+
+
+def getLOSOnLevel2( beholder_dict, pos, level ):
+    """0-cant see, 1-partial, 2-full"""
+    
+    if beholder_dict['pos'] == pos:
+        return 2
+    
+    b_pos = beholder_dict['pos'] + ( ( level.getHeight( beholder_dict['pos'] ) + beholder_dict['height'] -1 ) , )         
+    
+    t1 = pos + ( ( level.getHeight( pos ) + 1 ) , )        
+    if _getTiles3D( b_pos, t1, level ):
+        return 1
+    
+    return 0
+
 
 
 def getMoveDict( unit, level, units, returnOriginTile = False ):    
