@@ -13,6 +13,7 @@ from direct.showbase.DirectObject import DirectObject
 from direct.fsm import FSM
 from direct.gui.DirectGui import DirectButton, DirectEntry, DirectLabel
 from direct.gui.OnscreenText import OnscreenText
+from pandac.PandaModules import PStatClient 
 
 # strain related imports
 from strain.client import Client
@@ -39,6 +40,8 @@ class App():
         hdlr.setFormatter(formatter)
         self.logger.addHandler(hdlr) 
         self.logger.setLevel(logging.DEBUG)
+            
+        #PStatClient.connect()
         
         #setup screen
         self.screen = Screen(self, (800,600))
@@ -61,6 +64,7 @@ class AppFSM(FSM.FSM):
     def __init__(self, parent, name):
         FSM.FSM.__init__(self, name)
         self.parent = parent
+
 
     def enterLoginScreen(self):
         base.win.setClearColor(VBase4(0, 0, 0, 0))
