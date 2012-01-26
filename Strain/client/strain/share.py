@@ -23,8 +23,11 @@ def levelVisibilityDict( unit_list, level ):
     
     for x in xrange(level.maxX):
         for y in xrange(level.maxY):
-            
             vis_dict[(x,y)] = 0
+            
+            if level.getHeight( (x,y) ):
+                vis_dict[(x,y)] = 1
+                continue
             
             for unit in unit_list:
                 if getLOSOnLevel2( unit, (x,y), level):
