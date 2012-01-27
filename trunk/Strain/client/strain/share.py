@@ -4,6 +4,7 @@ Created on 19.12.2011.
 @author: krav
 '''
 import math
+import time
 
 
 
@@ -19,37 +20,129 @@ DYNAMICS_UNIT = 1
 
 def levelVisibilityDict( unit_list, level ):
     
-    vis_dict = {}
     
+    vis_dict = {}
     for x in xrange(level.maxX):
         for y in xrange(level.maxY):
             vis_dict[(x,y)] = 0
-            
-            if level.getHeight( (x,y) ):
-                vis_dict[(x,y)] = 1
-                continue
-            
-            for unit in unit_list:
-                if getLOSOnLevel2( unit, (x,y), level):
-                    vis_dict[(x,y)] = 1
-                    break
+    
+    
+
+    for unit in unit_list:            
+        for x in xrange(level.maxX):
+            for y in xrange(level.maxY):
+                x_y = (x,y)
+                
+                if vis_dict[x_y] == 1:
+                    continue
+                
+                if level.getHeight( x_y ):
+                    vis_dict[x_y] = 1
+                    continue
+                
+                tiles = tilesForVisibility( unit, (x,y), level)
+                    
+                    
+                if tiles:
+                    for t in tiles:
+                        vis_dict[t] = 1
+                    continue
+          
+        break
             
     return vis_dict            
 
 
-def getLOSOnLevel2( beholder_dict, pos, level ):
+def tilesForVisibility( beholder_dict, pos, level ):
     """0-cant see, 1-partial, 2-full"""
     
-    if beholder_dict['pos'] == pos:
-        return 2
+    t2 = beholder_dict['pos']          
+    t1 = pos        
+
+    #we see ourself
+    if( t1 == t2 ):
+        return [ t1 ]
     
-    b_pos = beholder_dict['pos'] + ( ( level.getHeight( beholder_dict['pos'] ) + beholder_dict['height'] -1 ) , )         
+    x1, y1 = t1
+    x2, y2 = t2
     
-    t1 = pos + ( ( level.getHeight( pos ) + 1 ) , )        
-    if _getTiles3D( b_pos, t1, level ):
-        return 1
+    #if one of our end points is not empty space, return false
+    if level.opaque( x1, y1, 1 ) or level.opaque( x2, y2, 1 ):
+        return False
     
-    return 0
+    absx0 = math.fabs(x2 - x1);
+    absy0 = math.fabs(y2 - y1);
+
+    list_visible_tiles = [ t1 ]
+    rev = False
+    
+    if( absx0 > absy0 ):
+        if x2 < x1:
+            x1, y1 = t2
+            x2, y2 = t1
+            list_visible_tiles[0] = t2
+            rev = True
+    else:
+        if y2 < y1:
+            x1, y1 = t2
+            x2, y2 = t1
+            list_visible_tiles[0] = t2
+            rev = True
+    
+    
+    x = int( x1 );
+    y = int( y1 );
+
+        
+    if( absx0 > absy0 ):
+        sgny0 = signum( y2 - y1 );
+        y_x = absy0/absx0            
+        D = y_x -0.5
+        
+        for i in xrange( int( absx0 ) ): #@UnusedVariable
+            lastx, lasty = x, y
+            
+            if( D > 0 ):
+                y += sgny0
+                D -= 1
+
+            x += 1
+            D += y_x
+            
+            #=========================TEST==========================================
+            if level.getHeight( (x,y) ) <= 1:
+                list_visible_tiles.append( (x, y) )
+            else:
+                return False
+                break
+            
+    #//(y0 >= x0)            
+    else:
+        sgnx0 = signum( x2 - x1 );
+        x_y = absx0/absy0
+        D = x_y -0.5;
+        
+        for i in xrange( int( absy0 ) ): #@UnusedVariable
+            lastx, lasty = x, y
+    
+            if( D > 0 ):
+                x += sgnx0
+                D -= 1.0
+
+            y += 1
+            D += x_y
+            
+            #=========================TEST==========================================
+            if level.getHeight( (x,y) ) <= 1:
+                list_visible_tiles.append( (x, y) )
+            else:
+                return False
+                break
+
+    return list_visible_tiles
+
+            
+
 
 
 
