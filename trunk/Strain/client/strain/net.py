@@ -92,8 +92,8 @@ class Net():
                 self.parent.sgm.showUnitAvailMove( unit['id'] )
                 self.parent.sgm.showVisibleEnemies(unit['id'])
                 if unit['pos'][0] != old_x or unit['pos'][1] != old_y:
-                    self.parent.sgm.level_mesh.setInvisibleTiles(self.parent.getInvisibleTiles())
-                    self.parent.sgm.level_mesh.switchNodes()
+                    m = self.parent.getInvisibleTiles()
+                    self.parent.sgm.level_mesh.setInvisibleTiles(m)
                 #self.parent.sgm.playUnitStateAnim( unit['id'] )
             self.parent._message_in_process = False
         #========================================================================

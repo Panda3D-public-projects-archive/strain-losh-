@@ -56,9 +56,6 @@ class SceneGraph():
         self.tile_cards_np = render.attachNewNode('tile_cards_np')
         self.tile_cards_np.setLightOff()
         
-        # Create main update task
-        taskMgr.add(self.animTask, "anim_task")  
-        
         #meter = SceneGraphAnalyzerMeter('meter', render.node())
         #meter.setupWindow(base.win)      
         
@@ -333,21 +330,7 @@ class SceneGraph():
     
     def deleteTurnNode(self, d):
         d.removeNode()
-    
-    def animTask(self, task):
-        """Task to animate draw units while they are idling."""
-        """
-        dt = globalClock.getDt()#@UndefinedVariable
-        for unit in self.unit_np_dict.itervalues():
-            if self.parent.isUnitAlive(int(unit.id)) == True:
-                unit.passtime += dt
-    
-                if unit.passtime > unit.idletime:
-                    unit.model.play('idle_stand01')
-                    unit.passtime = 0
-                    unit.setIdleTime()
-        """    
-        return task.cont
+
     
     """
     def initOutlineShader(self):  

@@ -494,7 +494,6 @@ class Client(DirectObject):
         
     def handleNewTurn(self):
         self.sgm.level_mesh.setInvisibleTiles(self.getInvisibleTiles())
-        self.sgm.level_mesh.switchNodes()
         text = TextNode('new turn node')
         text.setText("TURN: "+self.turn_player)
         textnp = NodePath("textnp")
