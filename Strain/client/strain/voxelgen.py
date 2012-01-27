@@ -109,27 +109,24 @@ class VoxelGenerator():
     def setInvisibleTiles(self, tile_dict):
         for invisible_tile in tile_dict:
             if tile_dict[invisible_tile] == 0:
+                self.floor_tile_dict[invisible_tile].clearTexture()
                 self.floor_tile_dict[invisible_tile].setTexture(self.tex_floor_transparent)
                 self.floor_tile_dict[invisible_tile].setTransparency(TransparencyAttrib.MAlpha)
-                
+                """
                 if self.wall_tile_dict.has_key(invisible_tile):
                     for i in self.wall_tile_dict[invisible_tile]:
                         i.setTexture(self.tex_floor_transparent)
                         i.setTransparency(TransparencyAttrib.MAlpha)
+                """
             else:
+                self.floor_tile_dict[invisible_tile].clearTexture()
                 self.floor_tile_dict[invisible_tile].setTexture(self.tex3)
                 self.floor_tile_dict[invisible_tile].setTransparency(TransparencyAttrib.MNone)              
-    
+                """
                 if self.wall_tile_dict.has_key(invisible_tile):
                     for i in self.wall_tile_dict[invisible_tile]:
                         #print i
                         i.setTexture(self.tex1)
                         i.setTransparency(TransparencyAttrib.MNone)
-    
-    def setFloorTex(self, color):
-        return
-        if color == 'RED':
-            self.node_floor_original.setTexture(self.tex_floor_r)
-        else:
-            self.node_floor_original.setTexture(self.tex_floor_b)
+                """
         
