@@ -274,8 +274,7 @@ class EngMsg:
                                                                       
     @staticmethod
     def shootMsg( shoot_actions, source = None):
-        EngMsg._sendMsg( (SHOOT, shoot_actions), source )
-        print shoot_actions 
+        EngMsg._sendMsg( (SHOOT, shoot_actions), source ) 
                                                                       
     @staticmethod
     def chat( msg, sender, source = None):
