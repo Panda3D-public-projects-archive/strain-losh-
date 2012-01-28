@@ -42,13 +42,11 @@ def levelVisibilityDict( unit_list, level ):
                 
                 tiles = tilesForVisibility( unit, (x,y), level)
                     
-                    
                 if tiles:
                     for t in tiles:
                         vis_dict[t] = 1
                     continue
           
-        break
             
     return vis_dict            
 
@@ -65,29 +63,22 @@ def tilesForVisibility( beholder_dict, pos, level ):
     
     x1, y1 = t1
     x2, y2 = t2
-    
-    #if one of our end points is not empty space, return false
-    if level.opaque( x1, y1, 1 ) or level.opaque( x2, y2, 1 ):
-        return False
-    
+        
     absx0 = math.fabs(x2 - x1);
     absy0 = math.fabs(y2 - y1);
 
     list_visible_tiles = [ t1 ]
-    rev = False
     
     if( absx0 > absy0 ):
         if x2 < x1:
             x1, y1 = t2
             x2, y2 = t1
             list_visible_tiles[0] = t2
-            rev = True
     else:
         if y2 < y1:
             x1, y1 = t2
             x2, y2 = t1
             list_visible_tiles[0] = t2
-            rev = True
     
     
     x = int( x1 );
@@ -110,11 +101,16 @@ def tilesForVisibility( beholder_dict, pos, level ):
             D += y_x
             
             #=========================TEST==========================================
-            if level.getHeight( (x,y) ) <= 1:
-                list_visible_tiles.append( (x, y) )
-            else:
+            if level.getHeight( (x,y) ) > 1:
                 return False
-                break
+            
+            if lastx != x and lasty != y:
+                if level.getHeight( (lastx, y) ) > 1 and level.getHeight( (x, lasty) ) > 1:
+                    return False 
+            
+            list_visible_tiles.append( (x, y) )
+
+
             
     #//(y0 >= x0)            
     else:
@@ -133,11 +129,16 @@ def tilesForVisibility( beholder_dict, pos, level ):
             D += x_y
             
             #=========================TEST==========================================
-            if level.getHeight( (x,y) ) <= 1:
-                list_visible_tiles.append( (x, y) )
-            else:
+            if level.getHeight( (x,y) ) > 1:
                 return False
-                break
+            
+            if lastx != x and lasty != y:
+                if level.getHeight( (lastx, y) ) > 1 and level.getHeight( (x, lasty) ) > 1:
+                    return False 
+            
+            list_visible_tiles.append( (x, y) )
+
+
 
     return list_visible_tiles
 

@@ -515,7 +515,9 @@ class Client(DirectObject):
         for u in self.units:
             if self.isThisMyUnit(u):
                 a.append(self.units[u])
+        t = time.clock()
         l = levelVisibilityDict(a, self.level)
+        print "timer:::", (time.clock()-t)*1000
         return l
 
 #========================================================================
