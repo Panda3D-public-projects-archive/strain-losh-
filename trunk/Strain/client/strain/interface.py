@@ -39,6 +39,7 @@ HEADING_SE        = 8
 
 class Interface(DirectObject.DirectObject):
     buttons = {}
+    aspect = 0
     def __init__(self, parent):
         # Keep pointer to the GraphicsEngine parent class
         self.parent = parent
@@ -54,7 +55,8 @@ class Interface(DirectObject.DirectObject):
         self.off_model = None
         self.selected_unit_tile = None
         
-        self.movetext_np = None       
+        self.movetext_np = None    
+        self.panel = None   
         
         b=OnscreenImage(parent=render2dp, image="galaxy1.jpg") #@UndefinedVariable
         #base.cam.node().getDisplayRegion(0).setSort(20)
@@ -83,27 +85,27 @@ class Interface(DirectObject.DirectObject):
     
     def init_gui(self):
         wp = base.win.getProperties() #@UndefinedVariable
-        aspect = float(wp.getXSize()) / wp.getYSize()
+        self.aspect = float(wp.getXSize()) / wp.getYSize()
         plane = loader.loadModel('plane')#@UndefinedVariable
         plane.setScale(2)
         plane.flattenLight()
         
         self.unit_card = GuiCard(0.19, 0.215, 0, None, "bottomleft", Point4(0.2, 0.2, 0.2, 0.8))
-        self.deselect_button = GuiButton2("bottom", Point3(0.0, 0, -0.2), aspect, plane, "deselect_unit")
+        self.deselect_button = GuiButton2("bottom", Point3(0.0, 0, -0.2), self.aspect, plane, "deselect_unit")
         #self.punit_button = GuiButton2("top", Point3(0.0, 0, -0.3), aspect, plane, "prev_unit")
-        self.nunit_button = GuiButton2("bottom", Point3(0.0, 0, -0.09), aspect, plane, "next_unit")
-        self.endturn_button = GuiButton2("right", Point3(-0.1, 0, 0.24), aspect, plane, "end_turn")
-        self.action_a = GuiButton2("right", Point3(-0.1, 0, 0.13), aspect, plane, "empty")
-        self.action_b = GuiButton2("right", Point3(-0.1, 0, 0.02), aspect, plane, "empty")
-        self.action_c = GuiButton2("right", Point3(-0.1, 0, -0.09), aspect, plane, "empty")
-        self.action_d = GuiButton2("right", Point3(-0.1, 0, -0.2), aspect, plane, "empty")
+        self.nunit_button = GuiButton2("bottom", Point3(0.0, 0, -0.09), self.aspect, plane, "next_unit")
+        self.endturn_button = GuiButton2("right", Point3(-0.1, 0, 0.24), self.aspect, plane, "end_turn")
+        self.action_a = GuiButton2("right", Point3(-0.1, 0, 0.13), self.aspect, plane, "empty")
+        self.action_b = GuiButton2("right", Point3(-0.1, 0, 0.02), self.aspect, plane, "empty")
+        self.action_c = GuiButton2("right", Point3(-0.1, 0, -0.09), self.aspect, plane, "empty")
+        self.action_d = GuiButton2("right", Point3(-0.1, 0, -0.2), self.aspect, plane, "empty")
         
-        self.overwatch = GuiButton2("bottom", Point3(1.5+0.01, 0, -0.09), aspect, plane, "overwatch")
-        self.set_up = GuiButton2("bottom", Point3(1.6+0.02, 0, -0.09), aspect, plane, "set_up")
-        self.use = GuiButton2("bottom", Point3(1.7+0.03, 0, -0.09), aspect, plane, "use")
-        self.action_4 = GuiButton2("bottom", Point3(1.5+0.01, 0, -0.2), aspect, plane, "empty")
-        self.action_5 = GuiButton2("bottom", Point3(1.6+0.02, 0, -0.2), aspect, plane, "empty")
-        self.action_6 = GuiButton2("bottom", Point3(1.7+0.03, 0, -0.2), aspect, plane, "empty")
+        self.overwatch = GuiButton2("bottom", Point3(1.5+0.01, 0, -0.09), self.aspect, plane, "overwatch")
+        self.set_up = GuiButton2("bottom", Point3(1.6+0.02, 0, -0.09), self.aspect, plane, "set_up")
+        self.use = GuiButton2("bottom", Point3(1.7+0.03, 0, -0.09), self.aspect, plane, "use")
+        self.action_4 = GuiButton2("bottom", Point3(1.5+0.01, 0, -0.2), self.aspect, plane, "empty")
+        self.action_5 = GuiButton2("bottom", Point3(1.6+0.02, 0, -0.2), self.aspect, plane, "empty")
+        self.action_6 = GuiButton2("bottom", Point3(1.7+0.03, 0, -0.2), self.aspect, plane, "empty")
         
         self.buttons["deselect"] = self.deselect_button
         #self.buttons["prev_unit"] = self.punit_button
@@ -128,28 +130,32 @@ class Interface(DirectObject.DirectObject):
         self.hovered_gui = None
         
         self.unit_info = {}
+        self.unit_panel = {}
         
-        self.console = GuiConsole(base.a2dBottomLeft, 1.503, 0.8, aspect, "bottom")#@UndefinedVariable
+        self.console = GuiConsole(base.a2dBottomLeft, 1.503, 0.8, self.aspect, "bottom")#@UndefinedVariable
         self.stats = GuiTextFrame(Point3(0.3, 0, 0), 0.4, 0.22, 4, "bottom")#@UndefinedVariable
         self.stats2 = GuiTextFrame(Point3(0.7, 0, 0), 0.4, 0.22, 4, "bottom")#@UndefinedVariable
         self.stats3 = GuiTextFrame(Point3(1.1, 0, 0), 0.405, 0.22, 4, "bottom")#@UndefinedVariable
-        self.status_bar = GuiTextFrame(Point3(0, 0, 0), 2 * aspect, GUI_TOP_OFFSET, 1, "statusbar")#@UndefinedVariable
+        self.status_bar = GuiTextFrame(Point3(0, 0, 0), 2 * self.aspect, GUI_TOP_OFFSET, 1, "statusbar")#@UndefinedVariable
         
     def redraw(self):
         wp = base.win.getProperties() #@UndefinedVariable
-        aspect = float(wp.getXSize()) / wp.getYSize()
-        if aspect >= 1:
+        self.aspect = float(wp.getXSize()) / wp.getYSize()
+        if self.aspect >= 1:
             flag = "wide"
-            calc_aspect = aspect
-        elif aspect < 1 and aspect != 0:
+            calc_aspect = self.aspect
+        elif self.aspect < 1 and self.aspect != 0:
             flag = "tall"
-            calc_aspect = 1 / aspect
+            calc_aspect = 1 / self.aspect
    
         self.unit_card.redraw()
-        self.status_bar.redraw(aspect)
+        self.status_bar.redraw(self.aspect)
         for button in self.buttons.values():
             button.redraw(calc_aspect, flag)
-
+            
+        for panel in self.unit_panel.values():
+            panel.getBounds(calc_aspect)
+            
         self.hovered_gui = None
 
     def windowEvent(self, window=None):
@@ -308,25 +314,33 @@ class Interface(DirectObject.DirectObject):
                                                 , self.parent.sgm.unit_np_dict[unit_id].node
                                                 , unit_default_HP, unit_HP
                                                 , unit_default_AP, unit_AP)
+            self.unit_panel[unit_id] = GuiUnitPanel(self.aspect, unit_id
+                                                , unit_default_HP, unit_HP
+                                                , unit_default_AP, unit_AP)
         else:
             self.unit_info[unit_id].reparentTo(self.parent.sgm.unit_np_dict[unit_id].node)
             self.unit_info[unit_id].refreshBars(unit_HP, unit_AP)
             self.unit_info[unit_id].show()
+            self.unit_panel[unit_id].refreshBars(unit_HP, unit_AP)
         
         if self.parent.units[unit_id]['overwatch'] == True:
             self.overwatch.turnOn()
             self.unit_info[unit_id].showOverwatch()
+            self.unit_panel[unit_id].showOverwatch()
         else:
             self.overwatch.turnOff()
             self.unit_info[unit_id].hideOverwatch()
+            self.unit_panel[unit_id].hideOverwatch()
         
         if 'set_up' in self.parent.units[unit_id]:
             if self.parent.units[unit_id]['set_up'] == True:
                 self.set_up.turnOn()
                 self.unit_info[unit_id].showSetUp()
+                self.unit_panel[unit_id].showSetUp()
             else:
                 self.set_up.turnOff()
                 self.unit_info[unit_id].hideSetUp()
+                self.unit_panel[unit_id].hideSetUp()
                 
         self.unit_info[unit_id].write(unit_type)
                 
@@ -377,6 +391,8 @@ class Interface(DirectObject.DirectObject):
             self.console.unfocus()
         elif self.hovered_gui == self.console:
             self.console.focus()
+        elif self.hovered_gui == self.panel:
+            self.parent.selectUnit(self.panel.unit_id)
         else:
             self.console.unfocus()    
             pickedObj, pickedPoint = self.getMouseHoveredObject() 
@@ -514,6 +530,14 @@ class Interface(DirectObject.DirectObject):
             mpos = base.mouseWatcherNode.getMouse()#@UndefinedVariable
             hovering_over_something = False
             
+            for panel_iterator in self.unit_panel.values():
+                panel_iterator.frame.setAlphaScale(0.8)
+                if mpos.x >= panel_iterator.pos_min_x and mpos.x <= panel_iterator.pos_max_x and mpos.y >= panel_iterator.pos_min_y and mpos.y <= panel_iterator.pos_max_y:
+                    self.panel = panel_iterator
+                    self.hovered_gui = self.panel
+                    self.panel.frame.setAlphaScale(1)
+                    hovering_over_something = True
+                    self.console.hide()
             #Vidi me kako iteriram kroz dictionary
             for button in self.buttons.values():
                 button.frame.setAlphaScale(0.8)
