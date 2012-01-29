@@ -391,7 +391,7 @@ class Interface(DirectObject.DirectObject):
             self.console.unfocus()
         elif self.hovered_gui == self.console:
             self.console.focus()
-        elif self.hovered_gui == self.panel:
+        elif self.panel != None and self.hovered_gui == self.panel:
             self.parent.selectUnit(self.panel.unit_id)
         else:
             self.console.unfocus()    
