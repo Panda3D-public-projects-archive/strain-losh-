@@ -157,6 +157,10 @@ class GuiButton2:
             p = base.a2dBottomLeft.getPos()#@UndefinedVariable
             p.setX(p.getX() + self.offset.getX() + 0.05)
             p.setZ(p.getZ() + self.offset.getZ() + GUI_BOTTOM_OFFSET - 0.05)
+        elif self.hugpos == "right":
+            p = base.a2dBottomRight.getPos()#@UndefinedVariable
+            p.setX(p.getX() + self.offset.getX() + 0.05)
+            p.setZ(p.getZ() + self.offset.getZ() + GUI_BOTTOM_OFFSET - 0.05)
         self.frame.setPos(p)
         if flag == "wide":
             posx, posy = self.frame.getTightBounds()
@@ -204,7 +208,7 @@ class GuiTextFrame:
                                   , frameColor = color
                                   , scale = 1
                                   , frameSize = (0, h_size, 0, -v_size) )
-        
+        self.v_size = v_size
         self.hugpos = hugpos
         self.offset = offset
         
@@ -248,16 +252,21 @@ class GuiTextFrame:
             return
         self.frameOutputList[lineNumber - 1].setText(text)
         
-    def redraw(self):
+    def redraw(self, aspect):
         if self.hugpos == "top":
             p = base.a2dTopLeft.getPos()#@UndefinedVariable
             p.setX(p.getX() + self.offset.getX() + 0.05)
             p.setZ(p.getZ() + self.offset.getZ() - GUI_TOP_OFFSET - 0.05)
+            self.frame.setPos(p)
         elif self.hugpos == "bottom":
             p = base.a2dBottomLeft.getPos()#@UndefinedVariable
             p.setX(p.getX() + self.offset.getX() + 0.05)
             p.setZ(p.getZ() + self.offset.getZ() + GUI_BOTTOM_OFFSET - 0.05)
-        self.frame.setPos(p)
+            self.frame.setPos(p)
+        elif self.hugpos == "statusbar":
+            self.frame["frameSize"] = (0, 2*aspect, 0, -self.v_size)
+            self.frame.resetFrameSize()
+            
 
 class GuiUnitInfo:
     def __init__(self, offset, parent, default_hp, hp, default_ap, ap):
