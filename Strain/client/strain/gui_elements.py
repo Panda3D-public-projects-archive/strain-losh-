@@ -3,7 +3,7 @@ Created on 26. pro. 2011.
 
 @author: Vjeko
 '''
-from panda3d.core import NodePath, CardMaker, GeomNode, TransparencyAttrib, TextNode, TextFont#@UnresolvedImport
+from panda3d.core import NodePath, CardMaker, GeomNode, TransparencyAttrib, TextNode, TextFont, Point3#@UnresolvedImport
 from direct.gui.DirectGui import DirectFrame, DGG, DirectWaitBar
 from direct.gui.OnscreenText import OnscreenText
 from direct.gui.OnscreenImage import OnscreenImage
@@ -383,3 +383,93 @@ class GuiUnitInfo:
     def showSetUp(self):
         self.visible_icons["set_up"] = self.all_icons["set_up"]
         self.refreshIcons()
+
+class GuiUnitPanel:
+    def __init__(self, aspect, unit_id, default_hp, hp, default_ap, ap):
+        self.unit_id = unit_id
+        self.frameWidth = 0.48
+        self.frameHeight = 0.06
+        self.frame = DirectFrame(  # relief = DGG.FLAT
+                                   scale = 1
+                                  , frameSize = (0, self.frameWidth, 0, -self.frameHeight)
+                                  , frameColor = (0.2, 0.2, 0.2, 0.8)
+                                  , parent = base.a2dTopLeft )#@UndefinedVariable
+        self.pos = Point3(0, 0, -GUI_TOP_OFFSET-0.05 - (0.069*unit_id))        
+        self.frame.setPos(self.pos)
+        
+        self.ap_bar = DirectWaitBar(parent = self.frame
+                                  , text = ""
+                                  , range = default_ap
+                                  , value = ap
+                                  , pos = (0.28,0,-0.03)
+                                  , barColor = (0,0,1,1)
+                                  , frameColor = (0,0,0.5,0.2)
+                                  , scale = (0.2,0.5,0.08))
+        
+        self.hp_bar = DirectWaitBar(parent = self.frame
+                                  , text = ""
+                                  , range = default_hp
+                                  , value = hp
+                                  , pos = (0.28,0,-0.05)
+                                  , barColor = (0,1,0,1)
+                                  , frameColor = (1,0,0,0.9)
+                                  , scale = (0.2,0.5,0.08))
+        
+        self.all_icons = {}
+        self.visible_icons = {}
+        self.addIcon("overwatch")
+        self.addIcon("set_up")
+        
+        self.getBounds(aspect)
+        
+    def addIcon(self, name):
+        self.all_icons[name] = OnscreenImage(parent = self.frame
+                                            ,image = name + "_icon.png"
+                                           #,pos = offset + (0,0,-0.1)
+                                            ,scale = 0.018)
+        
+        self.all_icons[name].setTransparency(TransparencyAttrib.MAlpha)
+        self.all_icons[name].hide()
+        
+    def refreshBars(self, hp, ap):
+        self.ap_bar['value'] = ap
+        self.hp_bar['value'] = hp
+        self.ap_bar.setValue()
+        self.hp_bar.setValue()
+        
+    def refreshIcons(self):
+        count = len(self.visible_icons)
+        start_pos =  0.1
+        for icon in self.all_icons:
+            if icon in self.visible_icons:
+                self.visible_icons[icon].setPos((start_pos, 0, -0.013))
+                self.visible_icons[icon].show()
+                start_pos += 0.04
+            else:
+                self.all_icons[icon].hide()
+                
+    def hideOverwatch(self):
+        if "overwatch" in self.visible_icons:
+            self.visible_icons.pop("overwatch")
+        self.refreshIcons()
+
+    def showOverwatch(self):
+        self.visible_icons["overwatch"] = self.all_icons["overwatch"]
+        self.refreshIcons()
+    
+    def hideSetUp(self):
+        if "set_up" in self.visible_icons:
+            self.visible_icons.pop("set_up")
+        self.refreshIcons()
+
+    def showSetUp(self):
+        self.visible_icons["set_up"] = self.all_icons["set_up"]
+        self.refreshIcons()
+        
+    def getBounds(self, aspect):
+        posx, posy = self.frame.getTightBounds()
+        self.pos_min_x = -1
+        self.pos_min_y = self.pos.getZ() + 1 - self.frameHeight
+        self.pos_max_x = -1 + self.frameWidth/aspect
+        self.pos_max_y = self.pos.getZ() + 1
+        
