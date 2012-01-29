@@ -74,6 +74,8 @@ class Interface(DirectObject.DirectObject):
         self.accept('escape', self.escapeEvent)
         self.accept("mouse1", self.mouseLeftClick)
         self.accept("mouse1-up", self.mouseLeftClickUp)
+        self.accept("r", self.redraw)
+        self.accept( 'window-event', self.windowEvent)
         
         taskMgr.add(self.processGui, 'processGui_task')#@UndefinedVariable
         taskMgr.add(self.hover, 'hover_task') #@UndefinedVariable
@@ -90,11 +92,11 @@ class Interface(DirectObject.DirectObject):
         self.deselect_button = GuiButton2("bottom", Point3(0.0, 0, -0.2), aspect, plane, "deselect_unit")
         #self.punit_button = GuiButton2("top", Point3(0.0, 0, -0.3), aspect, plane, "prev_unit")
         self.nunit_button = GuiButton2("bottom", Point3(0.0, 0, -0.09), aspect, plane, "next_unit")
-        self.endturn_button = GuiButton2("bottom", Point3(2*aspect - 0.1, 0, 0.24), aspect, plane, "end_turn")
-        self.action_a = GuiButton2("bottom", Point3(2*aspect - 0.1, 0, 0.13), aspect, plane, "empty")
-        self.action_b = GuiButton2("bottom", Point3(2*aspect - 0.1, 0, 0.02), aspect, plane, "empty")
-        self.action_c = GuiButton2("bottom", Point3(2*aspect - 0.1, 0, -0.09), aspect, plane, "empty")
-        self.action_d = GuiButton2("bottom", Point3(2*aspect - 0.1, 0, -0.2), aspect, plane, "empty")
+        self.endturn_button = GuiButton2("right", Point3(-0.1, 0, 0.24), aspect, plane, "end_turn")
+        self.action_a = GuiButton2("right", Point3(-0.1, 0, 0.13), aspect, plane, "empty")
+        self.action_b = GuiButton2("right", Point3(-0.1, 0, 0.02), aspect, plane, "empty")
+        self.action_c = GuiButton2("right", Point3(-0.1, 0, -0.09), aspect, plane, "empty")
+        self.action_d = GuiButton2("right", Point3(-0.1, 0, -0.2), aspect, plane, "empty")
         
         self.overwatch = GuiButton2("bottom", Point3(1.5+0.01, 0, -0.09), aspect, plane, "overwatch")
         self.set_up = GuiButton2("bottom", Point3(1.6+0.02, 0, -0.09), aspect, plane, "set_up")
@@ -144,12 +146,16 @@ class Interface(DirectObject.DirectObject):
             calc_aspect = 1 / aspect
    
         self.unit_card.redraw()
-        
+        self.status_bar.redraw(aspect)
         for button in self.buttons.values():
             button.redraw(calc_aspect, flag)
 
         self.hovered_gui = None
 
+    def windowEvent(self, window=None):
+        if window is not None: # window is none if panda3d is not started
+            self.redraw()
+             
     def getMousePos(self):
         """Returns mouse coordinates if mouse pointer is inside Panda window."""
         if base.mouseWatcherNode.hasMouse(): #@UndefinedVariable
