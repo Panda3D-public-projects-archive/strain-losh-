@@ -7,6 +7,7 @@ from direct.gui.OnscreenText import OnscreenText
 from console import GuiConsole
 from client_messaging import *
 from gui_elements import *
+import utils
 
 #===============================================================================
 # GLOBAL DEFINITIONS
@@ -67,7 +68,6 @@ class Interface(DirectObject.DirectObject):
         self.unit_move_orientation = HEADING_NONE
         self.turn_np = NodePath("turn_arrows_np")
         self.turn_np.reparentTo(render)#@UndefinedVariable
-        self.plane = Plane(Vec3(0, 0, 1), Point3(0, 0, 0.3))  
         self.dummy_turn_pos_node = NodePath("dummy_turn_pos_node")
         self.dummy_turn_dest_node = NodePath("dummy_turn_dest_node")
         
@@ -168,22 +168,6 @@ class Interface(DirectObject.DirectObject):
             return base.mouseWatcherNode.getMouse() #@UndefinedVariable
         return None
 
-    def getMouseHoveredObject(self):
-        """Returns the closest object in the scene graph over which we hover mouse pointer.
-           Returns None if no objects found.
-        """
-        pos = self.getMousePos()
-        if pos:
-            self.parent.sgm.coll_ray.setFromLens(base.camNode, pos.getX(), pos.getY())#@UndefinedVariable
-            self.parent.sgm.coll_trav.traverse(render)#@UndefinedVariable
-            if self.parent.sgm.coll_queue.getNumEntries() > 0:
-                self.parent.sgm.coll_queue.sortEntries()
-                entry = self.parent.sgm.coll_queue.getEntry(0)
-                pickedObj = entry.getIntoNodePath()
-                pickedPoint = entry.getSurfacePoint(pickedObj)
-                return pickedObj, pickedPoint
-        return None, None
-
     def loadTurnArrows(self, dest):
         self.turn_arrow_dict = {}        
         for i in xrange(9):
@@ -192,7 +176,7 @@ class Interface(DirectObject.DirectObject):
             x = dest.getX()+0.5
             y = dest.getY()+0.5   
             delta = 0.4   
-            height = 0.8     
+            height = utils.GROUND_LEVEL + 0.8     
             if i == 0:
                 pos = Point3(x-delta, y+delta, height)
                 h = 45
@@ -256,7 +240,7 @@ class Interface(DirectObject.DirectObject):
             messenger.send("shutdown-event")#@UndefinedVariable
       
     def refreshStatusBar(self):
-       self.status_bar.write(1, "Player: "+self.parent.player+"     Turn:" + str(self.parent.turn_number))
+        self.status_bar.write(1, "Player: "+self.parent.player+"     Turn:" + str(self.parent.turn_number))
        
     def refreshUnitData(self, unit_id):
         if unit_id != None:
@@ -395,13 +379,33 @@ class Interface(DirectObject.DirectObject):
             self.parent.selectUnit(self.panel.unit_id)
         else:
             self.console.unfocus()    
-            pickedObj, pickedPoint = self.getMouseHoveredObject() 
-            if pickedObj:
-                node_type = pickedObj.findNetTag("type").getTag("type")
-                if node_type == "unit" or node_type == "unit_marker":
-                    unit_id = int(pickedObj.findNetTag("id").getTag("id"))
-                    pickedCoord = self.parent.getCoordsByUnit(unit_id) 
-                    # Player can only select his own units
+            unit_id = self.parent.picker.hovered_unit_id;
+            if unit_id != None:
+                unit_id = int(unit_id)
+                pickedCoord = self.parent.getCoordsByUnit(unit_id) 
+                # Player can only select his own units
+                if self.parent.isThisMyUnit(unit_id):
+                    if unit_id != self.parent.sel_unit_id:
+                        self.parent.selectUnit(unit_id)
+                    else:
+                        # Remember movement tile so we can send orientation message when mouse is depressed
+                        # Do this only if it is our turn
+                        if self.parent.player == self.parent.turn_player:
+                            self.unit_move_destination = pickedCoord                          
+                elif self.parent.isThisEnemyUnit(unit_id):
+                    if self.parent.sel_unit_id != None and self.parent.player == self.parent.turn_player:
+                        self.parent.sgm.unit_np_dict[self.parent.sel_unit_id].target_unit = self.parent.sgm.unit_np_dict[unit_id]
+                        if self.parent._anim_in_process == False:
+                            ClientMsg.shoot(self.parent.sel_unit_id, unit_id)
+            else:
+                # We clicked on the grid, find if unit is placed on those coords
+                pickedCoord = Point2(int(self.parent.picker.hovered_point.getX()), int(self.parent.picker.hovered_point.getY()))
+                unit_id = self.parent.getUnitByCoords(pickedCoord)
+                
+                # If unit is there, check if it is our unit. If it is, select it.
+                # If enemy unit is there, we are trying to attack.
+                # If unit is not there, check if we have unit selected. If we do, we are trying to move it.
+                if unit_id != None:
                     if self.parent.isThisMyUnit(unit_id):
                         if unit_id != self.parent.sel_unit_id:
                             self.parent.selectUnit(unit_id)
@@ -409,39 +413,17 @@ class Interface(DirectObject.DirectObject):
                             # Remember movement tile so we can send orientation message when mouse is depressed
                             # Do this only if it is our turn
                             if self.parent.player == self.parent.turn_player:
-                                self.unit_move_destination = pickedCoord                          
+                                self.unit_move_destination = pickedCoord
                     elif self.parent.isThisEnemyUnit(unit_id):
                         if self.parent.sel_unit_id != None and self.parent.player == self.parent.turn_player:
-                            self.parent.sgm.unit_np_dict[self.parent.sel_unit_id].target_unit = self.parent.sgm.unit_np_dict[unit_id]
                             if self.parent._anim_in_process == False:
                                 ClientMsg.shoot(self.parent.sel_unit_id, unit_id)
                 else:
-                    # We clicked on the grid, find if unit is placed on those coords
-                    pickedCoord = Point2(int(pickedPoint.getX()), int(pickedPoint.getY()))
-                    unit_id = self.parent.getUnitByCoords(pickedCoord)
-                    
-                    # If unit is there, check if it is our unit. If it is, select it.
-                    # If enemy unit is there, we are trying to attack.
-                    # If unit is not there, check if we have unit selected. If we do, we are trying to move it.
-                    if unit_id != None:
-                        if self.parent.isThisMyUnit(unit_id):
-                            if unit_id != self.parent.sel_unit_id:
-                                self.parent.selectUnit(unit_id)
-                            else:
-                                # Remember movement tile so we can send orientation message when mouse is depressed
-                                # Do this only if it is our turn
-                                if self.parent.player == self.parent.turn_player:
-                                    self.unit_move_destination = pickedCoord
-                        elif self.parent.isThisEnemyUnit(unit_id):
-                            if self.parent.sel_unit_id != None and self.parent.player == self.parent.turn_player:
-                                if self.parent._anim_in_process == False:
-                                    ClientMsg.shoot(self.parent.sel_unit_id, unit_id)
-                    else:
-                        if self.parent.sel_unit_id != None and self.parent.player == self.parent.turn_player:
-                            # Remember movement tile so we can send movement message when mouse is depressed
-                            # Do this only if it is our turn
-                            if self.parent.units[self.parent.sel_unit_id]['move_dict'].has_key(tuple(pickedCoord)):
-                                self.unit_move_destination = pickedCoord
+                    if self.parent.sel_unit_id != None and self.parent.player == self.parent.turn_player:
+                        # Remember movement tile so we can send movement message when mouse is depressed
+                        # Do this only if it is our turn
+                        if self.parent.units[self.parent.sel_unit_id]['move_dict'].has_key(tuple(pickedCoord)):
+                            self.unit_move_destination = pickedCoord
                             
     def mouseLeftClickUp(self):
         """Handles left mouse click actions when mouse button is depressed.
@@ -570,49 +552,43 @@ class Interface(DirectObject.DirectObject):
                     pos = Point3(self.unit_move_destination.getX()+0.5, self.unit_move_destination.getY()+0.5, 0.3)
                     self.dummy_turn_pos_node.setPos(pos)
             else: 
-                if base.mouseWatcherNode.hasMouse(): #@UndefinedVariable
-                    mpos = base.mouseWatcherNode.getMouse()#@UndefinedVariable 
-                    pos3d = Point3() 
-                    nearPoint = Point3() 
-                    farPoint = Point3() 
-                    base.camLens.extrude(mpos, nearPoint, farPoint) #@UndefinedVariable
-                    if self.plane.intersectsLine(pos3d, render.getRelativePoint(base.camera, nearPoint), render.getRelativePoint(base.camera, farPoint)):#@UndefinedVariable 
-                        self.dummy_turn_dest_node.setPos(pos3d)
-                        self.dummy_turn_pos_node.lookAt(self.dummy_turn_dest_node)
-                        h = self.dummy_turn_pos_node.getH()
-                        if self.dummy_turn_dest_node.getX() >= 0:
-                            x = int(self.dummy_turn_dest_node.getX())
-                        else:
-                            x = int(self.dummy_turn_dest_node.getX()-1)
-                        if self.dummy_turn_dest_node.getY() >= 0:
-                            y = int(self.dummy_turn_dest_node.getY())
-                        else:
-                            y = int(self.dummy_turn_dest_node.getY()-1)    
-                        dest_node_pos = Point2(x, y)
-                        pos_node_pos = Point2(int(self.dummy_turn_pos_node.getX()), int(self.dummy_turn_pos_node.getY()))
-                        if dest_node_pos == pos_node_pos:
-                            key = HEADING_NONE
-                        # TODO: ogs: kad Debeli popravi turn poruku mozemo ovaj dolje kod zamijeniti s zakomentiranim
-                        #else:
-                            #key = utils.clampToHeading(h)
-                        
-                        elif h >= -22.5 and h < 22.5:
-                            key = HEADING_N
-                        elif h >= 22.5 and h < 67.5:
-                            key = HEADING_NW
-                        elif h >= 67.5 and h < 112.5:
-                            key = HEADING_W
-                        elif h >= 112.5 and h < 157.5:
-                            key = HEADING_SW
-                        elif (h >= 157.5 and h <= 180) or (h >= -180 and h < -157.5):
-                            key = HEADING_S
-                        elif h >= -157.5 and h < -112.5:
-                            key = HEADING_SE
-                        elif h >= -112.5 and h < -67.5:
-                            key = HEADING_E
-                        elif h >= -67.5 and h < -22.5:
-                            key = HEADING_NE
-                        self.markTurnArrow(key)
+                pos3d = self.parent.picker.hovered_point
+                self.dummy_turn_dest_node.setPos(pos3d)
+                self.dummy_turn_pos_node.lookAt(self.dummy_turn_dest_node)
+                h = self.dummy_turn_pos_node.getH()
+                if self.dummy_turn_dest_node.getX() >= 0:
+                    x = int(self.dummy_turn_dest_node.getX())
+                else:
+                    x = int(self.dummy_turn_dest_node.getX()-1)
+                if self.dummy_turn_dest_node.getY() >= 0:
+                    y = int(self.dummy_turn_dest_node.getY())
+                else:
+                    y = int(self.dummy_turn_dest_node.getY()-1)    
+                dest_node_pos = Point2(x, y)
+                pos_node_pos = Point2(int(self.dummy_turn_pos_node.getX()), int(self.dummy_turn_pos_node.getY()))
+                if dest_node_pos == pos_node_pos:
+                    key = HEADING_NONE
+                # TODO: ogs: kad Debeli popravi turn poruku mozemo ovaj dolje kod zamijeniti s zakomentiranim
+                #else:
+                    #key = utils.clampToHeading(h)
+                
+                elif h >= -22.5 and h < 22.5:
+                    key = HEADING_N
+                elif h >= 22.5 and h < 67.5:
+                    key = HEADING_NW
+                elif h >= 67.5 and h < 112.5:
+                    key = HEADING_W
+                elif h >= 112.5 and h < 157.5:
+                    key = HEADING_SW
+                elif (h >= 157.5 and h <= 180) or (h >= -180 and h < -157.5):
+                    key = HEADING_S
+                elif h >= -157.5 and h < -112.5:
+                    key = HEADING_SE
+                elif h >= -112.5 and h < -67.5:
+                    key = HEADING_E
+                elif h >= -67.5 and h < -22.5:
+                    key = HEADING_NE
+                self.markTurnArrow(key)
         return task.cont
 
     def toggleOverwatch(self):

@@ -147,16 +147,6 @@ class SceneGraph():
         alnp = render.attachNewNode(alight)
         render.setLight(alnp) 
         self.comp_inited['lights'] = True
-        
-    def initCollisions(self):
-        self.coll_trav = CollisionTraverser()
-        self.coll_queue = CollisionHandlerQueue()
-        self.coll_node = CollisionNode("mouse_ray")
-        self.coll_nodepath = base.camera.attachNewNode(self.coll_node)
-        self.coll_node.setFromCollideMask(GeomNode.getDefaultCollideMask())
-        self.coll_ray = CollisionRay()
-        self.coll_node.addSolid(self.coll_ray)
-        self.coll_trav.addCollider(self.coll_nodepath, self.coll_queue)
     
     def loadUnits(self):
         if self.comp_inited['units']:
@@ -238,7 +228,7 @@ class SceneGraph():
             return
         wpn_list = utils.getUnitWeapons(self.parent.units[unit_id])
         self.off_model = UnitModel(self, unit_id, off=True)
-        self.off_model.reparentTo(self.alt_render)
+        self.off_model.model.reparentTo(self.alt_render)
         
     def showUnitAvailMove(self, unit_id):
         """Displays visual indicator of tiles which are in movement range of the selected unit."""
@@ -272,37 +262,19 @@ class SceneGraph():
     
     def showVisibleEnemies(self, unit_id):
         self.hideVisibleEnemies()
-        unit = self.parent.units[unit_id]
-        #self.enemyunittiles_np = NodePath("enemyunittiles_np")        
+        unit = self.parent.units[unit_id]     
         for u in self.parent.units.itervalues():
             if self.parent.isThisEnemyUnit(u['id']):
                 if getLOSOnLevel(unit, u, self.parent.level) > 0:
-                    #ls = LineSegs()
-                    #ls.moveTo(unit['pos'][0] + utils.MODEL_OFFSET, unit['pos'][1] + utils.MODEL_OFFSET, utils.GROUND_LEVEL+0.5)
-                    #ls.drawTo(u['pos'][0] + utils.MODEL_OFFSET, u['pos'][1] + utils.MODEL_OFFSET, utils.GROUND_LEVEL+0.5)
-                    #ls.setThickness(1)
-                    #lines = self.enemyunittiles_np.attachNewNode(ls.create())
-                    #lines.setColorScale(1,0,0,0.7)
-                    # Set a looping interval to fade them both in and out together
-                    #self.enemyunittiles_np.setTransparency(TransparencyAttrib.MAlpha)
                     unit_model = self.parent.sgm.unit_np_dict[u['id']]
-                    unit_model.marker.setTexture(loader.loadTexture('target.png'))
-                    unit_model.marker.setColor(1,0,0)
-                    unit_model.showMarker()
-                    unit_model.startMarkerInterval()
-        #i = Sequence(LerpColorScaleInterval(self.enemyunittiles_np, 2, (1, 0, 0, 0.1)),
-        #             LerpColorScaleInterval(self.enemyunittiles_np, 0.5, (1, 0, 0, 0.7)))
-        #i.loop()
-        #self.enemyunittiles_np.flattenStrong()
-        #self.enemyunittiles_np.reparentTo(self.node)
+                    unit_model.setEnemyVisible()
         
     def hideVisibleEnemies(self):
         if self.enemyunittiles_np:
             self.enemyunittiles_np.removeNode()
         for u in self.parent.units.itervalues():
             if self.parent.isThisEnemyUnit(u['id']):
-                self.parent.sgm.unit_np_dict[u['id']].hideMarker()   
-                self.parent.sgm.unit_np_dict[u['id']].stopMarkerInterval()
+                self.parent.sgm.unit_np_dict[u['id']].clearEnemyVisible()   
 
             
     def setBullet(self, b):

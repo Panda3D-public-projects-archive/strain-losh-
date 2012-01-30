@@ -20,6 +20,7 @@ from camera import Camera
 #from cam2 import Camera
 from net import Net
 from interface import Interface
+from picker import Picker
 import utils as utils
 from strain.share import *
 
@@ -43,6 +44,9 @@ class Client(DirectObject):
         
         # Init SceneGraph manager
         self.sgm = SceneGraph(self)
+        
+        # Init Picker
+        self.picker = Picker(self)
         
         # Init Camera
         self.camera = Camera(self, 20, 20)
@@ -114,9 +118,10 @@ class Client(DirectObject):
             self.interface.refreshUnitData(unit_id) 
             # If it is our turn, display available move tiles
             if self.player == self.turn_player:
-                self.sgm.unit_np_dict[unit_id].showMarker()
+                self.sgm.unit_np_dict[unit_id].setSelected()
                 self.sgm.showUnitAvailMove(unit_id)
                 self.sgm.showVisibleEnemies(unit_id)
+                self.sgm.unit_np_dict[unit_id].setCollisionOff()
             
     def selectNextUnit(self):
         if self.sel_unit_id == None:
@@ -238,7 +243,8 @@ class Client(DirectObject):
         self.sgm.hideVisibleEnemies()
         self.interface.clearUnitData()
         if self.sel_unit_id != None:
-            self.sgm.unit_np_dict[self.sel_unit_id].hideMarker()
+            self.sgm.unit_np_dict[self.sel_unit_id].clearAllFlags()
+            self.sgm.unit_np_dict[self.sel_unit_id].setCollisionOn()
         self.sel_unit_id = None
     
 #========================================================================
@@ -555,7 +561,6 @@ class ClientFSM(FSM.FSM):
     def enterGraphicsInit(self):
         self.parent.sgm.initLights()
         self.parent.sgm.initAltRender()
-        self.parent.sgm.initCollisions()
     
     def exitGraphicsInit(self):
         None
