@@ -23,6 +23,7 @@ from interface import Interface
 from picker import Picker
 import utils as utils
 from strain.share import *
+from combat import Combat
 
 #========================================================================
 #
@@ -56,6 +57,9 @@ class Client(DirectObject):
         
         # All of our graphics components are initialized, request graphics init
         self.fsm.request('GraphicsInit')
+        
+        # Init combat
+        self.combat = Combat()
         
         # Init Network
         self.server_ip = ConfigVariableString("server-ip", "127.0.0.1").getValue()
@@ -399,6 +403,8 @@ class Client(DirectObject):
                  
         for action in action_list:
             action_type = action[0]
+            
+            """
             if action_type == "shoot":
                 shooter_id = action[1] # unit_id of the shooter
                 shoot_tile = action[2] # (x,y) pos of targeted tile
@@ -412,6 +418,20 @@ class Client(DirectObject):
                                           utils.GROUND_LEVEL
                                           )
                     b = self.buildBulletAnim(shooter_pos, shoot_tile)
+                    i = self.buildDamageAnim(damage_list)
+                    bi = Sequence(b, i)
+                    s.append(Parallel(a, bi))                    
+            """
+            
+            if action_type == "shoot":
+                shooter_id = action[1] # unit_id of the shooter
+                shoot_tile = action[2] # (x,y) pos of targeted tile
+                weapon = action[3] # weapon id
+                damage_list = action[4] # list of all damaged/missed/bounced/killed units
+                if shooter_id >= 0:
+                    shooter_model = self.sgm.unit_np_dict[shooter_id]
+                    a = self.buildShootAnim(shooter_model, weapon)
+                    b = Sequence(Func(self.buildLaserAnim, shooter_model.node, self.sgm.unit_np_dict[damage_list[0][1]].node))
                     i = self.buildDamageAnim(damage_list)
                     bi = Sequence(b, i)
                     s.append(Parallel(a, bi))
@@ -461,6 +481,12 @@ class Client(DirectObject):
                                    Func(self.sgm.deleteBullet, self.bullet)
                                    )
         return bullet_sequence
+    
+    def buildLaserAnim(self, source, target):
+        self.combat.source = source
+        self.combat.target = target
+        taskMgr.add(self.combat.drawBeam, 'beamtask')
+        
 
     def buildMeleeAnim(self, unit_model, target_tile, weapon):
         # Unit melee animation
