@@ -84,6 +84,9 @@ class VoxelGenerator():
         self.tex1 = loader.loadTexture("tile1.png")
         self.tex2 = loader.loadTexture("tile2.png")
         self.tex3 = loader.loadTexture("tile3.png")
+        self.tex_tile_nm = loader.loadTexture("tile2nm.png")
+        self.ts_nm = TextureStage('ts_nm')
+        self.ts_nm.setMode(TextureStage.MNormal)
         
         self.tex_floor_transparent = loader.loadTexture("trans_tex.png")
 
@@ -93,6 +96,8 @@ class VoxelGenerator():
         self.tex2.setMinfilter(Texture.FTLinearMipmapLinear)
         self.tex3.setMagfilter(Texture.FTLinearMipmapLinear)
         self.tex3.setMinfilter(Texture.FTLinearMipmapLinear)
+        self.tex_tile_nm.setMagfilter(Texture.FTLinearMipmapLinear)
+        self.tex_tile_nm.setMinfilter(Texture.FTLinearMipmapLinear)
         
         ts = TextureStage('ts')
         for x in xrange(0, self.level.maxX):
@@ -110,6 +115,7 @@ class VoxelGenerator():
                     model = loader.loadModel('halfcube')
                     model.setPos(x, y, utils.GROUND_LEVEL)
                     model.setTexture(ts, self.tex1)
+                    model.setTexture(self.ts_nm, self.tex_tile_nm)
                     model.reparentTo(self.node_wall_usable) 
                 else:
                     for i in xrange(0, self.level.getHeight( (x, y) )):
@@ -122,10 +128,12 @@ class VoxelGenerator():
                             model = loader.loadModel('cube')
                             model.setPos(x, y, i-1+utils.GROUND_LEVEL)
                             model.setTexture(ts, self.tex2)
+                            model.setTexture(self.ts_nm, self.tex_tile_nm) 
                             model.reparentTo(self.node_wall_usable) 
         self.floor_np.setTexture(self.tex3)  
         self.node_wall_usable.clearModelNodes()
         self.node_wall_usable.flattenStrong()
+        self.node_wall_usable.setShaderAuto()
         self.markAllChunksDirty()
         
     def setInvisibleTiles(self, tile_dict):
