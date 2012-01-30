@@ -6,20 +6,12 @@
 
 # panda3D imports
 from direct.showbase import DirectObject
-from panda3d.core import TextNode, NodePath, VBase4, GeomNode, CardMaker, Texture#@UnresolvedImport
-from panda3d.core import ShadeModelAttrib, DirectionalLight, AmbientLight, PointLight#@UnresolvedImport
 from panda3d.core import CollisionTraverser, CollisionRay, CollisionHandlerQueue, CollisionNode#@UnresolvedImport
-from panda3d.core import CullBinManager, CullBinEnums#@UnresolvedImport
-from panda3d.core import LineSegs, TransparencyAttrib, ColorBlendAttrib, BitMask32#@UnresolvedImport
-from panda3d.core import Plane, Vec3, Point3#@UnresolvedImport
-from direct.interval.IntervalGlobal import Sequence, LerpColorScaleInterval, LerpColorInterval, Wait#@UnresolvedImport
-
+from panda3d.core import BitMask32, Plane, Vec3, Point3#@UnresolvedImport
 
 # strain related imports
-from strain.voxelgen import VoxelGenerator
-from strain.unitmodel import UnitModel
 import strain.utils as utils
-from strain.share import *
+
 
 class Picker(DirectObject.DirectObject):      
     def __init__(self, parent):
