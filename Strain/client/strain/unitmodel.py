@@ -1,10 +1,17 @@
-from direct.actor.Actor import Actor
-from panda3d.core import Vec4, Point4, Point3, Point2, NodePath, CardMaker#@UnresolvedImport
+#############################################################################
+# IMPORTS
+#############################################################################
+
+# python imports
+
+# panda3D imports
+from panda3d.core import Vec4, Point3, NodePath, CardMaker#@UnresolvedImport
 from panda3d.core import PointLight, BitMask32#@UnresolvedImport
 from panda3d.core import TransparencyAttrib, AntialiasAttrib#@UnresolvedImport
-from panda3d.core import CollisionTube, CollisionNode, CollisionPolygon, CollisionSphere#@UnresolvedImport
+from panda3d.core import CollisionNode, CollisionPolygon#@UnresolvedImport
 from direct.interval.IntervalGlobal import Sequence, LerpColorScaleInterval, LerpColorInterval, Wait#@UnresolvedImport
-import random
+
+# strain related imports
 import utils
     
 #===============================================================================
