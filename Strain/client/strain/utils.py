@@ -167,6 +167,8 @@ def getHeadingAngle(h):
         angle = -90
     elif h == HEADING_NE:
         angle = -45
+    else:
+        angle = 0
     return angle
 
 def getUnitWeapons(unit):

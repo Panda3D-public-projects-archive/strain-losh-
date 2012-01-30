@@ -1,6 +1,6 @@
 from direct.actor.Actor import Actor
 from panda3d.core import Vec4, Point4, Point3, Point2, NodePath, CardMaker#@UnresolvedImport
-from panda3d.core import PointLight#@UnresolvedImport
+from panda3d.core import PointLight, BitMask32#@UnresolvedImport
 from panda3d.core import TransparencyAttrib, AntialiasAttrib#@UnresolvedImport
 from panda3d.core import CollisionTube, CollisionNode, CollisionPolygon, CollisionSphere#@UnresolvedImport
 from direct.interval.IntervalGlobal import Sequence, LerpColorScaleInterval, LerpColorInterval, Wait#@UnresolvedImport
@@ -25,14 +25,15 @@ class UnitModel:
             self.team_color = Vec4(0.106, 0.467, 0.878, 1)
         else:
             self.team_color = Vec4(0, 1, 0, 1)
+        self.owner_id = unit['owner_id']
         if unit['name'] == 'marine_common':        
             self.model = utils.loadUnit('marine', 'standard') 
         elif unit['name'] == 'marine_epic': 
             self.model = utils.loadUnit('marine', 'sergeant')
         elif unit['name'] == 'marine_hb': 
             self.model = utils.loadUnit('marine', 'heavy')
-        
         self.model.reparentTo(self.node)
+        
         if not off:
             scale = 0.4
             h = 180
@@ -57,27 +58,31 @@ class UnitModel:
 
         # If unit model is not rendered for portrait, set its heading as received from server
         if not off:
-            self.setHeading(unit)
+            self.setHeading(unit['heading'])
         
         self.target_unit = None
+        
+        self.tex_circle1 = loader.loadTexture('circle.png')
+        self.tex_circle2 = loader.loadTexture('circle2.png')
+        self.tex_target = loader.loadTexture('target.png')
+
         
         cm = CardMaker('cm') 
         self.marker = self.node.attachNewNode(cm.generate()) 
         self.marker.setP(render, -90)
         self.marker.setPos(-0.5, -0.5, 0)
-        self.marker.setTexture(loader.loadTexture('circle.png'))
+        self.marker.setTexture(self.tex_circle1)
         self.marker.setColor(0, 1, 0)
         self.marker.setDepthOffset(1)
         #cpos.node().setAttrib(ColorBlendAttrib.make(ColorBlendAttrib.MAdd))
         self.marker.setTransparency(TransparencyAttrib.MAlpha)
         self.marker.setBin('highlight', 25)
         self.marker.setCollideMask(0)
-        self.marker.detachNode()
         self.marker.setLightOff()
-        self.marker_interval = Sequence(LerpColorInterval(self.marker, 0.5, (1, 0, 0, 1)),
-                                        Wait(0.5),
-                                        LerpColorInterval(self.marker, 0.5, (0, 0, 0, 1)),
-                                        )  
+        self.marker.detachNode()
+        self.marker_interval = Sequence(LerpColorInterval(self.marker, 0.3, (0.4, 0.1, 0.1, 1)),
+                                        LerpColorInterval(self.marker, 0.3, (1, 0, 0, 1)),
+                                        )        
         
         
         cquad1 = CollisionPolygon(Point3(-0.5, -0.5, 0), Point3(-0.5, -0.5, 1), Point3(-0.5, 0.5, 1), Point3(-0.5, 0.5, 0))
@@ -86,64 +91,102 @@ class UnitModel:
         cquad4 = CollisionPolygon(Point3(-0.5, 0.5, 0), Point3(-0.5, 0.5, 1), Point3(0.5, 0.5, 1), Point3(0.5, 0.5, 0))
         cquad5 = CollisionPolygon(Point3(0.5, -0.5, 1), Point3(0.5, 0.5, 1), Point3(-0.5, 0.5, 1), Point3(-0.5, -0.5, 1))
         
-        #cs = CollisionSphere(0, 0, 0.5, 0.5)
-        cnodePath = self.node.attachNewNode(CollisionNode('cnode'))
-        cnodePath.node().addSolid(cquad1)
-        cnodePath.node().addSolid(cquad2)
-        cnodePath.node().addSolid(cquad3)
-        cnodePath.node().addSolid(cquad4)  
-        cnodePath.node().addSolid(cquad5)    
+        self.cnodePath = self.node.attachNewNode(CollisionNode('cnode'))
+        self.cnodePath.node().addSolid(cquad1)
+        self.cnodePath.node().addSolid(cquad2)
+        self.cnodePath.node().addSolid(cquad3)
+        self.cnodePath.node().addSolid(cquad4)  
+        self.cnodePath.node().addSolid(cquad5)
+        # DEBUG
         #cnodePath.show()
+        self.setCollisionOn()
         
-    def startMarkerInterval(self):
-        self.marker_interval.loop()
+        self.isHovered = False
+        self.isSelected = False
+        self.isTargeted = False
+        self.isEnemyVisible = False
         
-    def stopMarkerInterval(self):
-        self.marker_interval.pause()
+    def setCollisionOn(self):
+        self.cnodePath.setCollideMask(BitMask32.bit(1)) 
+        
+    def setCollisionOff(self):
+        self.cnodePath.setCollideMask(BitMask32.bit(0))  
     
-    def showMarker(self):
-        self.marker.reparentTo(self.node)
-        
-    def hideMarker(self):
+    def markHovered(self):
+        if self.owner_id == self.parent.parent.player_id:
+            self.setHovered()
+        else:
+            self.setTargeted()
+            
+    def unmarkHovered(self):
+        if self.owner_id == self.parent.parent.player_id:
+            self.clearHovered()
+        else:
+            self.clearTargeted()
+    
+    def setHovered(self):
+        if not self.isHovered and not self.isSelected and not self.isEnemyVisible and not self.isTargeted:
+            self.marker.clearTexture()
+            self.marker.setTexture(self.tex_circle2)
+            self.marker.setColor(0.2, 0.78, 0.157)
+            self.marker.reparentTo(self.node)      
+            self.isHovered = True
+            
+    def clearHovered(self):
+        if self.isHovered:
+            self.marker.detachNode()            
+            self.isHovered = False
+            
+    def setSelected(self):
+        if not self.isSelected and not self.isEnemyVisible and not self.isTargeted:
+            self.marker.clearTexture()
+            self.marker.setTexture(self.tex_circle1)
+            self.marker.setColor(0, 1, 0)
+            self.marker.reparentTo(self.node)
+            self.isHovered = False
+            self.isSelected = True
+            
+    def clearSelected(self):
+        if self.isSelected:
+            self.marker.detachNode()
+            self.isSelected = False
+            
+    def setTargeted(self):
+        if not self.isTargeted:
+            self.marker_interval.loop()
+            self.isTargeted = True 
+    
+    def clearTargeted(self):
+        if self.isTargeted:
+            self.marker_interval.pause()
+            self.marker.setColor(1, 0, 0)
+            self.isTargeted = False
+            
+    def setEnemyVisible(self):
+        if not self.isEnemyVisible:
+            self.marker.clearTexture()
+            self.marker.setTexture(self.tex_target)
+            self.marker.setColor(1, 0, 0)
+            self.marker.reparentTo(self.node)
+            self.isEnemyVisible = True
+            
+    def clearEnemyVisible(self):
+        if self.isEnemyVisible:
+            self.marker.detachNode()
+            self.isEnemyVisible= False
+            
+    def clearAllFlags(self):
         self.marker.detachNode()
-    
-    def setIdleTime(self):
-        self.idletime = random.randint(10, 20)
-    
-    def reparentTo(self, node):
-        self.node.reparentTo(node)  
+        self.isHovered = False
+        self.isSelected = False
+        self.isTargeted = False
+        self.isEnemyVisible = False
         
     def calcWorldPos(self, pos):
-        return pos + Point3(0.5, 0.5, utils.GROUND_LEVEL)  
-        
-    def getHeadingTile(self, unit):
-        x = int(unit['pos'][0])
-        y = int(unit['pos'][1])  
-        heading = unit['heading']  
-        
-        if heading == utils.HEADING_NW:
-            o = Point2(x-1, y+1)
-        elif heading == utils.HEADING_N:
-            o = Point2(x, y+1)
-        elif heading == utils.HEADING_NE:
-            o = Point2(x+1, y+1)
-        elif heading == utils.HEADING_W:
-            o = Point2(x-1, y)
-        elif heading == utils.HEADING_E:
-            o = Point2(x+1, y)
-        elif heading == utils.HEADING_SW:
-            o = Point2(x-1, y-1)
-        elif heading == utils.HEADING_S:
-            o = Point2(x, y-1)
-        elif heading == utils.HEADING_SE:
-            o = Point2(x+1, y-1)
-        return o
+        return pos + Point3(0.5, 0.5, utils.GROUND_LEVEL)
     
     def setHeading(self, heading):
-        tile_pos = self.getHeadingTile(heading)
-        dest_node = NodePath("dest_node")
-        dest_node.setPos(render, tile_pos.getX()+0.5, tile_pos.getY()+0.5, utils.GROUND_LEVEL)
-        self.model.lookAt(dest_node)
+        self.model.setH(utils.getHeadingAngle(heading))
         
     def cleanup(self):
         self.model.cleanup()

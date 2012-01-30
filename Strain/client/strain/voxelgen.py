@@ -55,7 +55,7 @@ class VoxelGenerator():
         
         # Create flatten task
         self.pause_flatten_task = True
-        self.frames_between = 10
+        self.frames_between = 3
         self.frames_counter = 0
         taskMgr.add(self.flattenTask, "flatten_task")  
         
@@ -161,14 +161,11 @@ class VoxelGenerator():
         if len(self.dirty_chunks) > 0:
             if self.frames_counter == self.frames_between:
                 chunk_tupple = self.dirty_chunks.popleft()
-                print chunk_tupple[1], chunk_tupple[2]
-                print time.clock()
                 np = chunk_tupple[0].copyTo(NodePath())
                 np.clearModelNodes()
                 np.flattenStrong()
                 self.floor_usable_np_list[chunk_tupple[1]][chunk_tupple[2]].removeNode()
                 self.floor_usable_np_list[chunk_tupple[1]][chunk_tupple[2]] = np
                 self.floor_usable_np_list[chunk_tupple[1]][chunk_tupple[2]].reparentTo(self.floor_usable_np)
-                print time.clock()
                 self.frames_counter = 0
         return task.cont
