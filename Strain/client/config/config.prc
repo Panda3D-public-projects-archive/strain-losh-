@@ -122,3 +122,7 @@ yield-timeslice #t
 server-ip 127.0.0.1
 #server-ip 178.79.164.4
 server-port 56005
+
+resx 1024
+resy 768
+
