@@ -75,6 +75,17 @@ class Client(DirectObject):
         
         self.num = 0
         taskMgr.add(self.clientTask, 'clientTask')#@UndefinedVariable
+        
+        self.shader = True
+        self.accept('enter', self.toggleShader)
+    
+    def toggleShader(self):
+        if self.shader:
+            self.sgm.level_mesh.node_wall_usable.setShaderOff()
+            self.shader = False
+        else:
+            self.sgm.level_mesh.node_wall_usable.setShaderAuto()
+            self.shader = True
     
     def clientTask(self, task):
         #self.num += 1

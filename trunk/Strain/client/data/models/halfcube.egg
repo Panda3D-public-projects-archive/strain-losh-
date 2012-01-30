@@ -1,171 +1,270 @@
-<CoordinateSystem> { Z-up }
+<CoordinateSystem> { Z-Up }
 
-<Comment> { "Egg laid by Chicken for Blender, version R85" }
-
+<Comment> {
+  "egg-trans -tbnall -o halfcube.egg halfcube.egg"
+}
+<Comment> {
+  "Egg laid by Chicken for Blender, version R85"
+}
 <Material> Material {
-  <Scalar> diffr {1.}
-  <Scalar> diffg {1.}
-  <Scalar> diffb {1.}
-  <Scalar> ambr {1.0}
-  <Scalar> ambg {1.0}
-  <Scalar> ambb {1.0}
-  <Scalar> specr {0.}
-  <Scalar> specg {0.}
-  <Scalar> specb {0.}
-  <Scalar> shininess {0.0}
+  <Scalar> diffr { 1 }
+  <Scalar> diffg { 1 }
+  <Scalar> diffb { 1 }
+  <Scalar> ambr { 1 }
+  <Scalar> ambg { 1 }
+  <Scalar> ambb { 1 }
+  <Scalar> specr { 0 }
+  <Scalar> specg { 0 }
+  <Scalar> specb { 0 }
+  <Scalar> shininess { 0 }
 }
 <Group> Cube {
   <VertexPool> Cube {
     <Vertex> 0 {
-      1.0 1.0 0.0
-      <UV> { 0.0 1.0 }
-      <RGBA> { 1.0 1.0 1.0 1.0 }      
+      0 0 0
+      <UV> {
+        0 0
+        <Tangent> { 0 0 0 }
+        <Binormal> { 0 0 0 }
+      }
+      <RGBA> { 1 1 1 1 }
     }
     <Vertex> 1 {
-      1.0 0.0 0.0
-      <UV> { 0.0 0.0 }
-      <RGBA> { 1.0 1.0 1.0 1.0 }      
+      0 0 0
+      <UV> {
+        1 0
+        <Tangent> { 0 0 0 }
+        <Binormal> { 0 0 0 }
+      }
+      <RGBA> { 1 1 1 1 }
     }
     <Vertex> 2 {
-      0.0 0.0 0.0
-      <UV> { 1.0 0.0 }
-      <RGBA> { 1.0 1.0 1.0 1.0 }      
+      0 0 0
+      <UV> {
+        1 0
+        <Tangent> { -1 0 0 }
+        <Binormal> { 0 1 0 }
+      }
+      <RGBA> { 1 1 1 1 }
     }
     <Vertex> 3 {
-      0.0 1.0 0.0
-      <UV> { 1.0 1.0 }
-      <RGBA> { 1.0 1.0 1.0 1.0 }      
+      0 0 0.5
+      <UV> {
+        0 1
+        <Tangent> { 0 0 0 }
+        <Binormal> { 0 0 0 }
+      }
+      <RGBA> { 1 1 1 1 }
     }
     <Vertex> 4 {
-      1.0 1.0 0.5
-      <UV> { 1.0 1.0 }
-      <RGBA> { 1.0 1.0 1.0 1.0 }      
+      0 0 0.5
+      <UV> {
+        1 1
+        <Tangent> { 0 0 0 }
+        <Binormal> { 0 0 0 }
+      }
+      <RGBA> { 1 1 1 1 }
     }
     <Vertex> 5 {
-      0.0 1.0 0.5
-      <UV> { 0.0 1.0 }
-      <RGBA> { 1.0 1.0 1.0 1.0 }      
+      0 0 0.5
+      <UV> {
+        0 0
+        <Tangent> { 1 0 0 }
+        <Binormal> { 0 1 0 }
+      }
+      <RGBA> { 1 1 1 1 }
     }
     <Vertex> 6 {
-      0.0 0.0 0.5
-      <UV> { 0.0 0.0 }
-      <RGBA> { 1.0 1.0 1.0 1.0 }      
+      0 1 0
+      <UV> {
+        0 0
+        <Tangent> { 0 0 0 }
+        <Binormal> { 0 0 0 }
+      }
+      <RGBA> { 1 1 1 1 }
     }
     <Vertex> 7 {
-      1.0 0.0 0.5
-      <UV> { 1.0 0.0 }
-      <RGBA> { 1.0 1.0 1.0 1.0 }      
+      0 1 0
+      <UV> {
+        1 1
+        <Tangent> { -1 0 0 }
+        <Binormal> { 0 1 0 }
+      }
+      <RGBA> { 1 1 1 1 }
     }
     <Vertex> 8 {
-      1.0 1.0 0.0
-      <UV> { 1.0 0.0 }
-      <RGBA> { 1.0 1.0 1.0 1.0 }      
+      0 1 0
+      <UV> {
+        1 0
+        <Tangent> { -1 0 0 }
+        <Binormal> { 0 0 1 }
+      }
+      <RGBA> { 1 1 1 1 }
     }
     <Vertex> 9 {
-      1.0 1.0 0.5
-      <UV> { 1.0 1.0 }
-      <RGBA> { 1.0 1.0 1.0 1.0 }      
+      0 1 0.5
+      <UV> {
+        0 1
+        <Tangent> { 0 0 0 }
+        <Binormal> { 0 0 0 }
+      }
+      <RGBA> { 1 1 1 1 }
     }
     <Vertex> 10 {
-      1.0 0.0 0.5
-      <UV> { 0.0 1.0 }
-      <RGBA> { 1.0 1.0 1.0 1.0 }      
+      0 1 0.5
+      <UV> {
+        0 1
+        <Tangent> { 1 0 0 }
+        <Binormal> { 0 1 0 }
+      }
+      <RGBA> { 1 1 1 1 }
     }
     <Vertex> 11 {
-      1.0 0.0 0.0
-      <UV> { 0.0 0.0 }
-      <RGBA> { 1.0 1.0 1.0 1.0 }      
+      0 1 0.5
+      <UV> {
+        1 1
+        <Tangent> { -1 0 0 }
+        <Binormal> { 0 0 1 }
+      }
+      <RGBA> { 1 1 1 1 }
     }
     <Vertex> 12 {
-      1.0 0.0 0.0
-      <UV> { 1.0 0.0 }
-      <RGBA> { 1.0 1.0 1.0 1.0 }      
+      1 0 0
+      <UV> {
+        1 0
+        <Tangent> { 0 0 0 }
+        <Binormal> { 0 0 0 }
+      }
+      <RGBA> { 1 1 1 1 }
     }
     <Vertex> 13 {
-      1.0 0.0 0.5
-      <UV> { 1.0 1.0 }
-      <RGBA> { 1.0 1.0 1.0 1.0 }      
+      1 0 0
+      <UV> {
+        0 0
+        <Tangent> { -1 0 0 }
+        <Binormal> { 0 1 0 }
+      }
+      <RGBA> { 1 1 1 1 }
     }
     <Vertex> 14 {
-      0.0 0.0 0.5
-      <UV> { 0.0 1.0 }
-      <RGBA> { 1.0 1.0 1.0 1.0 }      
+      1 0 0
+      <UV> {
+        0 0
+        <Tangent> { 0 1 0 }
+        <Binormal> { 0 0 1 }
+      }
+      <RGBA> { 1 1 1 1 }
     }
     <Vertex> 15 {
-      0.0 0.0 0.0
-      <UV> { 0.0 0.0 }
-      <RGBA> { 1.0 1.0 1.0 1.0 }      
+      1 0 0.5
+      <UV> {
+        1 1
+        <Tangent> { 0 0 0 }
+        <Binormal> { 0 0 0 }
+      }
+      <RGBA> { 1 1 1 1 }
     }
     <Vertex> 16 {
-      0.0 0.0 0.0
-      <UV> { 1.0 0.0 }
-      <RGBA> { 1.0 1.0 1.0 1.0 }      
+      1 0 0.5
+      <UV> {
+        1 0
+        <Tangent> { 1 0 0 }
+        <Binormal> { 0 1 0 }
+      }
+      <RGBA> { 1 1 1 1 }
     }
     <Vertex> 17 {
-      0.0 0.0 0.5
-      <UV> { 1.0 1.0 }
-      <RGBA> { 1.0 1.0 1.0 1.0 }      
+      1 0 0.5
+      <UV> {
+        0 1
+        <Tangent> { 0 1 0 }
+        <Binormal> { 0 0 1 }
+      }
+      <RGBA> { 1 1 1 1 }
     }
     <Vertex> 18 {
-      0.0 1.0 0.5
-      <UV> { 0.0 1.0 }
-      <RGBA> { 1.0 1.0 1.0 1.0 }      
+      1 1 0
+      <UV> {
+        0 1
+        <Tangent> { -1 0 0 }
+        <Binormal> { 0 1 0 }
+      }
+      <RGBA> { 1 1 1 1 }
     }
     <Vertex> 19 {
-      0.0 1.0 0.0
-      <UV> { 0.0 0.0 }
-      <RGBA> { 1.0 1.0 1.0 1.0 }      
+      1 1 0
+      <UV> {
+        0 0
+        <Tangent> { -1 0 0 }
+        <Binormal> { 0 0 1 }
+      }
+      <RGBA> { 1 1 1 1 }
     }
     <Vertex> 20 {
-      1.0 1.0 0.5
-      <UV> { 0.0 1.0 }
-      <RGBA> { 1.0 1.0 1.0 1.0 }      
+      1 1 0
+      <UV> {
+        1 0
+        <Tangent> { 0 1 0 }
+        <Binormal> { 0 0 1 }
+      }
+      <RGBA> { 1 1 1 1 }
     }
     <Vertex> 21 {
-      1.0 1.0 0.0
-      <UV> { 0.0 0.0 }
-      <RGBA> { 1.0 1.0 1.0 1.0 }      
+      1 1 0.5
+      <UV> {
+        1 1
+        <Tangent> { 1 0 0 }
+        <Binormal> { 0 1 0 }
+      }
+      <RGBA> { 1 1 1 1 }
     }
     <Vertex> 22 {
-      0.0 1.0 0.0
-      <UV> { 1.0 0.0 }
-      <RGBA> { 1.0 1.0 1.0 1.0 }      
+      1 1 0.5
+      <UV> {
+        0 1
+        <Tangent> { -1 0 0 }
+        <Binormal> { 0 0 1 }
+      }
+      <RGBA> { 1 1 1 1 }
     }
     <Vertex> 23 {
-      0.0 1.0 0.5
-      <UV> { 1.0 1.0 }
-      <RGBA> { 1.0 1.0 1.0 1.0 }      
+      1 1 0.5
+      <UV> {
+        1 1
+        <Tangent> { 0 1 0 }
+        <Binormal> { 0 0 1 }
+      }
+      <RGBA> { 1 1 1 1 }
     }
   }
   <Polygon> {
+    <Normal> { 0 0 -1 }
     <MRef> { Material }
-    <Normal> { 0.0 0.0 -1.0 }
-    <VertexRef> { 0 1 2 3 <Ref> { Cube } }
+    <VertexRef> { 18 13 2 7 <Ref> { Cube } }
   }
   <Polygon> {
+    <Normal> { 0 0 1 }
     <MRef> { Material }
-    <Normal> { 0.0 0.0 1.0 }
-    <VertexRef> { 4 5 6 7 <Ref> { Cube } }
+    <VertexRef> { 21 10 5 16 <Ref> { Cube } }
   }
   <Polygon> {
+    <Normal> { 1 0 0 }
     <MRef> { Material }
-    <Normal> { 1.0 0.0 0.0 }
-    <VertexRef> { 8 9 10 11 <Ref> { Cube } }
+    <VertexRef> { 20 23 17 14 <Ref> { Cube } }
   }
   <Polygon> {
+    <Normal> { -1 0 0 }
     <MRef> { Material }
-    <Normal> { -1.0 0.0 0.0 }
-    <VertexRef> { 12 13 14 15 <Ref> { Cube } }
+    <VertexRef> { 12 15 3 0 <Ref> { Cube } }
   }
   <Polygon> {
+    <Normal> { 0 -1 0 }
     <MRef> { Material }
-    <Normal> { 0.0 -1.0 0.0 }
-    <VertexRef> { 16 17 18 19 <Ref> { Cube } }
+    <VertexRef> { 1 4 9 6 <Ref> { Cube } }
   }
   <Polygon> {
+    <Normal> { 0 1 0 }
     <MRef> { Material }
-    <Normal> { 0.0 1.0 0.0 }
-    <VertexRef> { 20 21 22 23 <Ref> { Cube } }
+    <VertexRef> { 22 19 8 11 <Ref> { Cube } }
   }
 }
-
