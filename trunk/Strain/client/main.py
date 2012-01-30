@@ -9,11 +9,13 @@ import logging
 from direct.showbase.ShowBase import ShowBase
 from panda3d.core import loadPrcFile, WindowProperties#@UnresolvedImport
 from panda3d.core import TextNode, VBase4, AntialiasAttrib#@UnresolvedImport
+from panda3d.core import ConfigVariableInt#@UnresolvedImport
 from direct.showbase.DirectObject import DirectObject
 from direct.fsm import FSM
 from direct.gui.DirectGui import DirectButton, DirectEntry, DirectLabel
 from direct.gui.OnscreenText import OnscreenText
 from pandac.PandaModules import PStatClient 
+
 
 # strain related imports
 from strain.client import Client
@@ -171,7 +173,9 @@ class Screen(DirectObject):
         base.makeDefaultPipe()
         screen = (base.pipe.getDisplayWidth(), base.pipe.getDisplayHeight())
         win = WindowProperties.getDefault()
-        win.setSize(res[0], res[1])
+        xsize = ConfigVariableInt("resx", res[0]).getValue()
+        ysize = ConfigVariableInt("resy", res[1]).getValue()
+        win.setSize(xsize, ysize)
         #win.setOrigin(screen[0]/2 - res[0]/2, screen[1]/2 - res[1]/2)
         win.setFullscreen(False)
         base.openDefaultWindow(win)        
