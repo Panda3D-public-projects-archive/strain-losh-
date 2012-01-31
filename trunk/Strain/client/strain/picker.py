@@ -8,6 +8,7 @@
 from direct.showbase import DirectObject
 from panda3d.core import CollisionTraverser, CollisionRay, CollisionHandlerQueue, CollisionNode#@UnresolvedImport
 from panda3d.core import BitMask32, Plane, Vec3, Point3#@UnresolvedImport
+from panda3d.core import TransparencyAttrib, CardMaker#@UnresolvedImport
 
 # strain related imports
 import strain.utils as utils
@@ -37,11 +38,22 @@ class Picker(DirectObject.DirectObject):
         self.hovered_unit_id = None
         self.hovered_point = Point3()
         
-        taskMgr.add(self.rayupdate, 'rayupdate_task')   
-        
+        # create selection card
+        cm = CardMaker('sel_card') 
+        self.sel_card = render.attachNewNode(cm.generate()) 
+        self.sel_card.setP(-90)
+        self.sel_card.setDepthOffset(2)
+        self.sel_card.setTransparency(TransparencyAttrib.MAlpha)
+        self.sel_card.setColor(1,1,1,0.4)
+    
+        taskMgr.add(self.rayupdate, 'rayupdate_task')
+    
     def rayupdate(self, task):
         if base.mouseWatcherNode.hasMouse():
             mpos = base.mouseWatcherNode.getMouse()
+            
+            if self.parent.sgm.comp_inited['level'] == False:
+                return task.cont
             
             pos3d = Point3()
             nearPoint = Point3()
@@ -49,7 +61,14 @@ class Picker(DirectObject.DirectObject):
             base.camLens.extrude(mpos, nearPoint, farPoint)
             if self.plane.intersectsLine(pos3d, render.getRelativePoint(camera, nearPoint), render.getRelativePoint(camera, farPoint)):
                 self.hovered_point = pos3d
-            
+                """
+                x = int(pos3d.getX())
+                y = int(pos3d.getY())
+                if self.parent.sel_unit_id != None:
+                    
+                if x >= 0 and x < self.parent.level.maxX and y >= 0 and y < self.parent.level.maxY:
+                    self.sel_card.setPos(x, y, utils.GROUND_LEVEL)
+                """
             self.pickerRay.setFromLens(base.camNode, mpos.getX(),mpos.getY())
             if self.collisionHandler.getNumEntries() > 0:
                 self.collisionHandler.sortEntries()
