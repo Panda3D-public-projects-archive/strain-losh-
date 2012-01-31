@@ -65,6 +65,9 @@ class Picker(DirectObject.DirectObject):
                     self.parent.sgm.unit_np_dict[int(self.hovered_unit_id)].markHovered()
             else:
                 if self.hovered_unit_id != None:
-                    self.parent.sgm.unit_np_dict[int(self.hovered_unit_id)].unmarkHovered()
-                self.hovered_unit_id = None
+                    try:
+                        self.parent.sgm.unit_np_dict[int(self.hovered_unit_id)].unmarkHovered()
+                        self.hovered_unit_id = None
+                    except KeyError:
+                        self.hovered_unit_id = None
         return task.cont
