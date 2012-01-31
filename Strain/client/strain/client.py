@@ -490,7 +490,7 @@ class Client(DirectObject):
 
     def buildMeleeAnim(self, unit_model, target_tile, weapon):
         # Unit melee animation
-        melee_anim = unit_model.getActorInterval('melee')
+        melee_anim = unit_model.model.actorInterval('melee')
         return melee_anim
     
     def buildDamageAnim(self, damage_list):

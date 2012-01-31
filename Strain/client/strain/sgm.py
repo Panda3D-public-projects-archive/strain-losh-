@@ -5,13 +5,11 @@
 # python imports
 
 # panda3D imports
-from panda3d.core import TextNode, NodePath, VBase4, GeomNode, CardMaker, Texture#@UnresolvedImport
+from panda3d.core import TextNode, NodePath, VBase4, CardMaker#@UnresolvedImport
 from panda3d.core import ShadeModelAttrib, DirectionalLight, AmbientLight, PointLight#@UnresolvedImport
-from panda3d.core import CollisionTraverser, CollisionRay, CollisionHandlerQueue, CollisionNode#@UnresolvedImport
 from panda3d.core import CullBinManager, CullBinEnums#@UnresolvedImport
-from panda3d.core import LineSegs, TransparencyAttrib, ColorBlendAttrib#@UnresolvedImport
+from panda3d.core import TransparencyAttrib#@UnresolvedImport
 from panda3d.core import SceneGraphAnalyzerMeter#@UnresolvedImport
-from direct.interval.IntervalGlobal import Sequence, LerpColorScaleInterval, LerpColorInterval, Wait#@UnresolvedImport
 
 
 # strain related imports
@@ -298,15 +296,22 @@ class SceneGraph():
             unit_model.isOverwatch = False
             unit_model.pauseAllAnims()
             unit_model.standup_anim.start()
-        elif unit_model.isSetup == False and unit['set_up'] == True:
-            unit_model.isSetup = True
-            unit_model.pauseAllAnims()
-            unit_model.setup_anim.start()
-        elif unit_model.isSetup == True and unit['set_up'] == False:
-            unit_model.isSetup = False
-            unit_model.pauseAllAnims()
-            unit_model.standup_anim.start()
-    
+        elif unit_model.isSetup == False:
+            try:
+                if unit['set_up'] == True:
+                    unit_model.isSetup = True
+                    unit_model.pauseAllAnims()
+                    unit_model.setup_anim.start()
+            except:
+                None
+        elif unit_model.isSetup == True:
+            try:
+                if unit['set_up'] == False:
+                    unit_model.isSetup = False
+                    unit_model.pauseAllAnims()
+                    unit_model.standup_anim.start()
+            except:
+                None
     def deleteTurnNode(self, d):
         d.removeNode()
 
