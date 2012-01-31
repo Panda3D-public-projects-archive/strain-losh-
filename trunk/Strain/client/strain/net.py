@@ -94,7 +94,7 @@ class Net():
                 if unit['pos'][0] != old_x or unit['pos'][1] != old_y:
                     m = self.parent.getInvisibleTiles()
                     self.parent.sgm.level_mesh.setInvisibleTiles(m)
-                #self.parent.sgm.playUnitStateAnim( unit['id'] )
+                self.parent.sgm.playUnitStateAnim( unit['id'] )
             self.parent._message_in_process = False
         #========================================================================
         #

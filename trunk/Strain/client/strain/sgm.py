@@ -290,12 +290,22 @@ class SceneGraph():
         # Check if we have toggled overwatch
         unit = self.parent.units[unit_id]
         unit_model = self.unit_np_dict[unit_id]
-        if unit_model.last_overwatch != unit['overwatch']:
-            unit_model.last_overwatch = unit['overwatch']
-            if unit['overwatch'] == True:
-                unit_model.model.play('overwatch')
-            else:
-                unit_model.model.play('idle_stand01')
+        if unit_model.isOverwatch == False and unit['overwatch'] == True:
+            unit_model.isOverwatch = True
+            unit_model.pauseAllAnims()
+            unit_model.overwatch_anim.start()
+        elif unit_model.isOverwatch == True and unit['overwatch'] == False:
+            unit_model.isOverwatch = False
+            unit_model.pauseAllAnims()
+            unit_model.standup_anim.start()
+        elif unit_model.isSetup == False and unit['set_up'] == True:
+            unit_model.isSetup = True
+            unit_model.pauseAllAnims()
+            unit_model.setup_anim.start()
+        elif unit_model.isSetup == True and unit['set_up'] == False:
+            unit_model.isSetup = False
+            unit_model.pauseAllAnims()
+            unit_model.standup_anim.start()
     
     def deleteTurnNode(self, d):
         d.removeNode()

@@ -113,6 +113,18 @@ class UnitModel:
         self.isTargeted = False
         self.isEnemyVisible = False
         
+        self.isOverwatch = False
+        self.isSetup = False
+        
+        self.overwatch_anim = Sequence(self.model.actorInterval('crouch'), self.model.actorInterval('overwatch'))
+        self.standup_anim = Sequence(self.model.actorInterval('stand_up'), self.model.actorInterval('idle'))
+        self.setup_anim = Sequence(self.model.actorInterval('crouch'), self.model.actorInterval('setup'))
+        
+    def pauseAllAnims(self):
+        self.overwatch_anim.pause()
+        self.standup_anim.pause()
+        self.setup_anim.pause()
+    
     def setCollisionOn(self):
         self.cnodePath.setCollideMask(BitMask32.bit(1)) 
         
