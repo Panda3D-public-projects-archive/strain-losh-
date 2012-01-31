@@ -270,12 +270,9 @@ class SceneGraph():
                     unit_model.setEnemyVisible()
         
     def hideVisibleEnemies(self):
-        if self.enemyunittiles_np:
-            self.enemyunittiles_np.removeNode()
         for u in self.parent.units.itervalues():
             if self.parent.isThisEnemyUnit(u['id']):
                 self.parent.sgm.unit_np_dict[u['id']].clearEnemyVisible()   
-
             
     def setBullet(self, b):
         b.reparentTo(render)

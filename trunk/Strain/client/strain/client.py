@@ -246,6 +246,7 @@ class Client(DirectObject):
         self.sgm.hideUnitAvailMove()
         self.sgm.hideVisibleEnemies()
         self.interface.clearUnitData()
+        
         if self.sel_unit_id != None:
             self.sgm.unit_np_dict[self.sel_unit_id].clearAllFlags()
             self.sgm.unit_np_dict[self.sel_unit_id].setCollisionOn()
@@ -404,7 +405,7 @@ class Client(DirectObject):
         for action in action_list:
             action_type = action[0]
             
-            """
+
             if action_type == "shoot":
                 shooter_id = action[1] # unit_id of the shooter
                 shoot_tile = action[2] # (x,y) pos of targeted tile
@@ -421,20 +422,19 @@ class Client(DirectObject):
                     i = self.buildDamageAnim(damage_list)
                     bi = Sequence(b, i)
                     s.append(Parallel(a, bi))                    
-            """
-            
-            if action_type == "shoot":
-                shooter_id = action[1] # unit_id of the shooter
-                shoot_tile = action[2] # (x,y) pos of targeted tile
-                weapon = action[3] # weapon id
-                damage_list = action[4] # list of all damaged/missed/bounced/killed units
-                if shooter_id >= 0:
-                    shooter_model = self.sgm.unit_np_dict[shooter_id]
-                    a = self.buildShootAnim(shooter_model, weapon)
-                    b = Sequence(Func(self.buildLaserAnim, shooter_model.node, self.sgm.unit_np_dict[damage_list[0][1]].node))
-                    i = self.buildDamageAnim(damage_list)
-                    bi = Sequence(b, i)
-                    s.append(Parallel(a, bi))
+            #if action_type == "shoot":
+            #    shooter_id = action[1] # unit_id of the shooter
+            #    shoot_tile = action[2] # (x,y) pos of targeted tile
+            #    weapon = action[3] # weapon id
+            #    damage_list = action[4] # list of all damaged/missed/bounced/killed units
+            #    if shooter_id >= 0:
+            #        shooter_model = self.sgm.unit_np_dict[shooter_id]
+            #        a = self.buildShootAnim(shooter_model, weapon)
+            #        b = Sequence(Func(self.buildLaserAnim, shooter_model.node, self.sgm.unit_np_dict[damage_list[0][1]].node))
+            #        i = self.buildDamageAnim(damage_list)
+            #        bi = Sequence(b, i)
+            #        s.append(Parallel(a, bi))
+
             elif action_type == "melee":
                 shooter_id = action[1] # unit_id of the shooter
                 shoot_tile = action[2] # (x,y) pos of targeted tile
