@@ -49,11 +49,11 @@ class Net():
                     self.parent.player_id = p['id']
             self.parent.turn_player = self.parent.getPlayerName(msg[1]['active_player_id'])                    
             self.parent.setupUnitLists(pickle.loads(msg[1]['units']))
-            self.parent.clearState()
             self.parent.sgm.deleteLevel()
             self.parent.sgm.deleteUnits()
             self.parent.sgm.loadLevel(self.parent.level)
             self.parent.sgm.loadUnits()
+            self.parent.clearState()            
             self.parent.interface.refreshStatusBar()
             for unit_id in self.parent.units.iterkeys():
                 if self.parent.isThisMyUnit(unit_id):
