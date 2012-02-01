@@ -73,7 +73,7 @@ class SceneGraph():
         self.level_mesh.createLevel()
         self.comp_inited['level'] = True
         
-        grid_tex = loader.loadTexture('move.png')
+        grid_tex = loader.loadTexture('grid2.png')
         #grid_tex.setMagfilter(Texture.FTLinearMipmapLinear)
         #grid_tex.setMinfilter(Texture.FTLinearMipmapLinear)
         for i in xrange(0, level.maxX):
@@ -238,6 +238,7 @@ class SceneGraph():
             return
         if unit:
             unit['move_dict'] = getMoveDict(unit, self.parent.level, self.parent.units)
+            self.parent.units[unit_id]['move_dict'] = unit['move_dict']
             move_dict = unit['move_dict']
             self.movetext_np = NodePath("movetext_np")
             self.movetext_np.setLightOff()
@@ -246,11 +247,11 @@ class SceneGraph():
                 text.setText( "%s" % move_dict[tile])
                 text.setAlign(TextNode.ACenter)
                 textNodePath = self.movetext_np.attachNewNode(text)
-                textNodePath.setPos(render, tile[0]+0.45, tile[1]+0.45, utils.GROUND_LEVEL+0.03)
+                textNodePath.setPos(render, tile[0]+0.45, tile[1]+0.45, utils.GROUND_LEVEL+0.04)
                 textNodePath.setColor(1, 1, 1)
                 textNodePath.setScale(0.4, 0.4, 0.4)
                 textNodePath.setBillboardPointEye()
-                self.tile_cards[tile[0]][tile[1]].setColor(1, 1, 0.4)
+                self.tile_cards[tile[0]][tile[1]].setColor(utils.WALKABLE_TILE_COLOR)
                 self.tile_cards[tile[0]][tile[1]].reparentTo(self.tile_cards_np)                  
             self.movetext_np.reparentTo(self.node)  
 
@@ -340,6 +341,5 @@ class SceneGraph():
         np.setAntialias(AntialiasAttrib.MMultisample) 
         
     def clearOutlineShader(self, np):
-        print "clear"
         self.light_dummy.detachNode()
         np.setShaderOff()

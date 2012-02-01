@@ -4,6 +4,7 @@ from panda3d.core import GeomNode, CardMaker, TextNode, Texture, TextureStage#@U
 from panda3d.core import TransparencyAttrib#@UnresolvedImport
 from direct.gui.DirectGui import DirectFrame, DGG
 from direct.gui.OnscreenText import OnscreenText
+from direct.interval.IntervalGlobal import LerpColorScaleInterval, LerpColorInterval, Wait, Sequence#@UnresolvedImport
 from console import GuiConsole
 from client_messaging import *
 from gui_elements import *
@@ -78,6 +79,11 @@ class Interface(DirectObject.DirectObject):
         self.accept("mouse1-up", self.mouseLeftClickUp)
         self.accept("r", self.redraw)
         self.accept( 'window-event', self.windowEvent)
+        
+        self.move_tile_seq = Sequence()
+        self.picked_move_tile_seq = Sequence()
+        self.old_p = None
+        self.old_move_dest = None
         
         taskMgr.add(self.processGui, 'processGui_task')#@UndefinedVariable
         taskMgr.add(self.hover, 'hover_task') #@UndefinedVariable
@@ -455,57 +461,69 @@ class Interface(DirectObject.DirectObject):
         self.move_timer = 0
         self.removeTurnArrows()
 
+    def startMoveTileInterval(self, tile):
+        self.move_tile_seq = Sequence(LerpColorInterval(tile, 0.3, (0, 0, 0, 1)),
+                                      LerpColorInterval(tile, 0.3, utils.WALKABLE_TILE_COLOR)
+                                     )
+        self.move_tile_seq.loop()
+        
+    def stopMoveTileInterval(self, tile):
+        self.move_tile_seq.pause()
+        tile.setColor(utils.WALKABLE_TILE_COLOR)
+
+        
+    def startPickedMoveTileInterval(self, tile):
+        self.picked_move_tile_seq = Sequence(LerpColorInterval(tile, 0.2, (1, 0, 0, 1)),
+                                             LerpColorInterval(tile, 0.2, utils.WALKABLE_TILE_COLOR)
+                                            )
+        self.picked_move_tile_seq.loop()
+        
+    def stopPickedTileMoveInterval(self, tile):
+        self.picked_move_tile_seq.pause()
+        tile.setColor(utils.WALKABLE_TILE_COLOR)
+
+
 #===============================================================================
 # CLASS Interface --- TASKS
 #===============================================================================
     def hover(self, task):
-        """Visually marks and selects tiles or units over which mouse cursor hovers."""
-        return task.cont
-        """
-        pickedObj, pickedPos = self.getMouseHoveredObject()
-        if pickedObj:
-            node_type = pickedObj.findNetTag("type").getTag("type")
-            if node_type == "tile":
-                if self.hovered_unit:
-                    #self.changeUnitColor(self.hovered_unit, _UNIT_RESET)
-                    self.ge.clearOutlineShader(self.hovered_unit)
-                    self.hovered_unit = None
-                if self.hovered_tile != np:
-                    if self.hovered_tile:
-                        self.changeTileColor(self.hovered_tile, _TILE_RESET)
-                    self.changeTileColor(np, _TILE_HOVERED)
-                    self.hovered_tile = np
-            elif node_type == "unit_marker":
-                np_unit = self.ge.unit_np_dict[int(np.findNetTag("id").getTag("id"))].model
-                if self.hovered_tile:
-                    self.changeTileColor(self.hovered_tile, _TILE_RESET)  
-                    self.hovered_tile = None              
-                if self.hovered_unit != np_unit:
-                    if self.hovered_unit:
-                        #self.changeUnitColor(self.hovered_unit, _UNIT_RESET)
-                        self.ge.clearOutlineShader(self.hovered_unit)
-                    #self.changeUnitColor(np_unit, _UNIT_HOVERED)
-                    self.hovered_unit = np_unit
-                    self.ge.setOutlineShader(np_unit, self.ge.unit_np_dict[int(np.findNetTag("id").getTag("id"))].team_color)                
-            elif node_type == "unit":
-                np_unit = np.getParent()
-                if self.hovered_tile:
-                    self.changeTileColor(self.hovered_tile, _TILE_RESET)  
-                    self.hovered_tile = None              
-                if self.hovered_unit != np_unit:
-                    if self.hovered_unit:
-                        #self.changeUnitColor(self.hovered_unit, _UNIT_RESET)
-                        self.ge.clearOutlineShader(self.hovered_unit)
-                    #self.changeUnitColor(np_unit, _UNIT_HOVERED)
-                    self.hovered_unit = np_unit
-                    self.ge.setOutlineShader(np_unit, self.ge.unit_np_dict[int(np.findNetTag("id").getTag("id"))].team_color) 
+        """Visually marks tiles over which mouse cursor hovers."""
+        if self.unit_move_destination:
+            if self.old_p != None:
+                old_tile = self.parent.sgm.tile_cards[self.old_p[0]][self.old_p[1]]
+                self.stopMoveTileInterval(old_tile)
+                self.old_p = None
+            move_x = int(self.unit_move_destination.getX())
+            move_y = int(self.unit_move_destination.getY())
+            if (move_x, move_y) != self.old_move_dest:
+                tile = self.parent.sgm.tile_cards[move_x][move_y]
+                self.startPickedMoveTileInterval(tile)
+                self.old_move_dest = (move_x, move_y)
         else:
-            if self.hovered_unit:
-                self.changeUnitColor(self.hovered_unit, _UNIT_RESET)
-            if self.hovered_tile:
-                self.changeTileColor(self.hovered_tile, _TILE_RESET)                
-        return task.cont 
-        """
+            if self.old_move_dest != None:
+                old_move_tile = self.parent.sgm.tile_cards[self.old_move_dest[0]][self.old_move_dest[1]]
+                self.stopPickedTileMoveInterval(old_move_tile)
+                self.old_move_dest = None
+            if self.parent.sel_unit_id != None:
+                move_dict = self.parent.units[self.parent.sel_unit_id]['move_dict']
+                p = (int(self.parent.picker.hovered_point.getX()), int(self.parent.picker.hovered_point.getY()))
+                if p != self.old_p:
+                    if move_dict.has_key(p):
+                        if self.old_p != None:
+                            old_tile = self.parent.sgm.tile_cards[self.old_p[0]][self.old_p[1]]
+                            self.stopMoveTileInterval(old_tile)
+                        tile = self.parent.sgm.tile_cards[p[0]][p[1]]
+                        self.startMoveTileInterval(tile)
+                        self.old_p = p
+                    else:
+                        if self.old_p != None:
+                            old_tile = self.parent.sgm.tile_cards[self.old_p[0]][self.old_p[1]]
+                            self.stopMoveTileInterval(old_tile)
+                            self.old_p = None
+        
+        return task.cont
+    
+     
     def processGui(self, task):
         """Visually marks and selects GUI element over which mouse cursor hovers."""
         if base.mouseWatcherNode.hasMouse(): #@UndefinedVariable

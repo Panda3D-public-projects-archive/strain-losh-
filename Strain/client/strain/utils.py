@@ -6,7 +6,7 @@
 import string
 
 # panda3D imports
-from panda3d.core import GeomNode, NodePath, TextureStage
+from panda3d.core import GeomNode, NodePath, TextureStage, Vec4
 from direct.actor.Actor import Actor
 
 # strain related imports
@@ -44,6 +44,8 @@ HEADING_SE        = 8
 GROUND_LEVEL = 0.5
 MODEL_OFFSET = 0.5
 BULLET_SPEED = 15
+
+WALKABLE_TILE_COLOR = Vec4(0.2, 1.0, 0.2, 1)
 
 marine_anim_dict = {}
 marine_anim_dict['crouch'] = 'marine-crouch'
