@@ -85,8 +85,11 @@ class VoxelGenerator():
         self.tex2 = loader.loadTexture("tile2.png")
         self.tex3 = loader.loadTexture("tile3.png")
         self.tex_tile_nm = loader.loadTexture("tile2nm.png")
+        #self.tex_tile_spc = loader.loadTexture("tile2spc.png")
         self.ts_nm = TextureStage('ts_nm')
         self.ts_nm.setMode(TextureStage.MNormal)
+        #self.ts_spc = TextureStage('ts_spc')
+        #self.ts_spc.setMode(TextureStage.MGloss)
         
         self.tex_floor_transparent = loader.loadTexture("trans_tex.png")
 
@@ -116,6 +119,7 @@ class VoxelGenerator():
                     model.setPos(x, y, utils.GROUND_LEVEL)
                     model.setTexture(ts, self.tex1)
                     model.setTexture(self.ts_nm, self.tex_tile_nm)
+                    #model.setTexture(self.ts_spc, self.tex_tile_spc)
                     model.reparentTo(self.node_wall_usable) 
                 else:
                     for i in xrange(0, self.level.getHeight( (x, y) )):
@@ -129,6 +133,7 @@ class VoxelGenerator():
                             model.setPos(x, y, i-1+utils.GROUND_LEVEL)
                             model.setTexture(ts, self.tex2)
                             model.setTexture(self.ts_nm, self.tex_tile_nm) 
+                            #model.setTexture(self.ts_spc, self.tex_tile_spc)
                             model.reparentTo(self.node_wall_usable) 
         self.floor_np.setTexture(self.tex3)  
         self.node_wall_usable.clearModelNodes()
