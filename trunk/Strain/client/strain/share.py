@@ -477,6 +477,7 @@ class Level:
         self.maxY = 0
         self._level_data = []    
         self._dynamics = []
+        self._grid = []
         
         self.load(self.name)        
 
@@ -486,18 +487,52 @@ class Level:
     def load(self, name):
         line_count = 0
         lvl_file = open( name, "r")
+
+        s = lvl_file.readline().split()
+        self.maxX = int(s[0]) 
+        self.maxY = int(s[1])
+
+        #----------------------------------load cubes----------------------------------
         for line in lvl_file:
+            s = line.split(";")
+            s = s[0:self.maxX]
+            self._level_data.append(s)
+            if line_count == self.maxY-1:
+                break
             line_count = line_count + 1
-            if line_count == 1:
-                s = line.split()
-                self.maxX = int(s[0]); self.maxY = int(s[1])
-            else:
-                s = line.split(";")
-                s = s[0:self.maxX]
-                self._level_data.append(s)
-           
+        
+        
+        #we make this so its size is the same as level 
+        self._grid = [[ None ] * (2*self.maxY+1) for i in xrange(2*self.maxX+1)] #@UnusedVariable
+        
+        #---------------------------------load grid stuff------------------------------
+        in_grid = False
+        for line in lvl_file:
+            if not in_grid and line != 'GRID\n':
+                continue         
+            in_grid = True
+            
+            if line == 'GRID\n':
+                continue
+            if line == '/GRID\n':
+                break
+            
+            s = line.split(',')        
+            self._grid[int(s[0])][int(s[1])] = int(s[2])
+        
+        
+        for i in xrange( self.maxX):
+            for j in xrange( self.maxY):
+                print i,j
+                print self._grid[2*i+1][2*j]
+                print self._grid[2*i][2*j+1]
+                print self._grid[2*i+1][2*j+2]
+                print self._grid[2*i+2][2*j+1]
+        
+        
         lvl_file.close()
         self._level_data.reverse()
+        self._grid.reverse()
         
         #convert entries in _level_data from string to integer AND change x-y order
         tmp = [[None] * self.maxY for i in xrange(self.maxX)]
