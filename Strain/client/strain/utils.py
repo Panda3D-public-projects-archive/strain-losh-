@@ -45,7 +45,7 @@ GROUND_LEVEL = 0.5
 MODEL_OFFSET = 0.5
 BULLET_SPEED = 15
 
-WALKABLE_TILE_COLOR = Vec4(0.2, 1.0, 0.2, 1)
+WALKABLE_TILE_COLOR = Vec4(0.2, 1.0, 0.3, 0.5)
 
 marine_anim_dict = {}
 marine_anim_dict['crouch'] = 'marine-crouch'

@@ -73,7 +73,7 @@ class SceneGraph():
         self.level_mesh.createLevel()
         self.comp_inited['level'] = True
         
-        grid_tex = loader.loadTexture('grid2.png')
+        #grid_tex = loader.loadTexture('grid2.png')
         #grid_tex.setMagfilter(Texture.FTLinearMipmapLinear)
         #grid_tex.setMinfilter(Texture.FTLinearMipmapLinear)
         for i in xrange(0, level.maxX):
@@ -84,7 +84,7 @@ class SceneGraph():
                 cpos.setP(render, -90)
                 cpos.setPos(render, i, j, utils.GROUND_LEVEL)
                 cpos.setDepthOffset(1)
-                cpos.setTexture(grid_tex)
+                #cpos.setTexture(grid_tex)
                 #cpos.node().setAttrib(ColorBlendAttrib.make(ColorBlendAttrib.MAdd))
                 cpos.setTransparency(TransparencyAttrib.MAlpha)
                 cpos.setBin('highlight', 25)

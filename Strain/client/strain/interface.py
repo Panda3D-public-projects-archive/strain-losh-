@@ -462,7 +462,7 @@ class Interface(DirectObject.DirectObject):
         self.removeTurnArrows()
 
     def startMoveTileInterval(self, tile):
-        self.move_tile_seq = Sequence(LerpColorInterval(tile, 0.3, (0, 0, 0, 1)),
+        self.move_tile_seq = Sequence(LerpColorInterval(tile, 0.3, (0, 0, 0, 0.5)),
                                       LerpColorInterval(tile, 0.3, utils.WALKABLE_TILE_COLOR)
                                      )
         self.move_tile_seq.loop()
@@ -473,7 +473,7 @@ class Interface(DirectObject.DirectObject):
 
         
     def startPickedMoveTileInterval(self, tile):
-        self.picked_move_tile_seq = Sequence(LerpColorInterval(tile, 0.2, (1, 0, 0, 1)),
+        self.picked_move_tile_seq = Sequence(LerpColorInterval(tile, 0.2, (1, 0, 0, 0.5)),
                                              LerpColorInterval(tile, 0.2, utils.WALKABLE_TILE_COLOR)
                                             )
         self.picked_move_tile_seq.loop()
