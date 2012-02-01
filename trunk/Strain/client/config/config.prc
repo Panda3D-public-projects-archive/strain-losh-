@@ -40,7 +40,8 @@ depth-bits 1
 color-bits 1
 alpha-bits 0
 stencil-bits 0
-multisamples 0
+framebuffer-multisample 1
+multisamples 8
 
 # These control the amount of output Panda gives for some various
 # categories.  The severity levels, in order, are "spam", "debug",
@@ -118,11 +119,13 @@ particle-path $MAIN_DIR/data/particles/
 # Set this true to yield the timeslice at the end of the frame to be more polite to other applications that are trying to run.
 yield-timeslice #t
 
+#threading-model Cull/Draw 
+
 # Custom Strain parameters
 server-ip 127.0.0.1
 #server-ip 178.79.164.4
 server-port 56005
 
-resx 1024
-resy 768
+resx 800
+resy 600
 
