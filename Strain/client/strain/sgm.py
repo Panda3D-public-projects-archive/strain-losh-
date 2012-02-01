@@ -5,10 +5,10 @@
 # python imports
 
 # panda3D imports
-from panda3d.core import TextNode, NodePath, VBase4, CardMaker#@UnresolvedImport
+from panda3d.core import TextNode, NodePath, VBase4, CardMaker, Vec4, Vec3#@UnresolvedImport
 from panda3d.core import ShadeModelAttrib, DirectionalLight, AmbientLight, PointLight#@UnresolvedImport
 from panda3d.core import CullBinManager, CullBinEnums#@UnresolvedImport
-from panda3d.core import TransparencyAttrib#@UnresolvedImport
+from panda3d.core import TransparencyAttrib, AntialiasAttrib, Shader#@UnresolvedImport
 from panda3d.core import SceneGraphAnalyzerMeter#@UnresolvedImport
 
 
@@ -53,6 +53,8 @@ class SceneGraph():
         self.tile_cards = []
         self.tile_cards_np = render.attachNewNode('tile_cards_np')
         self.tile_cards_np.setLightOff()
+        
+        self.initOutlineShader()
         
         #meter = SceneGraphAnalyzerMeter('meter', render.node())
         #meter.setupWindow(base.win)      
@@ -315,31 +317,29 @@ class SceneGraph():
     def deleteTurnNode(self, d):
         d.removeNode()
 
-    
-    """
     def initOutlineShader(self):  
         self.light_dummy = NodePath("outline_light_dummy_node")      
-        self.light_input = NodePath("outline_light_input_node")#self.loader.loadModel('misc/sphere') 
+        self.light_input = NodePath("outline_light_input_node")
         self.light_input.reparentTo(self.light_dummy) 
-        self.light_input.setPos(5,0,1) 
-        self.light_dummy.setShaderOff(1) 
+        self.light_input.setPos(5, 0, 1) 
+        self.light_dummy.setShaderOff() 
         self.light_dummy.hprInterval(1,Vec3(360,0,0)).loop() 
         self.SHA_outline = Shader.load('./data/shaders/facingRatio1.sha') 
 
-    def setOutlineShader(self, np, color=Vec4(1, 0, 0, 0)):
-        facingRatioPower = 1.5
+    def setOutlineShader(self, np, color=Vec4(1, 1, 1, 0), power=1.1):
+        facingRatioPower = power
         envirLightColor = color    
 
         self.light_dummy.reparentTo(np)
         self.light_dummy.setPos(np, 0, 0, 1)
         
         np.setShader(self.SHA_outline) 
-        np.setShaderInput('cam', self.camera) 
+        np.setShaderInput('cam', base.camera) 
         np.setShaderInput('light', self.light_input) 
         np.setShaderInput('envirLightColor', envirLightColor * facingRatioPower) 
         np.setAntialias(AntialiasAttrib.MMultisample) 
         
     def clearOutlineShader(self, np):
+        print "clear"
         self.light_dummy.detachNode()
         np.setShaderOff()
-    """

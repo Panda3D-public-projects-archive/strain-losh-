@@ -15,6 +15,7 @@ void vshader(
              ) 
 { 
   l_smooth = smoothstep( -1.5,1,dot(vtx_normal, normalize(mspos_light-vtx_position)) ); 
+  //l_smooth = smoothstep( -1.5,1,dot(vtx_normal, normalize(vtx_position)) );   
   l_facingRatio = pow( 1.0-saturate( dot(vtx_normal, normalize(mspos_cam-vtx_position)) ), 2 ); 
   l_position = mul(mat_modelproj, vtx_position); 
   l_texcoord0=vtx_texcoord0; 

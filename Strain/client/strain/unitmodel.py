@@ -148,12 +148,14 @@ class UnitModel:
             self.marker.clearTexture()
             self.marker.setTexture(self.tex_circle2)
             self.marker.setColor(0.2, 0.78, 0.157)
-            self.marker.reparentTo(self.node)      
+            self.marker.reparentTo(self.node)  
+            self.parent.setOutlineShader(self.model)  
             self.isHovered = True
             
     def clearHovered(self):
         if self.isHovered:
-            self.marker.detachNode()            
+            self.marker.detachNode()  
+            self.parent.clearOutlineShader(self.model)              
             self.isHovered = False
             
     def setSelected(self):
@@ -162,8 +164,9 @@ class UnitModel:
             self.marker.setTexture(self.tex_circle1)
             self.marker.setColor(0, 1, 0)
             self.marker.reparentTo(self.node)
-            self.isHovered = False
             self.isSelected = True
+            self.parent.clearOutlineShader(self.model)
+            self.isHovered = False
             
     def clearSelected(self):
         if self.isSelected:
@@ -171,14 +174,16 @@ class UnitModel:
             self.isSelected = False
             
     def setTargeted(self):
-        if not self.isTargeted:
+        if self.isEnemyVisible and not self.isTargeted:
             self.marker_interval.loop()
+            self.parent.setOutlineShader(self.model, color=Vec4(1,0,0,0)) 
             self.isTargeted = True 
     
     def clearTargeted(self):
         if self.isTargeted:
             self.marker_interval.pause()
             self.marker.setColor(1, 0, 0)
+            self.parent.clearOutlineShader(self.model)
             self.isTargeted = False
             
     def setEnemyVisible(self):
@@ -192,6 +197,7 @@ class UnitModel:
     def clearEnemyVisible(self):
         if self.isEnemyVisible:
             self.marker.detachNode()
+            self.parent.clearOutlineShader(self.model)
             self.isEnemyVisible= False
             
     def clearAllFlags(self):
