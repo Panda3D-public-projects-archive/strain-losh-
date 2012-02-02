@@ -57,7 +57,9 @@ class Net():
             self.parent.interface.refreshStatusBar()
             for unit_id in self.parent.units.iterkeys():
                 if self.parent.isThisMyUnit(unit_id):
-                    self.parent.interface.refreshUnitInfo(unit_id)            
+                    self.parent.interface.refreshUnitInfo(unit_id) 
+            m = self.parent.getInvisibleTiles()
+            self.parent.sgm.level_mesh.setInvisibleTiles(m)           
             self.parent._message_in_process = False
         #========================================================================
         #
