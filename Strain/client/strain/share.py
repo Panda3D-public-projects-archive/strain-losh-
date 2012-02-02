@@ -448,6 +448,11 @@ def _testTile3D( pos, lastpos, level ):
     if level.opaque( pos[0], pos[1], pos[2] ):
         return False
     
+    
+    #check grid
+    if not checkGridVisibility( pos, lastpos, level ):
+        return False
+    
     #moved along x
     if pos[0] != lastpos[0]:
         #moved along y
@@ -495,7 +500,62 @@ def _testTile3D( pos, lastpos, level ):
     return True
 
 
+def checkGridVisibility( pos, lastpos, level):
+    
+    dx = lastpos[0] - pos[0]
+    dy = lastpos[1] - pos[1]
+    #dz = lastpos[2] - pos[2]
+    
+    x = pos[0]
+    y = pos[1]
+    
+    _2x = x*2
+    _2y = y*2
+  
+  
+    if dx == 1:
+        if dy == 1:
+            if level._grid[_2x+2][_2y+1] and level._grid[_2x+2][_2y+3]:
+                return False
+            if level._grid[_2x+1][_2y+2] and level._grid[_2x+3][_2y+2]:
+                return False
+            
+        if dy == -1:
+            if level._grid[_2x+2][_2y+1] and level._grid[_2x+2][_2y-1]:
+                return False
+            if level._grid[_2x+1][_2y] and level._grid[_2x+3][_2y]:
+                return False
 
+        if level._grid[_2x+2][_2y+1]:
+            return False
+
+        
+    if dx == -1:
+        if dy == 1:
+            if level._grid[_2x][_2y+1] and level._grid[_2x][_2y+3]:
+                return False
+            if level._grid[_2x+1][_2y+2] and level._grid[_2x-1][_2y+2]:
+                return False
+
+        if dy == -1:
+            if level._grid[_2x][_2y+1] and level._grid[_2x][_2y-1]:
+                return False
+            if level._grid[_2x+1][_2y] and level._grid[_2x-1][_2y]:
+                return False
+             
+        if level._grid[_2x][_2y+1]:
+            return False
+        
+    if dy == 1:
+        if level._grid[_2x+1][_2y+2]:
+            return False
+
+    if dy == -1:
+        if level._grid[_2x+1][_2y]:
+            return False
+    
+    return True    
+    
 
 def signum( num ):
     if( num < 0 ): 
