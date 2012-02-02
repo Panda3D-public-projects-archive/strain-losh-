@@ -563,18 +563,18 @@ class Level:
             s = line.split(',')        
             x = int(s[0])
             y = int(s[1])
-            type = int(s[2])
+            wall_type = int(s[2])
             
             #put wall in grid
-            self._grid[ x ][ y ] = type
+            self._grid[ x ][ y ] = wall_type
             
             #put flag in all nodes touching this wall
             if x % 2 == 0:
-                self._grid[ x ][ y + 1 ] = type
-                self._grid[ x ][ y - 1 ] = type
+                self._grid[ x ][ y + 1 ] = wall_type
+                self._grid[ x ][ y - 1 ] = wall_type
             else:
-                self._grid[ x + 1][ y ] = type
-                self._grid[ x - 1][ y ] = type
+                self._grid[ x + 1][ y ] = wall_type
+                self._grid[ x - 1][ y ] = wall_type
                 
                 
         lvl_file.close()
