@@ -135,7 +135,38 @@ class VoxelGenerator():
                             model.setTexture(self.ts_nm, self.tex_tile_nm) 
                             #model.setTexture(self.ts_spc, self.tex_tile_spc)
                             model.reparentTo(self.node_wall_usable) 
-        self.floor_np.setTexture(self.tex3)  
+        self.floor_np.setTexture(self.tex3) 
+        
+        #Calculate and place walls between tiles
+        for x, val in enumerate(self.level._grid):
+            for y, val2 in enumerate(val):
+                if val2 == 1: # TODO: ogs: kasnije razlikovati tipove zidova
+                    # prvi parni, drugi neparni
+                    if (x%2==0 and y%2!=0):
+                        tile1_x = (x-2)/2
+                        tile1_y = (y-1)/2
+                        tile2_x = x/2
+                        tile2_y = (y-1)/2
+                        my_x= tile2_x
+                        my_y=tile2_y
+                        model = loader.loadModel("wall")
+                        model.setPos(my_x, my_y, utils.GROUND_LEVEL)
+                        model.setH(90)
+                        model.reparentTo(self.node_wall_usable)
+                    # prvi neparni, drugi parni
+                    elif (x%2!=0 and y%2==0):
+                        tile1_x = (x-1)/2
+                        tile1_y = (y-2)/2
+                        tile2_x = (x-1)/2
+                        tile2_y = y/2
+                        my_x= tile2_x
+                        my_y=tile2_y                        
+                        model = loader.loadModel("wall")
+                        model.setPos(my_x, my_y, utils.GROUND_LEVEL)
+                        model.reparentTo(self.node_wall_usable)                        
+                    else:
+                        continue                                           
+         
         self.node_wall_usable.clearModelNodes()
         self.node_wall_usable.flattenStrong()
         self.node_wall_usable.setShaderAuto()
