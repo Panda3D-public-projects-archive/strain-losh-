@@ -412,7 +412,7 @@ class Engine( Thread ):
         
         moveDict = self._mvdict(unit, True)
 
-        #if target_tile tile is not in the move list, or my subjective move list then raise alarm
+        #if target_tile tile is not in the move list
         if target_tile not in moveDict:
             notify.critical("getPath() got an invalid target tile:%s", target_tile )
             raise Exception( "Trying to move to an invalid target_tile:%s", target_tile )
@@ -497,7 +497,7 @@ class Engine( Thread ):
         if not unit:
             return
         
-        #this means we only need to rotate the unit
+        #check if we are unable to move
         if unit.pos != new_position:
             msg = unit.amIStuck()
             if msg:

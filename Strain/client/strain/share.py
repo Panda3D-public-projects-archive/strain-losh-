@@ -218,6 +218,11 @@ def canIMoveHere( unit, position, dx, dy, level, units ):
     if not tileClearForMoving( unit, ptx + dx, pty + dy, level ):
         return False
 
+
+    #check grid if unit can move to destination
+    if not checkGrid(ptx, pty, dx, dy, level):
+        return False
+
   
     #check diagonal if it is clear
     if( dx != 0 and dy != 0 ):
@@ -237,6 +242,44 @@ def canIMoveHere( unit, position, dx, dy, level, units ):
             if( units[ stuff[1] ]['owner_id'] != unit['owner_id'] ):
                 return False
                 
+    return True
+
+
+def checkGrid( x, y, dx, dy, level ):
+    
+    _2x = x*2
+    _2y = y*2
+  
+    if dx == 1:
+        if dy == 1:
+            if level._grid[_2x+2][_2y+2]:
+                return False
+        if dy == -1:
+            if level._grid[_2x+2][_2y]:
+                return False
+             
+        if level._grid[_2x+2][_2y+1]:
+            return False
+        
+    if dx == -1:
+        if dy == 1:
+            if level._grid[_2x][_2y+2]:
+                return False
+        if dy == -1:
+            if level._grid[_2x][_2y]:
+                return False
+             
+        if level._grid[_2x][_2y+1]:
+            return False
+        
+    if dy == 1:
+        if level._grid[_2x+1][_2y+2]:
+            return False
+
+    if dy == -1:
+        if level._grid[_2x+1][_2y]:
+            return False
+    
     return True
 
 
@@ -502,7 +545,7 @@ class Level:
             line_count = line_count + 1
         
         
-        #we make this so its size is the same as level 
+        #initialize grid
         self._grid = [[ None ] * (2*self.maxY+1) for i in xrange(2*self.maxX+1)] #@UnusedVariable
         
         #---------------------------------load grid stuff------------------------------
@@ -518,21 +561,25 @@ class Level:
                 break
             
             s = line.split(',')        
-            self._grid[int(s[0])][int(s[1])] = int(s[2])
-        
-        
-        for i in xrange( self.maxX):
-            for j in xrange( self.maxY):
-                print i,j
-                print self._grid[2*i+1][2*j]
-                print self._grid[2*i][2*j+1]
-                print self._grid[2*i+1][2*j+2]
-                print self._grid[2*i+2][2*j+1]
-        
-        
+            x = int(s[0])
+            y = int(s[1])
+            type = int(s[2])
+            
+            #put wall in grid
+            self._grid[ x ][ y ] = type
+            
+            #put flag in all nodes touching this wall
+            if x % 2 == 0:
+                self._grid[ x ][ y + 1 ] = type
+                self._grid[ x ][ y - 1 ] = type
+            else:
+                self._grid[ x + 1][ y ] = type
+                self._grid[ x - 1][ y ] = type
+                
+                
         lvl_file.close()
         self._level_data.reverse()
-        self._grid.reverse()
+        #self._grid.reverse()
         
         #convert entries in _level_data from string to integer AND change x-y order
         tmp = [[None] * self.maxY for i in xrange(self.maxX)]
