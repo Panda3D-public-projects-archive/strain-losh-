@@ -154,12 +154,12 @@
   }
   <Polygon> {
     <MRef> { Material }
-    <Normal> { -1.0 0.0 0.0 }
+    <Normal> { 0.0 -1.0 0.0 }
     <VertexRef> { 12 13 14 15 <Ref> { Cube } }
   }
   <Polygon> {
     <MRef> { Material }
-    <Normal> { 0.0 -1.0 0.0 }
+    <Normal> { -1.0 0.0 0.0 }
     <VertexRef> { 16 17 18 19 <Ref> { Cube } }
   }
   <Polygon> {
