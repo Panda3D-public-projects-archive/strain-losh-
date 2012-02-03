@@ -500,6 +500,8 @@ class Interface(DirectObject.DirectObject):
                 self.startPickedMoveTileInterval(tile)
                 self.old_move_dest = (move_x, move_y)
         else:
+            if self.parent.turn_player != self.parent.player:
+                return task.cont
             if self.old_move_dest != None:
                 old_move_tile = self.parent.sgm.tile_cards[self.old_move_dest[0]][self.old_move_dest[1]]
                 self.stopPickedTileMoveInterval(old_move_tile)
