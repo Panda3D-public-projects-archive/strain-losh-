@@ -16,7 +16,7 @@ from engine import *
 import util
 
 
-TCP_PORT = 56005
+TCP_PORT = 8080
 
 
 MOVE = 'move'                   #values - list of actions ('move',tile) ('rotate',tile) ('overwatch',overwatchresult) ('detected',enemy)
