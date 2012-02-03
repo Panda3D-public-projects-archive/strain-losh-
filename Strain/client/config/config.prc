@@ -124,7 +124,8 @@ yield-timeslice #t
 # Custom Strain parameters
 server-ip 127.0.0.1
 #server-ip 178.79.164.4
-server-port 56005
+#server-port 56005
+server-port 8080
 
 resx 800
 resy 600
