@@ -652,6 +652,61 @@ class Level:
         #we make this so its size is the same as level 
         self._dynamics = [[ None ] * self.maxY for i in xrange(self.maxX)] #@UnusedVariable
 
+    def changeRowNumber(self, a):
+        pass
+    
+    def changeColumnNumber(self, a):
+        pass
+
+    def increaseElement(self, x, y ):
+        self._level_data[x][y] = self._level_data[x][y] + 1
+        if self._level_data[x][y] > 5:
+            self._level_data[x][y] = 5
+                
+    def decreaseElement(self, x, y ):
+        self._level_data[x][y] = self._level_data[x][y] - 1
+        if self._level_data[x][y] < 0:
+            self._level_data[x][y] = 0
+
+    def saveLevel(self):
+        
+        fajl = open( self.name, "w" )
+        
+        fajl.write( str(self.maxX) + " " + str(self.maxY) + "\n"  )
+        
+        import copy
+        data = copy.deepcopy( self._level_data )
+        
+        for l in data:
+            l.reverse()
+        
+        for y in xrange( self.maxY ):
+            for x in xrange( self.maxX ):   
+                fajl.write( str(data[x][y]) + ";" )
+            fajl.write( "\n" )
+            
+        fajl.write("\n\n\nGRID\n")
+        
+        for x in xrange( self.maxX*2+1):
+            for y in xrange( self.maxY*2+1):
+                if x % 2 == 0 and y % 2 == 0:
+                    continue
+                if not self._grid[x][y]:
+                    continue
+        
+                fajl.write( str(x) + ',' + str(y) + ',' + str(self._grid[x][y]) + '\n' )
+        
+        fajl.write("/GRID\n")
+        
+        
+        
+        fajl.close()
+        
+        print "saved OK"
+        
+        
+        pass
+
 
     def outOfBounds( self, x, y ):
         if( x < 0 or y < 0 or x >= self.maxX or y >= self.maxY ):
