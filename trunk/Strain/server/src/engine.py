@@ -20,6 +20,9 @@ from strain.share import *
 notify = util.Notify()
 
 
+LEVELS_ROOT = "./data/levels/"
+
+
 class Engine( Thread ):
     
         
@@ -56,7 +59,7 @@ class Engine( Thread ):
         EngMsg.startServer( notify )
         
         lvl = "level2.txt"
-        self.level = Level( lvl )
+        self.level = Level( LEVELS_ROOT + lvl )
         notify.info("Loaded level:%s", lvl )
 
         self.loadArmyList()

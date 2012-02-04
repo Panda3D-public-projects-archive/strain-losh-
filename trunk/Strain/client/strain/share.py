@@ -11,9 +11,6 @@ import time
 COMMUNICATION_PROTOCOL = 0.1
 
 
-LEVELS_ROOT = "./data/levels/"
-
-
 DYNAMICS_EMPTY = 0
 DYNAMICS_UNIT = 1
 
@@ -25,8 +22,6 @@ def levelVisibilityDict( unit_list, level ):
     for x in xrange(level.maxX):
         for y in xrange(level.maxY):
             vis_dict[(x,y)] = 0
-    
-    
 
     for unit in unit_list:            
         for x in xrange(level.maxX):
@@ -40,111 +35,18 @@ def levelVisibilityDict( unit_list, level ):
                     vis_dict[x_y] = 1
                     continue
                 
-                tiles = tilesForVisibility( unit, (x,y), level)
+                b_pos = unit['pos'] + ( ( level.getHeight( unit['pos'] ) + unit['height'] -1 ) , )
+                t1 = (x,y, 2)        
+                tiles = _getTiles3D( b_pos, t1, level )
+                #tiles = tilesForVisibility( unit, (x,y), level)
                     
                 if tiles:
-                    for t in tiles:
-                        vis_dict[t] = 1
+                    for x,y,z in tiles:
+                        vis_dict[(x,y)] = 1
                     continue
           
             
     return vis_dict            
-
-
-def tilesForVisibility( beholder_dict, pos, level ):
-    """0-cant see, 1-partial, 2-full"""
-    
-    t2 = beholder_dict['pos']          
-    t1 = pos        
-
-    #we see ourself
-    if( t1 == t2 ):
-        return [ t1 ]
-    
-    x1, y1 = t1
-    x2, y2 = t2
-        
-    absx0 = math.fabs(x2 - x1);
-    absy0 = math.fabs(y2 - y1);
-
-    list_visible_tiles = [ t1 ]
-    
-    if( absx0 > absy0 ):
-        if x2 < x1:
-            x1, y1 = t2
-            x2, y2 = t1
-            list_visible_tiles[0] = t2
-    else:
-        if y2 < y1:
-            x1, y1 = t2
-            x2, y2 = t1
-            list_visible_tiles[0] = t2
-    
-    
-    x = int( x1 );
-    y = int( y1 );
-
-        
-    if( absx0 > absy0 ):
-        sgny0 = signum( y2 - y1 );
-        y_x = absy0/absx0            
-        D = y_x -0.5
-        
-        for i in xrange( int( absx0 ) ): #@UnusedVariable
-            lastx, lasty = x, y
-            
-            if( D > 0 ):
-                y += sgny0
-                D -= 1
-
-            x += 1
-            D += y_x
-            
-            #=========================TEST==========================================
-            if level.getHeight( (x,y) ) > 1:
-                return False
-            
-            if lastx != x and lasty != y:
-                if level.getHeight( (lastx, y) ) > 1 and level.getHeight( (x, lasty) ) > 1:
-                    return False 
-            
-            list_visible_tiles.append( (x, y) )
-
-
-            
-    #//(y0 >= x0)            
-    else:
-        sgnx0 = signum( x2 - x1 );
-        x_y = absx0/absy0
-        D = x_y -0.5;
-        
-        for i in xrange( int( absy0 ) ): #@UnusedVariable
-            lastx, lasty = x, y
-    
-            if( D > 0 ):
-                x += sgnx0
-                D -= 1.0
-
-            y += 1
-            D += x_y
-            
-            #=========================TEST==========================================
-            if level.getHeight( (x,y) ) > 1:
-                return False
-            
-            if lastx != x and lasty != y:
-                if level.getHeight( (lastx, y) ) > 1 and level.getHeight( (x, lasty) ) > 1:
-                    return False 
-            
-            list_visible_tiles.append( (x, y) )
-
-
-
-    return list_visible_tiles
-
-            
-
-
 
 
 def getMoveDict( unit, level, units, returnOriginTile = False ):    
@@ -502,29 +404,58 @@ def _testTile3D( pos, lastpos, level ):
 
 def checkGridVisibility( pos, lastpos, level):
     
-    dx = lastpos[0] - pos[0]
-    dy = lastpos[1] - pos[1]
-    #dz = lastpos[2] - pos[2]
+    dx = pos[0] - lastpos[0]
+    dy = pos[1] - lastpos[1]
     
-    x = pos[0]
-    y = pos[1]
-    
+    x = lastpos[0]
+    y = lastpos[1]
+
     _2x = x*2
     _2y = y*2
   
   
     if dx == 1:
         if dy == 1:
-            if level._grid[_2x+2][_2y+1] and level._grid[_2x+2][_2y+3]:
-                return False
-            if level._grid[_2x+1][_2y+2] and level._grid[_2x+3][_2y+2]:
+            if level._grid[_2x+2][_2y+1]:
+                if level._grid[_2x+2][_2y+3]:
+                    return False
+                if level.getHeight( (x, y+1) ) > 1:
+                    return False
+                
+            if level._grid[_2x+2][_2y+3] and level.getHeight( (x+1, y) ) > 1:
                 return False
             
+            
+            if level._grid[_2x+1][_2y+2]:
+                if level._grid[_2x+3][_2y+2]:
+                    return False
+                if level.getHeight( (x+1, y) ) > 1:
+                    return False
+            
+            if level._grid[_2x+3][_2y+2] and level.getHeight( (x, y+1) ) > 1:
+                    return False
+                
+                
         if dy == -1:
-            if level._grid[_2x+2][_2y+1] and level._grid[_2x+2][_2y-1]:
+            if level._grid[_2x+2][_2y+1]:
+                if level._grid[_2x+2][_2y-1]:
+                    return False
+                if level.getHeight( (x, y-1) ) > 1:
+                    return False
+                
+            if level._grid[_2x+2][_2y-1] and level.getHeight( (x+1, y) ) > 1:
                 return False
-            if level._grid[_2x+1][_2y] and level._grid[_2x+3][_2y]:
-                return False
+                
+                
+            if level._grid[_2x+1][_2y]:
+                if level._grid[_2x+3][_2y]:
+                    return False
+                if level.getHeight( (x+1, y) ) > 1:
+                    return False
+
+            if level._grid[_2x+3][_2y] and level.getHeight( (x, y-1) ) > 1:
+                    return False
+
 
         if level._grid[_2x+2][_2y+1]:
             return False
@@ -532,19 +463,51 @@ def checkGridVisibility( pos, lastpos, level):
         
     if dx == -1:
         if dy == 1:
-            if level._grid[_2x][_2y+1] and level._grid[_2x][_2y+3]:
+            if level._grid[_2x][_2y+1]:
+                if level._grid[_2x][_2y+3]:
+                    return False
+                if level.getHeight( (x, y+1) ) > 1:
+                    return False
+                
+            if level._grid[_2x][_2y+3] and level.getHeight( (x-1, y) ) > 1:
                 return False
-            if level._grid[_2x+1][_2y+2] and level._grid[_2x-1][_2y+2]:
+                
+                
+            if level._grid[_2x+1][_2y+2]:
+                if level._grid[_2x-1][_2y+2]:
+                    return False
+                if level.getHeight( (x-1, y) ) > 1:
+                    return False
+
+            if level._grid[_2x-1][_2y+2] and level.getHeight( (x, y+1) ) > 1:
                 return False
 
+
+
         if dy == -1:
-            if level._grid[_2x][_2y+1] and level._grid[_2x][_2y-1]:
+            if level._grid[_2x][_2y+1]:
+                if level._grid[_2x][_2y-1]:
+                    return False
+                if level.getHeight( (x, y-1) ) > 1:
+                    return False
+            
+            if level._grid[_2x][_2y-1] and level.getHeight( (x-1, y) ) > 1:
                 return False
-            if level._grid[_2x+1][_2y] and level._grid[_2x-1][_2y]:
-                return False
+            
+            
+            if level._grid[_2x+1][_2y]:
+                if level._grid[_2x-1][_2y]:
+                    return False
+                if level.getHeight( (x-1, y) ) > 1:
+                    return False
+             
+            if level._grid[_2x-1][_2y] and level.getHeight( (x, y-1) ) > 1:
+                return False 
+             
              
         if level._grid[_2x][_2y+1]:
             return False
+
         
     if dy == 1:
         if level._grid[_2x+1][_2y+2]:
@@ -574,20 +537,22 @@ def distance( x1, y1, x2, y2 ):
 
 class Level:
         
-    def __init__(self, name):        
-        self.name = LEVELS_ROOT + name    
+    def __init__(self, name = None):        
         self.maxX = 0
         self.maxY = 0
         self._level_data = []    
         self._dynamics = []
         self._grid = []
         
-        self.load(self.name)        
+        if name:
+            self.load( name )        
 
         self.center = ( self.maxX / 2, self.maxY / 2 )
 
 
     def load(self, name):
+        self.name = name
+        self._level_data = []    
         line_count = 0
         lvl_file = open( name, "r")
 
