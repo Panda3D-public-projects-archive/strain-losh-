@@ -123,7 +123,7 @@ def canIMoveHere( unit, position, dx, dy, level, units ):
 
 
     #check grid if unit can move to destination
-    if not checkGrid(ptx, pty, dx, dy, level):
+    if not checkGridMove(ptx, pty, dx, dy, level):
         return False
 
   
@@ -148,7 +148,7 @@ def canIMoveHere( unit, position, dx, dy, level, units ):
     return True
 
 
-def checkGrid( x, y, dx, dy, level ):
+def checkGridMove( x, y, dx, dy, level ):
     
     _2x = x*2
     _2y = y*2
@@ -423,8 +423,12 @@ def checkGridVisibility( pos, lastpos, level):
                 if level.getHeight( (x, y+1) ) > 1:
                     return False
                 
-            if level._grid[_2x+2][_2y+3] and level.getHeight( (x+1, y) ) > 1:
-                return False
+                
+            if level._grid[_2x+2][_2y+3]:
+                if level.getHeight( (x+1, y) ) > 1:
+                    return False
+                if level._grid[_2x+3][_2y+2]:
+                    return False
             
             
             if level._grid[_2x+1][_2y+2]:
@@ -443,9 +447,13 @@ def checkGridVisibility( pos, lastpos, level):
                     return False
                 if level.getHeight( (x, y-1) ) > 1:
                     return False
+
                 
-            if level._grid[_2x+2][_2y-1] and level.getHeight( (x+1, y) ) > 1:
-                return False
+            if level._grid[_2x+2][_2y-1]:
+                if level.getHeight( (x+1, y) ) > 1:
+                    return False
+                if level._grid[_2x+3][_2y]:
+                    return False
                 
                 
             if level._grid[_2x+1][_2y]:
@@ -470,8 +478,11 @@ def checkGridVisibility( pos, lastpos, level):
                 if level.getHeight( (x, y+1) ) > 1:
                     return False
                 
-            if level._grid[_2x][_2y+3] and level.getHeight( (x-1, y) ) > 1:
-                return False
+            if level._grid[_2x][_2y+3]:
+                if level.getHeight( (x-1, y) ) > 1:
+                    return False
+                if level._grid[_2x-1][_2y+2]:
+                    return False
                 
                 
             if level._grid[_2x+1][_2y+2]:
@@ -491,9 +502,13 @@ def checkGridVisibility( pos, lastpos, level):
                     return False
                 if level.getHeight( (x, y-1) ) > 1:
                     return False
+
             
-            if level._grid[_2x][_2y-1] and level.getHeight( (x-1, y) ) > 1:
-                return False
+            if level._grid[_2x][_2y-1]:
+                if level.getHeight( (x-1, y) ) > 1:
+                    return False
+                if level._grid[_2x-1][_2y]:
+                    return False
             
             
             if level._grid[_2x+1][_2y]:
