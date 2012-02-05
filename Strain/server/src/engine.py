@@ -58,7 +58,7 @@ class Engine( Thread ):
         print "Engine started"
         EngMsg.startServer( notify )
         
-        lvl = "level2.txt"
+        lvl = "base.txt"
         self.level = Level( LEVELS_ROOT + lvl )
         notify.info("Loaded level:%s", lvl )
 
