@@ -35,8 +35,9 @@ def levelVisibilityDict( unit_list, level ):
                     vis_dict[x_y] = 1
                     continue
                 
-                b_pos = unit['pos'] + ( ( level.getHeight( unit['pos'] ) + unit['height'] -1 ) , )
-                t1 = (x,y, 2)        
+
+                b_pos = ( unit['pos'][0], unit['pos'][1], 1 ) 
+                t1 = (x,y, 1)        
                 tiles = _getTiles3D( b_pos, t1, level )
                 #tiles = tilesForVisibility( unit, (x,y), level)
                     
@@ -516,6 +517,7 @@ def checkGridVisibility( pos, lastpos, level):
     if dy == -1:
         if level._grid[_2x+1][_2y]:
             return False
+    
     
     return True    
     
