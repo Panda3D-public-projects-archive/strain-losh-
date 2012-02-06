@@ -62,6 +62,9 @@ class SceneGraph():
         bins = CullBinManager.getGlobalPtr()
         bins.addBin('highlight', CullBinEnums.BTStateSorted, 25)
         
+        self.tex_offset = 0
+        taskMgr.add(self.texTask, "texTask")
+        
         #print "base.win.getGsg().getMaxTextureStages() = "+str(base.win.getGsg().getMaxTextureStages())
     
     def loadLevel(self, level):
@@ -342,3 +345,10 @@ class SceneGraph():
     def clearOutlineShader(self, np):
         self.light_dummy.detachNode()
         np.setShaderOff()
+        
+    def texTask(self, task):
+        if self.comp_inited['level']:
+            dt = globalClock.getDt()
+            self.tex_offset += dt
+            self.level_mesh.node_forcewall_usable.setTexOffset(self.level_mesh.ts_fs, self.tex_offset, self.tex_offset)
+        return task.cont
