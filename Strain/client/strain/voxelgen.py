@@ -26,7 +26,8 @@ class VoxelGenerator():
         self.chunk_size = chunk_size
         # We need just one original nodepath for walls, and one usable in scenegraph
         # Wall will never need to be flattened
-        self.node_wall_usable = self.parent.level_node.attachNewNode("voxgen_wall_usable")        
+        self.node_wall_usable = self.parent.level_node.attachNewNode("voxgen_wall_usable")    
+        self.node_forcewall_usable  = self.parent.level_node.attachNewNode("voxgen_force_wall_usable")     
         
         # For floors we will create a list of nodepaths, each list member will parent one chunk of tiles
         x = int((level.maxX-1) / chunk_size[0]) + 1
@@ -85,9 +86,11 @@ class VoxelGenerator():
         self.tex2 = loader.loadTexture("tile2.png")
         self.tex3 = loader.loadTexture("tile3.png")
         self.tex_tile_nm = loader.loadTexture("tile2nm.png")
+        self.tex_fs = loader.loadTexture("fs.png")
         #self.tex_tile_spc = loader.loadTexture("tile2spc.png")
         self.ts_nm = TextureStage('ts_nm')
         self.ts_nm.setMode(TextureStage.MNormal)
+        self.ts_fs = TextureStage('ts_fs')
         #self.ts_spc = TextureStage('ts_spc')
         #self.ts_spc.setMode(TextureStage.MGloss)
         
@@ -163,7 +166,13 @@ class VoxelGenerator():
                         my_y=tile2_y                        
                         model = loader.loadModel("wall")
                         model.setPos(my_x, my_y, utils.GROUND_LEVEL)
-                        model.reparentTo(self.node_wall_usable)                        
+                        if x == 7 and y == 20:
+                            model.setTexture(self.ts_fs, self.tex_fs)
+                            model.setTransparency(TransparencyAttrib.MAlpha)
+                            model.reparentTo(self.node_forcewall_usable)
+                            model.setLightOff()
+                        else:
+                            model.reparentTo(self.node_wall_usable)
                     else:
                         continue                                           
          
