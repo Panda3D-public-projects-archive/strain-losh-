@@ -38,12 +38,11 @@ def levelVisibilityDict( unit_list, level ):
 
                 b_pos = ( unit['pos'][0], unit['pos'][1], 1 ) 
                 t1 = (x,y, 1)        
-                tiles = _getTiles3D( b_pos, t1, level )
+                tiles = _getTiles2D( b_pos, t1, level )
                 #tiles = tilesForVisibility( unit, (x,y), level)
                     
                 if tiles:
-                    for x,y,z in tiles:
-                        vis_dict[(x,y)] = 1
+                    vis_dict[x_y] = 1
                     continue
           
             
@@ -212,12 +211,12 @@ def getLOSOnLevel( beholder_dict, target_dict, level ):
     
     #check if we see target_dict's head
     t1 = target_dict['pos'] + ( ( level.getHeight( target_dict['pos'] ) + target_dict['height'] -1 ) , )        
-    if _getTiles3D( b_pos, t1, level ):
+    if _getTiles2D( b_pos, t1, level ):
         seen += 1
     
     #check if we see target_dict's feet
     t2 = target_dict['pos'] + ( level.getHeight( target_dict['pos'] ) , )
-    if _getTiles3D( b_pos, t2, level ):
+    if _getTiles2D( b_pos, t2, level ):
         seen += 1
 
     return seen
@@ -339,6 +338,214 @@ def _getTiles3D( t1, t2, level ):
     return list_visible_tiles
 
             
+def _getTiles2D( t1, t2, level ):
+
+    
+    x1, y1,z1 = t1
+    x2, y2,z2 = t2
+    
+    #we see ourself
+    if( t1 == t2 ):
+        return [ (x1,y1) ]
+    
+    #if one of our end points is not empty space, return false
+    if level.opaque( x1, y1, 2 ) or level.opaque( x2, y2, 2 ):
+        return False
+    
+    absx0 = math.fabs(x2 - x1);
+    absy0 = math.fabs(y2 - y1);
+    
+    list_visible_tiles = [ (x1,y1) ]
+    rev = False
+    
+    if( absx0 > absy0 ):
+        if x2 < x1:
+            x1, y1,z1 = t2
+            x2, y2,z2 = t1
+            list_visible_tiles[0] = (x2,y2)
+            rev = True
+    else:
+        if y2 < y1:
+            x1, y1,z1 = t2
+            x2, y2,z2 = t1
+            list_visible_tiles[0] = (x2,y2)
+            rev = True
+    
+    
+    x = int( x1 )
+    y = int( y1 )
+
+    
+    if( absx0 > absy0 ):
+        sgny0 = signum( y2 - y1 );
+        y_x = absy0/absx0      
+        y_x_2 = y_x/2      
+        D = y_x -0.5
+
+        for i in xrange( int( absx0 ) ): #@UnusedVariable
+            _2x = x*2
+            _2y = y*2
+            
+            if( D > 0 ):
+                if D < y_x_2:
+                    if( level.outOfBounds( x+1, y ) ):
+                        return False
+                    if level.opaque( x+1, y, 2 ) or level._grid[_2x+2][_2y+1]:
+                        return False
+                    if sgny0 > 0 and level._grid[_2x+3][_2y+2]:
+                        return False
+                    if sgny0 < 0 and level._grid[_2x+3][_2y]:
+                        return False
+                    
+                else:
+                    if sgny0 > 0:
+                        #we need to check (x,y+1)
+                        if( level.outOfBounds( x, y+1 ) ):
+                            return False
+                        if level.opaque( x, y+1, 2 ) or level._grid[_2x+1][_2y+2] or level._grid[_2x+2][_2y+3]:
+                            return False
+                    else:
+                        #we need to check (x,y-1)
+                        if( level.outOfBounds( x, y-1 ) ):
+                            return False
+                        if level.opaque( x, y-1, 2 ) or level._grid[_2x+1][_2y] or level._grid[_2x+2][_2y-1]:
+                            return False
+
+                    
+                y += sgny0
+                D -= 1
+
+            else:
+                #so now we know we are going only +1 on x 
+                if level._grid[2*x+2][2*y+1]:
+                    return False
+
+                if level.opaque( x+1, y, 2):
+                    return False
+
+            x += 1
+            D += y_x
+
+            #its visible add it to list            
+            list_visible_tiles.append( (x, y) )
+            
+    #//(y0 >= x0)            
+    else:
+        sgnx0 = signum( x2 - x1 );
+        x_y = absx0/absy0
+        x_y_2 = x_y/2
+        D = x_y -0.5;
+        
+        for i in xrange( int( absy0 ) ): #@UnusedVariable
+            _2x = x*2
+            _2y = y*2
+            
+            if( D > 0 ):
+                
+                #if this is straight 45 degree diagonal
+                if x_y == 1:
+
+                    if sgnx0 > 0:
+                        if( level.outOfBounds( x+1, y+1 ) ):
+                            return False
+                        
+                        if level._grid[_2x+2][_2y+1]:
+                            if level._grid[_2x+1][_2y+2]:
+                                return False
+                            if level._grid[_2x+2][_2y+3]:
+                                return False
+                            if level.opaque( x, y+1, 2 ):
+                                return False
+                            
+                        if level._grid[_2x+1][_2y+2]:
+                            if level._grid[_2x+3][_2y+2]:
+                                return False
+                            if level.opaque( x+1, y, 2 ):
+                                return False
+                            
+                        if level.opaque( x+1, y, 2 ) and level.opaque( x, y+1, 2):
+                            return False
+                            
+                        
+                        if level._grid[_2x+2][_2y+3] and level._grid[_2x+3][_2y+2]:
+                            return False
+                    
+                    if sgnx0 < 0:
+                        if( level.outOfBounds( x-1, y+1 ) ):
+                            return False
+                    
+                        if level._grid[_2x][_2y+1]:
+                            if level._grid[_2x+1][_2y+2]:
+                                return False
+                            if level._grid[_2x][_2y+3]:
+                                return False
+                            if level.opaque( x, y+1, 2 ):
+                                return False
+                            
+                        if level._grid[_2x+1][_2y+2]:
+                            if level._grid[_2x-1][_2y+2]:
+                                return False
+                            if level.opaque( x-1, y, 2 ):
+                                return False
+                            
+                        if level.opaque( x-1, y, 2 ) and level.opaque( x, y+1, 2):
+                            return False
+                            
+                        if level._grid[_2x-1][_2y+2] and level._grid[_2x][_2y+3]:
+                            return False
+                                                    
+                    
+                else:
+                               
+                    if D < x_y_2:
+                        if( level.outOfBounds( x, y+1 ) ):
+                            return False
+                        if level.opaque( x, y+1, 2 ) or level._grid[_2x+1][_2y+2]:
+                            return False
+                        if sgnx0 > 0 and level._grid[_2x+2][_2y+3]:
+                            return False
+                        if sgnx0 < 0 and level._grid[_2x][_2y+3]:
+                            return False
+                            
+                    else:
+                        if sgnx0 > 0:
+                            #we need to check (x+1,y)
+                            if( level.outOfBounds( x+1, y ) ):
+                                return False
+                            if level.opaque( x+1, y, 2 ) or level._grid[_2x+3][_2y+2] or level._grid[_2x+2][_2y+1]:
+                                return False
+                        else:
+                            #we need to check (x-1,y)
+                            if( level.outOfBounds( x-1, y ) ):
+                                return False
+                            if level.opaque( x-1, y, 2 ) or level._grid[_2x-1][_2y+2] or level._grid[_2x][_2y+1]:
+                                return False
+                
+                x += sgnx0
+                D -= 1.0
+
+            else:
+                #so now we know we are going only +1 on y 
+                if level._grid[2*x+1][2*y+2]:
+                    return False
+
+                if level.opaque( x, y+1, 2):
+                    return False
+
+            y += 1
+            D += x_y
+            
+            #its clear, add it to visible list
+            list_visible_tiles.append( (x, y) )
+            
+
+    if rev:
+        list_visible_tiles.reverse()
+        
+    return list_visible_tiles
+
+            
+
 def _testTile3D( pos, lastpos, level ):
     
     #level bounds
