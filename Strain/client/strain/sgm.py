@@ -126,11 +126,10 @@ class SceneGraph():
         shade = ShadeModelAttrib.make(ShadeModelAttrib.MSmooth)
         render.setAttrib(shade)
         dlight1 = DirectionalLight("dlight1")
-        dlight1.setColor(VBase4(0.8, 0.8, 0.8, 1.0))
+        dlight1.setColor(VBase4(0.5, 0.5, 0.5, 1.0))
         #dlight1.setShadowCaster(True, 512, 512)
         dlnp1 = render.attachNewNode(dlight1)
-        dlnp1.setPos(5, 5, 3)
-        dlnp1.lookAt(1, 1, 0)
+        dlnp1.setHpr(0, -60, 0)
         render.setLight(dlnp1)
         """
         plight = PointLight('plight')
