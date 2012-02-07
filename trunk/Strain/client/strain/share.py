@@ -16,8 +16,6 @@ DYNAMICS_UNIT = 1
 
 
 def levelVisibilityDict( unit_list, level ):
-    
-    
     vis_dict = {}
     for x in xrange(level.maxX):
         for y in xrange(level.maxY):
@@ -34,12 +32,8 @@ def levelVisibilityDict( unit_list, level ):
                 if level.getHeight( x_y ):
                     vis_dict[x_y] = 1
                     continue
-                
-
-                b_pos = ( unit['pos'][0], unit['pos'][1], 1 ) 
-                t1 = (x,y, 1)        
-                tiles = _getTiles2D( b_pos, t1, level )
-                #tiles = tilesForVisibility( unit, (x,y), level)
+                     
+                tiles = _getTiles2D( unit['pos'], x_y, level )
                     
                 if tiles:
                     vis_dict[x_y] = 1
@@ -203,27 +197,21 @@ def getLOSOnLevel( beholder_dict, target_dict, level ):
     """0-cant see, 1-partial, 2-full"""
     
     if beholder_dict['pos'] == target_dict['pos']:
-        return 2
+        return 2        
     
-    b_pos = beholder_dict['pos'] + ( ( level.getHeight( beholder_dict['pos'] ) + beholder_dict['height'] -1 ) , )
-    #print "print "beh:", beholder_dict['pos'], "\ttar:", target_dict['pos'] 
-    seen = 0        
-    
-    #check if we see target_dict's head
-    t1 = target_dict['pos'] + ( ( level.getHeight( target_dict['pos'] ) + target_dict['height'] -1 ) , )        
-    if _getTiles2D( b_pos, t1, level ):
-        seen += 1
+    return _getTiles2D( beholder_dict['pos'], target_dict['pos'], level )
+
     
     #check if we see target_dict's feet
-    t2 = target_dict['pos'] + ( level.getHeight( target_dict['pos'] ) , )
-    if _getTiles2D( b_pos, t2, level ):
-        seen += 1
+    #t2 = target_dict['pos'] + ( level.getHeight( target_dict['pos'] ) , )
+    #if _getTiles2D( b_pos, t2, level ):
+    #    seen += 1
 
-    return seen
+    #return seen
 
 
 def _getTiles3D( t1, t2, level ):
-
+    raise Exception("Not used anymore!")
     #we see ourself
     if( t1 == t2 ):
         return [ t1 ]
@@ -339,10 +327,8 @@ def _getTiles3D( t1, t2, level ):
 
             
 def _getTiles2D( t1, t2, level ):
-
-    
-    x1, y1,z1 = t1
-    x2, y2,z2 = t2
+    x1, y1 = t1
+    x2, y2 = t2
     
     #we see ourself
     if( t1 == t2 ):
@@ -360,14 +346,14 @@ def _getTiles2D( t1, t2, level ):
     
     if( absx0 > absy0 ):
         if x2 < x1:
-            x1, y1,z1 = t2
-            x2, y2,z2 = t1
+            x1, y1 = t2
+            x2, y2 = t1
             list_visible_tiles[0] = (x2,y2)
             rev = True
     else:
         if y2 < y1:
-            x1, y1,z1 = t2
-            x2, y2,z2 = t1
+            x1, y1 = t2
+            x2, y2 = t1
             list_visible_tiles[0] = (x2,y2)
             rev = True
     
@@ -547,7 +533,7 @@ def _getTiles2D( t1, t2, level ):
             
 
 def _testTile3D( pos, lastpos, level ):
-    
+    raise Exception("Not used anymore!")
     #level bounds
     if( level.outOfBounds( pos[0], pos[1] ) ):
         return False
@@ -800,13 +786,14 @@ class Level:
         #---------------------------------load grid stuff------------------------------
         in_grid = False
         for line in lvl_file:
-            if not in_grid and line != 'GRID\n':
+            line = line.strip()
+            if not in_grid and line != 'GRID':
                 continue         
             in_grid = True
             
-            if line == 'GRID\n':
+            if line == 'GRID':
                 continue
-            if line == '/GRID\n':
+            if line == '/GRID':
                 break
             
             s = line.split(',')        
