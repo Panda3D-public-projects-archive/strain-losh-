@@ -10,7 +10,7 @@ from collections import deque
 # panda3D imports
 from panda3d.core import Texture, NodePath, TextureStage
 from panda3d.core import Vec4, Vec3, Point3, TransparencyAttrib
-from direct.interval.IntervalGlobal import Sequence, LerpColorScaleInterval#@UnresolvedImport
+from direct.interval.IntervalGlobal import Sequence, LerpColorScaleInterval, LerpColorInterval, Wait#@UnresolvedImport
 
 # strain related imports
 import strain.utils as utils
@@ -171,6 +171,18 @@ class VoxelGenerator():
                             model.setTexture(self.ts_fs, self.tex_fs)
                             model.setTransparency(TransparencyAttrib.MAlpha)
                             model.reparentTo(self.node_forcewall_usable)
+                            model.setLightOff()
+                        elif x == 11 and y == 20:
+                            model = loader.loadModel("wall2")
+                            model.setPos(my_x, my_y, utils.GROUND_LEVEL)
+                            #model.setTexture(self.ts_fs, self.tex_fs)
+                            model.setColor(0.5,0.8,1,0.6)
+                            model.setTransparency(TransparencyAttrib.MAlpha)
+                            model.reparentTo(self.node_forcewall_usable)
+                            s = Sequence(LerpColorInterval(model, 1, (0.13,0.56,0.78,0.6)),
+                                        LerpColorInterval(model, 1, (0.5,0.8,1,0.6)),
+                                        )  
+                            s.loop()
                             model.setLightOff()
                         else:
                             model = loader.loadModel("wall")
