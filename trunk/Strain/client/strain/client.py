@@ -192,6 +192,7 @@ class Client(DirectObject):
             self.level.putUnitDict(unit)
     
     def deleteUnit(self, unit_id):
+        self.level.removeUnitId(unit_id)
         self.units.pop(unit_id)
     
     def setupUnitLists(self, units):
