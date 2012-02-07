@@ -6,7 +6,7 @@
 
 # panda3D imports
 from panda3d.core import TextNode, NodePath, VBase4, CardMaker, Vec4, Vec3#@UnresolvedImport
-from panda3d.core import ShadeModelAttrib, DirectionalLight, AmbientLight, PointLight#@UnresolvedImport
+from panda3d.core import ShadeModelAttrib, DirectionalLight, AmbientLight, PointLight, Spotlight, PerspectiveLens#@UnresolvedImport
 from panda3d.core import CullBinManager, CullBinEnums#@UnresolvedImport
 from panda3d.core import TransparencyAttrib, AntialiasAttrib, Shader#@UnresolvedImport
 from panda3d.core import SceneGraphAnalyzerMeter#@UnresolvedImport
@@ -136,9 +136,10 @@ class SceneGraph():
         render.setLight(dlnp1)
         """
         plight = PointLight('plight')
-        plight.setColor(VBase4(0.5, 0.5, 0.5, 1.2))
+        plight.setColor(VBase4(1, 1, 1, 1))
         plnp = render.attachNewNode(plight)
-        plnp.setPos(5, 5, 1.5)
+        plnp.setPos(5, 10, 1)
+        plight.setAttenuation(Vec3(0.5, 0.5, 0))
         render.setLight(plnp)
         a = loader.loadModel("camera")
         a.reparentTo(plnp)
@@ -149,7 +150,24 @@ class SceneGraph():
         alnp = render.attachNewNode(alight)
         render.setLight(alnp) 
         self.comp_inited['lights'] = True
-    
+        
+        """
+        slight = Spotlight('slight')
+        slight.setColor(VBase4(3, 3, 3, 1))
+        lens = PerspectiveLens()
+        lens.setFov(40, 20)
+        slight.setLens(lens)
+        slnp = render.attachNewNode(slight)
+        slnp.setPos(5, 10, utils.GROUND_LEVEL+0.1)
+        slnp.setH(-180)
+        #slnp.setP(-90)
+        render.setLight(slnp) 
+        m = loader.loadModel('camera')
+        m.setScale(0.3,0.3,0.3)
+        m.reparentTo(slnp)       
+        slight.showFrustum()
+        slight.setExponent(1)
+        """
     def loadUnits(self):
         if self.comp_inited['units']:
             return
@@ -345,6 +363,7 @@ class SceneGraph():
     def clearOutlineShader(self, np):
         self.light_dummy.detachNode()
         np.setShaderOff()
+        np.setShaderAuto()
         
     def texTask(self, task):
         if self.comp_inited['level']:

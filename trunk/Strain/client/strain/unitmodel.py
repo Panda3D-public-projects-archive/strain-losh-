@@ -120,6 +120,8 @@ class UnitModel:
         self.standup_anim = Sequence(self.model.actorInterval('stand_up'), self.model.actorInterval('idle'))
         self.setup_anim = Sequence(self.model.actorInterval('crouch'), self.model.actorInterval('setup'))
         
+        
+        self.model.setShaderAuto()
     def pauseAllAnims(self):
         self.overwatch_anim.pause()
         self.standup_anim.pause()

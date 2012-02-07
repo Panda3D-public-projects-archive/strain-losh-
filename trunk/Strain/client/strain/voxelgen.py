@@ -182,6 +182,7 @@ class VoxelGenerator():
         self.node_wall_usable.clearModelNodes()
         self.node_wall_usable.flattenStrong()
         self.node_wall_usable.setShaderAuto()
+        #self.floor_usable_np.setShaderAuto()
         self.markAllChunksDirty()
         
     def setInvisibleTiles(self, tile_dict):
