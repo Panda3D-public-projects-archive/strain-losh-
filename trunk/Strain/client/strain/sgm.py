@@ -349,6 +349,6 @@ class SceneGraph():
     def texTask(self, task):
         if self.comp_inited['level']:
             dt = globalClock.getDt()
-            self.tex_offset += dt
-            self.level_mesh.node_forcewall_usable.setTexOffset(self.level_mesh.ts_fs, self.tex_offset, self.tex_offset)
+            self.tex_offset += dt * 0.5
+            self.level_mesh.node_forcewall_usable.setTexOffset(self.level_mesh.ts_fs, 0, self.tex_offset)
         return task.cont

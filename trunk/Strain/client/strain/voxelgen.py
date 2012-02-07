@@ -86,7 +86,7 @@ class VoxelGenerator():
         self.tex2 = loader.loadTexture("tile2.png")
         self.tex3 = loader.loadTexture("tile3.png")
         self.tex_tile_nm = loader.loadTexture("tile2nm.png")
-        self.tex_fs = loader.loadTexture("fs.png")
+        self.tex_fs = loader.loadTexture("rnbw.png")
         #self.tex_tile_spc = loader.loadTexture("tile2spc.png")
         self.ts_nm = TextureStage('ts_nm')
         self.ts_nm.setMode(TextureStage.MNormal)
@@ -164,14 +164,17 @@ class VoxelGenerator():
                         tile2_y = y/2
                         my_x= tile2_x
                         my_y=tile2_y                        
-                        model = loader.loadModel("wall")
-                        model.setPos(my_x, my_y, utils.GROUND_LEVEL)
+
                         if x == 7 and y == 20:
+                            model = loader.loadModel("wall_fs")
+                            model.setPos(my_x, my_y, utils.GROUND_LEVEL)
                             model.setTexture(self.ts_fs, self.tex_fs)
                             model.setTransparency(TransparencyAttrib.MAlpha)
                             model.reparentTo(self.node_forcewall_usable)
                             model.setLightOff()
                         else:
+                            model = loader.loadModel("wall")
+                            model.setPos(my_x, my_y, utils.GROUND_LEVEL)                            
                             model.reparentTo(self.node_wall_usable)
                     else:
                         continue                                           
