@@ -121,11 +121,11 @@ class LoginScreen():
         self.button.reparentTo(aspect2d)
         self.button.setPos(0, 0, -0.6) 
         
-        self.button_ultras = DirectButton(text = ("Login as Ultramarines"),scale=.02,command=self.loginButUltrasPressed, text_font=font, text_align=TextNode.ACenter)
+        self.button_ultras = DirectButton(text = ("Login as BLUE"),scale=.02,command=self.loginButUltrasPressed, text_font=font, text_align=TextNode.ACenter)
         self.button_ultras.reparentTo(aspect2d)
         self.button_ultras.setPos(0.5, 0, -0.6) 
         
-        self.button_obs = DirectButton(text = ("Login as Berserker"),scale=.02,command=self.loginButObsPressed, text_font=font, text_align=TextNode.ACenter)
+        self.button_obs = DirectButton(text = ("Login as Observer"),scale=.02,command=self.loginButObsPressed, text_font=font, text_align=TextNode.ACenter)
         self.button_obs.reparentTo(aspect2d)
         self.button_obs.setPos(0.5, 0, -0.7)
         
@@ -149,12 +149,12 @@ class LoginScreen():
     
     def loginButPressed(self, text=None):
         self.parent.player = self.entry_username.get()
-        if self.parent.player != "ultramarines" and self.parent.player != "blood angels":
-            self.parent.player = "blood angels"
+        if self.parent.player != "Blue" and self.parent.player != "Red":
+            self.parent.player = "Red"
         self.parent.startClient(type="Game")
         
     def loginButUltrasPressed(self, text=None):
-        self.parent.player = "ultramarines"
+        self.parent.player = "Blue"
         self.parent.startClient(type="Game")
         
     def loginButObsPressed(self, text=None):

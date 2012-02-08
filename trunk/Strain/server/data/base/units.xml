@@ -1,8 +1,8 @@
 <units>
-	<unit name="marine_common" 	ws="4" hp="10" armour="Tactical" weapons="Bolter"/>
-	<unit name="marine_hb"	 	ws="4" hp="10" armour="Devastator" weapons="Heavy Bolter"/>
-	<unit name="marine_epic" 	ws="4" hp="10" armour="Assault" weapons="Bolt Pistol,Power Glove"/>
-	<unit name="commissar" 		ws="4" hp="10" armour="Flak" weapons="Bolt Pistol,Sword"/>
-	<unit name="terminator" 	ws="5" hp="10" armour="Terminator"	weapons="Storm Bolter,Power Glove"/>
-	<unit name="scout" 			ws="4" hp="10" armour="Scout"	weapons="Bolter"/>
+	<unit name="marine_standard" 	ws="4" hp="10" armour="Standard" 	weapons="Bolter"/>
+	<unit name="marine_heavy" 		ws="4" hp="10" armour="Heavy" 		weapons="Heavy Bolter"/>
+	<unit name="marine_sergeant"	ws="5" hp="10" armour="Sergeant" 	weapons="Plasma Pistol"/>
+	<unit name="marine_scout"		ws="4" hp="10" armour="Scout" 		weapons="Plasma Gun"/>
+	<unit name="marine_medic" 		ws="3" hp="10" armour="Medic"		weapons="Bolt Pistol"/>
+	<unit name="marine_jumper"		ws="4" hp="10" armour="Jumper"		weapons="Bolter"/>
 </units>

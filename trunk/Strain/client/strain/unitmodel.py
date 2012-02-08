@@ -33,12 +33,18 @@ class UnitModel:
         else:
             self.team_color = Vec4(0, 1, 0, 1)
         self.owner_id = unit['owner_id']
-        if unit['name'] == 'marine_common':        
+        if unit['name'] == 'marine_standard':        
             self.model = utils.loadUnit('marine', 'standard', unit['owner_id']) 
-        elif unit['name'] == 'marine_epic': 
+        elif unit['name'] == 'marine_sergeant': 
             self.model = utils.loadUnit('marine', 'sergeant', unit['owner_id'])
-        elif unit['name'] == 'marine_hb': 
+        elif unit['name'] == 'marine_heavy': 
             self.model = utils.loadUnit('marine', 'heavy', unit['owner_id'])
+        elif unit['name'] == 'marine_scout': 
+            self.model = utils.loadUnit('marine', 'scout', unit['owner_id'])
+        elif unit['name'] == 'marine_medic': 
+            self.model = utils.loadUnit('marine', 'medic', unit['owner_id'])
+        elif unit['name'] == 'marine_jumper': 
+            self.model = utils.loadUnit('marine', 'jumper', unit['owner_id'])            
         self.model.reparentTo(self.node)
         
         if not off:
