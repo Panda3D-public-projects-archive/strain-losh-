@@ -18,7 +18,7 @@ import utils
 # CLASS UnitModel --- DEFINITION
 #===============================================================================
 class UnitModel:
-    def __init__(self, parent, unit_id, off=False):
+    def __init__(self, parent, unit_id, off=False, wpn_list=None):
         self.parent = parent
         self.id = str(unit_id)
 
@@ -126,6 +126,32 @@ class UnitModel:
         self.standup_anim = Sequence(self.model.actorInterval('stand_up'), self.model.actorInterval('idle'))
         self.setup_anim = Sequence(self.model.actorInterval('crouch'), self.model.actorInterval('setup'))
         
+        gnp = self.model.exposeJoint(None,"modelRoot","Wrist.R")
+        
+        if wpn_list == 'Bolter':
+            self.gun = loader.loadModel('gun1')
+            self.gun.setTexture(loader.loadTexture('gun.png'))
+            self.gun.reparentTo(gnp)
+        elif wpn_list == 'Heavy Bolter':
+            self.gun = loader.loadModel('gun1')
+            self.gun.setTexture(loader.loadTexture('gun_blue.png'))
+            self.gun.reparentTo(gnp)
+        elif wpn_list == 'Plasma Gun':
+            self.gun = loader.loadModel('gun1')
+            self.gun.setTexture(loader.loadTexture('gun_orange.png'))
+            self.gun.reparentTo(gnp)  
+        elif wpn_list == 'Bolt Pistol':
+            self.gun = loader.loadModel('gun1')
+            self.gun.setTexture(loader.loadTexture('gun_yellow.png'))
+            self.gun.reparentTo(gnp)
+        elif wpn_list == 'Plasma Pistol':
+            self.gun = loader.loadModel('gun1')
+            self.gun.setTexture(loader.loadTexture('gun_green.png')) 
+            self.gun.reparentTo(gnp)
+        elif wpn_list == 'Flamer':
+            self.gun = loader.loadModel('gun1')
+            self.gun.setTexture(loader.loadTexture('gun_red.png'))                                             
+            self.gun.reparentTo(gnp)
         
         self.model.setShaderAuto()
     def pauseAllAnims(self):
