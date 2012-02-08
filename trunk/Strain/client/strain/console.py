@@ -12,10 +12,11 @@ from strain.client_messaging import ClientMsg
 
 class GuiConsole(DirectObject.DirectObject):
     
-    def __init__(self, parent, h_size, v_size, aspect, hugpos):
+    def __init__(self, class_parent, parent, h_size, v_size, aspect, hugpos):
         self.h_size = h_size
         self.v_size = v_size
         self.scale = 0.04
+        self.parent = class_parent
         self.numlines = int(v_size/self.scale - 2)
         
         self.pos_min_x = 0
@@ -77,6 +78,8 @@ class GuiConsole(DirectObject.DirectObject):
         
         self.consoleEntry["frameSize"]=(0,self.h_size/self.scale,0,1)
         self.consoleEntry["width"]=self.h_size/self.scale
+        self.consoleEntry["focusInCommand"]=self.focusInCallback;
+        self.consoleEntry["focusOutCommand"]=self.focusOutCallback;
         
         self.consoleFrame.reparentTo(parent)
         
@@ -106,6 +109,12 @@ class GuiConsole(DirectObject.DirectObject):
         self.linewrap.width = self.linelength
         self.toggleConsole()
         
+    def focusInCallback(self):
+        self.parent.parent.camera.disableKeyMovement()
+
+    def focusOutCallback(self):
+        self.parent.parent.camera.enableKeyMovement()
+    
     def show(self):
         if self.consoleFrame.isHidden():
             self.consoleFrame.toggleVis()
