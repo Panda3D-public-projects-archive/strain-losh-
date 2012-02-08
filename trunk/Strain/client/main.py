@@ -19,6 +19,7 @@ from pandac.PandaModules import PStatClient
 
 # strain related imports
 from strain.client import Client
+from strain.squadselector import Squadselector
 import strain.utils as utils
 
 #############################################################################
@@ -63,6 +64,9 @@ class App():
     def startClient(self, type):
         #start client
         self.fsm.request('Client', type)
+        
+    def startSquadSelection(self):
+        self.fsm.request('SquadSelection')
 #========================================================================
 #
 class AppFSM(FSM.FSM):
@@ -85,11 +89,19 @@ class AppFSM(FSM.FSM):
         self.parent.login.button_ultras.remove()
         self.parent.login.button_obs.remove()
         self.parent.login.button_replay.remove()
+        self.parent.login.button_selector.remove()
         self.parent.login.commander.delete()
         self.parent.login.jumper.delete()
         self.parent.login.textObject.remove()       
         del self.parent.login
 
+    def enterSquadSelection(self):
+        base.win.setClearColor(VBase4(0.5, 0.5, 0.5, 0))
+        self.parent.squad_selector = Squadselector(self.parent, self.parent.player)
+        
+    def exitSquadSelection(self):
+        None
+    
     def enterClient(self, type):
         base.win.setClearColor(VBase4(0, 0, 0, 0))
         self.parent.client = Client(self.parent, self.parent.player, type=type)
@@ -133,6 +145,10 @@ class LoginScreen():
         self.button_replay.reparentTo(aspect2d)
         self.button_replay.setPos(0.5, 0, -0.8)        
         
+        self.button_selector = DirectButton(text = ("Squad selection"),scale=.04,command=self.loginSelectorPressed, text_font=font, text_align=TextNode.ACenter)
+        self.button_selector.reparentTo(aspect2d)
+        self.button_selector.setPos(0.5, 0, -0.9)   
+
         ground_level = 0
         self.commander = utils.loadUnit('marine', 'sergeant', '1')
         self.commander.setPos(0, 20, -2)
@@ -164,6 +180,10 @@ class LoginScreen():
     def loginReplayPressed(self, text=None):
         self.parent.player = "observer"
         self.parent.startClient(type="Replay")
+        
+    def loginSelectorPressed(self, text=None):
+        self.parent.player = "Red"
+        self.parent.startSquadSelection()
 
 #========================================================================
 #

@@ -182,7 +182,7 @@ class SceneGraph():
         self.comp_inited['units'] = True  
         
     def loadUnit(self, unit_id, wpn_list):
-        um = UnitModel(self, unit_id)
+        um = UnitModel(self, unit_id, wpn_list=wpn_list)
         # Keep unit nodepath in dictionary of all unit nodepaths
         self.unit_np_dict[unit_id] = um
         return um

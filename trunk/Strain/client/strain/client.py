@@ -519,8 +519,9 @@ class Client(DirectObject):
             t.setAlign(TextNode.ACenter)
             textNodePath = NodePath("textnp")
             textNodePath.attachNewNode(t)
-            textNodePath.setScale(0.25)
+            textNodePath.setScale(0.35)
             textNodePath.setBillboardPointEye()
+            textNodePath.setLightOff()
             # textNodePath will be reparented to unitmodel, so set start and end pos relative to the unit
             start_pos = Point3(0, 0, 0.9)
             end_pos = start_pos + Point3(0, 0, 3)
