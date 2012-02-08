@@ -138,7 +138,7 @@ class Interface(DirectObject.DirectObject):
         self.unit_info = {}
         self.unit_panel = {}
         
-        self.console = GuiConsole(base.a2dBottomLeft, 1.503, 0.8, self.aspect, "bottom")#@UndefinedVariable
+        self.console = GuiConsole(self, base.a2dBottomLeft, 1.503, 0.8, self.aspect, "bottom")#@UndefinedVariable
         self.stats = GuiTextFrame(Point3(0.3, 0, 0), 0.4, 0.22, 4, "bottom")#@UndefinedVariable
         self.stats2 = GuiTextFrame(Point3(0.7, 0, 0), 0.4, 0.22, 4, "bottom")#@UndefinedVariable
         self.stats3 = GuiTextFrame(Point3(1.1, 0, 0), 0.405, 0.22, 4, "bottom")#@UndefinedVariable
@@ -379,8 +379,8 @@ class Interface(DirectObject.DirectObject):
             if self.set_up.enabled:
                 self.toggleSetUp()
             self.console.unfocus()
-        elif self.hovered_gui == self.console:
-            self.console.focus()
+        #elif self.hovered_gui == self.console:
+        #    self.console.focus()
         elif self.panel != None and self.hovered_gui == self.panel:
             self.parent.selectUnit(self.panel.unit_id)
         else:
@@ -549,12 +549,13 @@ class Interface(DirectObject.DirectObject):
                     hovering_over_something = True
                     self.console.hide()
             #Hovering iznad konzole
-            # TODO: vjeks: srediti da kad konzola ima fokus da se ne hajda! 
+            # TODO: vjeks: ovaj uvjet ne radi, pos_min x i y su krivi
+            """
             if  mpos.x >= self.console.pos_min_x and mpos.x <= self.console.pos_max_x and mpos.y >= self.console.pos_min_y and mpos.y <= self.console.pos_max_y:                 
                 self.hovered_gui = self.console
                 hovering_over_something = True
                 self.console.show()
-                                
+            """                 
             if not hovering_over_something:
                 self.hovered_gui = None
                 self.console.hide()

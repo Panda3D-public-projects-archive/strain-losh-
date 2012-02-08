@@ -60,6 +60,8 @@ class Camera(DirectObject):
         self.setupKeys()
         self.isFollowing = False   
         
+        self.keyMovementEnabled = True
+        
         self.camTask = taskMgr.add(self.update, 'camera_update_task') 
 
     def clamp(self, val, min_val, max_val):
@@ -165,8 +167,15 @@ class Camera(DirectObject):
             i = self.node.posInterval(duration = duration, pos = node.getPos(), blendType = 'easeInOut')
             i.start()
     
+    def enableKeyMovement(self):
+        self.keyMovementEnabled = True
+        
+    def disableKeyMovement(self):
+        self.keyMovementEnabled = False
+    
     def setKey(self, key, flag):
-        self.keys[key] = flag    
+        if self.keyMovementEnabled:
+            self.keys[key] = flag    
     
     def setupKeys(self):
         self.accept('w', self.setKey, ['up', 1])
