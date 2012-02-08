@@ -183,9 +183,12 @@ def getUnitWeapons(unit):
 def parseUnitWeapons(weapons):
     return string.split(weapons,',')
 
-def loadUnit(race, type):
+def loadUnit(race, type, team):
     model = Actor(unit_type_dict[race][type])
     model.loadAnims(anim_dict[race])
-    tex = loader.loadTexture(unit_type_dict[race][type] + ".png")
+    if team == '1':
+        tex = loader.loadTexture(unit_type_dict[race][type] + ".png")
+    elif team == '2':
+        tex = loader.loadTexture(unit_type_dict[race][type] + "2.png")
     model.setTexture(tex)
     return model 
