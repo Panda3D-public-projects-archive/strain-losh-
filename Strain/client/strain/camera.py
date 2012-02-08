@@ -69,20 +69,7 @@ class Camera(DirectObject):
            If val <= min_val returns min_val
            If val >= max_val returns max_val
         """
-        return min(max(val, min_val), max_val)
-    
-    def setKey(self, button, value):
-        """Sets the state of keyboard.
-           1 = pressed
-           0 = depressed
-        """
-        if self.parent.interface.console.consoleEntry['focus'] == 1:
-            self.keys['up'] = 0
-            self.keys['down'] = 0
-            self.keys['left'] = 0
-            self.keys['right'] = 0
-        else:
-            self.keys[button] = value    
+        return min(max(val, min_val), max_val)    
     
     def update(self, task):
         
@@ -174,6 +161,10 @@ class Camera(DirectObject):
         self.keyMovementEnabled = False
     
     def setKey(self, key, flag):
+        """Sets the state of keyboard.
+           1 = pressed
+           0 = depressed
+        """        
         if self.keyMovementEnabled:
             self.keys[key] = flag    
     
