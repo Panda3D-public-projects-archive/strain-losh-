@@ -134,12 +134,12 @@ class LoginScreen():
         self.button_replay.setPos(0.5, 0, -0.8)        
         
         ground_level = 0
-        self.commander = utils.loadUnit('marine', 'sergeant')
+        self.commander = utils.loadUnit('marine', 'sergeant', '1')
         self.commander.setPos(0, 20, -2)
         self.commander.reparentTo(render)
         self.commander.loop('overwatch')  
         
-        self.jumper = utils.loadUnit('marine', 'sergeant')
+        self.jumper = utils.loadUnit('marine', 'sergeant', '1')
         self.jumper.setPos(2, 20, -2)
         self.jumper.reparentTo(render)
         self.jumper.loop('overwatch')   
