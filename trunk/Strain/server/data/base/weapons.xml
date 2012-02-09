@@ -5,8 +5,8 @@
 	<weapon name="Bolter" 			range="24" 	Str="5"	ap_cost="1"		shots="1"	type="rifle"/>
 	<weapon name="Plasma Gun" 		range="24" 	Str="7"	ap_cost="1"		shots="1"	type="rifle" 	special="plasma"/>
 	
-	<weapon name="Bolt Pistol" 		range="12" 	Str="3"	ap_cost="1"		shots="2"	type="pistol"/>
-	<weapon name="Plasma Pistol"	range="12" 	Str="7"	ap_cost="1"		shots="1"	type="pistol"	special="plasma"/>
+	<weapon name="Bolt Pistol" 		range="12" 	Str="3"	ap_cost="0.5"	shots="1"	type="pistol"/>
+	<weapon name="Plasma Pistol"	range="12" 	Str="5"	ap_cost="1"		shots="1"	type="pistol"	special="plasma"/>
 	
 	<weapon name="Karate"						Str="3"	ap_cost="1"		shots="1"	type="melee"/>
 	<weapon name="Chain Sword" 					Str="4"	ap_cost="1"		shots="1"	type="melee"	parry="1"/>
@@ -18,10 +18,10 @@
 	<weapon name="Flamer"			range="4"	Str="4"	ap_cost="1"		shots="1"	type="assault" 	special="flamer"/>
 	<weapon name="Meltagun" 		range="12" 	Str="8"	ap_cost="1"		shots="1"	type="assault"	special="melta"/>
 	
-	<weapon name="Heavy Bolter" 	range="36" 	Str="5"	ap_cost="0.5"	shots="1"	type="heavy"/>
+	<weapon name="Heavy Bolter" 	range="36" 	Str="5"	ap_cost="1"		shots="2"	type="heavy"/>
 	<weapon name="Lascannon"		range="48" 	Str="9"	ap_cost="1"		shots="1"	type="heavy"/>
-	<weapon name="Krak Launcher"	range="48"	Str="8"	ap_cost="1"		shots="1"	type="heavy"/>
-	<weapon name="Frag Launcher"	range="48"	Str="4"	ap_cost="1"		shots="1"	type="heavy" 	blast="2"/>
+	<weapon name="Krak Launcher"	range="48"	Str="8"	ap_cost="3"		shots="1"	type="heavy"/>
+	<weapon name="Frag Launcher"	range="48"	Str="4"	ap_cost="3"		shots="1"	type="heavy" 	blast="2"/>
 	<weapon name="Heavy Plasma" 	range="36" 	Str="7"	ap_cost="1"		shots="1"	type="heavy" 	blast="2"/>
 	
 	
