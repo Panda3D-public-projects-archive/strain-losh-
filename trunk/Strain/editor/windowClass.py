@@ -224,7 +224,8 @@ class LevelEditor:
         if event.y > (self.level.maxY * (self.borderSize + self.rectSize)) + self.borderSize:
             return
 
-
+        wls = ['Wall1', 'Wall2', 'Wall3', 'Ruin', 'ClosedDoor', 'OpenedDoor', 'ForceField']
+        
         if event.type == gtk.gdk.BUTTON_PRESS:    
             tmpX = int( ( event.x ) / (self.rectSize+self.borderSize)  )
             tmpY = int( ( event.y ) / (self.rectSize+self.borderSize)  )
@@ -241,14 +242,30 @@ class LevelEditor:
                     self.level.decreaseElement( tmpX, tmpY)                
             
             if txr > self.borderSize and tyr < self.borderSize:
-                if event.button == 1:                    
-                    self.level._grid[ 2*tmpX+1][(2*tmpY)+2] = 1
+                if event.button == 1:
+                    elmt = self.level._grid[ 2*tmpX+1][(2*tmpY)+2]                     
+                    if elmt:
+                        idx = wls.index( elmt.name ) + 1
+                        if idx + 1 == len(wls):
+                            idx = 0
+                    else:
+                        idx = 0
+                    self.level._grid[ 2*tmpX+1][(2*tmpY)+2] = self.level._walls[ wls[idx] ]
+                    print self.level._grid[ 2*tmpX+1][(2*tmpY)+2].name
                 if event.button == 3:                    
                     self.level._grid[ 2*tmpX+1][(2*tmpY)+2] = 0
 
             if txr < self.borderSize and tyr > self.borderSize:
                 if event.button == 1:                    
-                    self.level._grid[ 2*tmpX][(2*tmpY)+1] = 1
+                    elmt = self.level._grid[ 2*tmpX][(2*tmpY)+1]                     
+                    if elmt:
+                        idx = wls.index( elmt.name ) + 1
+                        if idx + 1 == len(wls):
+                            idx = 0
+                    else:
+                        idx = 0
+                    self.level._grid[ 2*tmpX][(2*tmpY)+1] = self.level._walls[ wls[idx] ]
+                    print self.level._grid[ 2*tmpX][(2*tmpY)+1].name
                 if event.button == 3:                    
                     self.level._grid[ 2*tmpX][(2*tmpY)+1] = 0
 
