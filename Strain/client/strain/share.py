@@ -5,7 +5,7 @@ Created on 19.12.2011.
 '''
 import math
 import time
-
+from xml.dom import minidom
 
 
 COMMUNICATION_PROTOCOL = 0.1
@@ -753,6 +753,7 @@ class Level:
         self._level_data = []    
         self._dynamics = []
         self._grid = []
+        self._walls = {}
         
         if name:
             self.load( name )        
@@ -783,6 +784,10 @@ class Level:
         #initialize grid
         self._grid = [[ None ] * (2*self.maxY+1) for i in xrange(2*self.maxX+1)] #@UnusedVariable
         
+        
+        #---------------------------------load walls----------------------------------
+        self._walls = loadWalls()
+        
         #---------------------------------load grid stuff------------------------------
         in_grid = False
         for line in lvl_file:
@@ -799,12 +804,13 @@ class Level:
             s = line.split(',')        
             x = int(s[0])
             y = int(s[1])
-            wall_type = int(s[2])
+            wall_type = self._walls[ s[2] ]
             
             #put wall in grid
             self._grid[ x ][ y ] = wall_type
+
             
-            #put flag in all nodes touching this wall
+            #TODO: krav: ovo maknut:put flag in all nodes touching this wall
             if x % 2 == 0:
                 self._grid[ x ][ y + 1 ] = wall_type
                 self._grid[ x ][ y - 1 ] = wall_type
@@ -870,7 +876,7 @@ class Level:
                 if not self._grid[x][y]:
                     continue
         
-                fajl.write( str(x) + ',' + str(y) + ',' + str(self._grid[x][y]) + '\n' )
+                fajl.write( str(x) + ',' + str(y) + ',' + self._grid[x][y].name + '\n' )
         
         fajl.write("/GRID\n")
         
@@ -955,4 +961,47 @@ class Level:
         return True
     
     
+    
+class Wall:
+    
+    def __init__(self):
+        self.name = None
+        self.blockMove = False
+        self.blockVision = False
+        self.destroysTo = None  
+        self.usesTo = None
+    
+    
+#-------WALL LOADING---------
+
+def loadWalls():
+    #TODO: krav: a jebiga kako drugacije sad?
+    try:
+        xmldoc = minidom.parse('data/base/walls.xml')
+    except:
+        try:
+            xmldoc = minidom.parse('./../server/data/base/walls.xml')
+        except:
+            return None
+        
+    
+    walls = {}
+    
+    for p in xmldoc.getElementsByTagName( 'wall' ):                
+        wpn = Wall()            
+        wpn.name = p.attributes['name'].value
+        wpn.blockMove = p.attributes['blockMove'].value
+        wpn.blockVision = p.attributes['blockVision'].value 
+        try:wpn.destroysTo = int(p.attributes['destroysTo'].value)
+        except:pass
+        try:wpn.usesTo = int(p.attributes['usesTo'].value)
+        except: pass
+
+        walls[wpn.name] = wpn
+
+    xmldoc.unlink()
+    
+    return walls
+
+
     
