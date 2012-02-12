@@ -984,6 +984,19 @@ class Level:
         return False
     
     
+    def gridCanUse(self, x, y):
+        if self._grid[x][y] and self._grid[x][y].usesTo:
+                return True
+        return False
+    
+    
+    def gridUse(self, x, y):
+        if not self._grid[x][y] and not self._grid[x][y].usesTo:
+            return False
+        
+        self._grid[x][y] = self._walls[ self._grid[x][y].usesTo ]
+
+    
     
 class Wall:
     
@@ -1023,6 +1036,22 @@ def loadWalls():
         walls[wpn.name] = wpn
 
     xmldoc.unlink()
+    
+    
+    #------------check usesTo and destroysTo from every wall-------
+    for el in walls.itervalues():
+        if el.usesTo:
+            try:
+                walls[el.usesTo]
+            except:
+                raise Exception( "Wrong usesTo in: ", el.name, " it is:", el.usesTo," but there is no such wall.")
+    
+        if el.destroysTo:
+            try:
+                walls[el.destroysTo]
+            except:
+                raise Exception( "Wrong destroysTo in: ", el.name, " it is:", el.destroysTo," but there is no such wall.")
+    
     
     return walls
 
