@@ -32,7 +32,7 @@
 
 
 GRID
-2,5,Wall1
+2,5,ForceField
 2,7,Wall1
 2,9,Wall1
 2,11,Wall3
