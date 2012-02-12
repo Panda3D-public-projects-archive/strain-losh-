@@ -148,32 +148,56 @@ def checkGridMove( x, y, dx, dy, level ):
   
     if dx == 1:
         if dy == 1:
-            if level._grid[_2x+2][_2y+2]:
-                return False
+            if not level._grid[_2x+2][_2y+2]:
+                return True
+            
+            if level.gridMoveBlocked( _2x+2, _2y+1 ) or level.gridMoveBlocked( _2x+1, _2y+2 ):
+                if level.gridMoveBlocked( _2x+3, _2y+2 ) or level.gridMoveBlocked( _2x+2, _2y+3 ):
+                    return False
+            
+                        
         if dy == -1:
-            if level._grid[_2x+2][_2y]:
-                return False
-             
-        if level._grid[_2x+2][_2y+1]:
+            if not level._grid[_2x+2][_2y]:
+                return True
+            
+            if level.gridMoveBlocked( _2x+2, _2y+1 ) or level.gridMoveBlocked( _2x+1, _2y ):
+                if level.gridMoveBlocked( _2x+3, _2y ) or level.gridMoveBlocked( _2x+2, _2y-1 ):
+                    return False
+            
+            
+        if level.gridMoveBlocked( _2x+2, _2y+1 ):
             return False
+        
         
     if dx == -1:
         if dy == 1:
-            if level._grid[_2x][_2y+2]:
-                return False
+            if not level._grid[_2x][_2y+2]:
+                return True
+            
+            if level.gridMoveBlocked( _2x, _2y+1 ) or level.gridMoveBlocked( _2x+1, _2y+2 ):
+                if level.gridMoveBlocked( _2x-1, _2y+2 ) or level.gridMoveBlocked( _2x, _2y+3 ):
+                    return False
+            
+            
         if dy == -1:
             if level._grid[_2x][_2y]:
                 return False
+
+            if level.gridMoveBlocked( _2x, _2y+1 ) or level.gridMoveBlocked( _2x+1, _2y ):
+                if level.gridMoveBlocked( _2x-1, _2y ) or level.gridMoveBlocked( _2x, _2y-1 ):
+                    return False
              
-        if level._grid[_2x][_2y+1]:
+             
+        if level.gridMoveBlocked( _2x, _2y+1 ):
             return False
         
+        
     if dy == 1:
-        if level._grid[_2x+1][_2y+2]:
+        if level.gridMoveBlocked( _2x+1, _2y+2 ):
             return False
 
     if dy == -1:
-        if level._grid[_2x+1][_2y]:
+        if level.gridMoveBlocked( _2x+1, _2y ):
             return False
     
     return True
@@ -376,11 +400,11 @@ def _getTiles2D( t1, t2, level ):
                 if D < y_x_2:
                     if( level.outOfBounds( x+1, y ) ):
                         return False
-                    if level.opaque( x+1, y, 2 ) or level._grid[_2x+2][_2y+1]:
+                    if level.opaque( x+1, y, 2 ) or level.gridVisionBlocked( _2x+2, _2y+1 ):
                         return False
-                    if sgny0 > 0 and level._grid[_2x+3][_2y+2]:
+                    if sgny0 > 0 and level.gridVisionBlocked( _2x+3, _2y+2 ):
                         return False
-                    if sgny0 < 0 and level._grid[_2x+3][_2y]:
+                    if sgny0 < 0 and level.gridVisionBlocked( _2x+3, _2y ):
                         return False
                     
                 else:
@@ -388,13 +412,13 @@ def _getTiles2D( t1, t2, level ):
                         #we need to check (x,y+1)
                         if( level.outOfBounds( x, y+1 ) ):
                             return False
-                        if level.opaque( x, y+1, 2 ) or level._grid[_2x+1][_2y+2] or level._grid[_2x+2][_2y+3]:
+                        if level.opaque( x, y+1, 2 ) or level.gridVisionBlocked( _2x+1, _2y+2 ) or level.gridVisionBlocked( _2x+2, _2y+3 ):
                             return False
                     else:
                         #we need to check (x,y-1)
                         if( level.outOfBounds( x, y-1 ) ):
                             return False
-                        if level.opaque( x, y-1, 2 ) or level._grid[_2x+1][_2y] or level._grid[_2x+2][_2y-1]:
+                        if level.opaque( x, y-1, 2 ) or level.gridVisionBlocked( _2x+1, _2y ) or level.gridVisionBlocked( _2x+2, _2y-1 ):
                             return False
 
                     
@@ -403,7 +427,7 @@ def _getTiles2D( t1, t2, level ):
 
             else:
                 #so now we know we are going only +1 on x 
-                if level._grid[2*x+2][2*y+1]:
+                if level.gridVisionBlocked( 2*x+2, 2*y+1 ):
                     return False
 
                 if level.opaque( x+1, y, 2):
@@ -435,16 +459,16 @@ def _getTiles2D( t1, t2, level ):
                         if( level.outOfBounds( x+1, y+1 ) ):
                             return False
                         
-                        if level._grid[_2x+2][_2y+1]:
-                            if level._grid[_2x+1][_2y+2]:
+                        if level.gridVisionBlocked( _2x+2, _2y+1 ):
+                            if level.gridVisionBlocked( _2x+1, _2y+2 ):
                                 return False
-                            if level._grid[_2x+2][_2y+3]:
+                            if level.gridVisionBlocked( _2x+2, _2y+3 ):
                                 return False
                             if level.opaque( x, y+1, 2 ):
                                 return False
                             
-                        if level._grid[_2x+1][_2y+2]:
-                            if level._grid[_2x+3][_2y+2]:
+                        if level.gridVisionBlocked( _2x+1, _2y+2 ):
+                            if level.gridVisionBlocked( _2x+3, _2y+2 ):
                                 return False
                             if level.opaque( x+1, y, 2 ):
                                 return False
@@ -453,23 +477,23 @@ def _getTiles2D( t1, t2, level ):
                             return False
                             
                         
-                        if level._grid[_2x+2][_2y+3] and level._grid[_2x+3][_2y+2]:
+                        if level.gridVisionBlocked( _2x+2, _2y+3 ) and level.gridVisionBlocked( _2x+3, _2y+2 ):
                             return False
                     
                     if sgnx0 < 0:
                         if( level.outOfBounds( x-1, y+1 ) ):
                             return False
                     
-                        if level._grid[_2x][_2y+1]:
-                            if level._grid[_2x+1][_2y+2]:
+                        if level.gridVisionBlocked( _2x, _2y+1 ):
+                            if level.gridVisionBlocked( _2x+1, _2y+2 ):
                                 return False
-                            if level._grid[_2x][_2y+3]:
+                            if level.gridVisionBlocked( _2x, _2y+3 ):
                                 return False
                             if level.opaque( x, y+1, 2 ):
                                 return False
                             
-                        if level._grid[_2x+1][_2y+2]:
-                            if level._grid[_2x-1][_2y+2]:
+                        if level.gridVisionBlocked( _2x+1, _2y+2 ):
+                            if level.gridVisionBlocked( _2x-1, _2y+2 ):
                                 return False
                             if level.opaque( x-1, y, 2 ):
                                 return False
@@ -477,7 +501,7 @@ def _getTiles2D( t1, t2, level ):
                         if level.opaque( x-1, y, 2 ) and level.opaque( x, y+1, 2):
                             return False
                             
-                        if level._grid[_2x-1][_2y+2] and level._grid[_2x][_2y+3]:
+                        if level.gridVisionBlocked( _2x-1, _2y+2 ) and level.gridVisionBlocked( _2x, _2y+3 ):
                             return False
                                                     
                     
@@ -486,11 +510,11 @@ def _getTiles2D( t1, t2, level ):
                     if D < x_y_2:
                         if( level.outOfBounds( x, y+1 ) ):
                             return False
-                        if level.opaque( x, y+1, 2 ) or level._grid[_2x+1][_2y+2]:
+                        if level.opaque( x, y+1, 2 ) or level.gridVisionBlocked( _2x+1, _2y+2 ):
                             return False
-                        if sgnx0 > 0 and level._grid[_2x+2][_2y+3]:
+                        if sgnx0 > 0 and level.gridVisionBlocked( _2x+2, _2y+3 ):
                             return False
-                        if sgnx0 < 0 and level._grid[_2x][_2y+3]:
+                        if sgnx0 < 0 and level.gridVisionBlocked( _2x, _2y+3 ):
                             return False
                             
                     else:
@@ -498,13 +522,13 @@ def _getTiles2D( t1, t2, level ):
                             #we need to check (x+1,y)
                             if( level.outOfBounds( x+1, y ) ):
                                 return False
-                            if level.opaque( x+1, y, 2 ) or level._grid[_2x+3][_2y+2] or level._grid[_2x+2][_2y+1]:
+                            if level.opaque( x+1, y, 2 ) or level.gridVisionBlocked( _2x+3, _2y+2 ) or level.gridVisionBlocked( _2x+2, _2y+1 ):
                                 return False
                         else:
                             #we need to check (x-1,y)
                             if( level.outOfBounds( x-1, y ) ):
                                 return False
-                            if level.opaque( x-1, y, 2 ) or level._grid[_2x-1][_2y+2] or level._grid[_2x][_2y+1]:
+                            if level.opaque( x-1, y, 2 ) or level.gridVisionBlocked( _2x-1, _2y+2 ) or level.gridVisionBlocked( _2x, _2y+1 ):
                                 return False
                 
                 x += sgnx0
@@ -512,7 +536,7 @@ def _getTiles2D( t1, t2, level ):
 
             else:
                 #so now we know we are going only +1 on y 
-                if level._grid[2*x+1][2*y+2]:
+                if level.gridVisionBlocked( 2*x+1, 2*y+2 ):
                     return False
 
                 if level.opaque( x, y+1, 2):
@@ -523,7 +547,7 @@ def _getTiles2D( t1, t2, level ):
             
             #its clear, add it to visible list
             list_visible_tiles.append( (x, y) )
-            
+
 
     if rev:
         list_visible_tiles.reverse()
@@ -610,120 +634,120 @@ def checkGridVisibility( pos, lastpos, level):
   
     if dx == 1:
         if dy == 1:
-            if level._grid[_2x+2][_2y+1]:
-                if level._grid[_2x+2][_2y+3]:
+            if level.gridVisionBlocked( _2x+2, _2y+1 ):
+                if level.gridVisionBlocked( _2x+2, _2y+3 ):
                     return False
                 if level.getHeight( (x, y+1) ) > 1:
                     return False
                 
                 
-            if level._grid[_2x+2][_2y+3]:
+            if level.gridVisionBlocked( _2x+2, _2y+3 ):
                 if level.getHeight( (x+1, y) ) > 1:
                     return False
-                if level._grid[_2x+3][_2y+2]:
+                if level.gridVisionBlocked( _2x+3, _2y+2 ):
                     return False
             
             
-            if level._grid[_2x+1][_2y+2]:
-                if level._grid[_2x+3][_2y+2]:
+            if level.gridVisionBlocked( _2x+1, _2y+2 ):
+                if level.gridVisionBlocked( _2x+3, _2y+2 ):
                     return False
                 if level.getHeight( (x+1, y) ) > 1:
                     return False
             
-            if level._grid[_2x+3][_2y+2] and level.getHeight( (x, y+1) ) > 1:
+            if level.gridVisionBlocked( _2x+3, _2y+2 ) and level.getHeight( (x, y+1) ) > 1:
                     return False
                 
                 
         if dy == -1:
-            if level._grid[_2x+2][_2y+1]:
-                if level._grid[_2x+2][_2y-1]:
+            if level.gridVisionBlocked( _2x+2, _2y+1 ):
+                if level.gridVisionBlocked( _2x+2, _2y-1 ):
                     return False
                 if level.getHeight( (x, y-1) ) > 1:
                     return False
 
                 
-            if level._grid[_2x+2][_2y-1]:
+            if level.gridVisionBlocked( _2x+2, _2y-1 ):
                 if level.getHeight( (x+1, y) ) > 1:
                     return False
-                if level._grid[_2x+3][_2y]:
+                if level.gridVisionBlocked( _2x+3, _2y ):
                     return False
                 
                 
-            if level._grid[_2x+1][_2y]:
-                if level._grid[_2x+3][_2y]:
+            if level.gridVisionBlocked( _2x+1, _2y ):
+                if level.gridVisionBlocked( _2x+3, _2y ):
                     return False
                 if level.getHeight( (x+1, y) ) > 1:
                     return False
 
-            if level._grid[_2x+3][_2y] and level.getHeight( (x, y-1) ) > 1:
+            if level.gridVisionBlocked( _2x+3, _2y ) and level.getHeight( (x, y-1) ) > 1:
                     return False
 
 
-        if level._grid[_2x+2][_2y+1]:
+        if level.gridVisionBlocked( _2x+2, _2y+1 ):
             return False
 
         
     if dx == -1:
         if dy == 1:
-            if level._grid[_2x][_2y+1]:
-                if level._grid[_2x][_2y+3]:
+            if level.gridVisionBlocked( _2x, _2y+1 ):
+                if level.gridVisionBlocked( _2x, _2y+3 ):
                     return False
                 if level.getHeight( (x, y+1) ) > 1:
                     return False
                 
-            if level._grid[_2x][_2y+3]:
+            if level.gridVisionBlocked( _2x, _2y+3 ):
                 if level.getHeight( (x-1, y) ) > 1:
                     return False
-                if level._grid[_2x-1][_2y+2]:
+                if level.gridVisionBlocked( _2x-1, _2y+2 ):
                     return False
                 
                 
-            if level._grid[_2x+1][_2y+2]:
-                if level._grid[_2x-1][_2y+2]:
+            if level.gridVisionBlocked( _2x+1, _2y+2 ):
+                if level.gridVisionBlocked( _2x-1, _2y+2 ):
                     return False
                 if level.getHeight( (x-1, y) ) > 1:
                     return False
 
-            if level._grid[_2x-1][_2y+2] and level.getHeight( (x, y+1) ) > 1:
+            if level.gridVisionBlocked( _2x-1, _2y+2 ) and level.getHeight( (x, y+1) ) > 1:
                 return False
 
 
 
         if dy == -1:
-            if level._grid[_2x][_2y+1]:
-                if level._grid[_2x][_2y-1]:
+            if level.gridVisionBlocked( _2x, _2y+1 ):
+                if level.gridVisionBlocked( _2x, _2y-1 ):
                     return False
                 if level.getHeight( (x, y-1) ) > 1:
                     return False
 
             
-            if level._grid[_2x][_2y-1]:
+            if level.gridVisionBlocked( _2x, _2y-1 ):
                 if level.getHeight( (x-1, y) ) > 1:
                     return False
-                if level._grid[_2x-1][_2y]:
+                if level.gridVisionBlocked( _2x-1, _2y ):
                     return False
             
             
-            if level._grid[_2x+1][_2y]:
-                if level._grid[_2x-1][_2y]:
+            if level.gridVisionBlocked( _2x+1, _2y ):
+                if level.gridVisionBlocked( _2x-1, _2y ):
                     return False
                 if level.getHeight( (x-1, y) ) > 1:
                     return False
              
-            if level._grid[_2x-1][_2y] and level.getHeight( (x, y-1) ) > 1:
+            if level.gridVisionBlocked( _2x-1, _2y ) and level.getHeight( (x, y-1) ) > 1:
                 return False 
              
              
-        if level._grid[_2x][_2y+1]:
+        if level.gridVisionBlocked( _2x, _2y+1 ):
             return False
 
         
     if dy == 1:
-        if level._grid[_2x+1][_2y+2]:
+        if level.gridVisionBlocked( _2x+1, _2y+2 ):
             return False
 
     if dy == -1:
-        if level._grid[_2x+1][_2y]:
+        if level.gridVisionBlocked( _2x+1, _2y ):
             return False
     
     
@@ -961,6 +985,18 @@ class Level:
         return True
     
     
+    def gridMoveBlocked(self, x, y ):
+        if self._grid[x][y] and self._grid[x][y].blockMove:
+                return True
+        return False
+    
+    
+    def gridVisionBlocked(self, x, y ):
+        if self._grid[x][y] and self._grid[x][y].blockVision:
+                return True
+        return False
+    
+    
     
 class Wall:
     
@@ -982,7 +1018,7 @@ def loadWalls():
         try:
             xmldoc = minidom.parse('./../server/data/base/walls.xml')
         except:
-            return None
+            raise Exception( "Wrong 'walls.xml' directory")
         
     
     walls = {}
@@ -990,11 +1026,11 @@ def loadWalls():
     for p in xmldoc.getElementsByTagName( 'wall' ):                
         wpn = Wall()            
         wpn.name = p.attributes['name'].value
-        wpn.blockMove = p.attributes['blockMove'].value
-        wpn.blockVision = p.attributes['blockVision'].value 
-        try:wpn.destroysTo = int(p.attributes['destroysTo'].value)
+        wpn.blockMove = int( p.attributes['blockMove'].value )
+        wpn.blockVision = int( p.attributes['blockVision'].value ) 
+        try:wpn.destroysTo = p.attributes['destroysTo'].value
         except:pass
-        try:wpn.usesTo = int(p.attributes['usesTo'].value)
+        try:wpn.usesTo = p.attributes['usesTo'].value
         except: pass
 
         walls[wpn.name] = wpn
