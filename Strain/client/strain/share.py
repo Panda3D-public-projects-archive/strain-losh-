@@ -147,44 +147,30 @@ def checkGridMove( x, y, dx, dy, level ):
     _2y = y*2
   
     if dx == 1:
-        if dy == 1:
-            if not level._grid[_2x+2][_2y+2]:
-                return True
-            
-            if level.gridMoveBlocked( _2x+2, _2y+1 ) or level.gridMoveBlocked( _2x+1, _2y+2 ):
-                if level.gridMoveBlocked( _2x+3, _2y+2 ) or level.gridMoveBlocked( _2x+2, _2y+3 ):
+        if dy == 1:      
+            if level.gridMoveBlocked( _2x+2, _2y+1 ) or level.gridMoveBlocked( _2x+1, _2y+2 ) or \
+                level.gridMoveBlocked( _2x+3, _2y+2 ) or level.gridMoveBlocked( _2x+2, _2y+3 ):
                     return False
             
                         
         if dy == -1:
-            if not level._grid[_2x+2][_2y]:
-                return True
-            
-            if level.gridMoveBlocked( _2x+2, _2y+1 ) or level.gridMoveBlocked( _2x+1, _2y ):
-                if level.gridMoveBlocked( _2x+3, _2y ) or level.gridMoveBlocked( _2x+2, _2y-1 ):
+            if level.gridMoveBlocked( _2x+2, _2y+1 ) or level.gridMoveBlocked( _2x+1, _2y ) or \
+                level.gridMoveBlocked( _2x+3, _2y ) or level.gridMoveBlocked( _2x+2, _2y-1 ):
                     return False
-            
-            
+                        
         if level.gridMoveBlocked( _2x+2, _2y+1 ):
             return False
         
         
     if dx == -1:
         if dy == 1:
-            if not level._grid[_2x][_2y+2]:
-                return True
-            
-            if level.gridMoveBlocked( _2x, _2y+1 ) or level.gridMoveBlocked( _2x+1, _2y+2 ):
-                if level.gridMoveBlocked( _2x-1, _2y+2 ) or level.gridMoveBlocked( _2x, _2y+3 ):
+            if level.gridMoveBlocked( _2x, _2y+1 ) or level.gridMoveBlocked( _2x+1, _2y+2 ) or \
+                level.gridMoveBlocked( _2x-1, _2y+2 ) or level.gridMoveBlocked( _2x, _2y+3 ):
                     return False
-            
-            
+                        
         if dy == -1:
-            if level._grid[_2x][_2y]:
-                return False
-
-            if level.gridMoveBlocked( _2x, _2y+1 ) or level.gridMoveBlocked( _2x+1, _2y ):
-                if level.gridMoveBlocked( _2x-1, _2y ) or level.gridMoveBlocked( _2x, _2y-1 ):
+            if level.gridMoveBlocked( _2x, _2y+1 ) or level.gridMoveBlocked( _2x+1, _2y ) or \
+                level.gridMoveBlocked( _2x-1, _2y ) or level.gridMoveBlocked( _2x, _2y-1 ):
                     return False
              
              
@@ -199,6 +185,7 @@ def checkGridMove( x, y, dx, dy, level ):
     if dy == -1:
         if level.gridMoveBlocked( _2x+1, _2y ):
             return False
+    
     
     return True
 
