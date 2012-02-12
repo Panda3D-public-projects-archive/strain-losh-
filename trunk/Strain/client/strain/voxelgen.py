@@ -143,7 +143,7 @@ class VoxelGenerator():
         #Calculate and place walls between tiles
         for x, val in enumerate(self.level._grid):
             for y, val2 in enumerate(val):
-                if val2 == 1: # TODO: ogs: kasnije razlikovati tipove zidova
+                if val2 != None: # TODO: ogs: kasnije razlikovati tipove zidova
                     # prvi parni, drugi neparni
                     if (x%2==0 and y%2!=0):
                         tile1_x = (x-2)/2
@@ -152,10 +152,55 @@ class VoxelGenerator():
                         tile2_y = (y-1)/2
                         my_x= tile2_x
                         my_y=tile2_y
-                        model = loader.loadModel("wall")
-                        model.setPos(my_x, my_y, utils.GROUND_LEVEL)
-                        model.setH(90)
-                        model.reparentTo(self.node_wall_usable)
+                        if val2.name == "Wall1":
+                            model = loader.loadModel("wall")
+                            model.setPos(my_x, my_y, utils.GROUND_LEVEL)
+                            model.setH(90)
+                            model.reparentTo(self.node_wall_usable)
+                        elif val2.name == "Wall2":
+                            model = loader.loadModel("wall2")
+                            model.setPos(my_x, my_y, utils.GROUND_LEVEL)
+                            model.setH(90)
+                            model.setColor(0,1,0,1)
+                            model.reparentTo(self.node_wall_usable)
+                        elif val2.name == "Wall3":
+                            model = loader.loadModel("wall2")
+                            model.setPos(my_x, my_y, utils.GROUND_LEVEL)
+                            model.setH(90)
+                            model.setColor(0,0,0,1)
+                            model.reparentTo(self.node_wall_usable)
+                        elif val2.name == "Ruin":
+                            model = loader.loadModel("wall2")
+                            model.setPos(my_x, my_y, utils.GROUND_LEVEL)
+                            model.setH(90)
+                            model.setColor(0.5,0.8,1,0.6)
+                            model.setTransparency(TransparencyAttrib.MAlpha)
+                            model.reparentTo(self.node_forcewall_usable)
+                            s = Sequence(LerpColorInterval(model, 1, (0.13,0.56,0.78,0.6)),
+                                        LerpColorInterval(model, 1, (0.5,0.8,1,0.6)),
+                                        )  
+                            s.loop()
+                            model.setLightOff()   
+                        elif val2.name == "ClosedDoor":
+                            model = loader.loadModel("wall2")
+                            model.setPos(my_x, my_y, utils.GROUND_LEVEL)
+                            model.setH(90)
+                            model.setColor(1,0.0,0,0.0)
+                            model.reparentTo(self.node_forcewall_usable)
+                        elif val2.name == "OpenedDoor":
+                            model = loader.loadModel("wall2")
+                            model.setPos(my_x, my_y, utils.GROUND_LEVEL)
+                            model.setH(90)
+                            model.setColor(0.7,0.2,0.2,0.0)
+                            model.reparentTo(self.node_forcewall_usable)
+                        elif val2.name == "ForceField":
+                            model = loader.loadModel("wall_fs")
+                            model.setPos(my_x, my_y, utils.GROUND_LEVEL)
+                            model.setH(90)                            
+                            model.setTexture(self.ts_fs, self.tex_fs)
+                            model.setTransparency(TransparencyAttrib.MAlpha)
+                            model.reparentTo(self.node_forcewall_usable)
+                            model.setLightOff()                                                    
                     # prvi neparni, drugi parni
                     elif (x%2!=0 and y%2==0):
                         tile1_x = (x-1)/2
@@ -164,18 +209,23 @@ class VoxelGenerator():
                         tile2_y = y/2
                         my_x= tile2_x
                         my_y=tile2_y                        
-
-                        if x == 7 and y == 20:
-                            model = loader.loadModel("wall_fs")
+                        if val2.name == "Wall1":
+                            model = loader.loadModel("wall")
                             model.setPos(my_x, my_y, utils.GROUND_LEVEL)
-                            model.setTexture(self.ts_fs, self.tex_fs)
-                            model.setTransparency(TransparencyAttrib.MAlpha)
-                            model.reparentTo(self.node_forcewall_usable)
-                            model.setLightOff()
-                        elif x == 11 and y == 20:
+                            model.reparentTo(self.node_wall_usable)
+                        elif val2.name == "Wall2":
                             model = loader.loadModel("wall2")
                             model.setPos(my_x, my_y, utils.GROUND_LEVEL)
-                            #model.setTexture(self.ts_fs, self.tex_fs)
+                            model.setColor(0,1,0,1)
+                            model.reparentTo(self.node_wall_usable)
+                        elif val2.name == "Wall3":
+                            model = loader.loadModel("wall2")
+                            model.setPos(my_x, my_y, utils.GROUND_LEVEL)
+                            model.setColor(0,0,0,1)
+                            model.reparentTo(self.node_wall_usable)
+                        elif val2.name == "Ruin":
+                            model = loader.loadModel("wall2")
+                            model.setPos(my_x, my_y, utils.GROUND_LEVEL)
                             model.setColor(0.5,0.8,1,0.6)
                             model.setTransparency(TransparencyAttrib.MAlpha)
                             model.reparentTo(self.node_forcewall_usable)
@@ -183,11 +233,24 @@ class VoxelGenerator():
                                         LerpColorInterval(model, 1, (0.5,0.8,1,0.6)),
                                         )  
                             s.loop()
-                            model.setLightOff()
-                        else:
-                            model = loader.loadModel("wall")
-                            model.setPos(my_x, my_y, utils.GROUND_LEVEL)                            
-                            model.reparentTo(self.node_wall_usable)
+                            model.setLightOff()  
+                        elif val2.name == "ClosedDoor":
+                            model = loader.loadModel("wall2")
+                            model.setPos(my_x, my_y, utils.GROUND_LEVEL)
+                            model.setColor(1,0.0,0,0.0)
+                            model.reparentTo(self.node_forcewall_usable)
+                        elif val2.name == "OpenedDoor":
+                            model = loader.loadModel("wall2")
+                            model.setPos(my_x, my_y, utils.GROUND_LEVEL)
+                            model.setColor(0.7,0.2,0.2,0.0)
+                            model.reparentTo(self.node_forcewall_usable)
+                        elif val2.name == "ForceField":
+                            model = loader.loadModel("wall_fs")
+                            model.setPos(my_x, my_y, utils.GROUND_LEVEL)                       
+                            model.setTexture(self.ts_fs, self.tex_fs)
+                            model.setTransparency(TransparencyAttrib.MAlpha)
+                            model.reparentTo(self.node_forcewall_usable)
+                            model.setLightOff() 
                     else:
                         continue                                           
          

@@ -6,15 +6,15 @@
 import logging
 
 # panda3D imports
-from direct.showbase.ShowBase import ShowBase
+from direct.showbase.ShowBase import ShowBase#@UnresolvedImport
 from panda3d.core import loadPrcFile, WindowProperties#@UnresolvedImport
 from panda3d.core import TextNode, VBase4, AntialiasAttrib#@UnresolvedImport
 from panda3d.core import ConfigVariableInt#@UnresolvedImport
-from direct.showbase.DirectObject import DirectObject
-from direct.fsm import FSM
-from direct.gui.DirectGui import DirectButton, DirectEntry, DirectLabel
-from direct.gui.OnscreenText import OnscreenText
-from pandac.PandaModules import PStatClient 
+from direct.showbase.DirectObject import DirectObject#@UnresolvedImport
+from direct.fsm import FSM#@UnresolvedImport
+from direct.gui.DirectGui import DirectButton, DirectEntry, DirectLabel#@UnresolvedImport
+from direct.gui.OnscreenText import OnscreenText#@UnresolvedImport
+from pandac.PandaModules import PStatClient#@UnresolvedImport
 
 
 # strain related imports
