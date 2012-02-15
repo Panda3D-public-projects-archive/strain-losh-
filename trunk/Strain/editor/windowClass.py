@@ -246,7 +246,7 @@ class LevelEditor:
                     elmt = self.level._grid[ 2*tmpX+1][(2*tmpY)+2]                     
                     if elmt:
                         idx = wls.index( elmt.name ) + 1
-                        if idx + 1 == len(wls):
+                        if idx == len(wls):
                             idx = 0
                     else:
                         idx = 0
@@ -260,7 +260,7 @@ class LevelEditor:
                     elmt = self.level._grid[ 2*tmpX][(2*tmpY)+1]                     
                     if elmt:
                         idx = wls.index( elmt.name ) + 1
-                        if idx + 1 == len(wls):
+                        if idx == len(wls):
                             idx = 0
                     else:
                         idx = 0
