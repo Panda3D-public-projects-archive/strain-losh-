@@ -246,25 +246,12 @@ class VoxelGenerator():
                     my_x= tile2_x
                     my_y=tile2_y
                     if val2.name == "ClosedDoor" and val2.name != self.parent.parent.old_level_grid[x][y].name:
-                        self.dynamic_wall_dict[(my_x, my_y)].removeNode()
-                        self.dynamic_wall_dict[(my_x, my_y)] = None
-                        model = loader.loadModel("wall2")
-                        model.setPos(my_x, my_y, utils.GROUND_LEVEL)
-                        model.setH(h)
-                        model.setColor(1,0.0,0,0.0)
-                        self.dynamic_wall_dict[(my_x, my_y)] = model
-                        model.reparentTo(self.node_dynamic_wall_usable)
+                        i = self.dynamic_wall_dict[(my_x, my_y)].scaleInterval(1, Vec3(1,1,1))
+                        i.start()
                     elif val2.name == "OpenedDoor" and val2.name != self.parent.parent.old_level_grid[x][y].name:
-                        self.dynamic_wall_dict[(my_x, my_y)].removeNode()
-                        self.dynamic_wall_dict[(my_x, my_y)] = None
-                        model = loader.loadModel("wall2")
-                        model.setPos(my_x, my_y, utils.GROUND_LEVEL)
-                        model.setH(h)
-                        model.setScale(0.2,1,1)
-                        model.setColor(0.7,0.2,0.2,0.0)
-                        self.dynamic_wall_dict[(my_x, my_y)] = model
-                        model.reparentTo(self.node_dynamic_wall_usable)
-    
+                        i = self.dynamic_wall_dict[(my_x, my_y)].scaleInterval(1, Vec3(0.2,1,1))
+                        i.start() 
+
     def setInvisibleTiles(self, tile_dict):
         for invisible_tile in tile_dict:
             if self.old_tile_dict == None or tile_dict[invisible_tile] != self.old_tile_dict[invisible_tile]:
