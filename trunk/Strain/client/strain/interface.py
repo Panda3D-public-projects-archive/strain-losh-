@@ -379,6 +379,10 @@ class Interface(DirectObject.DirectObject):
             if self.set_up.enabled:
                 self.toggleSetUp()
             self.console.unfocus()
+        elif self.hovered_gui == self.use:
+            ClientMsg.use( self.parent.sel_unit_id )
+            print "sending use message"
+            self.console.unfocus()
         #elif self.hovered_gui == self.console:
         #    self.console.focus()
         elif self.panel != None and self.hovered_gui == self.panel:
@@ -615,7 +619,6 @@ class Interface(DirectObject.DirectObject):
     def toggleOverwatch(self):
         unit = self.parent.units[self.parent.sel_unit_id]
         ClientMsg.overwatch( self.parent.sel_unit_id )
-        ClientMsg.use( self.parent.sel_unit_id )
         
     def toggleSetUp(self):
         unit = self.parent.units[self.parent.sel_unit_id]
