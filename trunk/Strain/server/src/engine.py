@@ -123,6 +123,9 @@ class Engine( Thread ):
         elif( msg[0] == SET_UP ):
             self.unitUpdate( msg[1], SET_UP, source)
                         
+        elif( msg[0] == USE ):
+            self.unitUpdate( msg[1], USE, source)
+                        
         elif( msg[0] == SHOOT ):
             self.handleShoot( msg[1]['shooter_id'], msg[1]['target_id'], source )
                         
@@ -162,9 +165,31 @@ class Engine( Thread ):
                     EngMsg.error( msg, source )
                     return
                     
+        if param == USE:
+            if not unit.can_use:
+                EngMsg.error( "Unit cannot use anything.", source )
+                return
+                    
+            if unit.ap < 1:
+                EngMsg.error( "Not enough AP for using.", source )
+                return
+                    
+            if self.use( unit ):
+                unit.ap -= 1
+                print "level changed"
+                self.levelChanged()
+            else:
+                return
+                    
         player.addUnitMsg( compileUnit(unit) )
         self.observer.addUnitMsg( compileUnit(unit) )
         
+        
+    def levelChanged(self):
+        compiled_level = util.compileLevel( self.level )
+        for p in self.players:
+            p.addLevelMsg( compiled_level )
+        self.observer.addLevelMsg( compiled_level )
         
         
     def chat(self, msg, source, to_allies):
@@ -220,7 +245,7 @@ class Engine( Thread ):
                 
                 player.units.append( tmpUnit )                
                 self.units[tmpUnit.id] = tmpUnit
-                
+                self.checkUnitCanUse( tmpUnit )
                 
             self.players.append( player )
     
@@ -485,17 +510,18 @@ class Engine( Thread ):
         
     def validatePlayer(self, source):
         if self.active_player.connection == source:
-            return True
+            return self.active_player
         
         EngMsg.error( 'It is not your turn.', source )
-        return False
+        return None
         
         
     def moveUnit(self, unit_id, new_position, new_heading, source ):
 
-        if not self.validatePlayer( source ):
+        owner = self.validatePlayer( source )
+        if not owner: 
             return
-
+        
         unit = self.findAndValidateUnit( unit_id, source )
         if not unit:
             return
@@ -517,7 +543,7 @@ class Engine( Thread ):
         actions_for_others = {}
         #fill it up with empty lists
         for p in self.players:
-            if p.connection == source:
+            if p == owner:
                 continue
             actions_for_others[p] = []                                    
                                     
@@ -584,7 +610,7 @@ class Engine( Thread ):
         if res_overwatch:          
             for p in self.players:
                 #skip the owner of unit  
-                if p.connection == source:
+                if p == owner:
                     continue
                 
                 for ov_msg in res_overwatch:                
@@ -634,8 +660,7 @@ class Engine( Thread ):
                             unit_ids_involved[ trgt[1] ] = 0
             
         #send everything to owner of moving unit
-        player = self.findPlayer( source )
-        player.addMoveMsg( unit.id, my_actions )
+        owner.addMoveMsg( unit.id, my_actions )
         self.observer.addMoveMsg( unit.id, my_actions )
         
         #send stuff that other players need to see
@@ -643,7 +668,10 @@ class Engine( Thread ):
             if actions_for_others[plyr]:
                 plyr.addMoveMsg( unit.id, actions_for_others[plyr] )
 
-        
+        #check to see if unit can use at this new location
+        self.checkUnitCanUse( unit )
+
+        #send UNIT msgs
         for tmp_unit_id in unit_ids_involved:
             tmp_unit = self.units[tmp_unit_id] 
             for p in self.players:
@@ -913,6 +941,155 @@ class Engine( Thread ):
         for p in self.players:
             if p.connection == source:
                 return p
+
+
+    def checkUnitCanUse(self, cur_unit):        
+        cur_unit.can_use = self._getUnitCanUse( cur_unit )
+        
+        
+    def _getUnitCanUse(self, cur_unit):
+        """For now checks only walls"""
+        x = int(cur_unit.pos[0])
+        y = int(cur_unit.pos[1])
+        
+        _2x = 2*x
+        _2y = 2*y
+        
+        
+        if cur_unit.heading == unit.HEADING_N:
+            if self.level.gridCanUse( _2x+1, _2y+2 ):
+                return True
+        elif cur_unit.heading == unit.HEADING_S:
+            if self.level.gridCanUse( _2x+1, _2y ):
+                return True
+        elif cur_unit.heading == unit.HEADING_E:
+            if self.level.gridCanUse( _2x+2, _2y+1 ):
+                return True
+        elif cur_unit.heading == unit.HEADING_W:
+            if self.level.gridCanUse( _2x, _2y+1 ):
+                return True
+            
+        elif cur_unit.heading == unit.HEADING_NW:
+            if self.level.gridCanUse( _2x-1, _2y+2 ):
+                if self.level.gridMoveBlocked( _2x, _2y+1 ) or self.level.getHeight2( x-1, y ) > 1:
+                    return False
+                else:
+                    return True
+            if self.level.gridCanUse( _2x, _2y+3 ):
+                if self.level.gridMoveBlocked( _2x+1, _2y+2 ) or self.level.getHeight2( x, y+1 ) > 1:
+                    return False
+                else:
+                    return True
+
+        elif cur_unit.heading == unit.HEADING_NE:
+            if self.level.gridCanUse( _2x+3, _2y+2 ):
+                if self.level.gridMoveBlocked( _2x+2, _2y+1 ) or self.level.getHeight2( x+1, y ) > 1:
+                    return False
+                else:
+                    return True
+            if self.level.gridCanUse( _2x+2, _2y+3 ):
+                if self.level.gridMoveBlocked( _2x+1, _2y+2 ) or self.level.getHeight2( x, y+1 ) > 1:
+                    return False
+                else:
+                    return True
+               
+        elif cur_unit.heading == unit.HEADING_SE:
+            if self.level.gridCanUse( _2x+3, _2y ):
+                if self.level.gridMoveBlocked( _2x+2, _2y+1 ) or self.level.getHeight2( x+1, y ) > 1:
+                    return False
+                else:
+                    return True
+            if self.level.gridCanUse( _2x+2, _2y-1 ):
+                if self.level.gridMoveBlocked( _2x+1, _2y ) or self.level.getHeight2( x, y-1 ) > 1:
+                    return False
+                else:
+                    return True
+               
+        elif cur_unit.heading == unit.HEADING_SW:
+            if self.level.gridCanUse( _2x-1, _2y ):
+                if self.level.gridMoveBlocked( _2x, _2y+1 ) or self.level.getHeight2( x-1, y ) > 1:
+                    return False
+                else:
+                    return True
+            if self.level.gridCanUse( _2x, _2y-1 ):
+                if self.level.gridMoveBlocked( _2x+1, _2y ) or self.level.getHeight2( x, y-1 ) > 1:
+                    return False
+                else:
+                    return True
+               
+        return False
+
+
+    def use(self, cur_unit ):
+        x = int(cur_unit.pos[0])
+        y = int(cur_unit.pos[1])
+        
+        _2x = 2*x
+        _2y = 2*y
+
+        if cur_unit.heading == unit.HEADING_N:
+            if self.level.gridCanUse( _2x+1, _2y+2 ):
+                self.level.gridUse( _2x+1, _2y+2 )
+                return True
+        elif cur_unit.heading == unit.HEADING_S:
+            if self.level.gridCanUse( _2x+1, _2y ):
+                self.level.gridUse( _2x+1, _2y )
+                return True
+        elif cur_unit.heading == unit.HEADING_E:
+            if self.level.gridCanUse( _2x+2, _2y+1 ):
+                self.level.gridUse( _2x+2, _2y+1 )
+                return True
+        elif cur_unit.heading == unit.HEADING_W:
+            if self.level.gridCanUse( _2x, _2y+1 ):
+                self.level.gridUse( _2x, _2y+1 )
+                return True
+            
+        elif cur_unit.heading == unit.HEADING_NW:
+            if not self.level.gridMoveBlocked( _2x, _2y+1 ) and self.level.getHeight2( x-1, y ) < 2:
+                if self.level.gridCanUse( _2x-1, _2y+2 ):
+                    self.level.gridUse( _2x-1, _2y+2 )
+                    return True
+
+            if not self.level.gridMoveBlocked( _2x+1, _2y+2 ) and self.level.getHeight2( x, y+1 ) < 2:
+                if self.level.gridCanUse( _2x, _2y+3 ):
+                    self.level.gridUse( _2x, _2y+3 )
+                    return True
+
+        elif cur_unit.heading == unit.HEADING_NE:
+            if not self.level.gridMoveBlocked( _2x+2, _2y+1 ) and self.level.getHeight2( x+1, y ) < 2:
+                if self.level.gridCanUse( _2x+3, _2y+2 ):
+                    self.level.gridUse( _2x+3, _2y+2 )
+                    return True
+
+            if not self.level.gridMoveBlocked( _2x+1, _2y+2 ) and self.level.getHeight2( x, y+1 ) < 2:
+                if self.level.gridCanUse( _2x+2, _2y+3 ):
+                    self.level.gridUse( _2x+2, _2y+3 )
+                    return True
+
+               
+        elif cur_unit.heading == unit.HEADING_SE:
+            if not self.level.gridMoveBlocked( _2x+2, _2y+1 ) and self.level.getHeight2( x+1, y ) < 2:
+                if self.level.gridCanUse( _2x+3, _2y ):
+                    self.level.gridUse( _2x+3, _2y )
+                    return True
+
+            if not self.level.gridMoveBlocked( _2x+1, _2y ) and self.level.getHeight2( x, y-1 ) < 2:
+                if self.level.gridCanUse( _2x+2, _2y-1 ):
+                    self.level.gridUse( _2x+2, _2y-1 )
+                    return True
+               
+        elif cur_unit.heading == unit.HEADING_SW:
+            if not self.level.gridMoveBlocked( _2x, _2y+1 ) and self.level.getHeight2( x-1, y ) < 2:
+                if self.level.gridCanUse( _2x-1, _2y ):
+                    self.level.gridUse( _2x-1, _2y )
+                    return True
+
+            if not self.level.gridMoveBlocked( _2x+1, _2y ) and self.level.getHeight2( x, y-1 ) < 2:
+                if self.level.gridCanUse( _2x, _2y-1 ):
+                    self.level.gridUse( _2x, _2y-1 )
+                    return True
+               
+        return False
 
 
 if __name__ == "__main__":

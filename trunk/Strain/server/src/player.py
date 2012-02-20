@@ -52,6 +52,13 @@ class Player:
             self.msg_lst.append( (ENGINE_STATE, state) )
             
 
+    def addLevelMsg(self, compiled_level ):
+        if self.connection:
+            EngMsg.sendLevel( compiled_level, self.connection )
+        else:
+            self.msg_lst.append( (LEVEL, compiled_level) )
+            
+
     def addMsg(self, msg ):
         if self.connection:
             EngMsg.sendMsg( msg, self.connection )
