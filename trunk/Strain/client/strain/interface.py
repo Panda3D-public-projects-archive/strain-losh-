@@ -320,7 +320,7 @@ class Interface(DirectObject.DirectObject):
                                                 , self.parent.sgm.unit_np_dict[unit_id].node
                                                 , unit_default_HP, unit_HP
                                                 , unit_default_AP, unit_AP)
-            self.unit_panel[unit_id] = GuiUnitPanel(self.aspect, unit_id
+            self.unit_panel[unit_id] = GuiUnitPanel(self.aspect, unit_id, unit_type[7:100]
                                                 , unit_default_HP, unit_HP
                                                 , unit_default_AP, unit_AP)
         else:
