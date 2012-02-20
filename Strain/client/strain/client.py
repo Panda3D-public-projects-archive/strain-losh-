@@ -36,6 +36,7 @@ class Client(DirectObject):
         # Set up important game logic variables
         self.level = None
         self.units = {}
+        self.inactive_units = {}
         self.players = {}
         self.sel_unit_id = None
         self.turn_number = None
@@ -187,6 +188,7 @@ class Client(DirectObject):
                 self.sgm.hideUnit(unit['id'])
             if self.units.has_key(unit['id']):
                 self.deleteUnit(unit['id'])
+                self.inactive_units[unit['id']] = unit
             self.level.removeUnitDict(unit)
         else:
             self.units[unit['id']] = unit
