@@ -318,6 +318,7 @@ class Interface(DirectObject.DirectObject):
         if unit_id not in self.unit_info:
             self.unit_info[unit_id] = GuiUnitInfo(Point3(0, 0, 1.1)
                                                 , self.parent.sgm.unit_np_dict[unit_id].node
+                                                , unit_type[7:100]
                                                 , unit_default_HP, unit_HP
                                                 , unit_default_AP, unit_AP)
             self.unit_panel[unit_id] = GuiUnitPanel(self.aspect, unit_id, unit_type[7:100]
