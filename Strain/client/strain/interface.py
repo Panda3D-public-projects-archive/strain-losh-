@@ -229,16 +229,16 @@ class Interface(DirectObject.DirectObject):
         self.turn_arrow_dict = {}        
         for i in xrange(1):
             cm = CardMaker('cm')
-            m.setScale(0.01, 0.01, 0.01)
+            m.setScale(0.01, 0.01, 0.01)#@UndefinedVariable
             x = dest.getX()+0.5
             y = dest.getY()+0.5  
             z = utils.GROUND_LEVEL 
-            p3d = base.cam.getRelativePoint(render, Point3(x,y,z))
+            p3d = base.cam.getRelativePoint(render, Point3(x,y,z))#@UndefinedVariable
             p2d = Point2()
-            base.camLens.project(p3d, p2d)
-            m.setPos(p2d.getX(), 0, p2d.getY())
-            m.reparentTo(render2d)
-            m.setLightOff()
+            base.camLens.project(p3d, p2d)#@UndefinedVariable
+            m.setPos(p2d.getX(), 0, p2d.getY())#@UndefinedVariable
+            m.reparentTo(render2d)#@UndefinedVariable
+            m.setLightOff()#@UndefinedVariable
             #self.turn_arrow_dict[key] = m            
         
     def removeTurnArrows(self):
@@ -645,6 +645,10 @@ class Interface(DirectObject.DirectObject):
         #if self.parent.units[unit_id]['heavy_weapon'] == False:
         if not 'set_up' in self.parent.units[unit_id]:
             self.set_up.disable()
+            
+        if 'can_use' in self.parent.units[unit_id]:
+             if self.parent.units[unit_id]['can_use'] == False:
+                self.use.disable()
             
     def clearButtons(self):
         for button in self.action_buttons.itervalues():
