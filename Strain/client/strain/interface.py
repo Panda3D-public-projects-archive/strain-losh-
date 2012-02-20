@@ -224,6 +224,22 @@ class Interface(DirectObject.DirectObject):
             m.reparentTo(self.turn_np)
             m.setLightOff()
             self.turn_arrow_dict[key] = m
+            
+    def loadTurnArrows2(self, dest):
+        self.turn_arrow_dict = {}        
+        for i in xrange(1):
+            cm = CardMaker('cm')
+            m.setScale(0.01, 0.01, 0.01)
+            x = dest.getX()+0.5
+            y = dest.getY()+0.5  
+            z = utils.GROUND_LEVEL 
+            p3d = base.cam.getRelativePoint(render, Point3(x,y,z))
+            p2d = Point2()
+            base.camLens.project(p3d, p2d)
+            m.setPos(p2d.getX(), 0, p2d.getY())
+            m.reparentTo(render2d)
+            m.setLightOff()
+            #self.turn_arrow_dict[key] = m            
         
     def removeTurnArrows(self):
         for child in self.turn_np.getChildren():
@@ -381,7 +397,6 @@ class Interface(DirectObject.DirectObject):
             self.console.unfocus()
         elif self.hovered_gui == self.use:
             ClientMsg.use( self.parent.sel_unit_id )
-            print "sending use message"
             self.console.unfocus()
         #elif self.hovered_gui == self.console:
         #    self.console.focus()
