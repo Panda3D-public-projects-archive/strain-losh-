@@ -188,7 +188,8 @@ class Client(DirectObject):
                 self.sgm.hideUnit(unit['id'])
             if self.units.has_key(unit['id']):
                 self.deleteUnit(unit['id'])
-                self.inactive_units[unit['id']] = unit
+                if self.isThisMyUnit(unit['id']):
+                    self.inactive_units[unit['id']] = unit
             self.level.removeUnitDict(unit)
         else:
             self.units[unit['id']] = unit
