@@ -385,7 +385,7 @@ class GuiUnitInfo:
         self.refreshIcons()
 
 class GuiUnitPanel:
-    def __init__(self, aspect, unit_id, default_hp, hp, default_ap, ap):
+    def __init__(self, aspect, unit_id, unit_type, default_hp, hp, default_ap, ap):
         self.unit_id = unit_id
         self.frameWidth = 0.48
         self.frameHeight = 0.06
@@ -414,6 +414,12 @@ class GuiUnitPanel:
                                   , barColor = (0,1,0,1)
                                   , frameColor = (1,0,0,0.9)
                                   , scale = (0.2,0.5,0.08))
+        
+        self.insignia = OnscreenImage(parent = self.frame
+                                            ,image = "unit_" + unit_type + "_big_transparent_32.png"
+                                            ,pos = (0.035,0,-0.03)
+                                            ,scale = 0.025)
+        self.insignia.setTransparency(TransparencyAttrib.MAlpha)
         
         self.all_icons = {}
         self.visible_icons = {}
