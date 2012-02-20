@@ -27,7 +27,10 @@ class VoxelGenerator():
         # We need just one original nodepath for walls, and one usable in scenegraph
         # Wall will never need to be flattened
         self.node_wall_usable = self.parent.level_node.attachNewNode("voxgen_wall_usable")    
-        self.node_forcewall_usable  = self.parent.level_node.attachNewNode("voxgen_force_wall_usable")     
+        self.node_forcewall_usable  = self.parent.level_node.attachNewNode("voxgen_force_wall_usable") 
+        # Nodepath for dynamic wall models. These nodepaths will need to be changed
+        self.node_dynamic_wall_usable = self.parent.level_node.attachNewNode("voxgen_dynamic_wall_usable")    
+        self.dynamic_wall_dict = {}
         
         # For floors we will create a list of nodepaths, each list member will parent one chunk of tiles
         x = int((level.maxX-1) / chunk_size[0]) + 1
@@ -87,12 +90,10 @@ class VoxelGenerator():
         self.tex3 = loader.loadTexture("tile3.png")
         self.tex_tile_nm = loader.loadTexture("tile2nm.png")
         self.tex_fs = loader.loadTexture("rnbw.png")
-        #self.tex_tile_spc = loader.loadTexture("tile2spc.png")
         self.ts_nm = TextureStage('ts_nm')
         self.ts_nm.setMode(TextureStage.MNormal)
         self.ts_fs = TextureStage('ts_fs')
-        #self.ts_spc = TextureStage('ts_spc')
-        #self.ts_spc.setMode(TextureStage.MGloss)
+
         
         self.tex_floor_transparent = loader.loadTexture("trans_tex.png")
 
@@ -122,7 +123,6 @@ class VoxelGenerator():
                     model.setPos(x, y, utils.GROUND_LEVEL)
                     model.setTexture(ts, self.tex1)
                     model.setTexture(self.ts_nm, self.tex_tile_nm)
-                    #model.setTexture(self.ts_spc, self.tex_tile_spc)
                     model.reparentTo(self.node_wall_usable) 
                 else:
                     for i in xrange(0, self.level.getHeight( (x, y) )):
@@ -136,14 +136,13 @@ class VoxelGenerator():
                             model.setPos(x, y, i-1+utils.GROUND_LEVEL)
                             model.setTexture(ts, self.tex2)
                             model.setTexture(self.ts_nm, self.tex_tile_nm) 
-                            #model.setTexture(self.ts_spc, self.tex_tile_spc)
                             model.reparentTo(self.node_wall_usable) 
         self.floor_np.setTexture(self.tex3) 
         
         #Calculate and place walls between tiles
         for x, val in enumerate(self.level._grid):
             for y, val2 in enumerate(val):
-                if val2 != None: # TODO: ogs: kasnije razlikovati tipove zidova
+                if val2 != None:
                     # prvi parni, drugi neparni
                     if (x%2==0 and y%2!=0):
                         tile1_x = (x-2)/2
@@ -186,13 +185,15 @@ class VoxelGenerator():
                             model.setPos(my_x, my_y, utils.GROUND_LEVEL)
                             model.setH(90)
                             model.setColor(1,0.0,0,0.0)
-                            model.reparentTo(self.node_forcewall_usable)
+                            self.dynamic_wall_dict[(my_x, my_y)] = model
+                            model.reparentTo(self.node_dynamic_wall_usable)
                         elif val2.name == "OpenedDoor":
                             model = loader.loadModel("wall2")
                             model.setPos(my_x, my_y, utils.GROUND_LEVEL)
                             model.setH(90)
                             model.setColor(0.7,0.2,0.2,0.0)
-                            model.reparentTo(self.node_forcewall_usable)
+                            self.dynamic_wall_dict[(my_x, my_y)] = model
+                            model.reparentTo(self.node_dynamic_wall_usable)
                         elif val2.name == "ForceField":
                             model = loader.loadModel("wall_fs")
                             model.setPos(my_x, my_y, utils.GROUND_LEVEL)
@@ -238,12 +239,14 @@ class VoxelGenerator():
                             model = loader.loadModel("wall2")
                             model.setPos(my_x, my_y, utils.GROUND_LEVEL)
                             model.setColor(1,0.0,0,0.0)
-                            model.reparentTo(self.node_forcewall_usable)
+                            self.dynamic_wall_dict[(my_x, my_y)] = model
+                            model.reparentTo(self.node_dynamic_wall_usable)
                         elif val2.name == "OpenedDoor":
                             model = loader.loadModel("wall2")
                             model.setPos(my_x, my_y, utils.GROUND_LEVEL)
                             model.setColor(0.7,0.2,0.2,0.0)
-                            model.reparentTo(self.node_forcewall_usable)
+                            self.dynamic_wall_dict[(my_x, my_y)] = model
+                            model.reparentTo(self.node_dynamic_wall_usable)
                         elif val2.name == "ForceField":
                             model = loader.loadModel("wall_fs")
                             model.setPos(my_x, my_y, utils.GROUND_LEVEL)                       
@@ -260,6 +263,64 @@ class VoxelGenerator():
         #self.floor_usable_np.setShaderAuto()
         self.markAllChunksDirty()
         
+    def processLevel(self):
+        self.level = self.parent.parent.level
+        for x, val in enumerate(self.level._grid):
+            for y, val2 in enumerate(val):
+                if val2 != None:
+                    # prvi parni, drugi neparni
+                    if (x%2==0 and y%2!=0):
+                        tile1_x = (x-2)/2
+                        tile1_y = (y-1)/2
+                        tile2_x = x/2
+                        tile2_y = (y-1)/2
+                        my_x= tile2_x
+                        my_y=tile2_y
+                        if val2.name == "ClosedDoor" and val2.name != self.parent.parent.old_level_grid[x][y].name:
+                            self.dynamic_wall_dict[(my_x, my_y)].removeNode()
+                            self.dynamic_wall_dict[(my_x, my_y)] = None
+                            model = loader.loadModel("wall2")
+                            model.setPos(my_x, my_y, utils.GROUND_LEVEL)
+                            model.setH(90)
+                            model.setColor(1,0.0,0,0.0)
+                            self.dynamic_wall_dict[(my_x, my_y)] = model
+                            model.reparentTo(self.node_dynamic_wall_usable)
+                        elif val2.name == "OpenedDoor" and val2.name != self.parent.parent.old_level_grid[x][y].name:
+                            self.dynamic_wall_dict[(my_x, my_y)].removeNode()
+                            self.dynamic_wall_dict[(my_x, my_y)] = None
+                            model = loader.loadModel("wall2")
+                            model.setPos(my_x, my_y, utils.GROUND_LEVEL)
+                            model.setH(90)
+                            model.setColor(0.7,0.2,0.2,0.0)
+                            self.dynamic_wall_dict[(my_x, my_y)] = model
+                            model.reparentTo(self.node_dynamic_wall_usable)                                                   
+                    # prvi neparni, drugi parni
+                    elif (x%2!=0 and y%2==0):
+                        tile1_x = (x-1)/2
+                        tile1_y = (y-2)/2
+                        tile2_x = (x-1)/2
+                        tile2_y = y/2
+                        my_x= tile2_x
+                        my_y=tile2_y 
+                        if val2.name == "ClosedDoor" and val2.name != self.parent.parent.old_level_grid[x][y].name:
+                            self.dynamic_wall_dict[(my_x, my_y)].removeNode()
+                            self.dynamic_wall_dict[(my_x, my_y)] = None
+                            model = loader.loadModel("wall2")
+                            model.setPos(my_x, my_y, utils.GROUND_LEVEL)
+                            model.setColor(1,0.0,0,0.0)
+                            self.dynamic_wall_dict[(my_x, my_y)] = model
+                            model.reparentTo(self.node_dynamic_wall_usable)
+                        elif val2.name == "OpenedDoor" and val2.name != self.parent.parent.old_level_grid[x][y].name:
+                            self.dynamic_wall_dict[(my_x, my_y)].removeNode()
+                            self.dynamic_wall_dict[(my_x, my_y)] = None
+                            model = loader.loadModel("wall2")
+                            model.setPos(my_x, my_y, utils.GROUND_LEVEL)
+                            model.setColor(0.7,0.2,0.2,0.0)
+                            self.dynamic_wall_dict[(my_x, my_y)] = model
+                            model.reparentTo(self.node_dynamic_wall_usable) 
+                    else:
+                        continue
+    
     def setInvisibleTiles(self, tile_dict):
         for invisible_tile in tile_dict:
             if self.old_tile_dict == None or tile_dict[invisible_tile] != self.old_tile_dict[invisible_tile]:

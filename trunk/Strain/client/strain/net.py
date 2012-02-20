@@ -5,6 +5,7 @@
 # python imports
 import cPickle as pickle
 import time as time
+import copy
 
 # panda3D imports
 
@@ -35,7 +36,8 @@ class Net():
     def handleMsg(self, msg):
         """Handles incoming messages."""
         self.log.info("Received message: %s", msg[0])
-        #print self.parent.sel_unit_id
+        print 'Incoming message', msg[0]
+        print 'Message body', msg[1]
         #========================================================================
         #
         if msg[0] == ENGINE_STATE:
@@ -127,6 +129,13 @@ class Net():
             self.parent._message_in_process = False            
         #========================================================================
         #
+        elif msg[0] == LEVEL:
+            print "Receiving message LEVEL"
+            self.parent.old_level_grid = self.parent.level._grid[:]
+            self.parent.level = msg[1]
+            self.parent.sgm.level_mesh.processLevel()
+        #========================================================================
+        #        
         else:
             self.parent._message_in_process = True
             self.log.error("Unknown message Type: %s", msg[0])
