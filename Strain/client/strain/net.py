@@ -36,8 +36,8 @@ class Net():
     def handleMsg(self, msg):
         """Handles incoming messages."""
         self.log.info("Received message: %s", msg[0])
-        print 'Incoming message', msg[0]
-        print 'Message body', msg[1]
+        #print 'Incoming message', msg[0]
+        #print 'Message body', msg[1]
         #========================================================================
         #
         if msg[0] == ENGINE_STATE:
