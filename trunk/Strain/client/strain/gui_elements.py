@@ -307,7 +307,7 @@ class GuiUnitInfo:
                                   , text = ""
                                   , range = default_ap
                                   , value = ap
-                                  , pos = (offset.getX(),0,offset.getZ()-0.2)
+                                  , pos = (offset.getX(),0,offset.getZ()-0.27)
                                   , barColor = (0,0,1,1)
                                   , frameColor = (0,0,0.5,0.2)
                                   , scale = (0.3,0.5,0.3))
@@ -316,7 +316,7 @@ class GuiUnitInfo:
                                   , text = ""
                                   , range = default_hp
                                   , value = hp
-                                  , pos = (offset.getX(),0,offset.getZ()-0.27)
+                                  , pos = (offset.getX(),0,offset.getZ()-0.2)
                                   , barColor = (0,1,0,1)
                                   , frameColor = (1,0,0,0.9)
                                   , scale = (0.3,0.5,0.3))
@@ -407,7 +407,7 @@ class GuiUnitPanel:
                                   , text = ""
                                   , range = default_ap
                                   , value = ap
-                                  , pos = (0.28,0,-0.03)
+                                  , pos = (0.28,0,-0.05)
                                   , barColor = (0,0,1,1)
                                   , frameColor = (0,0,0.5,0.2)
                                   , scale = (0.2,0.5,0.08))
@@ -416,7 +416,7 @@ class GuiUnitPanel:
                                   , text = ""
                                   , range = default_hp
                                   , value = hp
-                                  , pos = (0.28,0,-0.05)
+                                  , pos = (0.28,0,-0.03)
                                   , barColor = (0,1,0,1)
                                   , frameColor = (1,0,0,0.9)
                                   , scale = (0.2,0.5,0.08))
