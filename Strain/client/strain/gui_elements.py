@@ -269,7 +269,7 @@ class GuiTextFrame:
             
 
 class GuiUnitInfo:
-    def __init__(self, offset, parent, default_hp, hp, default_ap, ap):
+    def __init__(self, offset, parent, unit_type, default_hp, hp, default_ap, ap):
             
         self.offset = offset
         self.frame = DirectFrame(   relief = DGG.FLAT
@@ -320,12 +320,18 @@ class GuiUnitInfo:
                                   , barColor = (0,1,0,1)
                                   , frameColor = (1,0,0,0.9)
                                   , scale = (0.3,0.5,0.3))
+        
+        self.insignia = OnscreenImage(parent = self.frame
+                                            ,image = "unit_" + unit_type + "_big_transparent_32.png"
+                                            ,pos = (offset.getX(),0,offset.getZ()+0.14)
+                                            ,scale = 0.12)
+        self.insignia.setTransparency(TransparencyAttrib.MAlpha)
 
     def addIcon(self, name):
         self.all_icons[name] = OnscreenImage(parent = self.frame
                                             ,image = name + "_icon.png"
                                            #,pos = offset + (0,0,-0.1)
-                                            ,scale = 0.125)
+                                            ,scale = 0.08)
         
         self.all_icons[name].setTransparency(TransparencyAttrib.MAlpha)
         self.all_icons[name].hide()
@@ -360,7 +366,7 @@ class GuiUnitInfo:
         start_pos =  (1 - count) * 0.25 / 2
         for icon in self.all_icons:
             if icon in self.visible_icons:
-                self.visible_icons[icon].setPos(self.offset + (start_pos, 0, -0.05))
+                self.visible_icons[icon].setPos(self.offset + (start_pos, 0, -0.08))
                 self.visible_icons[icon].show()
                 start_pos += 0.25
             else:
