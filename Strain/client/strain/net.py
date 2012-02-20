@@ -130,7 +130,6 @@ class Net():
         #========================================================================
         #
         elif msg[0] == LEVEL:
-            print "Receiving message LEVEL"
             self.parent.old_level_grid = self.parent.level._grid[:]
             self.parent.level = msg[1]
             self.parent.sgm.level_mesh.processLevel()

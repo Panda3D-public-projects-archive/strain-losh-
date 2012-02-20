@@ -149,113 +149,70 @@ class VoxelGenerator():
                         tile1_y = (y-1)/2
                         tile2_x = x/2
                         tile2_y = (y-1)/2
-                        my_x= tile2_x
-                        my_y=tile2_y
-                        if val2.name == "Wall1":
-                            model = loader.loadModel("wall")
-                            model.setPos(my_x, my_y, utils.GROUND_LEVEL)
-                            model.setH(90)
-                            model.reparentTo(self.node_wall_usable)
-                        elif val2.name == "Wall2":
-                            model = loader.loadModel("wall2")
-                            model.setPos(my_x, my_y, utils.GROUND_LEVEL)
-                            model.setH(90)
-                            model.setColor(0,1,0,1)
-                            model.reparentTo(self.node_wall_usable)
-                        elif val2.name == "Wall3":
-                            model = loader.loadModel("wall2")
-                            model.setPos(my_x, my_y, utils.GROUND_LEVEL)
-                            model.setH(90)
-                            model.setColor(0,0,0,1)
-                            model.reparentTo(self.node_wall_usable)
-                        elif val2.name == "Ruin":
-                            model = loader.loadModel("wall2")
-                            model.setPos(my_x, my_y, utils.GROUND_LEVEL)
-                            model.setH(90)
-                            model.setColor(0.5,0.8,1,0.6)
-                            model.setTransparency(TransparencyAttrib.MAlpha)
-                            model.reparentTo(self.node_forcewall_usable)
-                            s = Sequence(LerpColorInterval(model, 1, (0.13,0.56,0.78,0.6)),
-                                        LerpColorInterval(model, 1, (0.5,0.8,1,0.6)),
-                                        )  
-                            s.loop()
-                            model.setLightOff()   
-                        elif val2.name == "ClosedDoor":
-                            model = loader.loadModel("wall2")
-                            model.setPos(my_x, my_y, utils.GROUND_LEVEL)
-                            model.setH(90)
-                            model.setColor(1,0.0,0,0.0)
-                            self.dynamic_wall_dict[(my_x, my_y)] = model
-                            model.reparentTo(self.node_dynamic_wall_usable)
-                        elif val2.name == "OpenedDoor":
-                            model = loader.loadModel("wall2")
-                            model.setPos(my_x, my_y, utils.GROUND_LEVEL)
-                            model.setH(90)
-                            model.setColor(0.7,0.2,0.2,0.0)
-                            self.dynamic_wall_dict[(my_x, my_y)] = model
-                            model.reparentTo(self.node_dynamic_wall_usable)
-                        elif val2.name == "ForceField":
-                            model = loader.loadModel("wall_fs")
-                            model.setPos(my_x, my_y, utils.GROUND_LEVEL)
-                            model.setH(90)                            
-                            model.setTexture(self.ts_fs, self.tex_fs)
-                            model.setTransparency(TransparencyAttrib.MAlpha)
-                            model.reparentTo(self.node_forcewall_usable)
-                            model.setLightOff()                                                    
+                        h = 90
                     # prvi neparni, drugi parni
                     elif (x%2!=0 and y%2==0):
                         tile1_x = (x-1)/2
                         tile1_y = (y-2)/2
                         tile2_x = (x-1)/2
                         tile2_y = y/2
-                        my_x= tile2_x
-                        my_y=tile2_y                        
-                        if val2.name == "Wall1":
-                            model = loader.loadModel("wall")
-                            model.setPos(my_x, my_y, utils.GROUND_LEVEL)
-                            model.reparentTo(self.node_wall_usable)
-                        elif val2.name == "Wall2":
-                            model = loader.loadModel("wall2")
-                            model.setPos(my_x, my_y, utils.GROUND_LEVEL)
-                            model.setColor(0,1,0,1)
-                            model.reparentTo(self.node_wall_usable)
-                        elif val2.name == "Wall3":
-                            model = loader.loadModel("wall2")
-                            model.setPos(my_x, my_y, utils.GROUND_LEVEL)
-                            model.setColor(0,0,0,1)
-                            model.reparentTo(self.node_wall_usable)
-                        elif val2.name == "Ruin":
-                            model = loader.loadModel("wall2")
-                            model.setPos(my_x, my_y, utils.GROUND_LEVEL)
-                            model.setColor(0.5,0.8,1,0.6)
-                            model.setTransparency(TransparencyAttrib.MAlpha)
-                            model.reparentTo(self.node_forcewall_usable)
-                            s = Sequence(LerpColorInterval(model, 1, (0.13,0.56,0.78,0.6)),
-                                        LerpColorInterval(model, 1, (0.5,0.8,1,0.6)),
-                                        )  
-                            s.loop()
-                            model.setLightOff()  
-                        elif val2.name == "ClosedDoor":
-                            model = loader.loadModel("wall2")
-                            model.setPos(my_x, my_y, utils.GROUND_LEVEL)
-                            model.setColor(1,0.0,0,0.0)
-                            self.dynamic_wall_dict[(my_x, my_y)] = model
-                            model.reparentTo(self.node_dynamic_wall_usable)
-                        elif val2.name == "OpenedDoor":
-                            model = loader.loadModel("wall2")
-                            model.setPos(my_x, my_y, utils.GROUND_LEVEL)
-                            model.setColor(0.7,0.2,0.2,0.0)
-                            self.dynamic_wall_dict[(my_x, my_y)] = model
-                            model.reparentTo(self.node_dynamic_wall_usable)
-                        elif val2.name == "ForceField":
-                            model = loader.loadModel("wall_fs")
-                            model.setPos(my_x, my_y, utils.GROUND_LEVEL)                       
-                            model.setTexture(self.ts_fs, self.tex_fs)
-                            model.setTransparency(TransparencyAttrib.MAlpha)
-                            model.reparentTo(self.node_forcewall_usable)
-                            model.setLightOff() 
+                        h = 0
                     else:
-                        continue                                           
+                        continue
+                    
+                    my_x= tile2_x
+                    my_y=tile2_y
+                    if val2.name == "Wall1":
+                        model = loader.loadModel("wall")
+                        model.setPos(my_x, my_y, utils.GROUND_LEVEL)
+                        model.setH(h)
+                        model.reparentTo(self.node_wall_usable)
+                    elif val2.name == "Wall2":
+                        model = loader.loadModel("wall2")
+                        model.setPos(my_x, my_y, utils.GROUND_LEVEL)
+                        model.setH(h)
+                        model.setColor(0,1,0,1)
+                        model.reparentTo(self.node_wall_usable)
+                    elif val2.name == "Wall3":
+                        model = loader.loadModel("wall2")
+                        model.setPos(my_x, my_y, utils.GROUND_LEVEL)
+                        model.setH(h)
+                        model.setColor(0,0,0,1)
+                        model.reparentTo(self.node_wall_usable)
+                    elif val2.name == "Ruin":
+                        model = loader.loadModel("wall2")
+                        model.setPos(my_x, my_y, utils.GROUND_LEVEL)
+                        model.setH(h)
+                        model.setColor(0.5,0.8,1,0.6)
+                        model.setTransparency(TransparencyAttrib.MAlpha)
+                        model.reparentTo(self.node_forcewall_usable)
+                        s = Sequence(LerpColorInterval(model, 1, (0.13,0.56,0.78,0.6)),
+                                    LerpColorInterval(model, 1, (0.5,0.8,1,0.6)),
+                                    )  
+                        s.loop()
+                        model.setLightOff()   
+                    elif val2.name == "ClosedDoor":
+                        model = loader.loadModel("wall2")
+                        model.setPos(my_x, my_y, utils.GROUND_LEVEL)
+                        model.setH(h)
+                        model.setColor(1,0.0,0,0.0)
+                        self.dynamic_wall_dict[(my_x, my_y)] = model
+                        model.reparentTo(self.node_dynamic_wall_usable)
+                    elif val2.name == "OpenedDoor":
+                        model = loader.loadModel("wall2")
+                        model.setPos(my_x, my_y, utils.GROUND_LEVEL)
+                        model.setH(h)
+                        model.setColor(0.7,0.2,0.2,0.0)
+                        self.dynamic_wall_dict[(my_x, my_y)] = model
+                        model.reparentTo(self.node_dynamic_wall_usable)
+                    elif val2.name == "ForceField":
+                        model = loader.loadModel("wall_fs")
+                        model.setPos(my_x, my_y, utils.GROUND_LEVEL)
+                        model.setH(h)                            
+                        model.setTexture(self.ts_fs, self.tex_fs)
+                        model.setTransparency(TransparencyAttrib.MAlpha)
+                        model.reparentTo(self.node_forcewall_usable)
+                        model.setLightOff()                                         
          
         self.node_wall_usable.clearModelNodes()
         self.node_wall_usable.flattenStrong()
