@@ -27,6 +27,7 @@ GRID
 2,5,Wall1
 2,7,ClosedDoor
 2,9,Ruin
+3,8,Wall1
 2,11,OpenedDoor
 2,13,Wall1
 3,4,Wall1

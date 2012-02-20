@@ -761,6 +761,8 @@ class Level:
     def __init__(self, name = None):        
         self.maxX = 0
         self.maxY = 0
+        self.maxgridX = 0
+        self.maxgridY = 0        
         self._level_data = []    
         self._dynamics = []
         self._grid = []
@@ -793,6 +795,9 @@ class Level:
         
         
         #initialize grid
+        self.maxgridX = 2 * self.maxX + 2
+        self.maxgridY = 2 * self.maxY + 2
+        
         self._grid = [[ None ] * (2*self.maxY+1) for i in xrange(2*self.maxX+1)] #@UnusedVariable
         
         
@@ -966,6 +971,12 @@ class Level:
         return self._level_data[ int(pos[0]) ][ int(pos[1]) ]
 
 
+    def getHeight2(self, x, y ):
+        if x < 0 or y < 0 or x >= self.maxX or y >= self.maxY:
+            return 0
+        return self._level_data[ x ][ y ]
+
+
     def opaque(self, x, y, z):
         if self._level_data[ int(x) ][ int(y) ] <= z: 
             return False
@@ -985,6 +996,8 @@ class Level:
     
     
     def gridCanUse(self, x, y):
+        if x < 0 or y < 0 or x > self.maxgridX or y > self.maxgridY:
+            return False
         if self._grid[x][y] and self._grid[x][y].usesTo:
                 return True
         return False

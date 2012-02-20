@@ -34,11 +34,13 @@ class Unit():
         self.overwatch = False
         self.alive = True
         self.last_action = 'spawn'
-        #self.set_up = False #for heavy weapons this is only initilaized if a unit has a heavy weapon
+        #self.set_up = False #for heavy weapons this is only initialized if a unit has a heavy weapon
         self.height = 2
         
         self.ap, self.default_ap = 0, 0
         self.hp, self.default_hp = 0, 0
+                
+        self.can_use = False
                 
         self.move_dict = []
         self.shoot_dict = []

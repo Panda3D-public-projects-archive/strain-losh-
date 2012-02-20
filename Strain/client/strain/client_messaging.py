@@ -16,6 +16,7 @@ SHOOT = 'shoot'                 #value - (which unit, target unit)
 CHAT = 'chat'                   #value - string for chat
 OVERWATCH = 'overwatch'         #value - id of unit going on overwatch, this message toggles overwatch on/off
 SET_UP = 'set_up'               #value - id of unit setting up heavy weapon
+USE = 'use'                     #value - id of unit trying to use
 VANISH = 'vanish'               #value - id of unit vanishing
 SPOT = 'spot'                   #value - id of unit spotted
 ROTATE = 'rotate'               #value - new heading 
@@ -237,6 +238,10 @@ class ClientMsg:
     @staticmethod
     def setUp( unit_id ):
         ClientMsg._sendMsg( (SET_UP, unit_id) ) 
+        
+    @staticmethod
+    def use( unit_id ):
+        ClientMsg._sendMsg( (USE, unit_id) ) 
         
     @staticmethod
     def endTurn():

@@ -178,6 +178,8 @@ class Client(DirectObject):
             self.selectUnit(new_unit_id)
     
     def refreshUnit(self, unit):
+        if unit['can_use'] == True:
+            print "can use! id:", unit['id']
         if unit['alive'] == False:
             if self.sel_unit_id == unit['id']:
                 self.sel_unit_id = None
