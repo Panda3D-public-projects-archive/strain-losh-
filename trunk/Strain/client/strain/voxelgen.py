@@ -178,6 +178,7 @@ class VoxelGenerator():
                         model.setPos(my_x, my_y, utils.GROUND_LEVEL)
                         model.setH(h)
                         model.setColor(0,0,0,1)
+                        model.setScale(1,1,0.4)
                         model.reparentTo(self.node_wall_usable)
                     elif val2.name == "Ruin":
                         model = loader.loadModel("wall2")
