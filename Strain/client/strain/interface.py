@@ -166,7 +166,8 @@ class Interface(DirectObject.DirectObject):
 
     def windowEvent(self, window=None):
         if window is not None: # window is none if panda3d is not started
-            self.redraw()
+            taskMgr.doMethodLater(0.05, self.redraw, 'Redraw task', extraArgs = [])
+            #self.redraw()
              
     def getMousePos(self):
         """Returns mouse coordinates if mouse pointer is inside Panda window."""
