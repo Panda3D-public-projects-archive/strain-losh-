@@ -224,7 +224,7 @@ class LevelEditor:
         if event.y > (self.level.maxY * (self.borderSize + self.rectSize)) + self.borderSize:
             return
 
-        wls = ['Wall1', 'Wall2', 'Wall3', 'Ruin', 'ClosedDoor', 'OpenedDoor', 'ForceField']
+        wls = ['Wall1', 'Wall2', 'HalfWall', 'Ruin', 'ClosedDoor', 'OpenedDoor', 'ForceField']
         
         if event.type == gtk.gdk.BUTTON_PRESS:    
             tmpX = int( ( event.x ) / (self.rectSize+self.borderSize)  )

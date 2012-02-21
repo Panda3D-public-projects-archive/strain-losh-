@@ -48,8 +48,8 @@ GRID
 6,23,Wall2
 6,25,Wall1
 6,27,Wall1
-6,29,Wall3
-6,31,Wall3
+6,29,HalfWall
+6,31,HalfWall
 6,37,Wall1
 6,39,Wall1
 6,51,Wall1
