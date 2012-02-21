@@ -36,7 +36,9 @@ def levelVisibilityDict( unit_list, level ):
                 tiles = _getTiles2D( unit['pos'], x_y, level )
                     
                 if tiles:
-                    vis_dict[x_y] = 1
+                    for t in tiles:
+                        vis_dict[t] = 1
+                    #vis_dict[x_y] = 1
                     continue
           
             
@@ -186,7 +188,7 @@ def checkGridMove( x, y, dx, dy, level ):
         if level.gridMoveBlocked( _2x+1, _2y ):
             return False
     
-    
+
     return True
 
 
@@ -204,21 +206,8 @@ def tileClearForMoving(unit, x, y, level):
     return True
 
 
-def getLOSOnLevel( beholder_dict, target_dict, level ):
-    """0-cant see, 1-partial, 2-full"""
-    
-    if beholder_dict['pos'] == target_dict['pos']:
-        return 2        
-    
+def getLOSOnLevel( beholder_dict, target_dict, level ):    
     return _getTiles2D( beholder_dict['pos'], target_dict['pos'], level )
-
-    
-    #check if we see target_dict's feet
-    #t2 = target_dict['pos'] + ( level.getHeight( target_dict['pos'] ) , )
-    #if _getTiles2D( b_pos, t2, level ):
-    #    seen += 1
-
-    #return seen
 
             
 def _getTiles2D( t1, t2, level ):
@@ -282,14 +271,12 @@ def _getTiles2D( t1, t2, level ):
                     
                 else:
                     if sgny0 > 0:
-                        #we need to check (x,y+1)
                         if( level.outOfBounds( x, y+1 ) ):
                             return False
                         if level.opaque( x, y+1, 2 ) or level.gridVisionBlocked( _2x+1, _2y+2 ) or level.gridVisionBlocked( _2x+2, _2y+3 ):
                             return False
                         list_visible_tiles.append( (x, y+1) )
                     else:
-                        #we need to check (x,y-1)
                         if( level.outOfBounds( x, y-1 ) ):
                             return False
                         if level.opaque( x, y-1, 2 ) or level.gridVisionBlocked( _2x+1, _2y ) or level.gridVisionBlocked( _2x+2, _2y-1 ):
@@ -321,6 +308,8 @@ def _getTiles2D( t1, t2, level ):
         x_y = absx0/absy0
         x_y_2 = x_y/2
         D = x_y -0.5;
+        left_blocked = False
+        right_blocked = False
         
         for i in xrange( int( absy0 ) ): #@UnusedVariable
             _2x = x*2
@@ -335,52 +324,29 @@ def _getTiles2D( t1, t2, level ):
                         if( level.outOfBounds( x+1, y+1 ) ):
                             return False
                         
-                        if level.gridVisionBlocked( _2x+2, _2y+1 ):
-                            if level.gridVisionBlocked( _2x+1, _2y+2 ):
-                                return False
-                            if level.gridVisionBlocked( _2x+2, _2y+3 ):
-                                return False
-                            if level.opaque( x, y+1, 2 ):
-                                return False
+                        if level.gridVisionBlocked( _2x+2, _2y+1 ) or level.gridVisionBlocked( _2x+3, _2y+2 ) or level.opaque( x+1, y, 2 ):
+                            right_blocked = True
                             
-                        if level.gridVisionBlocked( _2x+1, _2y+2 ):
-                            if level.gridVisionBlocked( _2x+3, _2y+2 ):
-                                return False
-                            if level.opaque( x+1, y, 2 ):
-                                return False
-                            
-                        if level.opaque( x+1, y, 2 ) and level.opaque( x, y+1, 2):
-                            return False
-                            
-                        
-                        if level.gridVisionBlocked( _2x+2, _2y+3 ) and level.gridVisionBlocked( _2x+3, _2y+2 ):
+                        if level.gridVisionBlocked( _2x+1, _2y+2 ) or level.gridVisionBlocked( _2x+2, _2y+3 ) or level.opaque( x, y+1, 2):
+                            left_blocked = True
+
+                        if right_blocked and left_blocked:
                             return False
                     
                     if sgnx0 < 0:
                         if( level.outOfBounds( x-1, y+1 ) ):
                             return False
                     
-                        if level.gridVisionBlocked( _2x, _2y+1 ):
-                            if level.gridVisionBlocked( _2x+1, _2y+2 ):
-                                return False
-                            if level.gridVisionBlocked( _2x, _2y+3 ):
-                                return False
-                            if level.opaque( x, y+1, 2 ):
-                                return False
+                        if level.gridVisionBlocked( _2x, _2y+1 ) or level.gridVisionBlocked( _2x-1, _2y+2 ) or level.opaque( x-1, y, 2 ):
+                            left_blocked = True
                             
-                        if level.gridVisionBlocked( _2x+1, _2y+2 ):
-                            if level.gridVisionBlocked( _2x-1, _2y+2 ):
+                        if level.gridVisionBlocked( _2x+1, _2y+2 ) or level.gridVisionBlocked( _2x, _2y+3 ) or level.opaque( x, y+1, 2 ):
+                            right_blocked = True
+
+                        if left_blocked and right_blocked:                            
                                 return False
-                            if level.opaque( x-1, y, 2 ):
-                                return False
-                            
-                        if level.opaque( x-1, y, 2 ) and level.opaque( x, y+1, 2):
-                            return False
-                            
-                        if level.gridVisionBlocked( _2x-1, _2y+2 ) and level.gridVisionBlocked( _2x, _2y+3 ):
-                            return False
-                                                    
-                    
+
+                #not a 45 diagonal                    
                 else:
                                
                     if D < x_y_2:
@@ -397,14 +363,12 @@ def _getTiles2D( t1, t2, level ):
                     else:
                         
                         if sgnx0 > 0:
-                            #we need to check (x+1,y)
                             if( level.outOfBounds( x+1, y ) ):
                                 return False
                             if level.opaque( x+1, y, 2 ) or level.gridVisionBlocked( _2x+3, _2y+2 ) or level.gridVisionBlocked( _2x+2, _2y+1 ):
                                 return False
                             list_visible_tiles.append( (x+1, y) )
                         else:
-                            #we need to check (x-1,y)
                             if( level.outOfBounds( x-1, y ) ):
                                 return False
                             if level.opaque( x-1, y, 2 ) or level.gridVisionBlocked( _2x-1, _2y+2 ) or level.gridVisionBlocked( _2x, _2y+1 ):
@@ -436,16 +400,62 @@ def _getTiles2D( t1, t2, level ):
     return list_visible_tiles
 
 
+
 def toHit( shooter, target, level ):
     
-    vision = 2
-    
     tiles = _getTiles2D( shooter['pos'], target['pos'], level)
-    
     if not tiles:
         return ( None, "No line of sight.")
         
+    if len( tiles ) == 1:
+        return ( 2, "You shooting yourself?")
+        
     print tiles
+    
+    vision = _getVision(tiles, level)
+    if not vision:
+        return ( vision, "No line of sight." )
+    if vision == 2:
+        return ( vision, "Clear shot.")
+    elif vision == 1:
+        return ( vision, "Partial cover.")
+        
+
+def _getVision( tiles, level):
+    
+    #------check if tiles are diagonal-------
+    x1,y1 = tiles[0]
+    x2,y2 = tiles[1]
+    
+    #yes diagonal! set up 2 'normal' tiles list and send them again to this method
+    if x2 - x1 != 0 and y2 - y1 != 0:
+        tilesx = []
+        tilesy = []
+        
+        for i in xrange( len(tiles) -1):
+            tilesx.append( tiles[i] )
+            tilesy.append( tiles[i] )
+        
+            tilesx.append( (tiles[i+1][0], tiles[i][1]) )
+            tilesy.append( (tiles[i][0], tiles[i+1][1]) )
+        
+        #append last tile
+        tilesx.append( tiles[-1] )
+        tilesy.append( tiles[-1] )
+        
+        visx = _getVision( tilesx, level )
+        visy = _getVision( tilesy, level )
+        
+        res = visx + visy
+        if res >= 3:
+            return 2
+        elif res < 3 and res > 0: 
+            return 1
+        elif res == 0:
+            return 0
+        
+    #-----normal calculations----------
+    vision = 2
     
     for i in xrange( len(tiles) -1):
         dx = tiles[i+1][0] - tiles[i][0]
@@ -475,17 +485,21 @@ def toHit( shooter, target, level ):
             if i > 0:
                 vision = 1
             continue
-                        
+        
+        #or maybe a half cube
+        elif level.getHeight( (x, y) ) == 1:
+            #we see over first half cube
+            if i > 1:
+                vision = 1
+            continue
+            
         #if it is not a half cover, than see if we can shoot through it
         elif level.gridBulletBlocked( x1, y1 ):
-            return ( 0, "Cannot shoot through " + level._grid[x1][y1].name + "." )
-        
-        
-    if vision == 2:
-        return ( vision, "Clear shot.")
-    elif vision == 1:
-        return ( vision, "Partial cover.")
-        
+            #return ( 0, "Cannot shoot through " + level._grid[x1][y1].name + "." )
+            return 0
+    
+    return vision
+    
 
 
 def checkGridVisibility( pos, lastpos, level):
