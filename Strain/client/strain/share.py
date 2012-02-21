@@ -33,7 +33,7 @@ def levelVisibilityDict( unit_list, level ):
                     vis_dict[x_y] = 1
                     continue
                      
-                tiles = _getTiles2D( unit['pos'], x_y, level )
+                tiles = getTiles2D( unit['pos'], x_y, level )
                     
                 if tiles:
                     for t in tiles:
@@ -207,10 +207,10 @@ def tileClearForMoving(unit, x, y, level):
 
 
 def getLOSOnLevel( beholder_dict, target_dict, level ):    
-    return _getTiles2D( beholder_dict['pos'], target_dict['pos'], level )
+    return getTiles2D( beholder_dict['pos'], target_dict['pos'], level )
 
             
-def _getTiles2D( t1, t2, level ):
+def getTiles2D( t1, t2, level ):
     x1, y1 = t1
     x2, y2 = t2
     
@@ -403,7 +403,7 @@ def _getTiles2D( t1, t2, level ):
 
 def toHit( shooter, target, level ):
     
-    tiles = _getTiles2D( shooter['pos'], target['pos'], level)
+    tiles = getTiles2D( shooter['pos'], target['pos'], level)
     if not tiles:
         return ( None, "No line of sight.")
         
