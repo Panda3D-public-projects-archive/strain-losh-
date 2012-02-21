@@ -291,11 +291,8 @@ class Interface(DirectObject.DirectObject):
         unit_default_HP = unit['default_hp']
         unit_default_AP = unit['default_ap']
         unit_weapon = ''
-        i = 3
-        for w in unit['weapons']:
-            #unit_weapon = unit_weapon+'/'+w['name']
-            self.stats.write(i, w['name'])
-            i = i + 1
+        self.stats.write(3, unit['ranged_weapon']['name'])
+        self.stats.write(4, unit['melee_weapon']['name'])
         self.stats.write(1, unit_type)
         
         self.stats2.write(2, "HP: " + str(unit_HP) + "/" + str(unit_default_HP))

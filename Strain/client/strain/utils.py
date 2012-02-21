@@ -174,14 +174,8 @@ def getHeadingAngle(h):
     return angle
 
 def getUnitWeapons(unit):
-    wpn_list = ""
-    for w in unit['weapons']:
-        wpn_list += str(w['name']) + ','
-    wpn_list = wpn_list[:-1]
+    wpn_list = unit['ranged_weapon']['name'] + "  " + unit['melee_weapon']['name']
     return wpn_list
-
-def parseUnitWeapons(weapons):
-    return string.split(weapons,',')
 
 def loadUnit(race, type, team):
     model = Actor(unit_type_dict[race][type])

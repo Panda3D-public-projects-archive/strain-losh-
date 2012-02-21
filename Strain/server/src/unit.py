@@ -29,8 +29,8 @@ class Unit():
         self.name = name     
         self.heading = HEADING_N      
         self.resting = False
-        self.weapons = []
-        self.active_weapon = None
+        self.ranged_weapon = weapon.loadWeapon("Harsh language", self)
+        self.melee_weapon = weapon.loadWeapon("Karate", self)
         self.overwatch = False
         self.alive = True
         self.last_action = 'spawn'
@@ -65,10 +65,6 @@ class Unit():
         return False
         
 
-    def setActiveWeapon(self, weapon):
-        self.active_weapon = weapon
-        
-        
     def melee(self, target):
         
         ret_lst = []
@@ -99,11 +95,9 @@ class Unit():
                 ret_lst.append( ( ROTATE, target.id, target.heading) )
          
         
-        base -= 10 * target.numberOfMeleeWeapons() 
-        base += 10 * (self.numberOfMeleeWeapons() - 1)        
         base += (self.ws - target.ws) * 10
         
-        wpn = self.chooseMeleeWeapon(target)
+        wpn = self.melee_weapon
         
         self.last_action = 'melee'
         
@@ -116,39 +110,6 @@ class Unit():
         return ret_lst
 
         
-    def chooseMeleeWeapon(self, target):
-        dmg = 0
-
-        w = None
-        for wpn in self.weapons:
-            if wpn.type != weapon.TYPE_MELEE:
-                continue
-            
-            if wpn.str > dmg:
-                dmg = wpn.str
-                w = wpn
-    
-        if not w:
-            w = weapon.loadWeapon("Karate")
-            w.owner = self
-                
-        return w
-
-        
-        
-    def numberOfMeleeWeapons(self):
-        res = 0
-        for wpn in self.weapons:
-            if self.hasHeavyWeapon():
-                res -= 1
-            if wpn.type == weapon.TYPE_MELEE or wpn.type == weapon.TYPE_PISTOL:
-                res += 1        
-            if wpn.parry:
-                res += 1
-        return res
-        
-
-                
     def shoot(self, target, visibility, overwatch = False):
                 
         if not visibility:
@@ -156,13 +117,14 @@ class Unit():
         
         distance = util.distanceTupple(self.pos, target.pos)
         
-        #check range
-        if distance > self.active_weapon.range:
-            return None
-        
         #check melee
         if distance < 2:
             return self.melee( target )
+        
+        #check range
+        if distance > self.ranged_weapon.range:
+            return None
+        
         
         #check if we have a heavy weapon and if we are set up
         if self.hasHeavyWeapon():
@@ -170,9 +132,9 @@ class Unit():
                 return None
             
         #check if there is enough ap to fire
-        if self.ap < self.active_weapon.ap_cost:
+        if self.ap < self.ranged_weapon.ap_cost:
             return None
-        self.ap -= self.active_weapon.ap_cost
+        self.ap -= self.ranged_weapon.ap_cost
                         
         #check to see if we need to rotate unit before shooting, but if we are on overwatch, we cant rotate
         ret = [] 
@@ -182,7 +144,7 @@ class Unit():
                         
         self.last_action = 'shoot'
         
-        ret.append( (SHOOT, self.id, target.pos, self.active_weapon.name, self.active_weapon.fire( target, visibility ) ) )
+        ret.append( (SHOOT, self.id, target.pos, self.ranged_weapon.name, self.ranged_weapon.fire( target, visibility ) ) )
         return ret
 
 
@@ -274,12 +236,10 @@ class Unit():
         
 
     def hasHeavyWeapon(self):
-        for w in self.weapons:
-            if w.type == weapon.TYPE_HEAVY and self.armour != 'Terminator':
-                return True
-            
+        if self.ranged_weapon.type == weapon.TYPE_HEAVY:
+            return True
         return False
-
+    
 
     def inFront(self, tile):
         angle1 = math.atan2( tile[1] - self.pos[1] , tile[0] - self.pos[0] )
@@ -314,30 +274,28 @@ def loadUnit( name ):
             continue
         
         unit = Unit( p.attributes['name'].value )            
+        unit.default_hp = int( p.attributes['hp'].value )
+        unit.ws = int( p.attributes['ws'].value )
 
+        try:
+            unit.ranged_weapon = weapon.loadWeapon( p.attributes['ranged_weapon'].value, unit )
+        except:
+            pass
+        
+        try: 
+            unit.melee_weapon = weapon.loadWeapon( p.attributes['melee_weapon'].value, unit )
+        except:
+            pass
+        
+        #initialize set_up if needed
+        if unit.hasHeavyWeapon():
+            unit.set_up = False
+            
         #load armour                     
         unit.armour =  armour.loadArmour( p.attributes['armour'].value )
         unit.armour.owner = unit
         unit.default_ap = unit.armour.ap
         
-        #add all weapons, and try to set first ranged weapon as active
-        wpns = p.attributes['weapons'].value.split(',')
-        for wname in wpns:
-            wpn = weapon.loadWeapon( wname )
-            wpn.owner = unit
-            unit.weapons.append( wpn )  
-            if wpn.type != weapon.TYPE_MELEE:
-                unit.active_weapon = wpn
-        if not unit.active_weapon:
-            unit.weapons[0]
-
-        #initialize set_up if needed
-        if unit.hasHeavyWeapon():
-            unit.set_up = False
-
-        unit.default_hp = int( p.attributes['hp'].value )
-        unit.ws = int( p.attributes['ws'].value )
-
     xmldoc.unlink()
     
     if not unit:

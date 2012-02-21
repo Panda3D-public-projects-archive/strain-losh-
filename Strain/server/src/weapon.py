@@ -98,7 +98,7 @@ class Weapon():
         
 
         
-def loadWeapon( name ):     
+def loadWeapon( name, owner = None ):     
     xmldoc = minidom.parse('data/base/weapons.xml')
     
     wpn = None
@@ -109,6 +109,8 @@ def loadWeapon( name ):
             continue
         
         wpn = Weapon()            
+        if owner:
+            wpn.owner = owner
         wpn.name = p.attributes['name'].value
         wpn.type = p.attributes['type'].value 
         wpn.str = int(p.attributes['Str'].value)
