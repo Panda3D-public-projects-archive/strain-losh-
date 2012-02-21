@@ -302,6 +302,10 @@ class EngMsg:
         EngMsg._sendMsg((UNIT, pickled_unit), source)
 
     @staticmethod
+    def sendUse(unit_id, source = None):
+        EngMsg._sendMsg((USE, unit_id), source)
+
+    @staticmethod
     def sendMsg( msg, source = None):
         EngMsg._sendMsg( msg, source )
 

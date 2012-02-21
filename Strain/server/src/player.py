@@ -38,6 +38,13 @@ class Player:
             self.msg_lst.append( (UNIT, pickled_unit) )
 
 
+    def addUseMsg(self, unit_id):
+        if self.connection:
+            EngMsg.sendUse( unit_id, self.connection )
+        else:
+            self.msg_lst.append( (UNIT, unit_id) )
+
+
     def addNewTurnMsg(self, data):
         if self.connection:
             EngMsg.sendNewTurn( data, self.connection )

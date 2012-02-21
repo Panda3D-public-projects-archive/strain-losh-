@@ -176,6 +176,8 @@ class Engine( Thread ):
                     
             if self.use( unit ):
                 unit.ap -= 1
+                player.addUseMsg( unit.id )
+                self.observer.addUseMsg( unit.id )
                 print "level changed"
                 self.levelChanged()
             else:
