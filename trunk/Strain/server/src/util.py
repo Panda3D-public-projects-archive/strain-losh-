@@ -134,11 +134,11 @@ def compileLevel(level):
 
 
 def compileUnit(unit):
-    ret = compileTarget( unit, ['owner', 'weapons', 'active_weapon', 'armour', 'dynamics'] )
+    ret = compileTarget( unit, ['owner', 'ranged_weapon', 'melee_weapon', 'armour'] )
      
-    ret['weapons'] = compileWeaponList( unit.weapons )
+    ret['ranged_weapon'] = compileWeapon( unit.ranged_weapon )
+    ret['melee_weapon'] = compileWeapon( unit.melee_weapon )
     ret['armour'] = compileArmour( unit.armour )
-    ret['active_weapon'] = compileWeapon( unit.active_weapon )
     return ret
 
 
@@ -168,13 +168,6 @@ def compileWeapon( wpn ):
     return compileTarget( wpn, ['owner'] )
 
     
-def compileWeaponList( weapons ):
-    wpn_list = []
-    for weapon in weapons:
-        wpn_list.append( compileWeapon( weapon ) )
-    return wpn_list
-
-
 def compileTarget( target, banned_list = [] ):
     attr_dict ={}
     for attr in target.__dict__:
