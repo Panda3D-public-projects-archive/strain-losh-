@@ -173,7 +173,7 @@ class VoxelGenerator():
                         model.setH(h)
                         model.setColor(0,1,0,1)
                         model.reparentTo(self.node_wall_usable)
-                    elif val2.name == "Wall3":
+                    elif val2.name == "HalfWall":
                         model = loader.loadModel("wall2")
                         model.setPos(my_x, my_y, utils.GROUND_LEVEL)
                         model.setH(h)
