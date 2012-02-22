@@ -30,7 +30,7 @@ class Unit():
         self.name = name     
         self.heading = HEADING_N      
         self.resting = False
-        self.ranged_weapon = weapon.loadWeapon("Harsh language", self)
+        self.ranged_weapon = weapon.loadWeapon("Harsh Language", self)
         self.melee_weapon = weapon.loadWeapon("Karate", self)
         self.overwatch = False
         self.alive = True
