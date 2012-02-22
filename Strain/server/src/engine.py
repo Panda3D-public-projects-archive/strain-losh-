@@ -237,7 +237,7 @@ class Engine( Thread ):
                     continue
                 
                 
-                tmpUnit = unit.loadUnit(unittype)
+                tmpUnit = unit.loadUnit(unittype, self)
                 tmpUnit.init( self.getUID(), player, x, y )                
                 tmpUnit.heading = util.getHeading(tmpUnit.pos, self.level.center)
 
