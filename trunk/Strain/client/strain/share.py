@@ -436,8 +436,10 @@ def toHit( shooter, target, level ):
 def _getVision( tiles, level):
     
     #------check if tiles are diagonal-------
-    x1,y1 = tiles[0]
-    x2,y2 = tiles[1]
+    x1 = int( tiles[0][0] )
+    y1 = int( tiles[0][1] )
+    x2 = int( tiles[1][0] )
+    y2 = int( tiles[1][1] )
     
     #yes diagonal! set up 2 'normal' tiles list and send them again to this method
     if x2 - x1 != 0 and y2 - y1 != 0:
@@ -472,7 +474,8 @@ def _getVision( tiles, level):
     for i in xrange( len(tiles) -1):
         dx = tiles[i+1][0] - tiles[i][0]
         dy = tiles[i+1][1] - tiles[i][1]
-        x,y = tiles[i]
+        x = int( tiles[i][0] )
+        y = int( tiles[i][1] )
 
         x1 = 2*x+2
         y1 = 2*y+1
