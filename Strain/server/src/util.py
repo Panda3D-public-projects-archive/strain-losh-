@@ -77,7 +77,15 @@ def compileState(engine, player):
     dic[ 'level' ] = pickle.dumps( compileLevel( engine.level ) )        
     dic[ 'turn' ] = engine.turn
     dic[ 'active_player_id' ] = engine.active_player.id
-    dic[ 'players' ] = pickle.dumps( compilePlayers( engine.players, player ) )     
+    dic[ 'players' ] = pickle.dumps( compilePlayers( engine.players, player ) )
+    
+    tmp_dead_units = {}
+    
+    for u in engine.dead_units.itervalues():
+        if u.owner == player:
+            tmp_dead_units[ u.id ] = u
+         
+    dic[ 'dead_units' ] = pickle.dumps( tmp_dead_units )
     
     return dic
 
@@ -242,10 +250,6 @@ def d( num, dice ):
 
 def d100():
     return random.randint( 1, 100 )
-
-
-def distanceTupple( t1, t2  ):
-    return distance( t1[0], t1[1], t2[0], t2[1] )
 
     
 def getReplayName():

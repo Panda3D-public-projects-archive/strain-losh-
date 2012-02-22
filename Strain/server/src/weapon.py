@@ -5,15 +5,8 @@ from strain.share import *
 from util import compileUnit
 
 
-
-
-
-SPECIAL_FLAMER = 'flamer'
-
-
 SPECIAL_SET_UP = "set_up"
 
-    
     
 class Weapon():
 
@@ -30,16 +23,17 @@ class Weapon():
         self.shots = None
     
     
-    def fire(self, target, visibility ):
+    def fire(self, target, to_hit ):
         ret_list = []
 
-        for i in xrange(self.shots): #@UnusedVariable        
-            to_hit, msg = toHit( compileUnit(self.owner), compileUnit(target), self.owner.engine.level) #@UnusedVariable
-                    
+        for i in xrange(self.shots): #@UnusedVariable                            
             if util.d100() <= to_hit: 
                 ret_list.append( self.hitTarget( target ) )
             else: 
                 ret_list.append( ('miss', target.id) )
+            #TODO: krav: bez ovog dole se mozda brejka klijent, bumo vidli ako se ikad desi :)
+            #if not target.alive:
+            #    break
     
         return ret_list
     
