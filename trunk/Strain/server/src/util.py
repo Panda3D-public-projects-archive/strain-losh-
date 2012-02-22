@@ -73,7 +73,7 @@ def compileState(engine, player):
         units[unt.id] = compileDetectedEnemyUnit(unt)
     
         
-    dic[ 'units' ] = pickle.dumps( units )    
+    dic[ 'units' ] = pickle.dumps( units )
     dic[ 'level' ] = pickle.dumps( compileLevel( engine.level ) )        
     dic[ 'turn' ] = engine.turn
     dic[ 'active_player_id' ] = engine.active_player.id
@@ -134,7 +134,7 @@ def compileLevel(level):
 
 
 def compileUnit(unit):
-    ret = compileTarget( unit, ['owner', 'ranged_weapon', 'melee_weapon', 'armour'] )
+    ret = compileTarget( unit, ['engine', 'owner', 'ranged_weapon', 'melee_weapon', 'armour'] )
      
     ret['ranged_weapon'] = compileWeapon( unit.ranged_weapon )
     ret['melee_weapon'] = compileWeapon( unit.melee_weapon )

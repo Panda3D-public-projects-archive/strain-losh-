@@ -21,10 +21,11 @@ HEADING_SE        = 8
 class Unit():
     
     
-    def __init__( self, name ):        
+    def __init__( self, name, engine ):        
         self.id = -1
         self.owner = None
         self.owner_id = None
+        self.engine = engine
         self.pos = ( -1, -1 )
         self.name = name     
         self.heading = HEADING_N      
@@ -157,9 +158,13 @@ class Unit():
         return False
 
 
-    def iAmHit(self, weapon, dmg_saved):
+    def iAmHit(self, weapon):
         
+        dmg_saved = self.armour.reduceDmg( weapon )
         dmg_received = weapon.str - dmg_saved
+        
+        if dmg_received < 0:
+            dmg_received = 0
         
         if dmg_received:
             self.hp -= dmg_received
@@ -236,7 +241,7 @@ class Unit():
         
 
     def hasHeavyWeapon(self):
-        if self.ranged_weapon.type == weapon.TYPE_HEAVY:
+        if self.ranged_weapon.special == weapon.SPECIAL_SET_UP:
             return True
         return False
     
@@ -263,7 +268,7 @@ class Unit():
         return False
 
 #-----------------------------------------------------------------------
-def loadUnit( name ):
+def loadUnit( name, engine ):
     xmldoc = minidom.parse('data/base/units.xml')
     
     unit = None
@@ -273,7 +278,7 @@ def loadUnit( name ):
         if p.attributes['name'].value != name:
             continue
         
-        unit = Unit( p.attributes['name'].value )            
+        unit = Unit( p.attributes['name'].value, engine )            
         unit.default_hp = int( p.attributes['hp'].value )
         unit.ws = int( p.attributes['ws'].value )
 
