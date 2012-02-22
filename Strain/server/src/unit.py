@@ -112,10 +112,8 @@ class Unit():
         return ret_lst
 
         
-    def shoot(self, target, overwatch = False):
+    def shoot(self, target, to_hit, overwatch = False):
                 
-        to_hit, msg = toHit( util.compileUnit(self), util.compileUnit(target), self.engine.level) #@UnusedVariable
-        
         if not to_hit:
             return None
         
@@ -204,8 +202,8 @@ class Unit():
             return "This unit is not set-up."
        
        
-    def doOverwatch(self, target ):
-        return self.shoot( target, True )
+    def doOverwatch(self, target, to_hit ):
+        return self.shoot( target, to_hit, True )
         
         
     def move(self, new_position, ap_remaining ):

@@ -705,9 +705,10 @@ class Engine( Thread ):
                 continue
             
             for enemy in p.units:  
-                if self.getLOS( enemy, unit ):
+                to_hit, msg = toHit( util.compileUnit(enemy), util.compileUnit(unit), self.level) #@UnusedVariable
+                if to_hit:
                     if enemy.overwatch and enemy.inFront( unit.pos ) and enemy.alive:
-                        res = enemy.doOverwatch( unit )
+                        res = enemy.doOverwatch( unit, to_hit )
                         if res:
                             ret_actions.append( ('overwatch', res ) )
                         if not unit.alive:
@@ -795,8 +796,9 @@ class Engine( Thread ):
             return
         
          
-        if not self.getLOS( shooter, target ):
-            EngMsg.error( "No line of sight to target.", source)
+        to_hit, msg = toHit( util.compileUnit(shooter), util.compileUnit(target), self.level)
+        if not to_hit:
+            EngMsg.error( msg, source)
             return
                  
         
@@ -806,7 +808,7 @@ class Engine( Thread ):
                 return
         
         #---------------- main shoot event ------------------------
-        shoot_msg = shooter.shoot( target )
+        shoot_msg = shooter.shoot( target, to_hit )
          
         #if nothing happened, just return
         if not shoot_msg:
