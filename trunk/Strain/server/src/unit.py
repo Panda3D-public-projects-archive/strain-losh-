@@ -5,6 +5,7 @@ import armour
 import math
 import engine
 from server_messaging import *
+from strain.share import *
 
 HEADING_NONE      = 0
 HEADING_NW        = 1
@@ -111,26 +112,22 @@ class Unit():
         return ret_lst
 
         
-    def shoot(self, target, visibility, overwatch = False):
+    def shoot(self, target, overwatch = False):
                 
-        if not visibility:
+        to_hit, msg = toHit( util.compileUnit(self), util.compileUnit(target), self.engine.level) #@UnusedVariable
+        
+        if not to_hit:
             return None
         
-        distance = util.distanceTupple(self.pos, target.pos)
+        distance = distanceTupple(self.pos, target.pos)
         
         #check melee
         if distance < 2:
             return self.melee( target )
         
-        #check range
-        if distance > self.ranged_weapon.range:
-            return None
-        
-        
         #check if we have a heavy weapon and if we are set up
-        if self.hasHeavyWeapon():
-            if not self.set_up:
-                return None
+        if self.hasHeavyWeapon() and not self.set_up:
+            return None
             
         #check if there is enough ap to fire
         if self.ap < self.ranged_weapon.ap_cost:
@@ -145,7 +142,7 @@ class Unit():
                         
         self.last_action = 'shoot'
         
-        ret.append( (SHOOT, self.id, target.pos, self.ranged_weapon.name, self.ranged_weapon.fire( target, visibility ) ) )
+        ret.append( (SHOOT, self.id, target.pos, self.ranged_weapon.name, self.ranged_weapon.fire( target, to_hit ) ) )
         return ret
 
 
@@ -207,8 +204,8 @@ class Unit():
             return "This unit is not set-up."
        
        
-    def doOverwatch(self, target, visibility ):
-        return self.shoot( target, visibility, True )
+    def doOverwatch(self, target ):
+        return self.shoot( target, True )
         
         
     def move(self, new_position, ap_remaining ):
