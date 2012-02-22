@@ -405,21 +405,33 @@ def toHit( shooter, target, level ):
     
     tiles = getTiles2D( shooter['pos'], target['pos'], level)
     if not tiles:
-        return ( None, "No line of sight.")
+        return ( 0, "No line of sight.")
         
     if len( tiles ) == 1:
-        return ( 2, "You shooting yourself?")
+        return ( 100, "You shooting yourself?")
         
-    print tiles
-    
     vision = _getVision(tiles, level)
+    
     if not vision:
-        return ( vision, "No line of sight." )
+        return ( 0, "No line of sight." )
+    
+    distance = int( distanceTupple( shooter['pos'], target['pos'] ) )
+    #check if this is melee
+    if distance < 2:
+        print "--------MELEEEEEEEEEEEEEE!!!!!!!!!!!!------------"
+        return ( 90, "Melee." )
+    
+    wpn = shooter['ranged_weapon']
+    if distance > wpn['range']:
+        return ( 0, "Out of range! " + wpn['name'] + " max range:" + str(wpn['range']) + ". Target is @" + str(distance) )
+
+    percent = 90 - distance * 5
+    
     if vision == 2:
-        return ( vision, "Clear shot.")
+        return ( percent, wpn['name'] + "@" + str(distance)  )
     elif vision == 1:
-        return ( vision, "Partial cover.")
-        
+        return ( int(percent * 0.66), "Partial cover (x0.66)," + wpn['name'] + "@" + str(distance) )
+
 
 def _getVision( tiles, level):
     
@@ -645,6 +657,10 @@ def signum( num ):
 
 def distance( x1, y1, x2, y2 ):    
     return math.sqrt( math.pow( (x2-x1) , 2) +  math.pow( (y2-y1) , 2) )
+    
+
+def distanceTupple( t1, t2 ):    
+    return math.sqrt( math.pow( (t2[0]-t1[0]) , 2) +  math.pow( (t2[1]-t1[1]) , 2) )
     
 
 
