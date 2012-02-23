@@ -116,6 +116,9 @@ class Client(DirectObject):
         if self._anim_in_process == True:
             return
         
+        if not self.units.has_key(unit_id):
+            return
+        
         if self.sel_unit_id != unit_id:
             self.deselectUnit()
             self.sel_unit_id = unit_id
@@ -185,9 +188,9 @@ class Client(DirectObject):
             if self.sgm.unit_np_dict.has_key(unit['id']):
                 self.sgm.hideUnit(unit['id'])
             if self.units.has_key(unit['id']):
+                if self.isThisMyUnit(unit['id']):
+                    self.inactive_units[unit['id']] = unit
                 self.deleteUnit(unit['id'])
-                #if self.isThisMyUnit(unit['id']):
-                #    self.inactive_units[unit['id']] = unit
             self.level.removeUnitDict(unit)
         else:
             self.units[unit['id']] = unit
