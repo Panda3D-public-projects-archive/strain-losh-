@@ -179,8 +179,6 @@ class Client(DirectObject):
             self.selectUnit(new_unit_id)
     
     def refreshUnit(self, unit):
-        if unit['can_use'] == True:
-            print "can use! id:", unit['id']
         if unit['alive'] == False:
             if self.sel_unit_id == unit['id']:
                 self.sel_unit_id = None
@@ -188,8 +186,8 @@ class Client(DirectObject):
                 self.sgm.hideUnit(unit['id'])
             if self.units.has_key(unit['id']):
                 self.deleteUnit(unit['id'])
-                if self.isThisMyUnit(unit['id']):
-                    self.inactive_units[unit['id']] = unit
+                #if self.isThisMyUnit(unit['id']):
+                #    self.inactive_units[unit['id']] = unit
             self.level.removeUnitDict(unit)
         else:
             self.units[unit['id']] = unit
@@ -199,11 +197,6 @@ class Client(DirectObject):
     def deleteUnit(self, unit_id):
         self.level.removeUnitId(unit_id)
         self.units.pop(unit_id)
-    
-    def setupUnitLists(self, units):
-        self.units = {}
-        for u in units.itervalues():
-            self.units[u['id']] = u
     
     def getUnitData(self, unit_id):
         if self.units.has_key(unit_id):

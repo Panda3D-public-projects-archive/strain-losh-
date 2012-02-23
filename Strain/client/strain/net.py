@@ -36,8 +36,10 @@ class Net():
     def handleMsg(self, msg):
         """Handles incoming messages."""
         self.log.info("Received message: %s", msg[0])
-        #print 'Incoming message', msg[0]
-        #print 'Message body', msg[1]
+        print '--------START------------'
+        print 'Incoming message', msg[0]
+        print 'Message body', msg[1]
+        print '----------END----------'
         #========================================================================
         #
         if msg[0] == ENGINE_STATE:
@@ -49,8 +51,9 @@ class Net():
             for p in self.parent.players:
                 if p['name'] == self.parent.player:
                     self.parent.player_id = p['id']
-            self.parent.turn_player = self.parent.getPlayerName(msg[1]['active_player_id'])                    
-            self.parent.setupUnitLists(pickle.loads(msg[1]['units']))
+            self.parent.turn_player = self.parent.getPlayerName(msg[1]['active_player_id'])
+            self.parent.units = pickle.loads(msg[1]['units'])
+            self.parent.inactive_units = pickle.loads(msg[1]['dead_units'])
             self.parent.sgm.deleteLevel()
             self.parent.sgm.deleteUnits()
             self.parent.sgm.loadLevel(self.parent.level)
@@ -79,6 +82,7 @@ class Net():
             self.parent.interface.refreshStatusBar()
             for unit in units.itervalues():
                 self.parent.refreshUnit(unit)
+            self.parent.inactive_units = pickle.loads(msg[1]['dead_units'])
             for unit_id in self.parent.units.iterkeys():
                 if self.parent.isThisMyUnit(unit_id):
                     self.parent.interface.refreshUnitInfo(unit_id)
@@ -133,6 +137,10 @@ class Net():
             self.parent.old_level_grid = self.parent.level._grid[:]
             self.parent.level = msg[1]
             self.parent.sgm.level_mesh.processLevel()
+        #========================================================================
+        #
+        elif msg[0] == USE:
+            self.parent.sgm.unit_np_dict[msg[1]].model.play('use')          
         #========================================================================
         #        
         else:
