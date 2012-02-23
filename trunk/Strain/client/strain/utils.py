@@ -174,7 +174,7 @@ def getHeadingAngle(h):
     return angle
 
 def getUnitWeapons(unit):
-    wpn_list = unit['ranged_weapon']['name'] + "  " + unit['melee_weapon']['name']
+    wpn_list = [unit['ranged_weapon']['name'], unit['melee_weapon']['name']]
     return wpn_list
 
 def loadUnit(race, type, team):
