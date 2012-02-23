@@ -638,7 +638,6 @@ class Interface(DirectObject.DirectObject):
     def toggleOverwatch(self):
         unit = self.parent.units[self.parent.sel_unit_id]
         ClientMsg.overwatch( self.parent.sel_unit_id )
-        ClientMsg.taunt( self.parent.sel_unit_id )
         
     def toggleSetUp(self):
         unit = self.parent.units[self.parent.sel_unit_id]
