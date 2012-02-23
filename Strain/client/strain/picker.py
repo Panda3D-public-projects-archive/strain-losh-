@@ -61,7 +61,8 @@ class Picker(DirectObject.DirectObject):
                 new_hovered_unit_id = mouse_hovered_object.findNetTag('id').getNetTag('id')
                 if self.hovered_unit_id != None:
                     if self.hovered_unit_id != new_hovered_unit_id:
-                        self.parent.sgm.unit_np_dict[int(self.hovered_unit_id)].unmarkHovered()
+                        if self.parent.sgm.unit_np_dict.has_key(int(self.hovered_unit_id)):
+                            self.parent.sgm.unit_np_dict[int(self.hovered_unit_id)].unmarkHovered()
                         self.hovered_unit_id = new_hovered_unit_id
                         self.parent.sgm.unit_np_dict[int(self.hovered_unit_id)].markHovered()
                 else:
