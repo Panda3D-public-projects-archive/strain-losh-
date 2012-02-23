@@ -194,7 +194,7 @@ class Engine( Thread ):
                     
             unit.taunt()            
             self.taunt( unit )
-            
+            return
                     
         player.addUnitMsg( compileUnit(unit) )
         self.observer.addUnitMsg( compileUnit(unit) )
@@ -212,12 +212,12 @@ class Engine( Thread ):
             #check visibility for each player                              
             for p in self.players:  
                 if p == unit.owner:
-                    unit.owner.addTauntMsg( unit.id, ('overwatch', res_overwatch) )
-                    self.observer.addTauntMsg( unit.id, ('overwatch', res_overwatch) )
+                    unit.owner.addTauntMsg( unit.id, res_overwatch )
+                    self.observer.addTauntMsg( unit.id, res_overwatch )
                     continue
                        
                 tmp_shoot_msg = self.parseShootMsgForPlayer( res_overwatch, p )
-                p.addTauntMsg( unit.id, ('overwatch', tmp_shoot_msg) )         
+                p.addTauntMsg( unit.id, (tmp_shoot_msg) )         
 
             unit_ids_involved.update( self.findUnitsInvolved( res_overwatch ) )
                         
@@ -226,12 +226,12 @@ class Engine( Thread ):
             
             for p in self.players:
                 if p == unit.owner:            
-                    unit.owner.addTauntMsg( unit.id, ('overwatch', None) )
-                    self.observer.addTauntMsg( unit.id, ('overwatch', None) )
+                    unit.owner.addTauntMsg( unit.id,  None )
+                    self.observer.addTauntMsg( unit.id, None )
                     continue
                 
                 if unit in p.visible_enemies:
-                    p.addTauntMsg( unit.id, ('overwatch', None) )
+                    p.addTauntMsg( unit.id, None )
         
         
         self.sendUNITMsgsAndRemoveDeadUnits( unit_ids_involved )
