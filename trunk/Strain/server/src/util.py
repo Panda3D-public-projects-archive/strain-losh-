@@ -83,7 +83,7 @@ def compileState(engine, player):
     
     for u in engine.dead_units.itervalues():
         if u.owner == player:
-            tmp_dead_units[ u.id ] = u
+            tmp_dead_units[ u.id ] = compileUnit( u )
          
     dic[ 'dead_units' ] = pickle.dumps( tmp_dead_units )
     

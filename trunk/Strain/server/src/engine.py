@@ -127,6 +127,9 @@ class Engine( Thread ):
         elif( msg[0] == USE ):
             self.unitUpdate( msg[1], USE, source)
                         
+        elif( msg[0] == TAUNT ):
+            self.unitUpdate( msg[1], TAUNT, source)
+                        
         elif( msg[0] == SHOOT ):
             self.handleShoot( msg[1]['shooter_id'], msg[1]['target_id'], source )
                         
@@ -149,6 +152,7 @@ class Engine( Thread ):
                 unit.overwatch = not unit.overwatch
             else:
                 EngMsg.error("Not enough AP for overwatch.", source)
+                return
             
         if param == SET_UP:
             if not unit.hasHeavyWeapon():
@@ -176,16 +180,62 @@ class Engine( Thread ):
                 return
                     
             if self.use( unit ):
-                unit.ap -= 1
+                unit.use()
                 player.addUseMsg( unit.id )
                 self.observer.addUseMsg( unit.id )
-                print "level changed"
                 self.levelChanged()
             else:
                 return
                     
+        if param == TAUNT:
+            if unit.ap < 1:
+                EngMsg.error( "Not enough AP for taunting.", source )
+                return
+                    
+            unit.taunt()            
+            self.taunt( unit )
+            
+                    
         player.addUnitMsg( compileUnit(unit) )
         self.observer.addUnitMsg( compileUnit(unit) )
+        
+        
+        
+    def taunt(self, unit):
+        
+        res_overwatch = self.checkForAndDoOverwatch( unit )
+        
+        unit_ids_involved = { unit.id:0 }
+        
+        if res_overwatch:
+           
+            #check visibility for each player                              
+            for p in self.players:  
+                if p == unit.owner:
+                    unit.owner.addTauntMsg( unit.id, ('overwatch', res_overwatch) )
+                    self.observer.addTauntMsg( unit.id, ('overwatch', res_overwatch) )
+                    continue
+                       
+                tmp_shoot_msg = self.parseShootMsgForPlayer( res_overwatch, p )
+                p.addTauntMsg( unit.id, ('overwatch', tmp_shoot_msg) )         
+
+            unit_ids_involved.update( self.findUnitsInvolved( res_overwatch ) )
+                        
+        #there was no overwatch
+        else:
+            
+            for p in self.players:
+                if p == unit.owner:            
+                    unit.owner.addTauntMsg( unit.id, ('overwatch', None) )
+                    self.observer.addTauntMsg( unit.id, ('overwatch', None) )
+                    continue
+                
+                if unit in p.visible_enemies:
+                    p.addTauntMsg( unit.id, ('overwatch', None) )
+        
+        
+        self.sendUNITMsgsAndRemoveDeadUnits( unit_ids_involved )
+        
         
         
     def levelChanged(self):
@@ -612,57 +662,20 @@ class Engine( Thread ):
         #so we know which units to update with UNIT msgs            
         unit_ids_involved = { unit.id:0 }
 
+
         #check visibility for each player                    
         if res_overwatch:          
             for p in self.players:  
                 if p == owner:
                     continue
                 
-                for ov_msg in res_overwatch:                
-                    tmp_shoot_msg = copy.deepcopy( ov_msg[1] )
-                    for m in tmp_shoot_msg[:]:
-                        if m[0] == ROTATE:
-                            tmp_unit_id = m[1]
-                            tmp_unit = self.units[tmp_unit_id]
-                            #if we dont see this unit, remove the rotate msg                    
-                            if tmp_unit.owner != p and tmp_unit not in p.visible_enemies:
-                                tmp_shoot_msg.remove( m )
-        
-                        elif m[0] == SHOOT or m[0] == 'melee':
-                            sht, tmp_unit_id, pos, wpn, lst = m
-                            tmp_unit = self.units[tmp_unit_id]
-                            #if we dont see the shooter, remove him and his position
-                            if p != tmp_unit.owner and tmp_unit not in p.visible_enemies:
-                                tmp_unit_id = -1
-                                pos = None
-                            #go through list of targets and if we dont see the target, remove it from the list
-                            for effect in lst[:]:
-                                tmp_target_id = effect[1]
-                                trgt = self.units[tmp_target_id]
-                                if trgt.owner != p and trgt not in p.visible_enemies:
-                                    lst.remove( effect )
-                                    
-                            i = tmp_shoot_msg.index(m)
-                            tmp_shoot_msg.pop( i )
-                            new = (sht, tmp_unit_id, pos, wpn, lst)
-                            tmp_shoot_msg.insert( i, new )
+                for ov_msg in res_overwatch:       
+                    tmp_shoot_msg = self.parseShootMsgForPlayer( ov_msg[1], p )         
+                    actions_for_others[p].append( ('overwatch', tmp_shoot_msg) )
                             
-                            if tmp_unit_id == -1 and not lst:
-                                #if you dont see anyone, u just need to get message that someone fired a weapon
-                                actions_for_others[p].append( tmp_shoot_msg[0] )
-                            else:
-                                actions_for_others[p].append( ('overwatch', tmp_shoot_msg) )
-                            
+                                        
+            unit_ids_involved.update( self.findUnitsInvolved( res_overwatch ) )
             
-            #find all units involved in this mess: moving unit and multiple shooters and targets
-            for cmd2 in res_overwatch:
-                for cmd in cmd2[1]:
-                    if cmd[0] == ROTATE:
-                        unit_ids_involved[ cmd[1] ] = 0
-                    elif cmd[0] == SHOOT:
-                        unit_ids_involved[ cmd[1] ] = 0
-                        for trgt in cmd[4]:
-                            unit_ids_involved[ trgt[1] ] = 0
             
         #send everything to owner of moving unit
         owner.addMoveMsg( unit.id, my_actions )
@@ -696,8 +709,7 @@ class Engine( Thread ):
         self.removeDeadUnits()
 
             
-    def checkForAndDoOverwatch(self, unit ):
-        
+    def checkForAndDoOverwatch(self, unit):
         ret_actions = []
         
         for p in self.players:
@@ -716,6 +728,43 @@ class Engine( Thread ):
         
         
         return ret_actions
+    
+    
+    def parseShootMsgForPlayer(self, shoot_msg, player): 
+        #example message = [(ROTATE, 0, 3), (SHOOT, 0, (4, 7), u'Bolt Pistol', [('bounce', 6)])]
+        tmp_shoot_msg = copy.deepcopy(shoot_msg)
+        for m in tmp_shoot_msg[:]:
+            if m[0] == ROTATE:
+                tmp_unit_id = m[1]
+                tmp_unit = self.units[tmp_unit_id]
+                #if we dont see this unit, remove the rotate msg                    
+                if tmp_unit.owner != player and tmp_unit not in player.visible_enemies:
+                    tmp_shoot_msg.remove( m )
+
+            elif m[0] == SHOOT or m[0] == 'melee':
+                sht, tmp_unit_id, pos, wpn, lst = m
+                tmp_unit = self.units[tmp_unit_id] 
+                #if we dont see the shooter, remove him and his position
+                if player != tmp_unit.owner and tmp_unit not in player.visible_enemies:
+                    tmp_unit_id = -1
+                    pos = None
+                #go through list of targets and if we dont see the target, remove it from the list
+                for effect in lst[:]:
+                    tmp_target_id = effect[1]
+                    trgt = self.units[tmp_target_id]
+                    if trgt.owner != player and trgt not in player.visible_enemies:
+                        lst.remove( effect )
+                        
+                i = tmp_shoot_msg.index(m)
+                tmp_shoot_msg.pop( i )
+                new = (sht, tmp_unit_id, pos, wpn, lst)
+                tmp_shoot_msg.insert( i, new )
+                
+                #p.addShootMsg( tmp_shoot_msg )
+                #actions_for_others[p].append( ('overwatch', tmp_shoot_msg) )
+    
+        return tmp_shoot_msg
+    
     
     
     def checkEnemyVision(self, unit, actions_for_others ):
@@ -828,59 +877,40 @@ class Engine( Thread ):
             if shooter.owner == p:
                 p.addShootMsg( shoot_msg )
                 self.observer.addShootMsg( shoot_msg )
+                continue
                 
-            else:
-                #example message = [(ROTATE, 0, 3), (SHOOT, 0, (4, 7), u'Bolt Pistol', [('bounce', 6)])]
-                tmp_shoot_msg = copy.deepcopy(shoot_msg)
-                for m in tmp_shoot_msg[:]:
-                    if m[0] == ROTATE:
-                        tmp_unit_id = m[1]
-                        tmp_unit = self.units[tmp_unit_id]
-                        #if we dont see this unit, remove the rotate msg                    
-                        if tmp_unit.owner != p and tmp_unit not in p.visible_enemies:
-                            tmp_shoot_msg.remove( m )
-
-                    elif m[0] == SHOOT or m[0] == 'melee':
-                        sht, tmp_unit_id, pos, wpn, lst = m
-                        tmp_unit = self.units[tmp_unit_id] 
-                        #if we dont see the shooter, remove him and his position
-                        if p != tmp_unit.owner and tmp_unit not in p.visible_enemies:
-                            tmp_unit_id = -1
-                            pos = None
-                        #go through list of targets and if we dont see the target, remove it from the list
-                        for effect in lst[:]:
-                            tmp_target_id = effect[1]
-                            trgt = self.units[tmp_target_id]
-                            if trgt.owner != p and trgt not in p.visible_enemies:
-                                lst.remove( effect )
-                                
-                        i = tmp_shoot_msg.index(m)
-                        tmp_shoot_msg.pop( i )
-                        new = (sht, tmp_unit_id, pos, wpn, lst)
-                        tmp_shoot_msg.insert( i, new )
-                        
-                        p.addShootMsg( tmp_shoot_msg )
-
+            tmp_shoot_msg = self.parseShootMsgForPlayer( shoot_msg, p )
+            p.addShootMsg( tmp_shoot_msg )
 
         #find all units involved in shooting: shooter and (multiple) targets, and update them
-        unit_ids_involved = { shooter.id:0, target.id:0 }
+        unit_ids_involved = { shooter.id:0, target.id:0 } 
+        unit_ids_involved.update( self.findUnitsInvolved( shoot_msg ) )                  
+        self.sendUNITMsgsAndRemoveDeadUnits( unit_ids_involved )        
+                
+        self.updateVisibilityAndSendVanishAndSpotMessages()
+        
+            
+            
+    def findUnitsInvolved(self, shoot_msg ):
+        unit_ids_involved = {}
+        
         for cmd in shoot_msg:
             if cmd[0] == SHOOT: 
+                unit_ids_involved[ cmd[1] ] = 0
                 for trgt in cmd[4]:
                     unit_ids_involved[ trgt[1] ] = 0
+            elif cmd[0] == ROTATE:
+                unit_ids_involved[ cmd[1] ] = 0
             elif cmd[0] == 'overwatch': 
                 for cmd2 in cmd[1]:
                     if cmd2[0] == ROTATE:
                         unit_ids_involved[ cmd2[1] ] = 0
                     elif cmd2[0] == SHOOT:
+                        unit_ids_involved[ cmd2[1] ] = 0
                         for trgt in cmd2[4]:
                             unit_ids_involved[ trgt[1] ] = 0
-                  
-        self.sendUNITMsgsAndRemoveDeadUnits( unit_ids_involved )
-        
-        self.updateVisibilityAndSendVanishAndSpotMessages()
-        
             
+        return unit_ids_involved
         
     def updateVisibilityAndSendVanishAndSpotMessages(self):
         

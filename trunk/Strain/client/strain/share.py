@@ -36,9 +36,9 @@ def levelVisibilityDict( unit_list, level ):
                 tiles = getTiles2D( unit['pos'], x_y, level )
                     
                 if tiles:
-                    for t in tiles:
-                        vis_dict[t] = 1
-                    #vis_dict[x_y] = 1
+                    #for t in tiles:
+                    #    vis_dict[t] = 1
+                    vis_dict[x_y] = 1
                     continue
           
             

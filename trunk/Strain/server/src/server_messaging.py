@@ -35,6 +35,9 @@ USE = 'use'                     #value - id of unit trying to use
 VANISH = 'vanish'               #value - id of unit vanishing
 SPOT = 'spot'                   #value - id of unit spotted
 ROTATE = 'rotate'               #value - new heading 
+TAUNT = 'taunt'                 #value - id of unit taunting
+
+
 
 class EngMsg:
     
@@ -304,6 +307,10 @@ class EngMsg:
     @staticmethod
     def sendUse(unit_id, source = None):
         EngMsg._sendMsg((USE, unit_id), source)
+
+    @staticmethod
+    def sendTaunt(unit_id, actions, source = None):
+        EngMsg._sendMsg((TAUNT, (unit_id, actions)), source)
 
     @staticmethod
     def sendMsg( msg, source = None):

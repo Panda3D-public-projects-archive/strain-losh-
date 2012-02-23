@@ -20,7 +20,7 @@ USE = 'use'                     #value - id of unit trying to use
 VANISH = 'vanish'               #value - id of unit vanishing
 SPOT = 'spot'                   #value - id of unit spotted
 ROTATE = 'rotate'               #value - new heading 
-
+TAUNT = 'taunt'                 #value - id of unit taunting
 
 
 class Msg:
@@ -242,6 +242,10 @@ class ClientMsg:
     @staticmethod
     def use( unit_id ):
         ClientMsg._sendMsg( (USE, unit_id) ) 
+        
+    @staticmethod
+    def taunt( unit_id ):
+        ClientMsg._sendMsg( (TAUNT, unit_id) ) 
         
     @staticmethod
     def endTurn():
