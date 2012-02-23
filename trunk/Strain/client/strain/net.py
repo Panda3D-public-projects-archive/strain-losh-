@@ -36,10 +36,10 @@ class Net():
     def handleMsg(self, msg):
         """Handles incoming messages."""
         self.log.info("Received message: %s", msg[0])
-        print '--------START------------'
-        print 'Incoming message', msg[0]
-        print 'Message body', msg[1]
-        print '----------END----------'
+        #print '--------START------------'
+        #print 'Incoming message', msg[0]
+        #print 'Message body', msg[1]
+        #print '----------END----------'
         #========================================================================
         #
         if msg[0] == ENGINE_STATE:
@@ -140,7 +140,12 @@ class Net():
         #========================================================================
         #
         elif msg[0] == USE:
-            self.parent.sgm.unit_np_dict[msg[1]].model.play('use')          
+            self.parent.sgm.unit_np_dict[msg[1]].model.play('use')    
+        #========================================================================
+        #
+        elif msg[0] == TAUNT:
+            self.parent.sgm.unit_np_dict[msg[1][0]].model.play('taunt')
+            self.parent.handleShoot(msg[1][1][1]) 
         #========================================================================
         #        
         else:

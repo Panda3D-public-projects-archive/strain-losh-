@@ -399,12 +399,10 @@ class Client(DirectObject):
     
     def buildShoot(self, action_list):
         s = Sequence()
-        d = 0.0       
-                 
+        d = 0.0
         for action in action_list:
             action_type = action[0]
             
-
             if action_type == "shoot":
                 shooter_id = action[1] # unit_id of the shooter
                 shoot_tile = action[2] # (x,y) pos of targeted tile
