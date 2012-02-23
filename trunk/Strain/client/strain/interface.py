@@ -110,7 +110,7 @@ class Interface(DirectObject.DirectObject):
         self.overwatch = GuiButton2("bottom", Point3(1.5+0.01, 0, -0.09), self.aspect, plane, "overwatch")
         self.set_up = GuiButton2("bottom", Point3(1.6+0.02, 0, -0.09), self.aspect, plane, "set_up")
         self.use = GuiButton2("bottom", Point3(1.7+0.03, 0, -0.09), self.aspect, plane, "use")
-        self.action_4 = GuiButton2("bottom", Point3(1.5+0.01, 0, -0.2), self.aspect, plane, "empty")
+        self.taunt = GuiButton2("bottom", Point3(1.5+0.01, 0, -0.2), self.aspect, plane, "taunt")
         self.action_5 = GuiButton2("bottom", Point3(1.6+0.02, 0, -0.2), self.aspect, plane, "empty")
         self.action_6 = GuiButton2("bottom", Point3(1.7+0.03, 0, -0.2), self.aspect, plane, "empty")
         
@@ -125,7 +125,7 @@ class Interface(DirectObject.DirectObject):
         self.buttons["overwatch"] = self.overwatch
         self.buttons["set_up"] = self.set_up
         self.buttons["use"] = self.use
-        self.buttons["action_4"] = self.action_4
+        self.buttons["taunt"] = self.taunt
         self.buttons["action_5"] = self.action_5
         self.buttons["action_6"] = self.action_6
         
@@ -133,6 +133,7 @@ class Interface(DirectObject.DirectObject):
         self.action_buttons["overwatch"] = self.overwatch
         self.action_buttons["set_up"] = self.set_up
         self.action_buttons["use"] = self.use
+        self.action_buttons["taunt"] = self.taunt
         
         self.hovered_gui = None
         
@@ -398,6 +399,9 @@ class Interface(DirectObject.DirectObject):
         elif self.hovered_gui == self.use:
             ClientMsg.use( self.parent.sel_unit_id )
             self.console.unfocus()
+        elif self.hovered_gui == self.taunt:
+            ClientMsg.taunt( self.parent.sel_unit_id )
+            self.console.unfocus()
         #elif self.hovered_gui == self.console:
         #    self.console.focus()
         elif self.panel != None and self.hovered_gui == self.panel:
@@ -639,7 +643,7 @@ class Interface(DirectObject.DirectObject):
     def toggleSetUp(self):
         unit = self.parent.units[self.parent.sel_unit_id]
         ClientMsg.setUp( self.parent.sel_unit_id )
-            
+    
     def setButtons(self, unit_id):
         for button in self.action_buttons.itervalues():
             button.enable()
@@ -648,7 +652,7 @@ class Interface(DirectObject.DirectObject):
             self.set_up.disable()
             
         if 'can_use' in self.parent.units[unit_id]:
-             if self.parent.units[unit_id]['can_use'] == False:
+            if self.parent.units[unit_id]['can_use'] == False:
                 self.use.disable()
             
     def clearButtons(self):
