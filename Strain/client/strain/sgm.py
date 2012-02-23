@@ -95,7 +95,7 @@ class SceneGraph():
                 cpos.detachNode()
                 l.append(cpos)
             self.tile_cards.append(l)
-            
+        """    
         for i in xrange(0, level.maxX):
             t = TextNode('node name')
             t.setText( "%s" % i)
@@ -114,7 +114,7 @@ class SceneGraph():
             tnp.setPos(-0.3, i+0.3, 0.5)
             tnp.setBillboardPointEye()
             tnp.setLightOff()
-        
+        """
     def deleteLevel(self):
         if self.comp_inited['level'] == False:
             return
