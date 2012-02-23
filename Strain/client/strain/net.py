@@ -145,7 +145,8 @@ class Net():
         #
         elif msg[0] == TAUNT:
             self.parent.sgm.unit_np_dict[msg[1][0]].model.play('taunt')
-            self.parent.handleShoot(msg[1][1][1]) 
+            if msg[1][1]:
+                self.parent.handleShoot(msg[1][1]) 
         #========================================================================
         #        
         else:
