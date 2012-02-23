@@ -126,32 +126,42 @@ class UnitModel:
         self.standup_anim = Sequence(self.model.actorInterval('stand_up'), self.model.actorInterval('idle'))
         self.setup_anim = Sequence(self.model.actorInterval('crouch'), self.model.actorInterval('setup'))
         
-        gnp = self.model.exposeJoint(None,"modelRoot","Wrist.R")
+        rnp = self.model.exposeJoint(None,"modelRoot","Wrist.R")
+        lnp = self.model.exposeJoint(None,"modelRoot","Wrist.L")
         
-        if wpn_list == 'Bolter':
-            self.gun = loader.loadModel('gun1')
-            self.gun.setTexture(loader.loadTexture('gun.png'))
-            self.gun.reparentTo(gnp)
-        elif wpn_list == 'Heavy Bolter':
-            self.gun = loader.loadModel('gun1')
-            self.gun.setTexture(loader.loadTexture('gun_blue.png'))
-            self.gun.reparentTo(gnp)
-        elif wpn_list == 'Plasma Gun':
-            self.gun = loader.loadModel('gun1')
-            self.gun.setTexture(loader.loadTexture('gun_orange.png'))
-            self.gun.reparentTo(gnp)  
-        elif wpn_list == 'Bolt Pistol':
-            self.gun = loader.loadModel('gun1')
-            self.gun.setTexture(loader.loadTexture('gun_yellow.png'))
-            self.gun.reparentTo(gnp)
-        elif wpn_list == 'Plasma Pistol':
-            self.gun = loader.loadModel('gun1')
-            self.gun.setTexture(loader.loadTexture('gun_green.png')) 
-            self.gun.reparentTo(gnp)
-        elif wpn_list == 'Flamer':
-            self.gun = loader.loadModel('gun1')
-            self.gun.setTexture(loader.loadTexture('gun_red.png'))                                             
-            self.gun.reparentTo(gnp)
+        if wpn_list:
+            if wpn_list[0] == 'Defaulter':
+                self.rwp = loader.loadModel('gun1')
+                self.rwp.setTexture(loader.loadTexture('gun.png'))
+            elif wpn_list[0] == 'Heavy Defaulter':
+                self.rwp = loader.loadModel('gun1')
+                self.rwp.setTexture(loader.loadTexture('gun_blue.png'))
+            elif wpn_list[0] == 'Default Pistol':
+                self.rwp = loader.loadModel('gun1')
+                self.rwp.setTexture(loader.loadTexture('gun_green.png'))
+            elif wpn_list[0] == 'Plasma Pistol':
+                self.rwp = loader.loadModel('gun1')
+                self.rwp.setTexture(loader.loadTexture('gun_orange.png'))
+            else:
+                self.rwp = None
+            
+            if wpn_list[1] == 'Chain Sword':
+                self.lwp = loader.loadModel('gun1')
+                self.lwp.setTexture(loader.loadTexture('gun_red.png')) 
+            elif wpn_list[1] == 'Power Axe':
+                self.lwp = loader.loadModel('gun1')
+                self.lwp.setTexture(loader.loadTexture('gun_red.png'))    
+            elif wpn_list[1] == 'Doctors Bag':
+                self.lwp = loader.loadModel('gun1')
+                self.lwp.setTexture(loader.loadTexture('gun_red.png'))                                                       
+            else:
+                self.lwp = None
+                
+            if self.rwp:
+                self.rwp.reparentTo(rnp)
+            if self.lwp:
+                self.lwp.setScale(0.5,0.5,0.5)
+                self.lwp.reparentTo(lnp)
         
         self.model.setShaderAuto()
     def pauseAllAnims(self):
