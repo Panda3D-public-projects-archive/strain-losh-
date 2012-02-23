@@ -45,6 +45,13 @@ class Player:
             self.msg_lst.append( (UNIT, unit_id) )
 
 
+    def addTauntMsg(self, unit_id, actions):
+        if self.connection:
+            EngMsg.sendTaunt( unit_id, actions, self.connection )
+        else:
+            self.msg_lst.append( (TAUNT, (unit_id, actions)) )
+
+
     def addNewTurnMsg(self, data):
         if self.connection:
             EngMsg.sendNewTurn( data, self.connection )

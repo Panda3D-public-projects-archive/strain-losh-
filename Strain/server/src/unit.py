@@ -7,6 +7,7 @@ import engine
 from server_messaging import *
 from strain.share import *
 
+#TODO: ovo je kopirano u interface.py
 HEADING_NONE      = 0
 HEADING_NW        = 1
 HEADING_N         = 2
@@ -258,9 +259,20 @@ class Unit():
     def amIStuck(self):
         if self.hasHeavyWeapon() and self.set_up:
             return "Need to teardown heavy weapon first."
-            
         
         return False
+
+    
+    def use(self):
+        self.ap -= 1
+        self.last_action = 'use'
+
+    
+    def taunt(self):
+        self.ap -= 1
+        self.last_action = 'taunt'
+        
+        
 
 #-----------------------------------------------------------------------
 def loadUnit( name, engine ):

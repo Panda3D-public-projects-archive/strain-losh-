@@ -26,6 +26,7 @@ _TILE_RESET             = "_tile_reset"
 _UNIT_HOVERED           = "_unit_hovered"
 _UNIT_RESET             = "_unit_reset"    
 
+#TODO: ovo je kopirano iz unit.py
 HEADING_NONE      = 0
 HEADING_NW        = 1
 HEADING_N         = 2
@@ -633,6 +634,7 @@ class Interface(DirectObject.DirectObject):
     def toggleOverwatch(self):
         unit = self.parent.units[self.parent.sel_unit_id]
         ClientMsg.overwatch( self.parent.sel_unit_id )
+        ClientMsg.taunt( self.parent.sel_unit_id )
         
     def toggleSetUp(self):
         unit = self.parent.units[self.parent.sel_unit_id]
