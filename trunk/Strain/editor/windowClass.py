@@ -2,6 +2,7 @@ import sys
 import copy
 from gtk.gdk import *
 import pango #@UnresolvedImport
+import os.path
 
 try:
     import pygtk #@UnresolvedImport
@@ -23,7 +24,7 @@ from strain.share import *
 
 class LevelEditor:
     
-    level = Level( "level2.txt" ) #@UndefinedVariable
+    level = Level() #@UndefinedVariable
 
     #size of boxes drawn on the editor
     rectSize = 20
@@ -37,6 +38,7 @@ class LevelEditor:
     left_button_down = 0
     right_button_down = 0
     
+    
     def __init__( self ):
         
         #Set the Glade file
@@ -48,6 +50,7 @@ class LevelEditor:
         if ( self.window ):
             self.window.connect( "destroy", gtk.main_quit )
             
+        self.wls = ['Wall1', 'Wall2', 'HalfWall', 'Ruin', 'ClosedDoor', 'OpenedDoor', 'ForceField']
             
         #Create our dictionary and connect it
         dic = {"on_ClearLevel_clicked" : self.on_ClearLevel_clicked,
@@ -67,17 +70,21 @@ class LevelEditor:
                "on_MainWindow_destroy" : gtk.main_quit }
         self.wTree.signal_autoconnect( dic )
 
+
     def on_spinbuttoncolumns_event( self, widget, event ):
         #print event.type
         pass
+
 
     def on_spinbuttonrows_map_event( self, widget, event ):
         #widget.set_value( self.level.maxY )
         self.updateSpinButtonRows( self.level.maxY )
         
+        
     def on_spinbuttoncolumns_map_event( self, widget, event ):
         #widget.set_value( self.level.maxX )
         self.updateSpinButtonColumns( self.level.maxX )
+
 
     def on_drawingarea1_motion_notify_event( self, widget, event ):        
         #convert screen coords to level coords
@@ -92,6 +99,7 @@ class LevelEditor:
             if self.level.markElement( tmpX, tmpY, 0 ):
                 self.drawLevel( tmpX, tmpY )"""               
     
+    
     def on_ClearLevel_clicked( self, widget ):
         x = self.level.maxX
         y = self.level.maxY
@@ -101,11 +109,13 @@ class LevelEditor:
         self.level.changeRowNumber( y )                                
         self.updateDrawingArea()
         
+        
     def on_drawingarea1_event( self, widget, event ):
         #print event.type
         #if event.type == gtk.gdk.MAP:
         #    print "mapa"
         pass
+        
         
     def on_spinbuttoncolumns_value_changed( self, widget ):
         
@@ -118,6 +128,7 @@ class LevelEditor:
         self.level.changeColumnNumber( widget.get_value() )
         self.updateDrawingArea()
    
+   
     def on_spinbuttonrows_value_changed( self, widget ):
         
         #prevent this from going to 0 if it was not 1 first
@@ -129,68 +140,85 @@ class LevelEditor:
         self.level.changeRowNumber( widget.get_value() )           
         self.updateDrawingArea()
         
+        
     def updateSpinButtonRows( self, value ):
         widget = self.wTree.get_widget( "spinbuttonrows" )
         widget.set_value( value )
+        
         
     def updateSpinButtonColumns( self, value ):
         widget = self.wTree.get_widget( "spinbuttoncolumns" )
         widget.set_value( value )
         
+        
     def on_saveButton_clicked( self, widget ):
         self.saveLevelToFile( widget.parent )
+            
             
     def on_loadButton_clicked( self, widget ):
         self.loadLevel()
 
+
     def loadLevel( self ):
         
         dialog = gtk.FileChooserDialog( 
-                                       title="Open level",
+                                       title="Load level",
                                        parent=self.wTree.get_widget( "MainWindow" ),
                                        action=gtk.FILE_CHOOSER_ACTION_OPEN,
                                        buttons=( gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
-                                        gtk.STOCK_OPEN, gtk.RESPONSE_OK ),
-                                       backend="/home/krav" )                                       
+                                        gtk.STOCK_OPEN, gtk.RESPONSE_OK )
+                                        )                                       
+    
+        dialog.set_current_folder(".")
     
         if dialog.run() != gtk.RESPONSE_OK:
+            dialog.destroy()
             return 
         
         filename = dialog.get_filename()
         
         dialog.destroy()            
         
-        self.level.loadFromFile( filename )
+        self.level.load( filename )
         self.updateSpinButtonColumns( self.level.maxX )
         self.updateSpinButtonRows( self.level.maxY )
         self.drawLevel()
+    
     
     def on_writeLevel_clicked( self, widget ):
         print "level::rows=", self.level.maxY, "::::cols=", self.level.maxX
         for row in self.level._data:
             print row
     
+    
     def saveLevelToFile( self, window=None ):
-        """Dump level to a file""" 
-        """
+        
         dialog = gtk.FileChooserDialog( 
                                        title="Save level",
                                        parent=self.wTree.get_widget( "MainWindow" ),
                                        action=gtk.FILE_CHOOSER_ACTION_SAVE,
                                        buttons=( gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
-                                        gtk.STOCK_OPEN, gtk.RESPONSE_OK )#,
-                                       #backend="/home/krav" 
+                                        gtk.STOCK_SAVE, gtk.RESPONSE_OK ) 
                                        )
     
+    
+        #dialog.set_current_folder(".")
+    
         if dialog.run() != gtk.RESPONSE_OK:
+            dialog.destroy()
             return 
+    
         
-        filename = dialog.get_filename()
-        #filename = "level.txt"
+        filename = dialog.get_filename()        
+        dialog.destroy()                
         
-        dialog.destroy()        
+        #append .txt if not already
+        ext = os.path.splitext(filename)
+        if ext[1] != ".txt":
+            filename += ".txt"             
         
-        self.level.saveToFile( filename )
+        
+        self.level.saveLevel( filename )
 
         #show OK message
         dialog = gtk.MessageDialog( 
@@ -204,9 +232,8 @@ class LevelEditor:
         #needed so the dialog closes when OK is pressed
         dialog.connect( 'response', lambda dialog, response: dialog.destroy() )
         dialog.show()
-        """
-        self.level.saveLevel()
-           
+        
+                   
                     
     def on_drawingarea1_button_release_event( self, widget, event ):
         if event.button == 1:
@@ -218,13 +245,11 @@ class LevelEditor:
     def on_drawingarea1_button_press_event( self, widget, event ):
         # gtk.gdk.BUTTON_PRESS | gtk.gdk._2BUTTON_PRESS
 
-        if event.x > (self.level.maxX * (self.borderSize + self.rectSize)) + self.borderSize:
+        if event.x >= (self.level.maxX * (self.borderSize + self.rectSize)) + self.borderSize:
             return
         
-        if event.y > (self.level.maxY * (self.borderSize + self.rectSize)) + self.borderSize:
+        if event.y >= (self.level.maxY * (self.borderSize + self.rectSize)) + self.borderSize:
             return
-
-        wls = ['Wall1', 'Wall2', 'HalfWall', 'Ruin', 'ClosedDoor', 'OpenedDoor', 'ForceField']
         
         if event.type == gtk.gdk.BUTTON_PRESS:    
             tmpX = int( ( event.x ) / (self.rectSize+self.borderSize)  )
@@ -245,12 +270,12 @@ class LevelEditor:
                 if event.button == 1:
                     elmt = self.level._grid[ 2*tmpX+1][(2*tmpY)+2]                     
                     if elmt:
-                        idx = wls.index( elmt.name ) + 1
-                        if idx == len(wls):
+                        idx = self.wls.index( elmt.name ) + 1
+                        if idx == len(self.wls):
                             idx = 0
                     else:
                         idx = 0
-                    self.level._grid[ 2*tmpX+1][(2*tmpY)+2] = self.level._walls[ wls[idx] ]
+                    self.level._grid[ 2*tmpX+1][(2*tmpY)+2] = self.level._walls[ self.wls[idx] ]
                     print self.level._grid[ 2*tmpX+1][(2*tmpY)+2].name
                 if event.button == 3:                    
                     self.level._grid[ 2*tmpX+1][(2*tmpY)+2] = 0
@@ -259,12 +284,12 @@ class LevelEditor:
                 if event.button == 1:                    
                     elmt = self.level._grid[ 2*tmpX][(2*tmpY)+1]                     
                     if elmt:
-                        idx = wls.index( elmt.name ) + 1
-                        if idx == len(wls):
+                        idx = self.wls.index( elmt.name ) + 1
+                        if idx == len(self.wls):
                             idx = 0
                     else:
                         idx = 0
-                    self.level._grid[ 2*tmpX][(2*tmpY)+1] = self.level._walls[ wls[idx] ]
+                    self.level._grid[ 2*tmpX][(2*tmpY)+1] = self.level._walls[ self.wls[idx] ]
                     print self.level._grid[ 2*tmpX][(2*tmpY)+1].name
                 if event.button == 3:                    
                     self.level._grid[ 2*tmpX][(2*tmpY)+1] = 0
@@ -272,9 +297,12 @@ class LevelEditor:
 
         self.updateDrawingArea()
             
+            
     def drawLine( self, widget, x1, y1, x2, y2 ):
         """Draws a line between the given points"""   
-        gdkwindow = widget.window        
+        gdkwindow = widget.window      
+        #self.gcGrey.set_foreground( gtk.gdk.Color(blue=1) ) 
+        #self.gcGrey.set_background( gtk.gdk.Color(blue=1) ) 
         gdkwindow.draw_line( self.gcGrey, x1, y1, x2, y2 )
 
 
@@ -290,23 +318,61 @@ class LevelEditor:
 
 
     def on_drawingarea1_expose_event( self, widget, event ):
+
+        colormap = widget.get_colormap()
         
-        mycolor = Color( '#FF0078' )
-           
-        self.gcWhite = widget.window.new_gc( foreground=mycolor )
-        self.gcGrey = widget.window.new_gc( foreground = gtk.gdk.Color( blue = 65000 ) )
-        self.gc = widget.window.new_gc()
+        self.wall_colors = [widget.window.new_gc( foreground=colormap.alloc_color('Black') ), 
+                            widget.window.new_gc( foreground=colormap.alloc_color('Dark blue') ),
+                            widget.window.new_gc( foreground=colormap.alloc_color('grey') ),
+                            widget.window.new_gc( foreground=colormap.alloc_color('white') ),
+                            widget.window.new_gc( foreground=colormap.alloc_color('dark red') ),
+                            widget.window.new_gc( foreground=colormap.alloc_color('red') ),
+                            widget.window.new_gc( foreground=colormap.alloc_color('green') ),
+                            ]
+        
+        red = colormap.alloc_color('#FF0000', True, True)
+        white = colormap.alloc_color('#FFFFFF', True, True)
+        black = colormap.alloc_color('#000', True, True)
+        gray = colormap.alloc_color('Grey')
+        #gray = colormap.alloc_color('Burlywood')
+        #navajowhite = colormap.alloc('')
+        
+        self.gcGrey = widget.window.new_gc( foreground = gray )
+        self.gc = widget.window.new_gc( foreground=black )
+                                
+        #self.gcGrey.set_foreground( gtk.gdk.Color("#FF0078") )
                                 
         self.drawLevel()
+
+
+    def drawVerticalWall(self, x, y, value, widget):
+        #print "value:", value.
+        gdkwindow = widget.window      
+        x1 = x/2 * (self.borderSize + self.rectSize)
+        j = ((self.borderSize+self.rectSize)/2*(y-1))+ self.borderSize
+        for a in xrange( self.borderSize ):            
+            gdkwindow.draw_line( self.wall_colors[ self.wls.index( value.name ) ], x1+a, j, x1+a, j+self.rectSize )            
+
+
+    def drawHorizontalWall(self, x, y, value, widget):
+        gdkwindow = widget.window      
+        #print "value:", value.
+        y1 = y/2 * (self.borderSize + self.rectSize)
+        i = ((self.borderSize+self.rectSize)/2*(x-1))+ self.borderSize
+        for a in xrange( self.borderSize ):
+            gdkwindow.draw_line( self.wall_colors[ self.wls.index( value.name ) ], i, y1+a, i+self.rectSize, y1+a)            
+        
 
 
     def drawLevel( self, inX= - 1, inY= - 1 ):
         widget = self.wTree.get_widget( "drawingarea1" )          
 
+        if not self.level._level_data:
+            return 
+
         lyt = pango.Layout( gtk.Widget.create_pango_context( widget ) )
 
         data = copy.deepcopy( self.level._level_data )
-        
         for l in data:
             l.reverse()
 
@@ -329,26 +395,18 @@ class LevelEditor:
         grid = copy.deepcopy(self.level._grid)
         for l in grid:
             l.reverse()
-    
+            
         for x in xrange( self.level.maxX*2 +1):
             for y in xrange( self.level.maxY*2 +1):
                 if not grid[x][y]:
                     continue
                 #vertical walls
                 if x % 2 == 0 and y % 2 == 1:
-                    x1 = x/2 * (self.borderSize + self.rectSize)
-                    j = ((self.borderSize+self.rectSize)/2*(y-1))+ self.borderSize
-                    for a in xrange( self.borderSize ):
-                        self.drawLine(widget, x1+a, j, x1+a, j+self.rectSize)
+                    self.drawVerticalWall( x, y, grid[x][y], widget )
                         
                 #horizontal walls
                 if y % 2 == 0 and x % 2 == 1:
-                    y1 = y/2 * (self.borderSize + self.rectSize)
-                    i = ((self.borderSize+self.rectSize)/2*(x-1))+ self.borderSize
-                    for a in xrange( self.borderSize ):
-                        self.drawLine(widget, i, y1+a, i+self.rectSize, y1+a)
-
-                
+                    self.drawHorizontalWall( x, y, grid[x][y], widget )
         
         #fill squares
         for x in xrange( self.level.maxX ):
