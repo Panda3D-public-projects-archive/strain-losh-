@@ -137,6 +137,10 @@ class Net():
             self.parent.old_level_grid = self.parent.level._grid[:]
             self.parent.level._grid = msg[1]._grid
             self.parent.sgm.level_mesh.processLevel()
+            # if our enemy opens doors, we need to update visibility
+            # enemy's visibility gets updated when he gets UNIT message
+            if self.parent.player != self.parent.turn_player:
+                self.parent.sgm.level_mesh.setInvisibleTiles(self.parent.getInvisibleTiles())
         #========================================================================
         #
         elif msg[0] == USE:
