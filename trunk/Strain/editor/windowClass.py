@@ -199,7 +199,7 @@ class LevelEditor:
         self.updateSpinButtonColumns( self.level.maxX )
         self.updateSpinButtonRows( self.level.maxY )
         self.drawLevel()
-    
+        self.updateDrawingArea()
     
     
     def saveLevelToFile( self, window=None ):
@@ -251,6 +251,7 @@ class LevelEditor:
             self.left_button_down = 0
         elif event.button == 3:
             self.right_button_down = 0
+            
             
                     
     def on_drawingarea1_button_press_event( self, widget, event ):
@@ -374,6 +375,10 @@ class LevelEditor:
         for l in data:
             l.reverse()
 
+        deploy_data = copy.deepcopy( self.level._deploy )
+        for l in deploy_data:
+            l.reverse()
+
        
         #draw grid - x
         for i in range( self.level.maxX + 1 ):
@@ -426,6 +431,42 @@ class LevelEditor:
             
                 widget.window.draw_layout( self.gc, sqX + 7, sqY + 3, lyt, None, background )
                 
+                
+        #draw deployment
+        for x in xrange( self.level.maxX ):
+            for y in xrange( self.level.maxY ):
+                
+                if not deploy_data[x][y]:
+                    continue
+                
+                #sqX = self.borderSize + ( (self.rectSize+self.borderSize) * x ) #+ x
+                #sqY = self.borderSize + ( (self.rectSize+self.borderSize) * y ) #+ y
+            
+                self.drawDeploy(x, y, deploy_data[x][y], widget)    
+                #if deploy_data[x][y] == 1:
+                #    self.drawRect(widget, sqX, sqY, self.rectSize, self.rectSize, 0)
+                #else:
+                #    self.drawRect(widget, sqX, sqY, self.rectSize, self.rectSize, 1)
+                
+                #background = Color( red=35535, green=35535, blue=35535 )
+                #lyt.set_text( str( deploy_data[x][y]))     
+            
+                #widget.window.draw_layout( self.gc, sqX + 7, sqY + 3, lyt, None, background )
+        
+                
+    def drawDeploy(self, x, y, value, widget):
+        sqX = self.borderSize + ( (self.rectSize+self.borderSize) * x ) #+ x
+        sqY = self.borderSize + ( (self.rectSize+self.borderSize) * y ) #+ y
+
+        colors = [ 0, self.gcRed, self.gcBlue ]
+        
+        gdkwindow = widget.window      
+ 
+        #gdkwindow.draw_line( colors[value], sqX, sqY, sqX+5, sqY+5 )
+        gdkwindow.draw_rectangle( colors[value], 0, sqX+1, sqY+1, self.rectSize-1, self.rectSize-1 )
+        
+        pass
+                
 
     def updateDrawingArea( self ):
         widget = self.wTree.get_widget( "drawingarea1" )  
@@ -436,6 +477,7 @@ class LevelEditor:
     def on_drawingarea2_expose_event( self, widget, event ):
         colormap = widget.get_colormap()
         red = colormap.alloc_color('#FF0000', True, True)
+        blue = colormap.alloc_color('#0000FF', True, True)
         white = colormap.alloc_color('#FFFFFF', True, True)
         black = colormap.alloc_color('#000', True, True)
         gray = colormap.alloc_color('Grey')
@@ -444,7 +486,10 @@ class LevelEditor:
         
         self.gcGrey = widget.window.new_gc( foreground = gray )
         self.gc = widget.window.new_gc( foreground=black )
+        self.gcRed = widget.window.new_gc( foreground = red, line_width=3 )
+        self.gcBlue = widget.window.new_gc( foreground = blue, line_width=3 )
                                 
+
         #self.gcGrey.set_foreground( gtk.gdk.Color("#FF0078") )
                                 
         self.drawLegend()
@@ -456,8 +501,10 @@ class LevelEditor:
         lyt = pango.Layout( gtk.Widget.create_pango_context( widget ) )
         
         background = Color( red=35535, green=35535, blue=35535 )
+        maxI = 0
         
         for i in xrange( len( self.wls) ):
+            maxI = i
             #self.drawHorizontalWall( 10, i*30, i, widget )
             x = 0
             y = i*30+10
@@ -467,6 +514,15 @@ class LevelEditor:
 
             lyt.set_text( self.wls[i] )
             widget.window.draw_layout( self.wall_colors[0], 0, i*30+20, lyt, None, background )
+        
+        maxI += 1
+        widget.window.draw_rectangle( self.gcRed, 0, 1, maxI*30+20, self.rectSize-1, self.rectSize-1 )
+        lyt.set_text( "Red deploy" )
+        widget.window.draw_layout( self.wall_colors[0], 0, maxI*30+41, lyt, None, background )
+        
+        widget.window.draw_rectangle( self.gcBlue, 0, 1, maxI*30+60, self.rectSize-1, self.rectSize-1 )
+        lyt.set_text( "Blue deploy" )
+        widget.window.draw_layout( self.wall_colors[0], 0, maxI*30+81, lyt, None, background )
         
         
         
