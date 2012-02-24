@@ -164,6 +164,7 @@ class UnitModel:
                 self.lwp.reparentTo(lnp)
         
         self.model.setShaderAuto()
+        
     def pauseAllAnims(self):
         self.overwatch_anim.pause()
         self.standup_anim.pause()
