@@ -764,11 +764,83 @@ class Level:
         #we make this so its size is the same as level 
         self._dynamics = [[ None ] * self.maxY for i in xrange(self.maxX)] #@UnusedVariable
 
-    def changeRowNumber(self, a):
-        pass
-    
-    def changeColumnNumber(self, a):
-        pass
+
+    def changeRowNumber(self, newY):
+        #y
+        newY = int( newY )
+        
+        if self.maxY == newY:
+            return
+        
+        if newY > self.maxY:
+            delta = newY - self.maxY
+        
+            self.maxY = newY
+            self.maxgridY = 2 * self.maxY + 2
+            
+            for i in xrange( delta ):
+                for i in self._level_data:
+                    i.append( 0 )
+                for i in self._dynamics:
+                    i.append( None )
+                
+                for i in self._grid:
+                    i.append( None )
+                    i.append( None )
+
+                        
+        elif newY < self.maxY:
+            delta = self.maxY - newY
+                    
+            self.maxY = newY
+            self.maxgridY = 2 * self.maxY + 2
+
+            for i in xrange( delta ):            
+                for i in self._level_data:
+                    i.pop()            
+                for i in self._dynamics:
+                    i.pop()            
+                
+                for i in self._grid:
+                    i.pop()            
+                    i.pop()            
+        
+        
+        
+    def changeColumnNumber(self, newX):
+        #x
+        newX = int( newX )
+
+        if self.maxX == newX:
+            return
+        
+        if newX > self.maxX:
+            delta = newX - self.maxX
+
+            self.maxX = newX        
+            self.maxgridX = 2 * self.maxX + 2
+            
+            for i in xrange( delta ):    
+                self._level_data.append( [0] * self.maxY )
+                self._dynamics.append( [None] * self.maxY )
+            
+                self._grid.append( [None] * (2*self.maxY+1) ) 
+                self._grid.append( [None] * (2*self.maxY+1) ) 
+        
+        
+        elif newX < self.maxX:
+            delta = self.maxX - newX
+                    
+            self.maxX = newX            
+            self.maxgridX = 2 * self.maxX + 2
+            
+            for i in xrange( delta ):
+                self._level_data.pop()
+                self._dynamics.pop()
+                
+                self._grid.pop() 
+                self._grid.pop() 
+        
 
     def increaseElement(self, x, y ):
         self._level_data[x][y] = self._level_data[x][y] + 1
@@ -780,9 +852,9 @@ class Level:
         if self._level_data[x][y] < 0:
             self._level_data[x][y] = 0
 
-    def saveLevel(self):
+    def saveLevel(self, name):
         
-        fajl = open( self.name, "w" )
+        fajl = open( name, "w" )
         
         fajl.write( str(self.maxX) + " " + str(self.maxY) + "\n"  )
         
