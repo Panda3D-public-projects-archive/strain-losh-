@@ -110,8 +110,16 @@ class VoxelGenerator():
         for x in xrange(0, self.level.maxX):
             for y in xrange(0, self.level.maxY):
                 if self.level.getHeight( (x, y) ) == 0:
-                    model = loader.loadModel('halfcube')
-                    model.setPos(x, y, 0)
+                    
+                    if (x == 0 or x == self.level.maxX-1) or (y==0 or y==self.level.maxY-1):
+                        model = loader.loadModel('halfcube')
+                        model.setPos(x, y, 0)
+                    else:
+                        model = loader.loadModel('flattile')
+                        model.setPos(x, y, utils.GROUND_LEVEL)
+                    
+                    #model = loader.loadModel('halfcube')
+                    #model.setPos(x, y, 0)                        
                     model.reparentTo(self.floor_np_list[int(x/self.chunk_size[0])][int(y/self.chunk_size[1])])
                     self.floor_tile_dict[(x,y)] = model
                 elif self.level.getHeight( (x, y) ) == 1:                    
@@ -127,8 +135,17 @@ class VoxelGenerator():
                 else:
                     for i in xrange(0, self.level.getHeight( (x, y) )):
                         if i == 0:
-                            model = loader.loadModel('halfcube')
-                            model.setPos(x, y, 0)
+                            
+                            if (x == 0 or x == self.level.maxX-1) or (y==0 or y==self.level.maxY-1):
+                                model = loader.loadModel('halfcube')
+                                model.setPos(x, y, 0)
+                            else:
+                                model = loader.loadModel('flattile')
+                                model.setPos(x, y, utils.GROUND_LEVEL)
+                            
+                            #model = loader.loadModel('halfcube')
+                            #model.setPos(x, y, 0)
+                            
                             model.reparentTo(self.floor_np_list[int(x/self.chunk_size[0])][int(y/self.chunk_size[1])])
                             self.floor_tile_dict[(x,y)] = model
                         else:
