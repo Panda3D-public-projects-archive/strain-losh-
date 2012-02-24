@@ -678,6 +678,7 @@ class Level:
         self.maxgridX = 0
         self.maxgridY = 0        
         self._level_data = []    
+        self._deploy = []    
         self._dynamics = []
         self._grid = []
         self._walls = {}
@@ -712,6 +713,11 @@ class Level:
         self.maxgridX = 2 * self.maxX + 2
         self.maxgridY = 2 * self.maxY + 2
         
+        #we make this so its size is the same as level 
+        self._dynamics = [[ None ] * self.maxY for i in xrange(self.maxX)] #@UnusedVariable
+        self._deploy = [[ None ] * self.maxY for i in xrange(self.maxX)] #@UnusedVariable
+        
+        
         self._grid = [[ None ] * (2*self.maxY+1) for i in xrange(2*self.maxX+1)] #@UnusedVariable
         
         
@@ -739,15 +745,27 @@ class Level:
             #put wall in grid
             self._grid[ x ][ y ] = wall_type
 
+
+        #--------------------------load deployment tiles----------------------------------
+        
+        in_deploy = False
+        for line in lvl_file:
+            line = line.strip()
+            if not in_deploy and line != 'DEPLOY':
+                continue         
+            in_deploy = True
             
-            #TODO: krav: ovo maknut:put flag in all nodes touching this wall
-            if x % 2 == 0:
-                self._grid[ x ][ y + 1 ] = wall_type
-                self._grid[ x ][ y - 1 ] = wall_type
-            else:
-                self._grid[ x + 1][ y ] = wall_type
-                self._grid[ x - 1][ y ] = wall_type
-                
+            if line == 'DEPLOY':
+                continue
+            if line == '/DEPLOY':
+                break
+            
+            s = line.split(',')        
+            x = int(s[0])
+            y = int(s[1])
+            self._deploy[ x ][ y ] = int(s[2])
+
+
                 
         lvl_file.close()
         self._level_data.reverse()
@@ -761,8 +779,6 @@ class Level:
                 tmp[i][j] = self._level_data[j][i]
         self._level_data = tmp 
 
-        #we make this so its size is the same as level 
-        self._dynamics = [[ None ] * self.maxY for i in xrange(self.maxX)] #@UnusedVariable
 
 
     def changeRowNumber(self, newY):
@@ -783,6 +799,8 @@ class Level:
                     i.append( 0 )
                 for i in self._dynamics:
                     i.append( None )
+                for i in self._deploy:
+                    i.append( None )
                 
                 for i in self._grid:
                     i.append( None )
@@ -799,6 +817,8 @@ class Level:
                 for i in self._level_data:
                     i.pop()            
                 for i in self._dynamics:
+                    i.pop()            
+                for i in self._deploy:
                     i.pop()            
                 
                 for i in self._grid:
@@ -823,6 +843,7 @@ class Level:
             for i in xrange( delta ):    
                 self._level_data.append( [0] * self.maxY )
                 self._dynamics.append( [None] * self.maxY )
+                self._deploy.append( [None] * self.maxY )
             
                 self._grid.append( [None] * (2*self.maxY+1) ) 
                 self._grid.append( [None] * (2*self.maxY+1) ) 
@@ -837,6 +858,7 @@ class Level:
             for i in xrange( delta ):
                 self._level_data.pop()
                 self._dynamics.pop()
+                self._deploy.pop()
                 
                 self._grid.pop() 
                 self._grid.pop() 
@@ -846,11 +868,31 @@ class Level:
         self._level_data[x][y] = self._level_data[x][y] + 1
         if self._level_data[x][y] > 5:
             self._level_data[x][y] = 5
+        self._deploy[x][y] = None
                 
     def decreaseElement(self, x, y ):
         self._level_data[x][y] = self._level_data[x][y] - 1
         if self._level_data[x][y] < 0:
             self._level_data[x][y] = 0
+            self.changeDeploy(x, y)
+            
+
+
+    def changeDeploy(self, x, y):
+        
+        if not self._deploy[x][y]:
+            self._deploy[x][y] = 1
+            return
+        
+        if self._deploy[x][y] == 1:
+            self._deploy[x][y] = 2
+            return
+        
+        if self._deploy[x][y] == 2:
+            self._deploy[x][y] = 1
+            return
+        
+
 
     def saveLevel(self, name):
         
@@ -869,8 +911,7 @@ class Level:
                 fajl.write( str(data[x][y]) + ";" )
             fajl.write( "\n" )
             
-        fajl.write("\n\n\nGRID\n")
-        
+        fajl.write("\n\n\nGRID\n")        
         for x in xrange( self.maxX*2+1):
             for y in xrange( self.maxY*2+1):
                 if x % 2 == 0 and y % 2 == 0:
@@ -879,8 +920,16 @@ class Level:
                     continue
         
                 fajl.write( str(x) + ',' + str(y) + ',' + self._grid[x][y].name + '\n' )
-        
         fajl.write("/GRID\n")
+        
+        
+        fajl.write("\n\n\nDEPLOY\n")        
+        for x in xrange( self.maxX ):
+            for y in xrange( self.maxY ):
+                if not self._deploy[x][y]:
+                    continue
+                fajl.write( str(x) + ',' + str(y) + ',' + str(self._deploy[x][y]) + '\n' )
+        fajl.write("/DEPLOY\n")
         
         
         

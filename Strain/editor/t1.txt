@@ -19,3 +19,12 @@ GRID
 8,1,Wall1
 8,13,Wall2
 /GRID
+
+
+
+DEPLOY
+0,1,1
+1,0,1
+2,6,2
+3,5,2
+/DEPLOY
