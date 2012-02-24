@@ -36,10 +36,10 @@ class Net():
     def handleMsg(self, msg):
         """Handles incoming messages."""
         self.log.info("Received message: %s", msg[0])
-        #print '--------START------------'
-        #print 'Incoming message', msg[0]
-        #print 'Message body', msg[1]
-        #print '----------END----------'
+        print '--------START------------'
+        print 'Incoming message', msg[0]
+        print 'Message body', msg[1]
+        print '----------END----------'
         #========================================================================
         #
         if msg[0] == ENGINE_STATE:
@@ -99,7 +99,7 @@ class Net():
                 self.parent.interface.refreshUnitData( unit['id'] )
                 self.parent.sgm.showUnitAvailMove( unit['id'] )
                 self.parent.sgm.showVisibleEnemies(unit['id'])
-                if unit['pos'][0] != old_x or unit['pos'][1] != old_y:
+                if unit['pos'][0] != old_x or unit['pos'][1] != old_y or unit['last_action']=='use':
                     m = self.parent.getInvisibleTiles()
                     self.parent.sgm.level_mesh.setInvisibleTiles(m)
                 self.parent.sgm.playUnitStateAnim( unit['id'] )
