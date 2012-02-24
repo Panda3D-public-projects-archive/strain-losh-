@@ -8,7 +8,7 @@ import time
 # panda3D imports
 from panda3d.core import TextNode, NodePath, Point2, Point3#@UnresolvedImport
 from panda3d.core import ConfigVariableString, ConfigVariableInt#@UnresolvedImport
-from direct.interval.IntervalGlobal import Sequence, Parallel, Func, Wait#@UnresolvedImport
+from direct.interval.IntervalGlobal import Sequence, Parallel, Func, Wait, LerpColorScaleInterval#@UnresolvedImport
 from direct.showbase.DirectObject import DirectObject
 from direct.fsm import FSM
 
@@ -508,10 +508,14 @@ class Client(DirectObject):
                 target_anim = target_unit.model.actorInterval("get_hit")
                 dmg = 'miss'                
             elif damage_type == "damage":
-                target_anim = target_unit.model.actorInterval("get_hit")
+                color_interval = Sequence(LerpColorScaleInterval(target_unit.model, 0.2, (10,10,10,1))
+                                         ,LerpColorScaleInterval(target_unit.model, 0.2, (1,1,1,1)))
+                target_anim = Parallel(target_unit.model.actorInterval("get_hit"), color_interval)
                 dmg = str(action[2])
             elif damage_type == "kill":
-                target_anim = Sequence(target_unit.model.actorInterval("die"))
+                color_interval = Sequence(LerpColorScaleInterval(target_unit.model, 0.2, (10,10,10,1))
+                                         ,LerpColorScaleInterval(target_unit.model, 0.2, (1,1,1,1)))                
+                target_anim = Parallel(target_unit.model.actorInterval("die"), color_interval)
                 dmg = str(action[2])
             t.setText( "%s" % dmg)
             t.setTextColor(1, 0, 0, 1)
