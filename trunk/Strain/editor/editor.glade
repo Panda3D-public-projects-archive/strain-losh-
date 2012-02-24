@@ -66,13 +66,16 @@
               </packing>
             </child>
             <child>
-              <widget class="GtkButton" id="writeLevel">
+              <widget class="GtkDrawingArea" id="drawingarea2">
+                <!--<property name="width_request">800</property>
+                <property name="height_request">800</property>-->
                 <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="label" translatable="yes">writeLevel</property>
-                <property name="response_id">0</property>
-                <signal name="clicked" handler="on_writeLevel_clicked"/>
+                <property name="app_paintable">True</property>
+                <property name="events">GDK_EXPOSURE_MASK | GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_MOTION_MASK | GDK_BUTTON1_MOTION_MASK | GDK_BUTTON2_MOTION_MASK | GDK_BUTTON3_MOTION_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK | GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK | GDK_FOCUS_CHANGE_MASK | GDK_STRUCTURE_MASK | GDK_PROPERTY_CHANGE_MASK | GDK_VISIBILITY_NOTIFY_MASK | GDK_PROXIMITY_IN_MASK | GDK_PROXIMITY_OUT_MASK | GDK_SUBSTRUCTURE_MASK | GDK_SCROLL_MASK</property>
+                <!--<signal name="button_press_event" handler="on_drawingarea2_button_press_event"/>
+                <signal name="motion_notify_event" handler="on_drawingarea2_motion_notify_event"/>
+                <signal name="button_release_event" handler="on_drawingarea2_button_release_event"/>-->
+                <signal name="expose_event" handler="on_drawingarea2_expose_event"/>
               </widget>
               <packing>
                 <property name="position">3</property>

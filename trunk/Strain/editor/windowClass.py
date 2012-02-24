@@ -50,11 +50,9 @@ class LevelEditor:
         if ( self.window ):
             self.window.connect( "destroy", gtk.main_quit )
             
-        self.wls = ['Wall1', 'Wall2', 'HalfWall', 'Ruin', 'ClosedDoor', 'OpenedDoor', 'ForceField']
             
         #Create our dictionary and connect it
         dic = {"on_ClearLevel_clicked" : self.on_ClearLevel_clicked,
-               "on_writeLevel_clicked" : self.on_writeLevel_clicked,
                "on_spinbuttoncolumns_event" : self.on_spinbuttoncolumns_event, #debug
                "on_spinbuttonrows_map_event" : self.on_spinbuttonrows_map_event,
                "on_spinbuttoncolumns_map_event" : self.on_spinbuttoncolumns_map_event,
@@ -63,12 +61,30 @@ class LevelEditor:
                "on_spinbuttoncolumns_value_changed" : self.on_spinbuttoncolumns_value_changed,
                "on_spinbuttonrows_value_changed" : self.on_spinbuttonrows_value_changed,
                "on_drawingarea1_expose_event" : self.on_drawingarea1_expose_event,
+               "on_drawingarea2_expose_event" : self.on_drawingarea2_expose_event,
                "on_drawingarea1_button_press_event": self.on_drawingarea1_button_press_event,
                "on_drawingarea1_button_release_event" : self. on_drawingarea1_button_release_event,
                "on_saveButton_clicked" : self.on_saveButton_clicked,
                "on_loadButton_clicked" : self.on_loadButton_clicked,
                "on_MainWindow_destroy" : gtk.main_quit }
         self.wTree.signal_autoconnect( dic )
+
+
+
+        self.wls = ['Wall1', 'Wall2', 'HalfWall', 'Ruin', 'ClosedDoor', 'OpenedDoor', 'ForceField']
+        widget = self.wTree.get_widget( "drawingarea1" )        
+        colormap = widget.get_colormap()
+        
+        self.wall_colors = [widget.window.new_gc( foreground=colormap.alloc_color('Black') ), 
+                            widget.window.new_gc( foreground=colormap.alloc_color('Dark blue') ),
+                            widget.window.new_gc( foreground=colormap.alloc_color('grey') ),
+                            widget.window.new_gc( foreground=colormap.alloc_color('white') ),
+                            widget.window.new_gc( foreground=colormap.alloc_color('dark red') ),
+                            widget.window.new_gc( foreground=colormap.alloc_color('red') ),
+                            widget.window.new_gc( foreground=colormap.alloc_color('green') ),
+                            ]
+
+
 
 
     def on_spinbuttoncolumns_event( self, widget, event ):
@@ -185,11 +201,6 @@ class LevelEditor:
         self.drawLevel()
     
     
-    def on_writeLevel_clicked( self, widget ):
-        print "level::rows=", self.level.maxY, "::::cols=", self.level.maxX
-        for row in self.level._data:
-            print row
-    
     
     def saveLevelToFile( self, window=None ):
         
@@ -276,7 +287,7 @@ class LevelEditor:
                     else:
                         idx = 0
                     self.level._grid[ 2*tmpX+1][(2*tmpY)+2] = self.level._walls[ self.wls[idx] ]
-                    print self.level._grid[ 2*tmpX+1][(2*tmpY)+2].name
+                    #print self.level._grid[ 2*tmpX+1][(2*tmpY)+2].name
                 if event.button == 3:                    
                     self.level._grid[ 2*tmpX+1][(2*tmpY)+2] = 0
 
@@ -290,7 +301,7 @@ class LevelEditor:
                     else:
                         idx = 0
                     self.level._grid[ 2*tmpX][(2*tmpY)+1] = self.level._walls[ self.wls[idx] ]
-                    print self.level._grid[ 2*tmpX][(2*tmpY)+1].name
+                    #print self.level._grid[ 2*tmpX][(2*tmpY)+1].name
                 if event.button == 3:                    
                     self.level._grid[ 2*tmpX][(2*tmpY)+1] = 0
 
@@ -318,18 +329,7 @@ class LevelEditor:
 
 
     def on_drawingarea1_expose_event( self, widget, event ):
-
         colormap = widget.get_colormap()
-        
-        self.wall_colors = [widget.window.new_gc( foreground=colormap.alloc_color('Black') ), 
-                            widget.window.new_gc( foreground=colormap.alloc_color('Dark blue') ),
-                            widget.window.new_gc( foreground=colormap.alloc_color('grey') ),
-                            widget.window.new_gc( foreground=colormap.alloc_color('white') ),
-                            widget.window.new_gc( foreground=colormap.alloc_color('dark red') ),
-                            widget.window.new_gc( foreground=colormap.alloc_color('red') ),
-                            widget.window.new_gc( foreground=colormap.alloc_color('green') ),
-                            ]
-        
         red = colormap.alloc_color('#FF0000', True, True)
         white = colormap.alloc_color('#FFFFFF', True, True)
         black = colormap.alloc_color('#000', True, True)
@@ -346,21 +346,19 @@ class LevelEditor:
 
 
     def drawVerticalWall(self, x, y, value, widget):
-        #print "value:", value.
         gdkwindow = widget.window      
         x1 = x/2 * (self.borderSize + self.rectSize)
         j = ((self.borderSize+self.rectSize)/2*(y-1))+ self.borderSize
         for a in xrange( self.borderSize ):            
-            gdkwindow.draw_line( self.wall_colors[ self.wls.index( value.name ) ], x1+a, j, x1+a, j+self.rectSize )            
+            gdkwindow.draw_line( self.wall_colors[ value ], x1+a, j, x1+a, j+self.rectSize )            
 
 
     def drawHorizontalWall(self, x, y, value, widget):
         gdkwindow = widget.window      
-        #print "value:", value.
         y1 = y/2 * (self.borderSize + self.rectSize)
         i = ((self.borderSize+self.rectSize)/2*(x-1))+ self.borderSize
         for a in xrange( self.borderSize ):
-            gdkwindow.draw_line( self.wall_colors[ self.wls.index( value.name ) ], i, y1+a, i+self.rectSize, y1+a)            
+            gdkwindow.draw_line( self.wall_colors[ value ], i, y1+a, i+self.rectSize, y1+a)            
         
 
 
@@ -402,11 +400,11 @@ class LevelEditor:
                     continue
                 #vertical walls
                 if x % 2 == 0 and y % 2 == 1:
-                    self.drawVerticalWall( x, y, grid[x][y], widget )
+                    self.drawVerticalWall( x, y, self.wls.index( grid[x][y].name ), widget )
                         
                 #horizontal walls
                 if y % 2 == 0 and x % 2 == 1:
-                    self.drawHorizontalWall( x, y, grid[x][y], widget )
+                    self.drawHorizontalWall( x, y, self.wls.index( grid[x][y].name )  , widget )
         
         #fill squares
         for x in xrange( self.level.maxX ):
@@ -428,10 +426,49 @@ class LevelEditor:
             
                 widget.window.draw_layout( self.gc, sqX + 7, sqY + 3, lyt, None, background )
                 
-                    
-
 
     def updateDrawingArea( self ):
         widget = self.wTree.get_widget( "drawingarea1" )  
         widget.queue_draw()
+        
+        
+        
+    def on_drawingarea2_expose_event( self, widget, event ):
+        colormap = widget.get_colormap()
+        red = colormap.alloc_color('#FF0000', True, True)
+        white = colormap.alloc_color('#FFFFFF', True, True)
+        black = colormap.alloc_color('#000', True, True)
+        gray = colormap.alloc_color('Grey')
+        #gray = colormap.alloc_color('Burlywood')
+        #navajowhite = colormap.alloc('')
+        
+        self.gcGrey = widget.window.new_gc( foreground = gray )
+        self.gc = widget.window.new_gc( foreground=black )
+                                
+        #self.gcGrey.set_foreground( gtk.gdk.Color("#FF0078") )
+                                
+        self.drawLegend()
+
+        
+    def drawLegend(self):
+        widget = self.wTree.get_widget( "drawingarea2" )          
+
+        lyt = pango.Layout( gtk.Widget.create_pango_context( widget ) )
+        
+        background = Color( red=35535, green=35535, blue=35535 )
+        
+        for i in xrange( len( self.wls) ):
+            #self.drawHorizontalWall( 10, i*30, i, widget )
+            x = 0
+            y = i*30+10
+
+            for a in xrange( self.borderSize ):
+                widget.window.draw_line( self.wall_colors[ i ], x, y+a, x+self.rectSize, y+a)            
+
+            lyt.set_text( self.wls[i] )
+            widget.window.draw_layout( self.wall_colors[0], 0, i*30+20, lyt, None, background )
+        
+        
+        
+        
         
