@@ -244,6 +244,8 @@ class Engine( Thread ):
             p.addLevelMsg( compiled_level )
         self.observer.addLevelMsg( compiled_level )
         
+        self.updateVisibilityAndSendVanishAndSpotMessages()
+        
         
     def chat(self, msg, source, to_allies):
         sender = self.findPlayer( source )
