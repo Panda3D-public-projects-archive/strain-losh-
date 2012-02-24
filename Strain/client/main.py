@@ -4,7 +4,6 @@
 
 # python imports
 import logging
-import logging.handlers
 
 # panda3D imports
 from direct.showbase.ShowBase import ShowBase#@UnresolvedImport
@@ -41,8 +40,8 @@ class App():
         #print 'Threading', Thread.isThreadingSupported()
         
         #setup logger
-        self.logger = logging.getLogger('ClientLog')        
-        hdlr = logging.handlers.RotatingFileHandler('Client.log', maxBytes = 1024*1024*3 )
+        self.logger = logging.getLogger('ClientLog')
+        hdlr = logging.FileHandler('Client.log')
         formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
         hdlr.setFormatter(formatter)
         self.logger.addHandler(hdlr) 
