@@ -111,6 +111,12 @@ class Net():
             self.parent.handleShoot(msg[1])       
         #========================================================================
         #
+        elif msg[0] == SPOT:
+            self.parent._message_in_process = True
+            self.parent.handleSpot(msg[1])  
+            self.parent.level.putUnitDict(msg[1])      
+        #========================================================================
+        #
         elif msg[0] == VANISH:
             self.parent._message_in_process = True            
             unit_id = msg[1]
