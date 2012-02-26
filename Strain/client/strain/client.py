@@ -540,6 +540,21 @@ class Client(DirectObject):
         s = Sequence(i, Func(self.afterAnimHook))
         s.start()
         
+    def handleSpot(self, unit):
+        self.units[unit['id']] = unit
+        # This is the first time we see this unit, fill out starting variables for move and rotate actions
+        wpn_list = utils.getUnitWeapons(unit)
+        spotted_unit_model = self.sgm.loadUnit(unit['id'], wpn_list)
+
+        pos = Point3(self.units[unit['id']]['pos'][0] + utils.MODEL_OFFSET, 
+                     self.units[unit['id']]['pos'][1] + utils.MODEL_OFFSET,
+                     utils.GROUND_LEVEL
+                     )
+        heading = utils.getHeadingAngle(self.units[unit['id']]['heading'])
+        i = self.buildSpotAnim(spotted_unit_model, pos, heading)
+        s = Sequence(i, Func(self.afterAnimHook))
+        s.start()        
+        
     def handleNewTurn(self):
         self.sgm.level_mesh.setInvisibleTiles(self.getInvisibleTiles())
         text = TextNode('new turn node')
