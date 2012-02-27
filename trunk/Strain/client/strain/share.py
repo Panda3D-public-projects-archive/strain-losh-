@@ -324,11 +324,13 @@ def getTiles2D( t1, t2, level ):
                         if( level.outOfBounds( x+1, y+1 ) ):
                             return False
                         
-                        if level.gridVisionBlocked( _2x+2, _2y+1 ) or level.gridVisionBlocked( _2x+3, _2y+2 ) or level.opaque( x+1, y, 2 ):
-                            right_blocked = True
-                            
-                        if level.gridVisionBlocked( _2x+1, _2y+2 ) or level.gridVisionBlocked( _2x+2, _2y+3 ) or level.opaque( x, y+1, 2):
-                            left_blocked = True
+                        if not right_blocked:
+                            if level.gridVisionBlocked( _2x+2, _2y+1 ) or level.gridVisionBlocked( _2x+3, _2y+2 ) or level.opaque( x+1, y, 2 ):
+                                right_blocked = True
+
+                        if not left_blocked:
+                            if level.gridVisionBlocked( _2x+1, _2y+2 ) or level.gridVisionBlocked( _2x+2, _2y+3 ) or level.opaque( x, y+1, 2):
+                                left_blocked = True
 
                         if right_blocked and left_blocked:
                             return False
