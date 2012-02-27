@@ -186,3 +186,16 @@ def loadUnit(race, type, team):
         tex = loader.loadTexture(unit_type_dict[race][type] + "2.png")
     model.setTexture(tex)
     return model 
+
+#===============================================================================
+# nodeCoordIn2d
+# source by birukoff from Panda3d forums
+# http://www.panda3d.org/forums/viewtopic.php?t=4130
+#===============================================================================
+def nodeCoordIn2d(nodePath):
+    coord3d = nodePath.getPos(base.cam)
+    coord2d = Point2()
+    base.camLens.project(coord3d, coord2d)
+    coordInRender2d = Point3(coord2d[0], 0, coord2d[1])
+    coordInAspect2d = aspect2d.getRelativePoint(render2d, coordInRender2d)
+    return coordInAspect2d
