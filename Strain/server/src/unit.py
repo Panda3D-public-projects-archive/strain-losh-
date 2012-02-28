@@ -108,7 +108,7 @@ class Unit():
         if util.d100() > base:
             ret_lst.append( ('melee', self.id, target.pos, wpn.name, [('miss', target.id)] ) )
         else:
-            ret_lst.append( ('melee', self.id, target.pos, wpn.name, wpn.hitTarget( target ) ) )
+            ret_lst.append( ('melee', self.id, target.pos, wpn.name, [wpn.hitTarget( target )]) )
             
         return ret_lst
 
