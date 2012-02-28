@@ -6,7 +6,7 @@
 import string
 
 # panda3D imports
-from panda3d.core import GeomNode, NodePath, TextureStage, Vec4
+from panda3d.core import GeomNode, NodePath, TextureStage, Vec4, Point2, Point3
 from direct.actor.Actor import Actor
 
 # strain related imports
@@ -190,7 +190,7 @@ def loadUnit(race, type, team):
 #===============================================================================
 # nodeCoordIn2d
 # source by birukoff from Panda3d forums
-# http://www.panda3d.org/forums/viewtopic.php?t=4130
+# http://www.panda3d.org/forums/viewtopic.php?p=22023
 #===============================================================================
 def nodeCoordIn2d(nodePath):
     coord3d = nodePath.getPos(base.cam)
