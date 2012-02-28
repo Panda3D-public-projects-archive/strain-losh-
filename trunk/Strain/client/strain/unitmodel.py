@@ -5,14 +5,16 @@
 # python imports
 
 # panda3D imports
-from panda3d.core import Vec4, Point3, NodePath, CardMaker#@UnresolvedImport
+from panda3d.core import Vec4, Point3, NodePath, CardMaker, TextNode#@UnresolvedImport
 from panda3d.core import PointLight, BitMask32#@UnresolvedImport
 from panda3d.core import TransparencyAttrib, AntialiasAttrib#@UnresolvedImport
 from panda3d.core import CollisionNode, CollisionPolygon#@UnresolvedImport
 from direct.interval.IntervalGlobal import Sequence, LerpColorScaleInterval, LerpColorInterval, Wait#@UnresolvedImport
+from direct.gui.OnscreenText import OnscreenText#@UnresolvedImport
 
 # strain related imports
 import utils
+from share import toHit
     
 #===============================================================================
 # CLASS UnitModel --- DEFINITION
@@ -113,6 +115,8 @@ class UnitModel:
         # DEBUG
         #cnodePath.show()
         self.setCollisionOn()
+        
+        self.target_info_node = None
         
         self.isHovered = False
         self.isSelected = False
@@ -217,11 +221,12 @@ class UnitModel:
         if self.isSelected:
             self.marker.detachNode()
             self.isSelected = False
-            
+    
     def setTargeted(self):
         if self.isEnemyVisible and not self.isTargeted:
             self.marker_interval.loop()
             self.parent.setOutlineShader(self.model, color=Vec4(1,0,0,0)) 
+            self.showTargetInfo()
             self.isTargeted = True 
     
     def clearTargeted(self):
@@ -229,6 +234,7 @@ class UnitModel:
             self.marker_interval.pause()
             self.marker.setColor(1, 0, 0)
             self.parent.clearOutlineShader(self.model)
+            self.clearTargetInfo()
             self.isTargeted = False
             
     def setEnemyVisible(self):
@@ -252,6 +258,24 @@ class UnitModel:
         self.isTargeted = False
         self.isEnemyVisible = False
         
+    def showTargetInfo(self):
+        self.target_info_node = aspect2d.attachNewNode('target_info')
+        self.target_info_node.setPos(utils.nodeCoordIn2d(self.model))
+        shooter = self.parent.parent.units[self.parent.parent.sel_unit_id]
+        target = self.parent.parent.units[int(self.id)]    
+        text = str(toHit(shooter, target, self.parent.parent.level)[0])  + '%\n' + str(toHit(shooter, target, self.parent.parent.level)[1])
+        OnscreenText(parent = self.target_info_node
+                          , text = text
+                          , align=TextNode.ACenter
+                          , scale=0.04
+                          , fg = (1,1,1,1)
+                          , bg = (1,0,0,0.7)
+                          , font = loader.loadFont(utils.GUI_FONT)
+                          , shadow = (0, 0, 0, 1))
+    
+    def clearTargetInfo(self):
+        self.target_info_node.removeNode()
+    
     def calcWorldPos(self, pos):
         return pos + Point3(0.5, 0.5, utils.GROUND_LEVEL)
     
