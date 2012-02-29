@@ -8,7 +8,7 @@
 from panda3d.core import Vec4, Point3, NodePath, CardMaker, TextNode#@UnresolvedImport
 from panda3d.core import PointLight, BitMask32#@UnresolvedImport
 from panda3d.core import TransparencyAttrib, AntialiasAttrib#@UnresolvedImport
-from panda3d.core import CollisionNode, CollisionPolygon#@UnresolvedImport
+from panda3d.core import CollisionNode, CollisionPolygon, CollisionSphere#@UnresolvedImport
 from direct.interval.IntervalGlobal import Sequence, LerpColorScaleInterval, LerpColorInterval, Wait#@UnresolvedImport
 from direct.gui.OnscreenText import OnscreenText#@UnresolvedImport
 
@@ -100,20 +100,28 @@ class UnitModel:
                                         )        
         
         
+        """
         cquad1 = CollisionPolygon(Point3(-0.5, -0.5, 0), Point3(-0.5, -0.5, 1), Point3(-0.5, 0.5, 1), Point3(-0.5, 0.5, 0))
         cquad2 = CollisionPolygon(Point3(0.5, -0.5, 0), Point3(0.5, -0.5, 1), Point3(-0.5, -0.5, 1), Point3(-0.5, -0.5, 0))
         cquad3 = CollisionPolygon(Point3(0.5, 0.5, 0), Point3(0.5, 0.5, 1), Point3(0.5, -0.5, 1), Point3(0.5, -0.5, 0))
         cquad4 = CollisionPolygon(Point3(-0.5, 0.5, 0), Point3(-0.5, 0.5, 1), Point3(0.5, 0.5, 1), Point3(0.5, 0.5, 0))
         cquad5 = CollisionPolygon(Point3(0.5, -0.5, 1), Point3(0.5, 0.5, 1), Point3(-0.5, 0.5, 1), Point3(-0.5, -0.5, 1))
+        """
+        csphere1 = CollisionSphere(0, 0, 0.5, 0.6)
+        cquad5 = CollisionPolygon(Point3(0.5, -0.5, 0), Point3(0.5, 0.5, 0), Point3(-0.5, 0.5, 0), Point3(-0.5, -0.5, 0))
         
         self.cnodePath = self.node.attachNewNode(CollisionNode('cnode'))
+        """
         self.cnodePath.node().addSolid(cquad1)
         self.cnodePath.node().addSolid(cquad2)
         self.cnodePath.node().addSolid(cquad3)
         self.cnodePath.node().addSolid(cquad4)  
         self.cnodePath.node().addSolid(cquad5)
+        """
+        self.cnodePath.node().addSolid(csphere1)
+        self.cnodePath.node().addSolid(cquad5)
         # DEBUG
-        #cnodePath.show()
+        #self.cnodePath.show()
         self.setCollisionOn()
         
         self.target_info_node = None
