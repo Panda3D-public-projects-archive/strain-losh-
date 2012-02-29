@@ -271,13 +271,26 @@ class UnitModel:
         self.target_info_node.setPos(utils.nodeCoordIn2d(self.model))
         shooter = self.parent.parent.units[self.parent.parent.sel_unit_id]
         target = self.parent.parent.units[int(self.id)]    
-        text = str(toHit(shooter, target, self.parent.parent.level)[0])  + '%\n' + str(toHit(shooter, target, self.parent.parent.level)[1])
+        hit, desc = toHit(shooter, target, self.parent.parent.level)
+        text = str(hit)  + '%\n' + str(desc)
+        if hit < 35:
+            bg = (1,0,0,0.7)
+            fg = (1,1,1,1)
+        elif hit >= 35 and hit < 75:
+            bg = (0.89, 0.82, 0.063, 0.7)
+            fg = (0,0,0,1)
+        elif hit >= 75:
+            bg = (0.153, 0.769, 0.07, 0.7)
+            fg = (0,0,0,1)
+        else:
+            bg = (1,0,0,0.7)
+            fg = (1,1,1,1)
         OnscreenText(parent = self.target_info_node
                           , text = text
                           , align=TextNode.ACenter
                           , scale=0.04
-                          , fg = (1,1,1,1)
-                          , bg = (1,0,0,0.7)
+                          , fg = fg
+                          , bg = bg
                           , font = loader.loadFont(utils.GUI_FONT)
                           , shadow = (0, 0, 0, 1))
     
