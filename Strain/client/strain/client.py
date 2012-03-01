@@ -235,6 +235,10 @@ class Client(DirectObject):
         self._anim_in_process = True
         self.sgm.hideUnitAvailMove()
         self.sgm.hideVisibleEnemies()
+        for u in self.sgm.unit_np_dict.itervalues():
+            u.clearTargeted()
+        self.picker.hovered_unit_id = None
+            
     
     def afterAnimHook(self):     
         self._anim_in_process = False

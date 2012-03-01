@@ -247,13 +247,16 @@ class UnitModel:
             self.marker.clearTexture()
             self.marker.setTexture(self.tex_target)
             self.marker.setColor(1, 0, 0)
-            self.marker.reparentTo(self.node)
+            self.marker.reparentTo(self.node)                
             self.isEnemyVisible = True
-            
+            if self.parent.parent.picker.hovered_unit_id == self.id:
+                self.setTargeted()
+                
     def clearEnemyVisible(self):
         if self.isEnemyVisible:
             self.marker.detachNode()
             self.parent.clearOutlineShader(self.model)
+            self.parent.parent.interface.clearTargetInfo()
             self.isEnemyVisible= False
             
     def clearAllFlags(self):

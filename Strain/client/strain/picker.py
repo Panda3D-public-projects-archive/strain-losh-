@@ -47,6 +47,9 @@ class Picker(DirectObject.DirectObject):
             if self.parent.sgm.comp_inited['level'] == False:
                 return task.cont
             
+            if self.parent._anim_in_process:
+                return task.cont
+            
             pos3d = Point3()
             nearPoint = Point3()
             farPoint = Point3()
