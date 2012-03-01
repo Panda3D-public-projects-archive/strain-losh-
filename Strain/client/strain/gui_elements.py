@@ -278,9 +278,9 @@ class GuiUnitInfo:
                                   , parent = parent )
         self.frame.setBillboardPointEye()
         self.frame.setLightOff()
-        self.frame.setBin("fixed", 40)
-        self.frame.setDepthTest(False)
-        self.frame.setDepthWrite(False)
+        #self.frame.setBin("fixed", 40)
+        #self.frame.setDepthTest(False)
+        #self.frame.setDepthWrite(False)
         
         fixedWidthFont = loader.loadFont(GUI_FONT)#@UndefinedVariable        
         #fixedWidthFont.setPixelsPerUnit(60)
@@ -311,7 +311,7 @@ class GuiUnitInfo:
                                   , text = ""
                                   , range = default_ap
                                   , value = ap
-                                  , pos = (offset.getX(),0,offset.getZ()-0.27)
+                                  , pos = (offset.getX()+0.08,0,offset.getZ()-0.27)
                                   , barColor = (0,0,1,1)
                                   , frameColor = (0,0,0.5,0.2)
                                   , scale = (0.3,0.5,0.3))
@@ -320,15 +320,16 @@ class GuiUnitInfo:
                                   , text = ""
                                   , range = default_hp
                                   , value = hp
-                                  , pos = (offset.getX(),0,offset.getZ()-0.2)
+                                  , pos = (offset.getX()+0.08,0,offset.getZ()-0.2)
                                   , barColor = (0,1,0,1)
                                   , frameColor = (1,0,0,0.9)
                                   , scale = (0.3,0.5,0.3))
         
         self.insignia = OnscreenImage(parent = self.frame
                                             ,image = "unit_" + unit_type + "_big_transparent_32.png"
-                                            ,pos = (offset.getX(),0,offset.getZ()+0.14)
-                                            ,scale = 0.12)
+                                            #,pos = (offset.getX(),0,offset.getZ()+0.14)
+                                            , pos = (offset.getX() - 0.31,0,offset.getZ()-0.23)
+                                            ,scale = 0.09)
         self.insignia.setTransparency(TransparencyAttrib.MAlpha)
 
     def addIcon(self, name):
@@ -372,7 +373,7 @@ class GuiUnitInfo:
             if icon in self.visible_icons:
                 self.visible_icons[icon].setPos(self.offset + (start_pos, 0, -0.08))
                 self.visible_icons[icon].show()
-                start_pos += 0.25
+                start_pos += 0.21
             else:
                 self.all_icons[icon].hide()
             
@@ -397,7 +398,7 @@ class GuiUnitInfo:
 class GuiUnitPanel:
     def __init__(self, aspect, unit_id, unit_type, default_hp, hp, default_ap, ap):
         self.unit_id = unit_id
-        self.frameWidth = 0.48
+        self.frameWidth = 0.30
         self.frameHeight = 0.06
         self.frame = DirectFrame(  # relief = DGG.FLAT
                                    scale = 1
@@ -411,19 +412,19 @@ class GuiUnitPanel:
                                   , text = ""
                                   , range = default_ap
                                   , value = ap
-                                  , pos = (0.28,0,-0.05)
+                                  , pos = (0.2,0,-0.045)
                                   , barColor = (0,0,1,1)
                                   , frameColor = (0,0,0.5,0.2)
-                                  , scale = (0.2,0.5,0.08))
+                                  , scale = (0.1,0.5,0.1))
         
         self.hp_bar = DirectWaitBar(parent = self.frame
                                   , text = ""
                                   , range = default_hp
                                   , value = hp
-                                  , pos = (0.28,0,-0.03)
+                                  , pos = (0.2,0,-0.015)
                                   , barColor = (0,1,0,1)
                                   , frameColor = (1,0,0,0.9)
-                                  , scale = (0.2,0.5,0.08))
+                                  , scale = (0.1,0.5,0.08))
         
         self.insignia = OnscreenImage(parent = self.frame
                                             ,image = "unit_" + unit_type + "_big_transparent_32.png"
@@ -442,7 +443,7 @@ class GuiUnitPanel:
         self.all_icons[name] = OnscreenImage(parent = self.frame
                                             ,image = name + "_icon.png"
                                            #,pos = offset + (0,0,-0.1)
-                                            ,scale = 0.018)
+                                            ,scale = 0.035)
         
         self.all_icons[name].setTransparency(TransparencyAttrib.MAlpha)
         self.all_icons[name].hide()
@@ -455,12 +456,12 @@ class GuiUnitPanel:
         
     def refreshIcons(self):
         count = len(self.visible_icons)
-        start_pos =  0.1
+        start_pos =  0.34
         for icon in self.all_icons:
             if icon in self.visible_icons:
-                self.visible_icons[icon].setPos((start_pos, 0, -0.013))
+                self.visible_icons[icon].setPos((start_pos, 0, -0.032))
                 self.visible_icons[icon].show()
-                start_pos += 0.04
+                start_pos += 0.07
             else:
                 self.all_icons[icon].hide()
                 
@@ -482,6 +483,40 @@ class GuiUnitPanel:
         self.visible_icons["set_up"] = self.all_icons["set_up"]
         self.refreshIcons()
         
+    def getBounds(self, aspect):
+        posx, posy = self.frame.getTightBounds()
+        self.pos_min_x = -1
+        self.pos_min_y = self.pos.getZ() + 1 - self.frameHeight
+        self.pos_max_x = -1 + self.frameWidth/aspect
+        self.pos_max_y = self.pos.getZ() + 1
+
+
+class GuiEnemyUnitPanel:
+    def __init__(self, aspect, all_enemy_units, enemy_units):
+        
+        self.frameWidth = 0.48
+        self.frameHeight = 0.06
+        i = 0
+        for unit_id in all_enemy_units:
+            self.frame[unit_id] = DirectFrame(  # relief = DGG.FLAT
+                                   scale = 1
+                                  , frameSize = (0, self.frameWidth, 0, -self.frameHeight)
+                                  , frameColor = (0.9, 0.9, 0.2, 0.8)
+                                  , parent = base.a2dTopRight )#@UndefinedVariable
+            self.pos = Point3(0, 0, -GUI_TOP_OFFSET-0.05 - (0.069*i))        
+            self.frame[unit_id].setPos(self.pos)
+            unit_type = "medic"
+            self.insignia[unit_id] = OnscreenImage(parent = self.frame
+                                            ,image = "unit_" + unit_type + "_big_transparent_32.png"
+                                            ,pos = (0.035,0,-0.03)
+                                            ,scale = 0.025)
+            self.insignia[unit_id].setTransparency(TransparencyAttrib.MAlpha)
+            i=i+1
+        
+        
+        #self.getBounds(aspect)
+        
+
     def getBounds(self, aspect):
         posx, posy = self.frame.getTightBounds()
         self.pos_min_x = -1
