@@ -1050,7 +1050,7 @@ class Level:
     
     
     def gridCanUse(self, x, y):
-        if x < 0 or y < 0 or x > self.maxgridX or y > self.maxgridY:
+        if x < 0 or y < 0 or x >= self.maxgridX or y >= self.maxgridY:
             return False
         if self._grid[x][y] and self._grid[x][y].usesTo:
                 return True
