@@ -676,7 +676,8 @@ class Interface(DirectObject.DirectObject):
                           , shadow = (0, 0, 0, 1))
     
     def clearTargetInfo(self):
-        self.target_info_node.removeNode()
+        if self.target_info_node:
+            self.target_info_node.removeNode()
     
     def toggleOverwatch(self):
         ClientMsg.overwatch( self.parent.sel_unit_id )

@@ -197,6 +197,7 @@ class SceneGraph():
     def hideUnit(self, unit_id):
         unit_model = self.unit_np_dict[unit_id] 
         self.unit_np_dict.pop(unit_id)
+        unit_model.clearTargeted()
         unit_model.node.remove()
         del unit_model
         
