@@ -14,7 +14,6 @@ from direct.gui.OnscreenText import OnscreenText#@UnresolvedImport
 
 # strain related imports
 import utils
-from share import toHit
     
 #===============================================================================
 # CLASS UnitModel --- DEFINITION
@@ -124,8 +123,6 @@ class UnitModel:
         #self.cnodePath.show()
         self.setCollisionOn()
         
-        self.target_info_node = None
-        
         self.isHovered = False
         self.isSelected = False
         self.isTargeted = False
@@ -234,7 +231,7 @@ class UnitModel:
         if self.isEnemyVisible and not self.isTargeted:
             self.marker_interval.loop()
             self.parent.setOutlineShader(self.model, color=Vec4(1,0,0,0)) 
-            self.showTargetInfo()
+            self.parent.parent.interface.showTargetInfo(self)
             self.isTargeted = True 
     
     def clearTargeted(self):
@@ -242,7 +239,7 @@ class UnitModel:
             self.marker_interval.pause()
             self.marker.setColor(1, 0, 0)
             self.parent.clearOutlineShader(self.model)
-            self.clearTargetInfo()
+            self.parent.parent.interface.clearTargetInfo()
             self.isTargeted = False
             
     def setEnemyVisible(self):
@@ -265,37 +262,6 @@ class UnitModel:
         self.isSelected = False
         self.isTargeted = False
         self.isEnemyVisible = False
-        
-    def showTargetInfo(self):
-        self.target_info_node = aspect2d.attachNewNode('target_info')
-        self.target_info_node.setPos(utils.nodeCoordIn2d(self.model))
-        shooter = self.parent.parent.units[self.parent.parent.sel_unit_id]
-        target = self.parent.parent.units[int(self.id)]    
-        hit, desc = toHit(shooter, target, self.parent.parent.level)
-        text = str(hit)  + '%\n' + str(desc)
-        if hit < 35:
-            bg = (1,0,0,0.7)
-            fg = (1,1,1,1)
-        elif hit >= 35 and hit < 75:
-            bg = (0.89, 0.82, 0.063, 0.7)
-            fg = (0,0,0,1)
-        elif hit >= 75:
-            bg = (0.153, 0.769, 0.07, 0.7)
-            fg = (0,0,0,1)
-        else:
-            bg = (1,0,0,0.7)
-            fg = (1,1,1,1)
-        OnscreenText(parent = self.target_info_node
-                          , text = text
-                          , align=TextNode.ACenter
-                          , scale=0.04
-                          , fg = fg
-                          , bg = bg
-                          , font = loader.loadFont(utils.GUI_FONT)
-                          , shadow = (0, 0, 0, 1))
-    
-    def clearTargetInfo(self):
-        self.target_info_node.removeNode()
     
     def calcWorldPos(self, pos):
         return pos + Point3(0.5, 0.5, utils.GROUND_LEVEL)

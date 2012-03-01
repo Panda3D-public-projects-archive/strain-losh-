@@ -9,6 +9,7 @@ from console import GuiConsole
 from client_messaging import *
 from gui_elements import *
 import utils
+from share import toHit
 
 #===============================================================================
 # GLOBAL DEFINITIONS
@@ -86,9 +87,12 @@ class Interface(DirectObject.DirectObject):
         self.old_p = None
         self.old_move_dest = None
         
+        self.target_info_node = None
+        
         taskMgr.add(self.processGui, 'processGui_task')#@UndefinedVariable
         taskMgr.add(self.hover, 'hover_task') #@UndefinedVariable
         taskMgr.add(self.turnUnit, 'turnUnit_task')     #@UndefinedVariable  
+        taskMgr.add(self.positionInfoTask, 'positionInfo_task')#@UndefinedVariable  
     
     def init_gui(self):
         wp = base.win.getProperties() #@UndefinedVariable
@@ -635,12 +639,49 @@ class Interface(DirectObject.DirectObject):
                 self.markTurnArrow(key)
         return task.cont
 
+    def positionInfoTask(self, task):
+        if self.target_info_node:
+            if base.mouseWatcherNode.hasMouse():
+                mpos = base.mouseWatcherNode.getMouse()
+                r2d = Point3(mpos.getX(), 0, mpos.getY())
+                a2d = aspect2d.getRelativePoint(render2d, r2d)
+                self.target_info_node.setPos(a2d + Point3(0, 0, 0.08))
+        return task.cont
+
+    def showTargetInfo(self, node):
+        shooter = self.parent.units[self.parent.sel_unit_id]
+        target = self.parent.units[int(node.id)]    
+        hit, desc = toHit(shooter, target, self.parent.level)
+        text = str(hit)  + '%\n' + str(desc)
+        if hit < 35:
+            bg = (1,0,0,0.7)
+            fg = (1,1,1,1)
+        elif hit >= 35 and hit < 75:
+            bg = (0.89, 0.82, 0.063, 0.7)
+            fg = (0,0,0,1)
+        elif hit >= 75:
+            bg = (0.153, 0.769, 0.07, 0.7)
+            fg = (0,0,0,1)
+        else:
+            bg = (1,0,0,0.7)
+            fg = (1,1,1,1)
+        self.target_info_node = aspect2d.attachNewNode('target_info')
+        OnscreenText(parent = self.target_info_node
+                          , text = text
+                          , align=TextNode.ACenter
+                          , scale=0.04
+                          , fg = fg
+                          , bg = bg
+                          , font = loader.loadFont(utils.GUI_FONT)
+                          , shadow = (0, 0, 0, 1))
+    
+    def clearTargetInfo(self):
+        self.target_info_node.removeNode()
+    
     def toggleOverwatch(self):
-        unit = self.parent.units[self.parent.sel_unit_id]
         ClientMsg.overwatch( self.parent.sel_unit_id )
         
     def toggleSetUp(self):
-        unit = self.parent.units[self.parent.sel_unit_id]
         ClientMsg.setUp( self.parent.sel_unit_id )
     
     def setButtons(self, unit_id):
