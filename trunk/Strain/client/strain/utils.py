@@ -199,3 +199,11 @@ def nodeCoordIn2d(nodePath):
     coordInRender2d = Point3(coord2d[0], 0, coord2d[1])
     coordInAspect2d = aspect2d.getRelativePoint(render2d, coordInRender2d)
     return coordInAspect2d
+
+def pointCoordIn2d(point):
+    coord3d = base.cam.getRelativePoint(render, point) 
+    coord2d = Point2()
+    base.camLens.project(coord3d, coord2d)
+    coordInRender2d = Point3(coord2d[0], 0, coord2d[1])
+    coordInAspect2d = aspect2d.getRelativePoint(render2d, coordInRender2d)
+    return coordInAspect2d
