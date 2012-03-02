@@ -712,15 +712,15 @@ class Level:
         
         
         #initialize grid
-        self.maxgridX = 2 * self.maxX + 2
-        self.maxgridY = 2 * self.maxY + 2
+        self.maxgridX = 2 * self.maxX + 1
+        self.maxgridY = 2 * self.maxY + 1
         
         #we make this so its size is the same as level 
         self._dynamics = [[ None ] * self.maxY for i in xrange(self.maxX)] #@UnusedVariable
         self._deploy = [[ None ] * self.maxY for i in xrange(self.maxX)] #@UnusedVariable
         
         
-        self._grid = [[ None ] * (2*self.maxY+1) for i in xrange(2*self.maxX+1)] #@UnusedVariable
+        self._grid = [[ None ] * self.maxgridY for i in xrange(self.maxgridX)] #@UnusedVariable
         
         
         #---------------------------------load walls----------------------------------
@@ -1052,6 +1052,7 @@ class Level:
     def gridCanUse(self, x, y):
         if x < 0 or y < 0 or x >= self.maxgridX or y >= self.maxgridY:
             return False
+        print "x:",x,"  maxX:",self.maxgridX
         if self._grid[x][y] and self._grid[x][y].usesTo:
                 return True
         return False
