@@ -54,7 +54,7 @@ class Picker(DirectObject.DirectObject):
             nearPoint = Point3()
             farPoint = Point3()
             base.camLens.extrude(mpos, nearPoint, farPoint)
-            if self.plane.intersectsLine(pos3d, render.getRelativePoint(camera, nearPoint), render.getRelativePoint(camera, farPoint)):
+            if self.plane.intersectsLine(pos3d, render.getRelativePoint(camera, nearPoint), render.getRelativePoint(camera, farPoint)) and self.hovered_unit_id == None:    
                 self.hovered_point = pos3d
                 
             self.pickerRay.setFromLens(base.camNode, mpos.getX(),mpos.getY())
@@ -68,9 +68,11 @@ class Picker(DirectObject.DirectObject):
                             self.parent.sgm.unit_np_dict[int(self.hovered_unit_id)].unmarkHovered()
                         self.hovered_unit_id = new_hovered_unit_id
                         self.parent.sgm.unit_np_dict[int(self.hovered_unit_id)].markHovered()
+                        self.hovered_point = None
                 else:
                     self.hovered_unit_id = new_hovered_unit_id
                     self.parent.sgm.unit_np_dict[int(self.hovered_unit_id)].markHovered()
+                    self.hovered_point = None
             else:
                 if self.hovered_unit_id != None:
                     try:

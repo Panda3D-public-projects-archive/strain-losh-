@@ -535,21 +535,26 @@ class Interface(DirectObject.DirectObject):
                 self.old_move_dest = None
             if self.parent.sel_unit_id != None:
                 move_dict = self.parent.units[self.parent.sel_unit_id]['move_dict']
-                p = (int(self.parent.picker.hovered_point.getX()), int(self.parent.picker.hovered_point.getY()))
-                if p != self.old_p:
-                    if move_dict.has_key(p):
-                        if self.old_p != None:
-                            old_tile = self.parent.sgm.tile_cards[self.old_p[0]][self.old_p[1]]
-                            self.stopMoveTileInterval(old_tile)
-                        tile = self.parent.sgm.tile_cards[p[0]][p[1]]
-                        self.startMoveTileInterval(tile)
-                        self.old_p = p
-                    else:
-                        if self.old_p != None:
-                            old_tile = self.parent.sgm.tile_cards[self.old_p[0]][self.old_p[1]]
-                            self.stopMoveTileInterval(old_tile)
-                            self.old_p = None
-        
+                if self.parent.picker.hovered_point:
+                    p = (int(self.parent.picker.hovered_point.getX()), int(self.parent.picker.hovered_point.getY()))
+                    if p != self.old_p:
+                        if move_dict.has_key(p):
+                            if self.old_p != None:
+                                old_tile = self.parent.sgm.tile_cards[self.old_p[0]][self.old_p[1]]
+                                self.stopMoveTileInterval(old_tile)
+                            tile = self.parent.sgm.tile_cards[p[0]][p[1]]
+                            self.startMoveTileInterval(tile)
+                            self.old_p = p
+                        else:
+                            if self.old_p != None:
+                                old_tile = self.parent.sgm.tile_cards[self.old_p[0]][self.old_p[1]]
+                                self.stopMoveTileInterval(old_tile)
+                                self.old_p = None
+                else:
+                    if self.old_p != None:
+                        old_tile = self.parent.sgm.tile_cards[self.old_p[0]][self.old_p[1]]
+                        self.stopMoveTileInterval(old_tile)
+                        self.old_p = None
         return task.cont
     
      
