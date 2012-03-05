@@ -35,10 +35,7 @@ loadPrcFile("./config/config.prc")
 #========================================================================
 #
 class App():
-    def __init__(self):
-        #from pandac.PandaModules import Thread
-        #print 'Threading', Thread.isThreadingSupported()
-        
+    def __init__(self):        
         #setup logger
         self.logger = logging.getLogger('ClientLog')
         hdlr = logging.FileHandler('Client.log')

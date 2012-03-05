@@ -58,7 +58,7 @@ class Net():
             self.parent.sgm.deleteUnits()
             self.parent.sgm.loadLevel(self.parent.level)
             self.parent.sgm.loadUnits()
-            self.parent.clearState()            
+            self.parent.deselectUnit()            
             self.parent.interface.refreshStatusBar()
             for unit_id in self.parent.units.iterkeys():
                 if self.parent.isThisMyUnit(unit_id):
@@ -75,7 +75,7 @@ class Net():
         #
         elif msg[0] == NEW_TURN:
             self.parent._message_in_process = True            
-            self.parent.newTurn()
+            self.parent.deselectUnit()
             self.parent.turn_number = msg[1]['turn']
             self.parent.turn_player = self.parent.getPlayerName(msg[1]['active_player_id'])
             units = pickle.loads(msg[1]['units'])

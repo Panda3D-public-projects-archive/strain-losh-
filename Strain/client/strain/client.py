@@ -41,9 +41,6 @@ class Client(DirectObject):
         self.sel_unit_id = None
         self.turn_number = None
         
-        # Init Client FSM
-        self.fsm = ClientFSM(self, 'ClientFSM')
-        
         # Init SceneGraph manager
         self.sgm = SceneGraph(self)
         
@@ -57,7 +54,8 @@ class Client(DirectObject):
         self.interface = Interface(self)
         
         # All of our graphics components are initialized, request graphics init
-        self.fsm.request('GraphicsInit')
+        self.sgm.initLights()
+        self.sgm.initAltRender()
         
         # Init combat
         self.combat = Combat()
@@ -72,46 +70,35 @@ class Client(DirectObject):
         # This handles interface interactions - we will not allow interaction if current animation is not done
         self._anim_in_process = False 
 
-        #Initialize game mode (network)
+        # Initialize game mode (network)
         if type == "Game":
-            self.fsm.request('GameMode')
+            self.net = Net(self)
+            self.net.startNet()
         elif type == "Replay":
-            self.fsm.request('ReplayMode', "replay_2011-12-19_1.rpl")
+            self.net = Net(self)
+            self.net.startReplay("replay_2011-12-19_1.rpl")
             
         # Turn number and player on turn
         self.turn_number = 0
-        self.turn_player = None
-        
-        self.num = 0
-        taskMgr.add(self.clientTask, 'clientTask')#@UndefinedVariable
-        
-        self.shader = True
-        self.accept('enter', self.toggleShader)
-    
-    def toggleShader(self):
-        if self.shader:
-            self.sgm.level_mesh.node_wall_usable.setShaderOff()
-            self.shader = False
-        else:
-            self.sgm.level_mesh.node_wall_usable.setShaderAuto()
-            self.shader = True
-    
-    def clientTask(self, task):
-        #self.num += 1
-        #print self.num
-        return task.cont
-    
-    def newTurn(self):
-        self.deselectUnit()
+        self.turn_player = None        
+
         
     def getPlayerName(self, player_id):
         for p in self.players:
             if p['id'] == player_id:
                 return p['name']
-    
+            
     def deselectUnit(self):
-        self.clearState()
+        self.sgm.clearAltRenderModel()
+        self.sgm.hideUnitAvailMove()
+        self.sgm.hideVisibleEnemies()
+        self.interface.clearUnitData()
         
+        if self.sel_unit_id != None:
+            self.sgm.unit_np_dict[self.sel_unit_id].clearAllFlags()
+            self.sgm.unit_np_dict[self.sel_unit_id].setCollisionOn()
+        self.sel_unit_id = None
+    
     def selectUnit(self, unit_id):
         if self._anim_in_process == True:
             return
@@ -243,20 +230,6 @@ class Client(DirectObject):
     def afterAnimHook(self):     
         self._anim_in_process = False
         self._message_in_process = False
-        
-    def endTurn(self):
-        ClientMsg.endTurn()
-    
-    def clearState(self):
-        self.sgm.clearAltRenderModel()
-        self.sgm.hideUnitAvailMove()
-        self.sgm.hideVisibleEnemies()
-        self.interface.clearUnitData()
-        
-        if self.sel_unit_id != None:
-            self.sgm.unit_np_dict[self.sel_unit_id].clearAllFlags()
-            self.sgm.unit_np_dict[self.sel_unit_id].setCollisionOn()
-        self.sel_unit_id = None
     
 #========================================================================
 # Client animation handler methods
@@ -587,30 +560,3 @@ class Client(DirectObject):
         print "timer:::", (time.clock()-t)*1000
         return l
 
-#========================================================================
-#
-class ClientFSM(FSM.FSM):
-    def __init__(self, parent, name):
-        FSM.FSM.__init__(self, name)
-        self.parent = parent
-
-    def enterReplayMode(self, replay):
-        self.parent.net = Net(self.parent)
-        self.parent.net.startReplay(replay)
-        
-    def exitReplayMode(self):
-        None
-
-    def enterGameMode(self):
-        self.parent.net = Net(self.parent)
-        self.parent.net.startNet()
-    
-    def exitGameMode(self):
-        None
-
-    def enterGraphicsInit(self):
-        self.parent.sgm.initLights()
-        self.parent.sgm.initAltRender()
-    
-    def exitGraphicsInit(self):
-        None
