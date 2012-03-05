@@ -6,18 +6,7 @@
 <Comment> {
   "Egg laid by Chicken for Blender, version R85"
 }
-<Material> Material {
-  <Scalar> diffr { 1 }
-  <Scalar> diffg { 1 }
-  <Scalar> diffb { 1 }
-  <Scalar> ambr { 1 }
-  <Scalar> ambg { 1 }
-  <Scalar> ambb { 1 }
-  <Scalar> specr { 0 }
-  <Scalar> specg { 0 }
-  <Scalar> specb { 0 }
-  <Scalar> shininess { 0 }
-}
+
 <Group> Cube {
   <VertexPool> Cube {
     <Vertex> 0 {
@@ -239,32 +228,26 @@
   }
   <Polygon> {
     <Normal> { 0 0 -1 }
-    <MRef> { Material }
     <VertexRef> { 18 13 2 7 <Ref> { Cube } }
   }
   <Polygon> {
     <Normal> { 0 0 1 }
-    <MRef> { Material }
     <VertexRef> { 21 10 5 16 <Ref> { Cube } }
   }
   <Polygon> {
     <Normal> { 1 0 0 }
-    <MRef> { Material }
     <VertexRef> { 20 23 17 14 <Ref> { Cube } }
   }
   <Polygon> {
     <Normal> { -1 0 0 }
-    <MRef> { Material }
     <VertexRef> { 12 15 3 0 <Ref> { Cube } }
   }
   <Polygon> {
     <Normal> { 0 -1 0 }
-    <MRef> { Material }
     <VertexRef> { 1 4 9 6 <Ref> { Cube } }
   }
   <Polygon> {
     <Normal> { 0 1 0 }
-    <MRef> { Material }
     <VertexRef> { 22 19 8 11 <Ref> { Cube } }
   }
 }
