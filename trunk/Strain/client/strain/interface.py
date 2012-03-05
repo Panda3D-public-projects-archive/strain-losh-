@@ -369,11 +369,6 @@ class Interface(DirectObject.DirectObject):
         for unit_id in self.unit_info:
             self.unit_info[unit_id].hide()
         self.clearButtons()        
-        
-    def endTurn(self):
-        """Ends the turn"""
-        if not self.ge.interface_disabled:
-            self.ge.createEndTurnMsg() 
 
     def mouseLeftClick(self):
         """Handles left mouse click actions.
@@ -390,7 +385,7 @@ class Interface(DirectObject.DirectObject):
             self.parent.selectNextUnit()
             self.console.unfocus() 
         elif self.hovered_gui == self.endturn_button:
-            self.parent.endTurn()
+            ClientMsg.endTurn()
             self.console.unfocus()
         elif self.hovered_gui == self.overwatch:
             if self.overwatch.enabled:
