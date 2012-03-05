@@ -591,7 +591,6 @@ class Interface(DirectObject.DirectObject):
 
     def turnUnit(self, task):
         if self.unit_move_destination: 
-            #print self.unit_move_destination
             if self.move_timer < 0.1:
                 dt = globalClock.getDt()#@UndefinedVariable
                 self.move_timer += dt
