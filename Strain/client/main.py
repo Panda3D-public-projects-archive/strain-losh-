@@ -97,10 +97,10 @@ class AppFSM(FSM.FSM):
 
     def enterSquadSelection(self):
         base.win.setClearColor(VBase4(0.5, 0.5, 0.5, 0))
-        self.parent.squad_selector = Squadselector(self.parent, self.parent.player)
+        self.parent.squad_selector = Squadselector(self.parent, self.parent.player, 1500)
         
     def exitSquadSelection(self):
-        None
+        del self.parent.squad_selector
     
     def enterClient(self, type):
         base.win.setClearColor(VBase4(0, 0, 0, 0))
