@@ -63,8 +63,7 @@ class Net():
             for unit_id in self.parent.units.iterkeys():
                 if self.parent.isThisMyUnit(unit_id):
                     self.parent.interface.refreshUnitInfo(unit_id) 
-            m = self.parent.getInvisibleTiles()
-            self.parent.sgm.level_mesh.setInvisibleTiles(m)           
+            self.parent.sgm.level_mesh.setInvisibleTiles(self.parent.getInvisibleTiles())           
             self.parent._message_in_process = False
         #========================================================================
         #
@@ -86,6 +85,7 @@ class Net():
             for unit_id in self.parent.units.iterkeys():
                 if self.parent.isThisMyUnit(unit_id):
                     self.parent.interface.refreshUnitInfo(unit_id)
+            # play new turn animation, _message_in_process will be set to false after this
             self.parent.handleNewTurn()
         #========================================================================
         #
@@ -100,14 +100,14 @@ class Net():
                 self.parent.sgm.showUnitAvailMove( unit['id'] )
                 self.parent.sgm.showVisibleEnemies(unit['id'])
                 if unit['pos'][0] != old_x or unit['pos'][1] != old_y or unit['last_action']=='use':
-                    m = self.parent.getInvisibleTiles()
-                    self.parent.sgm.level_mesh.setInvisibleTiles(m)
+                    self.parent.sgm.level_mesh.setInvisibleTiles(self.parent.getInvisibleTiles())
                 self.parent.sgm.playUnitStateAnim( unit['id'] )
             self.parent._message_in_process = False
         #========================================================================
         #
         elif msg[0] == SHOOT:
             self.parent._message_in_process = True
+            # play shoot animation, _message_in_process will be set to false after this
             self.parent.handleShoot(msg[1])       
         #========================================================================
         #
