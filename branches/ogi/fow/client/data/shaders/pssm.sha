@@ -1,0 +1,96 @@
+//Cg
+//Cg profile arbvp1 arbfp1 
+
+#define PCF
+
+void vshader(uniform float4x4 trans_model_to_world,
+			uniform float4x4 mat_modelproj,
+			//#--------------------------
+			uniform float4x4 trans_model_to_MainCamera,
+			uniform float4x4 trans_model_to_clip_of_ShadowCam0,
+			uniform float4x4 trans_model_to_clip_of_ShadowCam1,
+			uniform float4x4 trans_model_to_clip_of_ShadowCam2,
+			//#--------------------------
+			float4 vtx_position : POSITION,
+			float2 vtx_texcoord0: TEXCOORD0,
+			float3 vtx_normal: NORMAL,
+			//#--------------------------
+			out float2 l_texcoord0 : TEXCOORD0,
+			out float4 l_shadowcoord0 : TEXCOORD2,
+			out float4 l_shadowcoord1 : TEXCOORD3,
+			out float4 l_shadowcoord2 : TEXCOORD4,
+			out float4 l_cs_pos : TEXCOORD5,
+			out float3 l_ws_Normal : TEXCOORD7,
+			out float4 l_position : POSITION )
+{
+	l_position = mul(mat_modelproj, vtx_position);
+	l_texcoord0 = vtx_texcoord0;
+	
+	float3x3 vec_trans_model_to_world = (float3x3)trans_model_to_world;
+	l_ws_Normal = mul( vec_trans_model_to_world, vtx_normal );
+	
+	l_cs_pos = mul( trans_model_to_MainCamera, vtx_position);
+	
+	float4 pushed = vtx_position + float4(vtx_normal * 0.08, 0) ;
+	float4 lightclip = mul( trans_model_to_clip_of_ShadowCam0, pushed );
+	l_shadowcoord0 = lightclip * float4(0.5,0.5,0.5,1.0) + lightclip.w * float4(0.5,0.5,0.5,0.0);
+	
+	lightclip = mul( trans_model_to_clip_of_ShadowCam1, pushed );
+	l_shadowcoord1 = lightclip * float4(0.5,0.5,0.5,1.0) + lightclip.w * float4(0.5,0.5,0.5,0.0);
+	
+	lightclip = mul( trans_model_to_clip_of_ShadowCam2, pushed );
+	l_shadowcoord2 = lightclip * float4(0.5,0.5,0.5,1.0) + lightclip.w * float4(0.5,0.5,0.5,0.0);
+	
+}
+
+void fshader(uniform sampler2D tex_0 : TEXUNIT0,
+			in uniform float4 k_KeyLightDir,
+			in uniform float4 k_SplitDepth,
+			in uniform float4 k_smapkernal,
+			in uniform float4 k_DebugLabelIntensity,
+			//##---------------------------------
+			in float2 l_texcoord0 : TEXCOORD0,
+			in float4 l_shadowcoord0 : TEXCOORD2,
+			in float4 l_shadowcoord1 : TEXCOORD3,
+			in float4 l_shadowcoord2 : TEXCOORD4,
+			in float4 l_cs_pos : TEXCOORD5,
+			in float3 l_ws_Normal : TEXCOORD7,
+			//##---------------------------------
+			uniform sampler2D k_texShadDepth0 : TEXUNIT5,
+			uniform sampler2D k_texShadDepth1 : TEXUNIT6,
+			uniform sampler2D k_texShadDepth2 : TEXUNIT7,
+			//##---------------------------------
+			out float4 o_color: COLOR )
+{
+	l_ws_Normal = normalize( l_ws_Normal.xyz);
+	float fNDotL = dot( l_ws_Normal, k_KeyLightDir.xyz );
+	float3 f3SplitDepthColor = (0, 0, 1);
+	float fShadowFactor = 1;
+	if (l_cs_pos.y < k_SplitDepth.x ) {
+		fShadowFactor = shadow2DProj(k_texShadDepth0, l_shadowcoord0).r;
+		#ifdef PCF
+			fShadowFactor += shadow2DProj(k_texShadDepth0, l_shadowcoord0 + float4( k_smapkernal.x, k_smapkernal.x, 0, 0)).r;
+			fShadowFactor += shadow2DProj(k_texShadDepth0, l_shadowcoord0 + float4( k_smapkernal.x, -k_smapkernal.x, 0, 0)).r;
+			fShadowFactor += shadow2DProj(k_texShadDepth0, l_shadowcoord0 + float4( -k_smapkernal.x, -k_smapkernal.x, 0, 0)).r;
+			fShadowFactor += shadow2DProj(k_texShadDepth0, l_shadowcoord0 + float4( -k_smapkernal.x, k_smapkernal.x, 0, 0)).r;
+			fShadowFactor += shadow2DProj(k_texShadDepth0, l_shadowcoord0 + float4( -k_smapkernal.x, 0, 0, 0)).r;
+			fShadowFactor += shadow2DProj(k_texShadDepth0, l_shadowcoord0 + float4( k_smapkernal.x, 0, 0, 0)).r;
+			fShadowFactor += shadow2DProj(k_texShadDepth0, l_shadowcoord0 + float4(0, -k_smapkernal.x, 0, 0)).r;
+			fShadowFactor += shadow2DProj(k_texShadDepth0, l_shadowcoord0 + float4(0, k_smapkernal.x, 0, 0)).r;
+			fShadowFactor = fShadowFactor/9.0;
+		#endif
+		f3SplitDepthColor = float3(1, k_DebugLabelIntensity.x, k_DebugLabelIntensity.x); 
+	} else {
+		if (l_cs_pos.y < k_SplitDepth.y ) {
+			fShadowFactor = shadow2DProj(k_texShadDepth1, l_shadowcoord1).r;
+			f3SplitDepthColor = float3( k_DebugLabelIntensity.x, 1, k_DebugLabelIntensity.x);
+		} else {
+			if (l_cs_pos.y < k_SplitDepth.z ) {
+				fShadowFactor = shadow2DProj(k_texShadDepth2, l_shadowcoord2).r;
+				f3SplitDepthColor = float3( k_DebugLabelIntensity.x, k_DebugLabelIntensity.x,1);
+			}
+		}
+	}
+	float3 texDiffuse = tex2D( tex_0, l_texcoord0 ).rgb;
+	o_color.rgb = texDiffuse*f3SplitDepthColor*fNDotL*fShadowFactor;
+}

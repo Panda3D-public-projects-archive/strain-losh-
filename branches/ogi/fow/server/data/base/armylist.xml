@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+
+<armylist>
+
+	<player name="Red" team="1" id="1">
+		<unit x="2" y="1" type="marine_heavy"/>
+		<unit x="3" y="1" type="marine_sergeant"/>
+		<unit x="15" y="1" type="marine_standard"/>			
+		<unit x="16" y="1" type="marine_scout"/>
+		<unit x="4" y="1" type="marine_medic"/>
+		<unit x="15" y="0" type="marine_jumper"/>			
+	</player>
+
+	<player name="Blue" team = "2" id="2">
+		<unit x="5" y="20" type="marine_heavy"/>
+		<unit x="11" y="20" type="marine_sergeant"/>
+		<unit x="6" y="20" type="marine_standard"/>
+		<unit x="12" y="20" type="marine_scout"/>			
+ 	 	<unit x="13" y="20" type="marine_medic"/>
+		<unit x="7" y="20" type="marine_jumper"/> 	 	
+	</player>
+<!-- 
+	<player name="meta" team = "3" id="3">
+		<unit x="0" y="0" type="marine_standard"/>
+	</player>
+
+	<player name="nevidi_nikog" team = "6" id="6">
+		<unit x="19" y="19" type="marine_standard"/>
+	</player>
+
+	<player name="vidi_blue" team = "4" id="4">
+		<unit x="10" y="6" type="marine_standard"/>
+	</player>
+
+	<player name="vidi_red" team = "5" id="5">
+		<unit x="10" y="3" type="marine_standard"/>
+	</player>
+-->
+
+</armylist>
