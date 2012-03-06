@@ -17,7 +17,7 @@
 		<unit x="6" y="20" type="marine_standard"/>
 		<unit x="12" y="20" type="marine_scout"/>			
  	 	<unit x="13" y="20" type="marine_medic"/>
-		<unit x="7" y="20" type="marine_jumper"/> 	 	
+		<unit x="3" y="5" type="marine_jumper"/> 	 	
 	</player>
 <!-- 
 	<player name="meta" team = "3" id="3">

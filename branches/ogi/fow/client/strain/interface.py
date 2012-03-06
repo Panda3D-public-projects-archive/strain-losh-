@@ -412,6 +412,7 @@ class Interface(DirectObject.DirectObject):
             self.parent.selectUnit(self.panel.unit_id)
         else:
             self.console.unfocus()    
+            
             unit_id = self.parent.picker.hovered_unit_id;
             if unit_id != None:
                 unit_id = int(unit_id)
@@ -457,7 +458,8 @@ class Interface(DirectObject.DirectObject):
                         # Do this only if it is our turn
                         if self.parent.units[self.parent.sel_unit_id]['move_dict'].has_key(tuple(pickedCoord)):
                             self.unit_move_destination = pickedCoord
-                            
+                  
+                  
     def mouseLeftClickUp(self):
         """Handles left mouse click actions when mouse button is depressed.
            Used for unit movement.

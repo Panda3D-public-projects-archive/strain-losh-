@@ -106,10 +106,14 @@ class UnitModel:
         cquad4 = CollisionPolygon(Point3(-0.5, 0.5, 0), Point3(-0.5, 0.5, 1), Point3(0.5, 0.5, 1), Point3(0.5, 0.5, 0))
         cquad5 = CollisionPolygon(Point3(0.5, -0.5, 1), Point3(0.5, 0.5, 1), Point3(-0.5, 0.5, 1), Point3(-0.5, -0.5, 1))
         """
+        
+        """
         csphere1 = CollisionSphere(0, 0, 0.5, 0.6)
         cquad5 = CollisionPolygon(Point3(0.5, -0.5, 0), Point3(0.5, 0.5, 0), Point3(-0.5, 0.5, 0), Point3(-0.5, -0.5, 0))
         
         self.cnodePath = self.node.attachNewNode(CollisionNode('cnode'))
+        """
+        
         """
         self.cnodePath.node().addSolid(cquad1)
         self.cnodePath.node().addSolid(cquad2)
@@ -117,11 +121,16 @@ class UnitModel:
         self.cnodePath.node().addSolid(cquad4)  
         self.cnodePath.node().addSolid(cquad5)
         """
+        
+        """
         self.cnodePath.node().addSolid(csphere1)
         self.cnodePath.node().addSolid(cquad5)
+        """
         # DEBUG
+        """
         #self.cnodePath.show()
         self.setCollisionOn()
+        """
         
         self.isHovered = False
         self.isSelected = False
@@ -172,18 +181,22 @@ class UnitModel:
                 self.lwp.setScale(0.5,0.5,0.5)
                 self.lwp.reparentTo(lnp)
         
+        self.node_2d = aspect2d.attachNewNode('node_2d')
         self.model.setShaderAuto()
         
     def pauseAllAnims(self):
         self.overwatch_anim.pause()
         self.standup_anim.pause()
         self.setup_anim.pause()
-    
+
+    """    
     def setCollisionOn(self):
         self.cnodePath.setCollideMask(BitMask32.bit(1)) 
         
     def setCollisionOff(self):
         self.cnodePath.setCollideMask(BitMask32.bit(0))  
+    """
+    
     
     def markHovered(self):
         if self.owner_id == self.parent.parent.player_id:

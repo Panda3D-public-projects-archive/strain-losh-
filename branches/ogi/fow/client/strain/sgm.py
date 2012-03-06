@@ -250,37 +250,6 @@ class SceneGraph():
         wpn_list = utils.getUnitWeapons(self.parent.units[unit_id])
         self.off_model = UnitModel(self, unit_id, off=True)
         self.off_model.model.reparentTo(self.alt_render)
-        
-    def showUnitAvailMove(self, unit_id):
-        """Displays visual indicator of tiles which are in movement range of the selected unit."""
-        self.hideUnitAvailMove()
-        unit = self.parent.units[unit_id]
-        if self.parent.turn_player != self.parent.player:
-            return
-        if unit:
-            unit['move_dict'] = getMoveDict(unit, self.parent.level, self.parent.units)
-            self.parent.units[unit_id]['move_dict'] = unit['move_dict']
-            move_dict = unit['move_dict']
-            self.movetext_np = NodePath("movetext_np")
-            self.movetext_np.setLightOff()
-            for tile in move_dict:
-                text = TextNode('node name')
-                text.setText( "%s" % move_dict[tile])
-                text.setAlign(TextNode.ACenter)
-                textNodePath = self.movetext_np.attachNewNode(text)
-                textNodePath.setPos(render, tile[0]+0.45, tile[1]+0.45, utils.GROUND_LEVEL+0.04)
-                textNodePath.setColor(1, 1, 1)
-                textNodePath.setScale(0.4, 0.4, 0.4)
-                textNodePath.setBillboardPointEye()
-                self.tile_cards[tile[0]][tile[1]].setColor(utils.WALKABLE_TILE_COLOR)
-                self.tile_cards[tile[0]][tile[1]].reparentTo(self.tile_cards_np)                  
-            self.movetext_np.reparentTo(self.node)  
-
-    def hideUnitAvailMove(self):
-        if self.movetext_np:
-            self.movetext_np.removeNode() 
-            for c in self.tile_cards_np.getChildren():
-                c.detachNode()
     
     def showVisibleEnemies(self, unit_id):
         self.hideVisibleEnemies()

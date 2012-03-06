@@ -127,9 +127,9 @@ class Client(DirectObject):
             # If it is our turn, display available move tiles
             if self.player == self.turn_player:
                 self.sgm.unit_np_dict[unit_id].setSelected()
-                self.sgm.showUnitAvailMove(unit_id)
+                self.picker.calcUnitAvailMove(unit_id)
                 self.sgm.showVisibleEnemies(unit_id)
-                self.sgm.unit_np_dict[unit_id].setCollisionOff()
+                #self.sgm.unit_np_dict[unit_id].setCollisionOff()
             
     def selectNextUnit(self):
         if self.sel_unit_id == None:
@@ -249,13 +249,13 @@ class Client(DirectObject):
     
     def clearState(self):
         self.sgm.clearAltRenderModel()
-        self.sgm.hideUnitAvailMove()
+        #self.sgm.hideUnitAvailMove()
         self.sgm.hideVisibleEnemies()
         self.interface.clearUnitData()
         
         if self.sel_unit_id != None:
             self.sgm.unit_np_dict[self.sel_unit_id].clearAllFlags()
-            self.sgm.unit_np_dict[self.sel_unit_id].setCollisionOn()
+            #self.sgm.unit_np_dict[self.sel_unit_id].setCollisionOn()
         self.sel_unit_id = None
     
 #========================================================================

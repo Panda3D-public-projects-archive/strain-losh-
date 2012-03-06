@@ -97,7 +97,7 @@ class Net():
             self.parent.refreshUnit(unit)
             if self.parent.sel_unit_id == unit['id']:
                 self.parent.interface.refreshUnitData( unit['id'] )
-                self.parent.sgm.showUnitAvailMove( unit['id'] )
+                self.parent.picker.calcUnitAvailMove( unit['id'] )
                 self.parent.sgm.showVisibleEnemies(unit['id'])
                 if unit['pos'][0] != old_x or unit['pos'][1] != old_y or unit['last_action']=='use':
                     m = self.parent.getInvisibleTiles()
