@@ -359,7 +359,8 @@ class Movement(DirectObject.DirectObject):
         elif min_unit_id != None:
             self.move_node.detachNode() 
             if min_unit_id != self.hovered_unit_id and self.hovered_unit_id != None:
-                self.parent.sgm.unit_np_dict[int(self.hovered_unit_id)].unmarkHovered()
+                if self.parent.sgm.unit_np_dict.has_key(int(self.hovered_unit_id)):
+                    self.parent.sgm.unit_np_dict[int(self.hovered_unit_id)].unmarkHovered()
             self.parent.sgm.unit_np_dict[int(min_unit_id)].markHovered()
             if self.hovered_tile != None:
                 self.hovered_tile.setColor(1, 1, 1)
