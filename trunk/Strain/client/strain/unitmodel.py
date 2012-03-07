@@ -49,7 +49,7 @@ class UnitModel:
         self.model.reparentTo(self.node)
         
         if not off:
-            scale = 0.4
+            scale = 0.3
             h = 180
             pos = Point3(int(unit['pos'][0]), int(unit['pos'][1]), 0)
             pos = self.calcWorldPos(pos)
