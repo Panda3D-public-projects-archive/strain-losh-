@@ -78,7 +78,6 @@ class Interface(DirectObject.DirectObject):
         
         self.accept('escape', self.escapeEvent)
         self.accept("mouse1", self.mouseLeftClick)
-        self.accept("mouse1-up", self.mouseLeftClickUp)
         self.accept("r", self.redraw)
         self.accept( 'window-event', self.windowEvent)
         
@@ -87,12 +86,7 @@ class Interface(DirectObject.DirectObject):
         self.old_p = None
         self.old_move_dest = None
         
-        self.target_info_node = None
-        
-        taskMgr.add(self.processGui, 'processGui_task')#@UndefinedVariable
-        taskMgr.add(self.hover, 'hover_task') #@UndefinedVariable
-        taskMgr.add(self.turnUnit, 'turnUnit_task')     #@UndefinedVariable  
-        taskMgr.add(self.positionInfoTask, 'positionInfo_task')#@UndefinedVariable  
+        taskMgr.add(self.processGui, 'processGui_task')#@UndefinedVariable 
     
     def init_gui(self):
         wp = base.win.getProperties() #@UndefinedVariable
@@ -181,86 +175,7 @@ class Interface(DirectObject.DirectObject):
             return base.mouseWatcherNode.getMouse() #@UndefinedVariable
         return None
 
-    def loadTurnArrows(self, dest):
-        self.turn_arrow_dict = {}        
-        for i in xrange(9):
-            m = loader.loadModel("sphere")#@UndefinedVariable
-            m.setScale(0.07, 0.07, 0.07)
-            x = dest.getX()+0.5
-            y = dest.getY()+0.5   
-            delta = 0.4   
-            height = utils.GROUND_LEVEL + 0.8     
-            if i == 0:
-                pos = Point3(x-delta, y+delta, height)
-                h = 45
-                key = HEADING_NW
-            elif i == 1:
-                pos = Point3(x, y+delta, height)
-                h = 0
-                key = HEADING_N                
-            elif i ==2:
-                pos = Point3(x+delta, y+delta, height)
-                h = -45
-                key = HEADING_NE                
-            elif i ==3:
-                pos = Point3(x-delta, y, height)
-                h = 90
-                key = HEADING_W                
-            elif i ==4:
-                pos = Point3(x+delta, y, height)
-                h = -90
-                key = HEADING_E                
-            if i == 5:
-                pos = Point3(x-delta, y-delta, height)
-                h = 135
-                key = HEADING_SW                
-            elif i == 6:
-                pos = Point3(x, y-delta, height)
-                h = 180
-                key = HEADING_S                
-            elif i ==7:
-                pos = Point3(x+delta, y-delta, height)
-                h = 225               
-                key = HEADING_SE
-            elif i == 8:
-                pos = Point3(x, y, height)
-                h = 0
-                key = HEADING_NONE
-            m.setPos(pos)
-            m.setH(h)
-            m.reparentTo(self.turn_np)
-            m.setLightOff()
-            self.turn_arrow_dict[key] = m
-            
-    def loadTurnArrows2(self, dest):
-        self.turn_arrow_dict = {}        
-        for i in xrange(1):
-            cm = CardMaker('cm')
-            m.setScale(0.01, 0.01, 0.01)#@UndefinedVariable
-            x = dest.getX()+0.5
-            y = dest.getY()+0.5  
-            z = utils.GROUND_LEVEL 
-            p3d = base.cam.getRelativePoint(render, Point3(x,y,z))#@UndefinedVariable
-            p2d = Point2()
-            base.camLens.project(p3d, p2d)#@UndefinedVariable
-            m.setPos(p2d.getX(), 0, p2d.getY())#@UndefinedVariable
-            m.reparentTo(render2d)#@UndefinedVariable
-            m.setLightOff()#@UndefinedVariable
-            #self.turn_arrow_dict[key] = m            
-        
-    def removeTurnArrows(self):
-        for child in self.turn_np.getChildren():
-            child.remove()
-        self.turn_arrow_dict = {}
-            
-    def markTurnArrow(self, key):
-        for i in self.turn_arrow_dict.itervalues():
-            i.setColor(1,1,1)
-        if key == HEADING_NONE:
-            self.turn_arrow_dict[key].setColor(0,0,1)
-        else:
-            self.turn_arrow_dict[key].setColor(1,0,0)
-        self.unit_move_orientation = key
+
 
     def escapeEvent(self):
         if self.selected_unit:
@@ -407,81 +322,6 @@ class Interface(DirectObject.DirectObject):
             self.parent.selectUnit(self.panel.unit_id)
         else:
             self.console.unfocus()    
-            unit_id = self.parent.picker.hovered_unit_id;
-            if unit_id != None:
-                unit_id = int(unit_id)
-                pickedCoord = self.parent.getCoordsByUnit(unit_id) 
-                # Player can only select his own units
-                if self.parent.isThisMyUnit(unit_id):
-                    if unit_id != self.parent.sel_unit_id:
-                        self.parent.selectUnit(unit_id)
-                    else:
-                        # Remember movement tile so we can send orientation message when mouse is depressed
-                        # Do this only if it is our turn
-                        if self.parent.player == self.parent.turn_player:
-                            self.unit_move_destination = pickedCoord                          
-                elif self.parent.isThisEnemyUnit(unit_id):
-                    if self.parent.sel_unit_id != None and self.parent.player == self.parent.turn_player:
-                        self.parent.sgm.unit_np_dict[self.parent.sel_unit_id].target_unit = self.parent.sgm.unit_np_dict[unit_id]
-                        if self.parent._anim_in_process == False:
-                            ClientMsg.shoot(self.parent.sel_unit_id, unit_id)
-            else:
-                # We clicked on the grid, find if unit is placed on those coords
-                pickedCoord = Point2(int(self.parent.picker.hovered_point.getX()), int(self.parent.picker.hovered_point.getY()))
-                unit_id = self.parent.getUnitByCoords(pickedCoord)
-                
-                # If unit is there, check if it is our unit. If it is, select it.
-                # If enemy unit is there, we are trying to attack.
-                # If unit is not there, check if we have unit selected. If we do, we are trying to move it.
-                if unit_id != None:
-                    if self.parent.isThisMyUnit(unit_id):
-                        if unit_id != self.parent.sel_unit_id:
-                            self.parent.selectUnit(unit_id)
-                        else:
-                            # Remember movement tile so we can send orientation message when mouse is depressed
-                            # Do this only if it is our turn
-                            if self.parent.player == self.parent.turn_player:
-                                self.unit_move_destination = pickedCoord
-                    elif self.parent.isThisEnemyUnit(unit_id):
-                        if self.parent.sel_unit_id != None and self.parent.player == self.parent.turn_player:
-                            if self.parent._anim_in_process == False:
-                                ClientMsg.shoot(self.parent.sel_unit_id, unit_id)
-                else:
-                    if self.parent.sel_unit_id != None and self.parent.player == self.parent.turn_player:
-                        # Remember movement tile so we can send movement message when mouse is depressed
-                        # Do this only if it is our turn
-                        if self.parent.units[self.parent.sel_unit_id]['move_dict'].has_key(tuple(pickedCoord)):
-                            self.unit_move_destination = pickedCoord
-                            
-    def mouseLeftClickUp(self):
-        """Handles left mouse click actions when mouse button is depressed.
-           Used for unit movement.
-        """
-        if self.parent.sel_unit_id != None and self.unit_move_destination and self.unit_move_orientation != HEADING_NONE:   
-            # Send movement message to engine
-            x = self.unit_move_destination.getX()
-            y = self.unit_move_destination.getY()
-            if self.unit_move_orientation == HEADING_NW:
-                o = Point2(x-1, y+1)
-            elif self.unit_move_orientation == HEADING_N:
-                o = Point2(x, y+1)
-            elif self.unit_move_orientation == HEADING_NE:
-                o = Point2(x+1, y+1)
-            elif self.unit_move_orientation == HEADING_W:
-                o = Point2(x-1, y)
-            elif self.unit_move_orientation == HEADING_E:
-                o = Point2(x+1, y)
-            elif self.unit_move_orientation == HEADING_SW:
-                o = Point2(x-1, y-1)
-            elif self.unit_move_orientation == HEADING_S:
-                o = Point2(x, y-1)
-            elif self.unit_move_orientation == HEADING_SE:
-                o = Point2(x+1, y-1)
-            ClientMsg.move(self.parent.sel_unit_id, (x, y), (o.x, o.y))
-        self.unit_move_destination = None
-        self.unit_move_orientation = HEADING_NONE
-        self.move_timer = 0
-        self.removeTurnArrows()
 
     def startMoveTileInterval(self, tile):
         self.move_tile_seq = Sequence(LerpColorInterval(tile, 0.3, (0, 0, 0, 0.5)),
@@ -508,51 +348,6 @@ class Interface(DirectObject.DirectObject):
 #===============================================================================
 # CLASS Interface --- TASKS
 #===============================================================================
-    def hover(self, task):
-        """Visually marks tiles over which mouse cursor hovers."""
-        if self.unit_move_destination:
-            if self.old_p != None:
-                old_tile = self.parent.sgm.tile_cards[self.old_p[0]][self.old_p[1]]
-                self.stopMoveTileInterval(old_tile)
-                self.old_p = None
-            move_x = int(self.unit_move_destination.getX())
-            move_y = int(self.unit_move_destination.getY())
-            if (move_x, move_y) != self.old_move_dest:
-                tile = self.parent.sgm.tile_cards[move_x][move_y]
-                self.startPickedMoveTileInterval(tile)
-                self.old_move_dest = (move_x, move_y)
-        else:
-            if self.parent.turn_player != self.parent.player:
-                return task.cont
-            if self.old_move_dest != None:
-                old_move_tile = self.parent.sgm.tile_cards[self.old_move_dest[0]][self.old_move_dest[1]]
-                self.stopPickedTileMoveInterval(old_move_tile)
-                self.old_move_dest = None
-            if self.parent.sel_unit_id != None:
-                move_dict = self.parent.units[self.parent.sel_unit_id]['move_dict']
-                if self.parent.picker.hovered_point:
-                    p = (int(self.parent.picker.hovered_point.getX()), int(self.parent.picker.hovered_point.getY()))
-                    if p != self.old_p:
-                        if move_dict.has_key(p):
-                            if self.old_p != None:
-                                old_tile = self.parent.sgm.tile_cards[self.old_p[0]][self.old_p[1]]
-                                self.stopMoveTileInterval(old_tile)
-                            tile = self.parent.sgm.tile_cards[p[0]][p[1]]
-                            self.startMoveTileInterval(tile)
-                            self.old_p = p
-                        else:
-                            if self.old_p != None:
-                                old_tile = self.parent.sgm.tile_cards[self.old_p[0]][self.old_p[1]]
-                                self.stopMoveTileInterval(old_tile)
-                                self.old_p = None
-                else:
-                    if self.old_p != None:
-                        old_tile = self.parent.sgm.tile_cards[self.old_p[0]][self.old_p[1]]
-                        self.stopMoveTileInterval(old_tile)
-                        self.old_p = None
-        return task.cont
-    
-     
     def processGui(self, task):
         """Visually marks and selects GUI element over which mouse cursor hovers."""
         if base.mouseWatcherNode.hasMouse(): #@UndefinedVariable
@@ -587,96 +382,7 @@ class Interface(DirectObject.DirectObject):
                 self.hovered_gui = None
                 self.console.hide()
   
-        return task.cont    
-
-    def turnUnit(self, task):
-        if self.unit_move_destination: 
-            if self.move_timer < 0.1:
-                dt = globalClock.getDt()#@UndefinedVariable
-                self.move_timer += dt
-                if self.move_timer > 0.1:
-                    self.loadTurnArrows(self.unit_move_destination)
-                    pos = Point3(self.unit_move_destination.getX()+0.5, self.unit_move_destination.getY()+0.5, 0.3)
-                    self.dummy_turn_pos_node.setPos(pos)
-            else: 
-                pos3d = self.parent.picker.hovered_point
-                self.dummy_turn_dest_node.setPos(pos3d)
-                self.dummy_turn_pos_node.lookAt(self.dummy_turn_dest_node)
-                h = self.dummy_turn_pos_node.getH()
-                if self.dummy_turn_dest_node.getX() >= 0:
-                    x = int(self.dummy_turn_dest_node.getX())
-                else:
-                    x = int(self.dummy_turn_dest_node.getX()-1)
-                if self.dummy_turn_dest_node.getY() >= 0:
-                    y = int(self.dummy_turn_dest_node.getY())
-                else:
-                    y = int(self.dummy_turn_dest_node.getY()-1)    
-                dest_node_pos = Point2(x, y)
-                pos_node_pos = Point2(int(self.dummy_turn_pos_node.getX()), int(self.dummy_turn_pos_node.getY()))
-                if dest_node_pos == pos_node_pos:
-                    key = HEADING_NONE
-                # TODO: ogs: kad Debeli popravi turn poruku mozemo ovaj dolje kod zamijeniti s zakomentiranim
-                #else:
-                    #key = utils.clampToHeading(h)
-                
-                elif h >= -22.5 and h < 22.5:
-                    key = HEADING_N
-                elif h >= 22.5 and h < 67.5:
-                    key = HEADING_NW
-                elif h >= 67.5 and h < 112.5:
-                    key = HEADING_W
-                elif h >= 112.5 and h < 157.5:
-                    key = HEADING_SW
-                elif (h >= 157.5 and h <= 180) or (h >= -180 and h < -157.5):
-                    key = HEADING_S
-                elif h >= -157.5 and h < -112.5:
-                    key = HEADING_SE
-                elif h >= -112.5 and h < -67.5:
-                    key = HEADING_E
-                elif h >= -67.5 and h < -22.5:
-                    key = HEADING_NE
-                self.markTurnArrow(key)
         return task.cont
-
-    def positionInfoTask(self, task):
-        if self.target_info_node:
-            if base.mouseWatcherNode.hasMouse():
-                mpos = base.mouseWatcherNode.getMouse()
-                r2d = Point3(mpos.getX(), 0, mpos.getY())
-                a2d = aspect2d.getRelativePoint(render2d, r2d)
-                self.target_info_node.setPos(a2d + Point3(0, 0, 0.08))
-        return task.cont
-
-    def showTargetInfo(self, node):
-        shooter = self.parent.units[self.parent.sel_unit_id]
-        target = self.parent.units[int(node.id)]    
-        hit, desc = toHit(shooter, target, self.parent.level)
-        text = str(hit)  + '%\n' + str(desc)
-        if hit < 35:
-            bg = (1,0,0,0.7)
-            fg = (1,1,1,1)
-        elif hit >= 35 and hit < 75:
-            bg = (0.89, 0.82, 0.063, 0.7)
-            fg = (0,0,0,1)
-        elif hit >= 75:
-            bg = (0.153, 0.769, 0.07, 0.7)
-            fg = (0,0,0,1)
-        else:
-            bg = (1,0,0,0.7)
-            fg = (1,1,1,1)
-        self.target_info_node = aspect2d.attachNewNode('target_info')
-        OnscreenText(parent = self.target_info_node
-                          , text = text
-                          , align=TextNode.ACenter
-                          , scale=0.04
-                          , fg = fg
-                          , bg = bg
-                          , font = loader.loadFont(utils.GUI_FONT)
-                          , shadow = (0, 0, 0, 1))
-    
-    def clearTargetInfo(self):
-        if self.target_info_node:
-            self.target_info_node.removeNode()
     
     def toggleOverwatch(self):
         ClientMsg.overwatch( self.parent.sel_unit_id )

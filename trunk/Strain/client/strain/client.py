@@ -20,7 +20,7 @@ from camera import Camera
 #from cam2 import Camera
 from net import Net
 from interface import Interface
-from picker import Picker
+from movement import Movement
 import utils as utils
 from strain.share import *
 from combat import Combat
@@ -44,8 +44,8 @@ class Client(DirectObject):
         # Init SceneGraph manager
         self.sgm = SceneGraph(self)
         
-        # Init Picker
-        self.picker = Picker(self)
+        # Init Movement
+        self.movement = Movement(self)
         
         # Init Camera
         self.camera = Camera(self, 20, 20)
@@ -90,13 +90,12 @@ class Client(DirectObject):
             
     def deselectUnit(self):
         self.sgm.clearAltRenderModel()
-        self.sgm.hideUnitAvailMove()
+        self.movement.deleteUnitAvailMove()
         self.sgm.hideVisibleEnemies()
         self.interface.clearUnitData()
         
         if self.sel_unit_id != None:
             self.sgm.unit_np_dict[self.sel_unit_id].clearAllFlags()
-            self.sgm.unit_np_dict[self.sel_unit_id].setCollisionOn()
         self.sel_unit_id = None
     
     def selectUnit(self, unit_id):
@@ -114,9 +113,8 @@ class Client(DirectObject):
             # If it is our turn, display available move tiles
             if self.player == self.turn_player:
                 self.sgm.unit_np_dict[unit_id].setSelected()
-                self.sgm.showUnitAvailMove(unit_id)
+                self.movement.calcUnitAvailMove(unit_id)
                 self.sgm.showVisibleEnemies(unit_id)
-                self.sgm.unit_np_dict[unit_id].setCollisionOff()
             
     def selectNextUnit(self):
         if self.sel_unit_id == None:
@@ -220,11 +218,11 @@ class Client(DirectObject):
     
     def beforeAnimHook(self):
         self._anim_in_process = True
-        self.sgm.hideUnitAvailMove()
+        self.movement.deleteUnitAvailMove()
         self.sgm.hideVisibleEnemies()
         for u in self.sgm.unit_np_dict.itervalues():
             u.clearTargeted()
-        self.picker.hovered_unit_id = None
+        self.movement.hovered_unit_id = None
             
     
     def afterAnimHook(self):     

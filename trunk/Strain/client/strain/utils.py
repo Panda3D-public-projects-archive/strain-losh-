@@ -173,6 +173,29 @@ def getHeadingAngle(h):
         angle = 0
     return angle
 
+def getHeadingTile(h, dest):
+    int_h = int(h)
+    if int_h == HEADING_N:
+        offset = (0, 1)
+    elif int_h == HEADING_NW:
+        offset = (-1, 1)
+    elif int_h == HEADING_W:
+        offset = (-1, 0)
+    elif int_h == HEADING_SW:
+        offset = (-1, -1)
+    elif int_h == HEADING_S:
+        offset = (0, -1)
+    elif int_h == HEADING_SE:
+        offset = (1, -1)
+    elif int_h == HEADING_E:
+        offset = (1, 0)
+    elif int_h == HEADING_NE:
+        offset = (1, 1)
+    else:
+        offset = (0, 0)
+    return tuple([item1 + item2 for item1, item2 in zip(dest, offset)])
+
+
 def getUnitWeapons(unit):
     wpn_list = [unit['ranged_weapon']['name'], unit['melee_weapon']['name']]
     return wpn_list
