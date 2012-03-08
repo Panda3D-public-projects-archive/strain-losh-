@@ -30,7 +30,7 @@ def levelVisibilityDict( unit_list, level ):
                     continue
                 
                 if level.getHeight( x_y ):
-                    vis_dict[x_y] = 1
+                    #vis_dict[x_y] = 1
                     continue
                      
                 tiles = getTiles2D( unit['pos'], x_y, level )
@@ -658,27 +658,22 @@ def visibleWalls( unit_list, level ):
     
     visible_walls = []
     
+    lvl_vis = levelVisibilityDict(unit_list, level)
+    
     for x in xrange( level.maxgridX ):
         for y in xrange( level.maxgridY ):
             if not level._grid[x][y]:
                 continue
-    
-            #print "provjeravam x:",x, "  y:",y, "grid:",level._grid[x][y]
-            for unit in unit_list.values():
-                if canSeeWall( unit, x, y, level ):
-                    visible_walls.append( (x,y) )
-                    break
-                
-                
-    
-    #return list( set(visible_walls) )
+
+            if canSeeWall( x, y, level, lvl_vis ):
+                visible_walls.append( (x,y) )               
     
     return visible_walls
     
     
     
     
-def canSeeWall( unit, x, y, level ):
+def canSeeWall( x, y, level, level_vis_dict ):
     
     if x % 2 == 0:
         #this is a diagonal, skip this
@@ -690,13 +685,13 @@ def canSeeWall( unit, x, y, level ):
         
         if _y_2 < 0:
             _y_2 = 0
-        
+
         #find both neighboring tiles, and if we see any of those we can see the wall
         if _x_2 <= level.maxgridX:
-            if getTiles2D(unit['pos'], ( _x_2, _y_2 ), level):
+            if (_x_2, _y_2) in level_vis_dict and level_vis_dict[ (_x_2,_y_2) ]:
                 return True
         if _x_2 > 0:
-            if getTiles2D(unit['pos'], ( _x_2-1, _y_2 ), level):
+            if (_x_2-1, _y_2) in level_vis_dict and level_vis_dict[ (_x_2-1,_y_2) ]:
                 return True
     
     else:
@@ -712,11 +707,11 @@ def canSeeWall( unit, x, y, level ):
         
         #find both neighboring tiles, and if we see any of those we can see the wall
         if _y_2 <= level.maxgridY:
-            if getTiles2D(unit['pos'], ( _x_2, _y_2 ), level):
+            if (_x_2, _y_2) in level_vis_dict and level_vis_dict[ (_x_2, _y_2) ]:
                 return True
             
         if _y_2 > 0:
-            if getTiles2D(unit['pos'], ( _x_2, _y_2-1 ), level):
+            if (_x_2, _y_2-1) in level_vis_dict and level_vis_dict[ (_x_2,_y_2-1) ]:
                 return True
     
     
@@ -1086,8 +1081,6 @@ class Level:
 
 
     def opaque(self, x, y, z):
-        if self.outOfBounds(x, y):
-            return True
         if self._level_data[ int(x) ][ int(y) ] < z: 
             return False
         return True

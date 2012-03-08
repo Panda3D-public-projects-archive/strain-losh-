@@ -314,7 +314,7 @@ class Engine( Thread ):
         xmldoc.unlink()
         
         notify.info( "Army lists loaded OK" )
-                
+
 
     def endTurn(self, source):
         
@@ -340,7 +340,7 @@ class Engine( Thread ):
         changes = {}
         
         for p in self.players:
-            vis_walls[p.id] = visibleWalls( compileAllUnits( p.units ) , self.level)
+            vis_walls[p.id] = visibleWalls( compileAllUnits( p.units ).values() , self.level)
             print "player:", p.name, "walls:", vis_walls[p.id]
             
             
