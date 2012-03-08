@@ -12,7 +12,7 @@ import sys, traceback
 import cPickle as pickle
 import util
 from player import Player
-from util import compileEnemyUnit, compileUnit, compileState
+from util import compileEnemyUnit, compileUnit, compileState, compileAllUnits
 import copy
 from util import OBSERVER_ID
 from strain.share import *
@@ -45,6 +45,10 @@ class Engine( Thread ):
         self.units = {}
         self.dead_units = {}
         
+        #K-player.id V-grid that player with that id saw last
+        self._grid_player = {}
+        
+        
         self.turn = 0
         self.active_player = None
                 
@@ -67,7 +71,7 @@ class Engine( Thread ):
       
         self.firstTurn()
 
-        
+        self.checkAndSendLevelMsgs()
         #+++++++++++++++++++++++++++++++++++++++++++++MAIN LOOP+++++++++++++++++++++++++++++++++++++++++++++
         #+++++++++++++++++++++++++++++++++++++++++++++MAIN LOOP+++++++++++++++++++++++++++++++++++++++++++++
         while( self.stop == False ):
@@ -152,9 +156,9 @@ class Engine( Thread ):
                 unit.overwatch = not unit.overwatch
             else:
                 EngMsg.error("Not enough AP for overwatch.", source)
-                return
+
             
-        if param == SET_UP:
+        elif param == SET_UP:
             if not unit.hasHeavyWeapon():
                 EngMsg.error( "The unit does not have any heavy weapons.", source )
                 return
@@ -170,7 +174,7 @@ class Engine( Thread ):
                     EngMsg.error( msg, source )
                     return
                     
-        if param == USE:
+        elif param == USE:
             if not unit.can_use:
                 EngMsg.error( "Unit cannot use anything.", source )
                 return
@@ -183,22 +187,25 @@ class Engine( Thread ):
                 unit.use()
                 player.addUseMsg( unit.id )
                 self.observer.addUseMsg( unit.id )
-                self.levelChanged()
+                
+                #self.levelChanged()
             else:
                 return
                     
-        if param == TAUNT:
+        elif param == TAUNT:
             if unit.ap < 1:
                 EngMsg.error( "Not enough AP for taunting.", source )
                 return
                     
             unit.taunt()            
             self.taunt( unit )
-            return
+
                     
         player.addUnitMsg( compileUnit(unit) )
         self.observer.addUnitMsg( compileUnit(unit) )
         
+        self.checkAndSendLevelMsgs()
+        self.updateVisibilityAndSendVanishAndSpotMessages()
         
         
     def taunt(self, unit):
@@ -327,6 +334,36 @@ class Engine( Thread ):
         
         
         
+    def checkAndSendLevelMsgs(self):
+        
+        vis_walls = {}
+        changes = {}
+        
+        for p in self.players:
+            vis_walls[p.id] = visibleWalls( compileAllUnits( p.units ) , self.level)
+            print "player:", p.name, "walls:", vis_walls[p.id]
+            
+            
+        for x in xrange( self.level.maxgridX ):
+            for y in xrange( self.level.maxgridY ):
+                if not self.level._grid[x][y]:
+                    continue
+
+                for p in self.players:
+                    if (x,y) in vis_walls[p.id]:
+                        if self.level._grid[x][y] != self._grid_player[p.id]:
+                            self._grid_player[p.id][x][y] = self.level._grid[x][y]
+                            changes[p.id] = p
+                        
+
+        for p in changes.values():
+            p.addLevelMsg( util.compileLevelWithDifferentGrid(self.level, self._grid_player[p.id]))
+        
+        
+        pass
+        
+        
+        
     def checkVictoryConditions(self):
         
         #mark all defeated players
@@ -400,6 +437,14 @@ class Engine( Thread ):
         self.turn = 1
 
         print "turn:", self.turn, "\tplayer:", self.active_player.name
+
+        #fill grid_player with default walls
+        for p in self.players:
+            self._grid_player[p.id] = []
+            for line in self.level._grid:
+                #copy the whole line, not just reference                
+                self._grid_player[p.id].append(line[:])
+                
 
         #check visibility
         self.updateVisibilityAndSendVanishAndSpotMessages()
@@ -692,6 +737,7 @@ class Engine( Thread ):
         self.checkUnitCanUse( unit )
 
         self.sendUNITMsgsAndRemoveDeadUnits( unit_ids_involved )
+        self.checkAndSendLevelMsgs()
             
         
         
@@ -890,7 +936,7 @@ class Engine( Thread ):
         self.sendUNITMsgsAndRemoveDeadUnits( unit_ids_involved )        
                 
         self.updateVisibilityAndSendVanishAndSpotMessages()
-        
+        self.checkAndSendLevelMsgs()
             
             
     def findUnitsInvolved(self, shoot_msg ):
