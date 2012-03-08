@@ -652,6 +652,77 @@ def checkGridVisibility( pos, lastpos, level):
     
     return True    
     
+    
+    
+def visibleWalls( unit_list, level ):
+    
+    visible_walls = []
+    
+    for x in xrange( level.maxgridX ):
+        for y in xrange( level.maxgridY ):
+            if not level._grid[x][y]:
+                continue
+    
+            #print "provjeravam x:",x, "  y:",y, "grid:",level._grid[x][y]
+            for unit in unit_list.values():
+                if canSeeWall( unit, x, y, level ):
+                    visible_walls.append( (x,y) )
+                    break
+                
+                
+    
+    #return list( set(visible_walls) )
+    
+    return visible_walls
+    
+    
+    
+    
+def canSeeWall( unit, x, y, level ):
+    
+    if x % 2 == 0:
+        #this is a diagonal, skip this
+        if y % 2 == 0:
+            return False
+        
+        _x_2 = x/2
+        _y_2 = (y-1)/2
+        
+        if _y_2 < 0:
+            _y_2 = 0
+        
+        #find both neighboring tiles, and if we see any of those we can see the wall
+        if _x_2 <= level.maxgridX:
+            if getTiles2D(unit['pos'], ( _x_2, _y_2 ), level):
+                return True
+        if _x_2 > 0:
+            if getTiles2D(unit['pos'], ( _x_2-1, _y_2 ), level):
+                return True
+    
+    else:
+        #this is a diagonal, skip this
+        if y % 2 != 0:
+            return False
+            
+        _y_2 = y/2
+        _x_2 = (x-1)/2
+        if _x_2 < 0:
+            _x_2 = 0
+        
+        
+        #find both neighboring tiles, and if we see any of those we can see the wall
+        if _y_2 <= level.maxgridY:
+            if getTiles2D(unit['pos'], ( _x_2, _y_2 ), level):
+                return True
+            
+        if _y_2 > 0:
+            if getTiles2D(unit['pos'], ( _x_2, _y_2-1 ), level):
+                return True
+    
+    
+    return False
+    
+    
 
 def signum( num ):
     if( num < 0 ): 
@@ -684,7 +755,7 @@ class Level:
         self._dynamics = []
         self._grid = []
         self._walls = {}
-        
+                
         if name:
             self.load( name )        
 
@@ -1015,7 +1086,9 @@ class Level:
 
 
     def opaque(self, x, y, z):
-        if self._level_data[ int(x) ][ int(y) ] <= z: 
+        if self.outOfBounds(x, y):
+            return True
+        if self._level_data[ int(x) ][ int(y) ] < z: 
             return False
         return True
     
@@ -1052,7 +1125,7 @@ class Level:
     def gridCanUse(self, x, y):
         if x < 0 or y < 0 or x >= self.maxgridX or y >= self.maxgridY:
             return False
-        print "x:",x,"  maxX:",self.maxgridX
+
         if self._grid[x][y] and self._grid[x][y].usesTo:
                 return True
         return False
@@ -1075,7 +1148,7 @@ class Wall:
         self.blockBullets = False
         self.destroysTo = None  
         self.usesTo = None
-    
+
     
 #-------WALL LOADING---------
 
