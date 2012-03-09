@@ -115,7 +115,7 @@ class Net():
             self.parent._message_in_process = True
             self.parent.handleSpot(msg[1])  
             self.parent.level.putUnitDict(msg[1])  
-            if self.parent.player == self.parent.turn_player:
+            if self.parent.player == self.parent.turn_player and self.parent.sel_unit_id != None:
                 self.parent.movement.calcUnitAvailMove( self.parent.sel_unit_id )
                 self.parent.sgm.showVisibleEnemies( self.parent.sel_unit_id )
         #========================================================================
@@ -151,10 +151,11 @@ class Net():
             self.parent.sgm.level_mesh.processLevel()
             # if our enemy opens doors, we need to update visibility
             # enemy's visibility gets updated when he gets UNIT message
-            if self.parent.player == self.parent.turn_player:
+            if self.parent.player == self.parent.turn_player and self.parent.sel_unit_id != None:
                 self.parent.movement.calcUnitAvailMove( self.parent.sel_unit_id )
                 self.parent.sgm.showVisibleEnemies( self.parent.sel_unit_id )
                 self.parent.sgm.level_mesh.setInvisibleTiles(self.parent.getInvisibleTiles())
+                self.parent.sgm.level_mesh.setInvisibleWalls(self.parent.getInvisibleWalls())
         #========================================================================
         #
         elif msg[0] == USE:
