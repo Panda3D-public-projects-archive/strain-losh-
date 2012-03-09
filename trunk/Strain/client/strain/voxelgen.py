@@ -263,13 +263,23 @@ class VoxelGenerator():
             if self.old_tile_dict == None or tile_dict[invisible_tile] != self.old_tile_dict[invisible_tile]:
                 if tile_dict[invisible_tile] == 0:
                     self.floor_tile_dict[invisible_tile].clearTexture()
+                    self.floor_tile_dict[invisible_tile].setTexture(self.tex3)                    
+                    self.floor_tile_dict[invisible_tile].setColorScale(0.3,0.3,0.3,1)
+                    """
+                    self.floor_tile_dict[invisible_tile].clearTexture()
                     self.floor_tile_dict[invisible_tile].setTexture(self.tex_floor_transparent)
                     self.floor_tile_dict[invisible_tile].setTransparency(TransparencyAttrib.MAlpha)
+                    """
                     self.markChunkDirty(invisible_tile[0], invisible_tile[1])
                 else:
                     self.floor_tile_dict[invisible_tile].clearTexture()
+                    self.floor_tile_dict[invisible_tile].setTexture(self.tex3)                    
+                    self.floor_tile_dict[invisible_tile].setColorScale(1,1,1,1)
+                    """
+                    self.floor_tile_dict[invisible_tile].clearTexture()
                     self.floor_tile_dict[invisible_tile].setTexture(self.tex3)
                     self.floor_tile_dict[invisible_tile].setTransparency(TransparencyAttrib.MNone) 
+                    """
                     self.markChunkDirty(invisible_tile[0], invisible_tile[1])            
         self.old_tile_dict = tile_dict
     
