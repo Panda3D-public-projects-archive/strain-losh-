@@ -558,3 +558,12 @@ class Client(DirectObject):
         print "timer:::", (time.clock()-t)*1000
         return l
 
+    def getInvisibleWalls(self):
+        a = []
+        for u in self.units:
+            if self.isThisMyUnit(u):
+                a.append(self.units[u])
+        t = time.clock()
+        l = visibleWalls(a, self.level)
+        print "timer:::", (time.clock()-t)*1000
+        return l

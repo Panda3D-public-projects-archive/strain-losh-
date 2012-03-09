@@ -24,14 +24,13 @@ class VoxelGenerator():
         self.parent = parent
         self.level = level
         self.chunk_size = chunk_size
-        # We need just one original nodepath for walls, and one usable in scenegraph
-        # Wall will never need to be flattened
+        self.node_wall_original = NodePath('wall_original')
         self.node_wall_usable = self.parent.level_node.attachNewNode("voxgen_wall_usable")    
         self.node_forcewall_usable  = self.parent.level_node.attachNewNode("voxgen_force_wall_usable") 
-        # Nodepath for dynamic wall models. These nodepaths will need to be changed
         self.node_dynamic_wall_usable = self.parent.level_node.attachNewNode("voxgen_dynamic_wall_usable")    
+        self.wall_dict= {}
         self.dynamic_wall_dict = {}
-        
+                
         # For floors we will create a list of nodepaths, each list member will parent one chunk of tiles
         x = int((level.maxX-1) / chunk_size[0]) + 1
         y = int((level.maxY-1) / chunk_size[1]) + 1
@@ -54,6 +53,7 @@ class VoxelGenerator():
         
         # We need a FIFO struct to hold pointers to dirty chunks that need flattening
         self.dirty_chunks = deque()
+        self.dirty_walls = 0
         
         self.old_tile_dict = None
         
@@ -62,7 +62,6 @@ class VoxelGenerator():
         self.frames_between = 3
         self.frames_counter = 0
         taskMgr.add(self.flattenTask, "flatten_task")  
-        
 
     def markChunkDirty(self, x, y):
         chunk_x = int(x / self.chunk_size[0])
@@ -143,9 +142,6 @@ class VoxelGenerator():
                                 model = loader.loadModel('flattile')
                                 model.setPos(x, y, utils.GROUND_LEVEL)
                             
-                            #model = loader.loadModel('halfcube')
-                            #model.setPos(x, y, 0)
-                            
                             model.reparentTo(self.floor_np_list[int(x/self.chunk_size[0])][int(y/self.chunk_size[1])])
                             self.floor_tile_dict[(x,y)] = model
                         else:
@@ -161,20 +157,8 @@ class VoxelGenerator():
             for y, val2 in enumerate(val):
                 if val2 != None:
                     # prvi parni, drugi neparni
-                    if (x%2==0 and y%2!=0):
-                        tile1_x = (x-2)/2
-                        tile1_y = (y-1)/2
-                        tile2_x = x/2
-                        tile2_y = (y-1)/2
-                        h = 90
-                    # prvi neparni, drugi parni
-                    elif (x%2!=0 and y%2==0):
-                        tile1_x = (x-1)/2
-                        tile1_y = (y-2)/2
-                        tile2_x = (x-1)/2
-                        tile2_y = y/2
-                        h = 0
-                    else:
+                    tile2_x, tile2_y, h = self.getWallPosition(x, y)
+                    if tile2_x == None:
                         continue
                     
                     my_x= tile2_x
@@ -183,20 +167,23 @@ class VoxelGenerator():
                         model = loader.loadModel("wall")
                         model.setPos(my_x, my_y, utils.GROUND_LEVEL)
                         model.setH(h)
-                        model.reparentTo(self.node_wall_usable)
+                        self.wall_dict[(my_x, my_y)] = model                        
+                        model.reparentTo(self.node_wall_original)
                     elif val2.name == "Wall2":
                         model = loader.loadModel("wall2")
                         model.setPos(my_x, my_y, utils.GROUND_LEVEL)
                         model.setH(h)
                         model.setColor(0,1,0,1)
-                        model.reparentTo(self.node_wall_usable)
+                        self.wall_dict[(my_x, my_y)] = model                        
+                        model.reparentTo(self.node_wall_original)
                     elif val2.name == "HalfWall":
                         model = loader.loadModel("wall2")
                         model.setPos(my_x, my_y, utils.GROUND_LEVEL)
                         model.setH(h)
                         model.setColor(0,0,0,1)
                         model.setScale(1,1,0.4)
-                        model.reparentTo(self.node_wall_usable)
+                        self.wall_dict[(my_x, my_y)] = model                             
+                        model.reparentTo(self.node_wall_original)
                     elif val2.name == "Ruin":
                         model = loader.loadModel("wall2")
                         model.setPos(my_x, my_y, utils.GROUND_LEVEL)
@@ -231,38 +218,39 @@ class VoxelGenerator():
                         model.setTexture(self.ts_fs, self.tex_fs)
                         model.setTransparency(TransparencyAttrib.MAlpha)
                         model.reparentTo(self.node_forcewall_usable)
+                        self.dynamic_wall_dict[(my_x, my_y)] = model
                         model.setLightOff()                                         
          
-        self.node_wall_usable.clearModelNodes()
-        self.node_wall_usable.flattenStrong()
-        self.node_wall_usable.setShaderAuto()
         #self.floor_usable_np.setShaderAuto()
         self.markAllChunksDirty()
+        self.dirty_walls = 1
         
+    def getWallPosition(self, x, y):
+        if (x%2==0 and y%2!=0):
+            pos_x = x/2
+            pos_y = (y-1)/2
+            h = 90
+        # prvi neparni, drugi parni
+        elif (x%2!=0 and y%2==0):
+            pos_x = (x-1)/2
+            pos_y = y/2
+            h = 0
+        else:
+            pos_x = None
+            pos_y = None
+            h = None
+        return pos_x, pos_y, h
+    
     def processLevel(self):
         self.level = self.parent.parent.level
         for x, val in enumerate(self.level._grid):
             for y, val2 in enumerate(val):
                 if val2 != None:
+                    my_x, my_y, h = self.getWallPosition(x, y)
                     # prvi parni, drugi neparni
-                    if (x%2==0 and y%2!=0):
-                        tile1_x = (x-2)/2
-                        tile1_y = (y-1)/2
-                        tile2_x = x/2
-                        tile2_y = (y-1)/2
-                        h = 90
-                    # prvi neparni, drugi parni
-                    elif (x%2!=0 and y%2==0):
-                        tile1_x = (x-1)/2
-                        tile1_y = (y-2)/2
-                        tile2_x = (x-1)/2
-                        tile2_y = y/2
-                        h = 0
-                    else:
+                    if my_x == None:
                         continue
                     
-                    my_x= tile2_x
-                    my_y=tile2_y
                     if val2.name == "ClosedDoor" and val2.name != self.parent.parent.old_level._grid[x][y].name:
                         i = self.dynamic_wall_dict[(my_x, my_y)].scaleInterval(1, Vec3(1,1,1))
                         i.start()
@@ -285,12 +273,41 @@ class VoxelGenerator():
                     self.markChunkDirty(invisible_tile[0], invisible_tile[1])            
         self.old_tile_dict = tile_dict
     
+    def setInvisibleWalls(self, visible_wall_list):
+        new_list = []
+        for l in visible_wall_list:
+            x,y,h = self.getWallPosition(l[0], l[1])
+            new_list.append((x,y))
+        for wall in self.wall_dict:
+            # If we have key in visible_wall_dict, the wall is visible
+            if wall in new_list:
+                self.wall_dict[wall].setColorScale(1,1,1,1)
+            else:
+                self.wall_dict[wall].setColorScale(0.3,0.3,0.3,1)
+        for wall in self.dynamic_wall_dict:
+            if wall in new_list:
+                self.dynamic_wall_dict[wall].setColorScale(1,1,1,1)
+            else:
+                self.dynamic_wall_dict[wall].setColorScale(0.3,0.3,0.3,1)
+        self.dirty_walls = 1
+                
+    
     def flattenTask(self, task):
         if self.pause_flatten_task:
             return task.cont
         
         if self.frames_counter < self.frames_between:
             self.frames_counter += 1
+        
+        if self.dirty_walls == 1:
+            np = self.node_wall_original.copyTo(NodePath())
+            np.clearModelNodes()
+            np.flattenStrong()
+            self.node_wall_usable.removeNode()
+            self.node_wall_usable = np
+            self.node_wall_usable.reparentTo(self.parent.level_node)
+            #self.node_wall_usable.setShaderAuto()
+            self.dirty_walls = 0
         
         if len(self.dirty_chunks) > 0:
             if self.frames_counter == self.frames_between:
