@@ -266,11 +266,11 @@ class Movement(DirectObject.DirectObject):
             if self.hovered_unit_id != None:
                 self.parent.sgm.unit_np_dict[int(self.hovered_unit_id)].unmarkHovered()
                 self.hovered_unit_id = None
-            if self.hovered_tile != None:
+            if self.hovered_tile != None and not self.hovered_tile.isEmpty():
                 self.hovered_tile.setColor(1, 1, 1)
                 self.hovered_tile.setScale(0.05)                
                 self.color_scale_parallel.pause()
-            if self.hovered_compass_tile != None:
+            if self.hovered_compass_tile != None and not self.hovered_compass_tile.isEmpty():
                 self.hovered_compass_tile.setColor(1, 1, 1)
                 self.hovered_compass_tile.setScale(0.05)                
                 self.color_scale_parallel.pause()
@@ -338,13 +338,13 @@ class Movement(DirectObject.DirectObject):
         # - mark new hovered unit
         # TODO: ogs: potencijalna optimizacija da se provjeri da li je self.hovered_unit_id = min_unit_id, tada ne treba unmark+mark
         if min_compass_tile != None:
-            if self.hovered_tile != None:
+            if self.hovered_tile != None and not self.hovered_tile.isEmpty():
                 self.hovered_tile.setColor(1, 1, 1)
                 self.hovered_tile.setScale(0.05)
                 self.color_scale_parallel.pause()
                 self.hovered_tile = None
             if min_compass_tile != self.hovered_compass_tile:
-                if self.hovered_compass_tile != None:
+                if self.hovered_compass_tile != None and not self.hovered_compass_tile.isEmpty():
                     self.hovered_compass_tile.setColor(1, 1, 1)
                     self.hovered_compass_tile.setScale(0.05)
                     self.color_scale_parallel.pause()
@@ -362,7 +362,7 @@ class Movement(DirectObject.DirectObject):
                 if self.parent.sgm.unit_np_dict.has_key(int(self.hovered_unit_id)):
                     self.parent.sgm.unit_np_dict[int(self.hovered_unit_id)].unmarkHovered()
             self.parent.sgm.unit_np_dict[int(min_unit_id)].markHovered()
-            if self.hovered_tile != None:
+            if self.hovered_tile != None and not self.hovered_tile.isEmpty():
                 self.hovered_tile.setColor(1, 1, 1)
                 self.hovered_tile.setScale(0.05)   
                 self.color_scale_parallel.pause()
@@ -379,7 +379,7 @@ class Movement(DirectObject.DirectObject):
                 self.hovered_unit_id = None         
             if min_tile != self.hovered_tile:
                 self.move_node.reparentTo(aspect2d)
-                if self.hovered_tile != None:
+                if self.hovered_tile != None and not self.hovered_tile.isEmpty():
                     self.hovered_tile.setColor(1, 1, 1)
                     self.hovered_tile.setScale(0.05)
                     self.color_scale_parallel.pause()
@@ -398,12 +398,12 @@ class Movement(DirectObject.DirectObject):
             if self.hovered_unit_id != None:
                 self.parent.sgm.unit_np_dict[int(self.hovered_unit_id)].unmarkHovered()
                 self.hovered_unit_id = None
-            if self.hovered_tile != None:
+            if self.hovered_tile != None and not self.hovered_tile.isEmpty():
                 self.hovered_tile.setColor(1, 1, 1)
                 self.hovered_tile.setScale(0.05)                
                 self.color_scale_parallel.pause()
                 self.hovered_tile = None   
-            if self.hovered_compass_tile != None:
+            if self.hovered_compass_tile != None and not self.hovered_compass_tile.isEmpty():
                 self.hovered_compass_tile.setColor(1, 1, 1)
                 self.hovered_compass_tile.setScale(0.05)                
                 self.color_scale_parallel.pause()
