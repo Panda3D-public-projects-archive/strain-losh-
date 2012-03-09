@@ -272,6 +272,7 @@ class SceneGraph():
         unit = self.parent.units[unit_id]     
         for u in self.parent.units.itervalues():
             if self.parent.isThisEnemyUnit(u['id']):
+                print u, getLOSOnLevel(unit, u, self.parent.level)
                 if getLOSOnLevel(unit, u, self.parent.level) > 0:
                     unit_model = self.parent.sgm.unit_np_dict[u['id']]
                     unit_model.setEnemyVisible()

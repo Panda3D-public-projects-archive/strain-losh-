@@ -263,10 +263,10 @@ class VoxelGenerator():
                     
                     my_x= tile2_x
                     my_y=tile2_y
-                    if val2.name == "ClosedDoor" and val2.name != self.parent.parent.old_level_grid[x][y].name:
+                    if val2.name == "ClosedDoor" and val2.name != self.parent.parent.old_level._grid[x][y].name:
                         i = self.dynamic_wall_dict[(my_x, my_y)].scaleInterval(1, Vec3(1,1,1))
                         i.start()
-                    elif val2.name == "OpenedDoor" and val2.name != self.parent.parent.old_level_grid[x][y].name:
+                    elif val2.name == "OpenedDoor" and val2.name != self.parent.parent.old_level._grid[x][y].name:
                         i = self.dynamic_wall_dict[(my_x, my_y)].scaleInterval(1, Vec3(0.2,1,1))
                         i.start() 
 
