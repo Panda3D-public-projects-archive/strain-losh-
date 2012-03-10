@@ -167,14 +167,14 @@ class VoxelGenerator():
                         model = loader.loadModel("wall")
                         model.setPos(my_x, my_y, utils.GROUND_LEVEL)
                         model.setH(h)
-                        self.wall_dict[(my_x, my_y)] = model                        
+                        self.wall_dict[(my_x, my_y, h)] = model                        
                         model.reparentTo(self.node_wall_original)
                     elif val2.name == "Wall2":
                         model = loader.loadModel("wall2")
                         model.setPos(my_x, my_y, utils.GROUND_LEVEL)
                         model.setH(h)
                         model.setColor(0,1,0,1)
-                        self.wall_dict[(my_x, my_y)] = model                        
+                        self.wall_dict[(my_x, my_y, h)] = model                        
                         model.reparentTo(self.node_wall_original)
                     elif val2.name == "HalfWall":
                         model = loader.loadModel("wall2")
@@ -182,7 +182,7 @@ class VoxelGenerator():
                         model.setH(h)
                         model.setColor(0,0,0,1)
                         model.setScale(1,1,0.4)
-                        self.wall_dict[(my_x, my_y)] = model                             
+                        self.wall_dict[(my_x, my_y, h)] = model                             
                         model.reparentTo(self.node_wall_original)
                     elif val2.name == "Ruin":
                         model = loader.loadModel("wall2")
@@ -201,7 +201,7 @@ class VoxelGenerator():
                         model.setPos(my_x, my_y, utils.GROUND_LEVEL)
                         model.setH(h)
                         model.setColor(1,0.0,0,0.0)
-                        self.dynamic_wall_dict[(my_x, my_y)] = model
+                        self.dynamic_wall_dict[(my_x, my_y, h)] = model
                         model.reparentTo(self.node_dynamic_wall_usable)
                     elif val2.name == "OpenedDoor":
                         model = loader.loadModel("door")
@@ -209,7 +209,7 @@ class VoxelGenerator():
                         model.setH(h)
                         model.setScale(0.2,1,1)
                         model.setColor(0.7,0.2,0.2,0.0)
-                        self.dynamic_wall_dict[(my_x, my_y)] = model
+                        self.dynamic_wall_dict[(my_x, my_y, h)] = model
                         model.reparentTo(self.node_dynamic_wall_usable)
                     elif val2.name == "ForceField":
                         model = loader.loadModel("wall_fs")
@@ -218,7 +218,7 @@ class VoxelGenerator():
                         model.setTexture(self.ts_fs, self.tex_fs)
                         model.setTransparency(TransparencyAttrib.MAlpha)
                         model.reparentTo(self.node_forcewall_usable)
-                        self.dynamic_wall_dict[(my_x, my_y)] = model
+                        self.dynamic_wall_dict[(my_x, my_y, h)] = model
                         model.setLightOff()                                         
          
         #self.floor_usable_np.setShaderAuto()
@@ -252,10 +252,10 @@ class VoxelGenerator():
                         continue
                     
                     if val2.name == "ClosedDoor" and val2.name != self.parent.parent.old_level._grid[x][y].name:
-                        i = self.dynamic_wall_dict[(my_x, my_y)].scaleInterval(1, Vec3(1,1,1))
+                        i = self.dynamic_wall_dict[(my_x, my_y, h)].scaleInterval(1, Vec3(1,1,1))
                         i.start()
                     elif val2.name == "OpenedDoor" and val2.name != self.parent.parent.old_level._grid[x][y].name:
-                        i = self.dynamic_wall_dict[(my_x, my_y)].scaleInterval(1, Vec3(0.2,1,1))
+                        i = self.dynamic_wall_dict[(my_x, my_y, h)].scaleInterval(1, Vec3(0.2,1,1))
                         i.start() 
 
     def setInvisibleTiles(self, tile_dict):
@@ -287,7 +287,7 @@ class VoxelGenerator():
         new_list = []
         for l in visible_wall_list:
             x,y,h = self.getWallPosition(l[0], l[1])
-            new_list.append((x,y))
+            new_list.append((x,y,h))
         for wall in self.wall_dict:
             # If we have key in visible_wall_dict, the wall is visible
             if wall in new_list:
