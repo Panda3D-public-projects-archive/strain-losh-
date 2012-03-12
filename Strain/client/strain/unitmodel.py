@@ -22,6 +22,7 @@ class UnitModel:
     def __init__(self, parent, unit_id, off=False, wpn_list=None):
         self.parent = parent
         self.id = str(unit_id)
+        self.off = off
 
         self.node = NodePath("unit_"+self.id)
         
@@ -179,7 +180,8 @@ class UnitModel:
                 self.lwp.setScale(0.5,0.5,0.5)
                 self.lwp.reparentTo(lnp)
         
-        self.node_2d = aspect2d.attachNewNode('node_2d')
+        if not off:
+            self.node_2d = aspect2d.attachNewNode('node_2d')
 
         self.model.setShaderAuto()
         
@@ -279,4 +281,6 @@ class UnitModel:
         self.model.cleanup()
         
     def remove(self):
+        if not self.off:
+            self.node_2d.removeNode()
         self.model.remove()  
