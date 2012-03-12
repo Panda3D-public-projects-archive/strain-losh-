@@ -530,7 +530,6 @@ class Client(DirectObject):
         s.start()        
         
     def handleNewTurn(self):
-        self.sgm.level_mesh.setInvisibleTiles(self.getInvisibleTiles())
         text = TextNode('new turn node')
         text.setText("TURN: "+self.turn_player)
         textnp = NodePath("textnp")
@@ -555,7 +554,7 @@ class Client(DirectObject):
                 a.append(self.units[u])
         t = time.clock()
         l = levelVisibilityDict(a, self.level)
-        print "timer:::", (time.clock()-t)*1000
+        print "tiles timer:::", (time.clock()-t)*1000
         return l
     
     @pstat
@@ -566,5 +565,5 @@ class Client(DirectObject):
                 a.append(self.units[u])
         t = time.clock()
         l = visibleWalls(a, self.level)
-        print "timer:::", (time.clock()-t)*1000
+        print "walls timer:::", (time.clock()-t)*1000
         return l
