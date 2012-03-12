@@ -56,8 +56,8 @@ class SceneGraph():
         
         self.initOutlineShader()
         
-        meter = SceneGraphAnalyzerMeter('meter', aspect2d.node())
-        meter.setupWindow(base.win)      
+        #meter = SceneGraphAnalyzerMeter('meter', aspect2d.node())
+        #meter.setupWindow(base.win)      
         
         bins = CullBinManager.getGlobalPtr()
         bins.addBin('highlight', CullBinEnums.BTStateSorted, 25)
