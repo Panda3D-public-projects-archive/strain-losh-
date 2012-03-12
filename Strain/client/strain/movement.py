@@ -397,7 +397,8 @@ class Movement(DirectObject.DirectObject):
         # - unmark last hovered tile
         else:
             if self.hovered_unit_id != None:
-                self.parent.sgm.unit_np_dict[int(self.hovered_unit_id)].unmarkHovered()
+                if self.parent.sgm.unit_np_dict.has_key(int(self.hovered_unit_id)):
+                    self.parent.sgm.unit_np_dict[int(self.hovered_unit_id)].unmarkHovered()
                 self.hovered_unit_id = None
             if self.hovered_tile != None and not self.hovered_tile.isEmpty():
                 self.hovered_tile.setColor(1, 1, 1)
