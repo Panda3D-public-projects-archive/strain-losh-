@@ -19,10 +19,9 @@ import utils
 # CLASS UnitModel --- DEFINITION
 #===============================================================================
 class UnitModel:
-    def __init__(self, parent, unit_id, off=False, wpn_list=None):
+    def __init__(self, parent, unit_id, wpn_list=None):
         self.parent = parent
         self.id = str(unit_id)
-        self.off = off
 
         self.node = NodePath("unit_"+self.id)
         
@@ -49,15 +48,10 @@ class UnitModel:
             self.model = utils.loadUnit('marine', 'jumper', unit['owner_id'])            
         self.model.reparentTo(self.node)
         
-        if not off:
-            scale = 0.3
-            h = 180
-            pos = Point3(int(unit['pos'][0]), int(unit['pos'][1]), 0)
-            pos = self.calcWorldPos(pos)
-        else:
-            scale = 1
-            h = 0
-            pos = Point3(0, 4.1, -1)
+        scale = 0.3
+        h = 180
+        pos = Point3(int(unit['pos'][0]), int(unit['pos'][1]), 0)
+        pos = self.calcWorldPos(pos)
         
         # Bake in rotation transform because model is created facing towards screen (h=180)
         self.model.setScale(scale)
@@ -72,8 +66,7 @@ class UnitModel:
         self.node.setTag("team", str(unit['owner_id']))
 
         # If unit model is not rendered for portrait, set its heading as received from server
-        if not off:
-            self.setHeading(unit['heading'])
+        self.setHeading(unit['heading'])
         
         self.target_unit = None
         
@@ -180,9 +173,7 @@ class UnitModel:
                 self.lwp.setScale(0.5,0.5,0.5)
                 self.lwp.reparentTo(lnp)
         
-        if not off:
-            self.node_2d = aspect2d.attachNewNode('node_2d')
-
+        self.node_2d = aspect2d.attachNewNode('node_2d')
         self.model.setShaderAuto()
         
     def pauseAllAnims(self):
@@ -281,6 +272,5 @@ class UnitModel:
         self.model.cleanup()
         
     def remove(self):
-        if not self.off:
-            self.node_2d.removeNode()
+        self.node_2d.removeNode()
         self.model.remove()  
