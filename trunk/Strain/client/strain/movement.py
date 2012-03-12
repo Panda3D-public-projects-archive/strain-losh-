@@ -375,7 +375,8 @@ class Movement(DirectObject.DirectObject):
         # - mark new hovered tile
         elif min_tile != None:
             if self.hovered_unit_id != None:
-                self.parent.sgm.unit_np_dict[int(self.hovered_unit_id)].unmarkHovered() 
+                if self.parent.sgm.unit_np_dict.has_key(int(self.hovered_unit_id)):
+                    self.parent.sgm.unit_np_dict[int(self.hovered_unit_id)].unmarkHovered() 
                 self.hovered_unit_id = None         
             if min_tile != self.hovered_tile:
                 self.move_node.reparentTo(aspect2d)
