@@ -47,19 +47,6 @@ class Interface(DirectObject.DirectObject):
     def __init__(self, parent):
         # Keep pointer to the GraphicsEngine parent class
         self.parent = parent
-        
-        # Initialize variables
-        self.los_visible = False
-        self.unit_los_visible = False
-        self.not_in_los_visible = False
-        
-        self.hovered_tile = None
-        self.hovered_unit = None
-        self.selected_unit = None
-        self.off_model = None
-        self.selected_unit_tile = None
-        
-        self.movetext_np = None    
         self.panel = None   
         
         b=OnscreenImage(parent=render2dp, image="galaxy1.jpg") #@UndefinedVariable
@@ -67,24 +54,12 @@ class Interface(DirectObject.DirectObject):
         base.cam2dp.node().getDisplayRegion(0).setSort(-20)#@UndefinedVariable
         
         self.move_timer = 0
-        self.unit_move_destination = None
-        self.unit_move_orientation = HEADING_NONE
-        self.turn_np = NodePath("turn_arrows_np")
-        self.turn_np.reparentTo(render)#@UndefinedVariable
-        self.dummy_turn_pos_node = NodePath("dummy_turn_pos_node")
-        self.dummy_turn_dest_node = NodePath("dummy_turn_dest_node")
-        
         self.init_gui()
         
         self.accept('escape', self.escapeEvent)
         self.accept("mouse1", self.mouseLeftClick)
         self.accept("r", self.redraw)
         self.accept( 'window-event', self.windowEvent)
-        
-        self.move_tile_seq = Sequence()
-        self.picked_move_tile_seq = Sequence()
-        self.old_p = None
-        self.old_move_dest = None
         
         taskMgr.add(self.processGui, 'processGui_task')#@UndefinedVariable 
     
@@ -322,28 +297,6 @@ class Interface(DirectObject.DirectObject):
             self.parent.selectUnit(self.panel.unit_id)
         else:
             self.console.unfocus()    
-
-    def startMoveTileInterval(self, tile):
-        self.move_tile_seq = Sequence(LerpColorInterval(tile, 0.3, (0, 0, 0, 0.5)),
-                                      LerpColorInterval(tile, 0.3, utils.WALKABLE_TILE_COLOR)
-                                     )
-        self.move_tile_seq.loop()
-        
-    def stopMoveTileInterval(self, tile):
-        self.move_tile_seq.pause()
-        tile.setColor(utils.WALKABLE_TILE_COLOR)
-
-        
-    def startPickedMoveTileInterval(self, tile):
-        self.picked_move_tile_seq = Sequence(LerpColorInterval(tile, 0.2, (1, 0, 0, 0.5)),
-                                             LerpColorInterval(tile, 0.2, utils.WALKABLE_TILE_COLOR)
-                                            )
-        self.picked_move_tile_seq.loop()
-        
-    def stopPickedTileMoveInterval(self, tile):
-        self.picked_move_tile_seq.pause()
-        tile.setColor(utils.WALKABLE_TILE_COLOR)
-
 
 #===============================================================================
 # CLASS Interface --- TASKS
