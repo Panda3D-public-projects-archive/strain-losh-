@@ -56,8 +56,8 @@ class SceneGraph():
         
         self.initOutlineShader()
         
-        #meter = SceneGraphAnalyzerMeter('meter', render.node())
-        #meter.setupWindow(base.win)      
+        meter = SceneGraphAnalyzerMeter('meter', aspect2d.node())
+        meter.setupWindow(base.win)      
         
         bins = CullBinManager.getGlobalPtr()
         bins.addBin('highlight', CullBinEnums.BTStateSorted, 25)
@@ -228,44 +228,6 @@ class SceneGraph():
         self.unit_node.removeNode()
         self.unit_np_dict = {}
         self.comp_inited['units'] = False
-          
-    
-    def initAltRender(self):
-        """Initializes off screen buffer used to render models and animations for unit portraits."""
-        if self.comp_inited['alt_render']:
-            return
-        
-        self.alt_buffer = base.win.makeTextureBuffer("texbuf", 256, 256)
-        self.alt_render = NodePath("offrender")
-        self.alt_cam = base.makeCamera(self.alt_buffer)
-        self.alt_cam.reparentTo(self.alt_render)        
-        self.alt_cam.setPos(0,0,0)
-        #lens = PerspectiveLens()#OrthographicLens()
-        #lens.setFilmSize(20*.5, 15*.5) # or whatever is appropriate for your scene
-        #self.alt_cam.node().setLens(lens)
-        #base.cam.node().getLens().setNear(0.1)
-        #base.cam.node().getLens().setFar(32*1.5)
-        #lens.setFov(20)
-        self.alt_render.setLightOff()
-        self.alt_render.setFogOff() 
-        self.parent.interface.unit_card.setTexture(self.alt_buffer.getTexture())  
-        self.comp_inited['alt_render'] = True
-    
-    def clearAltRenderModel(self):
-        if not self.comp_inited['alt_render']:
-            return
-        
-        if self.off_model:
-            self.off_model.cleanup()
-            self.off_model.remove()
-        
-        
-    def loadAltRenderModel(self, unit_id):
-        if not self.comp_inited['alt_render']:
-            return
-        wpn_list = utils.getUnitWeapons(self.parent.units[unit_id])
-        self.off_model = UnitModel(self, unit_id, off=True)
-        self.off_model.model.reparentTo(self.alt_render)
     
     def showVisibleEnemies(self, unit_id):
         self.hideVisibleEnemies()

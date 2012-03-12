@@ -25,32 +25,16 @@ class GuiCard:
         cm.setFrame(0, width, 0, height)
         n = self.frame_node.attachNewNode(cm.generate())
         n.setPos(0, 0, 0)
-        #cm = CardMaker("cm_right")
-        #cm.setFrame(0, border_size, 0, height)
-        #n = self.frame_node.attachNewNode(cm.generate())
-        #n.setPos(width - border_size, 0, 0)
-        #cm = CardMaker("cm_top")
-        #cm.setFrame(0, width, height - border_size, width)
-        #n = self.frame_node.attachNewNode(cm.generate())
-        #n.setPos(0, 0, 0)
-        #cm = CardMaker("cm_bottom")
-        #cm.setFrame(0, width, 0, border_size)
-        #n = self.frame_node.attachNewNode(cm.generate())
-        #n.setPos(0, 0, 0)
         self.frame_node.setColor(color)
         self.frame_node.flattenStrong()
         self.frame_node.reparentTo(self.node)
-        cm = CardMaker("cm_back")
-        cm.setFrame(0+border_size, width-border_size, 0+border_size, height-border_size)
-        self.back_node = self.node.attachNewNode(cm.generate())
-        self.back_node.setPos(0, 0, 0)
-        self.back_node.setTransparency(1)
+        self.frame_node.setTransparency(1)
         
         self.node.reparentTo(aspect2d)#@UndefinedVariable
         self.redraw()
     
     def setTexture(self, tex):
-        self.back_node.setTexture(tex)
+        self.frame_node.setTexture(tex)
     
     def redraw(self):
         if self.hugpos == "topleft":
