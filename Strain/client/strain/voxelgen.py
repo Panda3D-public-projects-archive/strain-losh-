@@ -56,6 +56,7 @@ class VoxelGenerator():
         self.dirty_walls = 0
         
         self.old_tile_dict = None
+        self.old_invisible_walls= []
         
         # Create flatten task
         self.pause_flatten_task = True
@@ -89,12 +90,7 @@ class VoxelGenerator():
         self.tex3 = loader.loadTexture("tile3.png")
         self.tex_tile_nm = loader.loadTexture("tile2nm.png")
         self.tex_fs = loader.loadTexture("rnbw.png")
-        self.ts_nm = TextureStage('ts_nm')
-        self.ts_nm.setMode(TextureStage.MNormal)
         self.ts_fs = TextureStage('ts_fs')
-
-        
-        self.tex_floor_transparent = loader.loadTexture("trans_tex.png")
 
         self.tex1.setMagfilter(Texture.FTLinearMipmapLinear)
         self.tex1.setMinfilter(Texture.FTLinearMipmapLinear)
@@ -222,6 +218,7 @@ class VoxelGenerator():
                         model.setLightOff()                                         
          
         #self.floor_usable_np.setShaderAuto()
+        self.floor_usable_np.setTexture(self.tex3)   
         self.markAllChunksDirty()
         self.dirty_walls = 1
         
@@ -241,7 +238,7 @@ class VoxelGenerator():
             h = None
         return pos_x, pos_y, h
     
-    def processLevel(self):
+    def processLevel(self, invisible_walls):
         self.level = self.parent.parent.level
         for x, val in enumerate(self.level._grid):
             for y, val2 in enumerate(val):
@@ -252,34 +249,27 @@ class VoxelGenerator():
                         continue
                     
                     if val2.name == "ClosedDoor" and val2.name != self.parent.parent.old_level._grid[x][y].name:
-                        i = self.dynamic_wall_dict[(my_x, my_y, h)].scaleInterval(1, Vec3(1,1,1))
-                        i.start()
+                        if not (x,y) in self.old_invisible_walls:
+                            self.dynamic_wall_dict[(my_x, my_y, h)].setScale(1)
+                        else:
+                            i = self.dynamic_wall_dict[(my_x, my_y, h)].scaleInterval(1, Vec3(1,1,1))
+                            i.start()
                     elif val2.name == "OpenedDoor" and val2.name != self.parent.parent.old_level._grid[x][y].name:
-                        i = self.dynamic_wall_dict[(my_x, my_y, h)].scaleInterval(1, Vec3(0.2,1,1))
-                        i.start() 
+                        if not (x,y) in self.old_invisible_walls:
+                            self.dynamic_wall_dict[(my_x, my_y, h)].setScale(0.2,1,1)
+                        else:
+                            i = self.dynamic_wall_dict[(my_x, my_y, h)].scaleInterval(1, Vec3(0.2,1,1))
+                            i.start() 
+        self.old_invisible_walls = invisible_walls
 
     def setInvisibleTiles(self, tile_dict):
         for invisible_tile in tile_dict:
             if self.old_tile_dict == None or tile_dict[invisible_tile] != self.old_tile_dict[invisible_tile]:
-                if tile_dict[invisible_tile] == 0:
-                    self.floor_tile_dict[invisible_tile].clearTexture()
-                    self.floor_tile_dict[invisible_tile].setTexture(self.tex3)                    
+                if tile_dict[invisible_tile] == 0:                   
                     self.floor_tile_dict[invisible_tile].setColorScale(0.3,0.3,0.3,1)
-                    """
-                    self.floor_tile_dict[invisible_tile].clearTexture()
-                    self.floor_tile_dict[invisible_tile].setTexture(self.tex_floor_transparent)
-                    self.floor_tile_dict[invisible_tile].setTransparency(TransparencyAttrib.MAlpha)
-                    """
                     self.markChunkDirty(invisible_tile[0], invisible_tile[1])
-                else:
-                    self.floor_tile_dict[invisible_tile].clearTexture()
-                    self.floor_tile_dict[invisible_tile].setTexture(self.tex3)                    
+                else:                  
                     self.floor_tile_dict[invisible_tile].setColorScale(1,1,1,1)
-                    """
-                    self.floor_tile_dict[invisible_tile].clearTexture()
-                    self.floor_tile_dict[invisible_tile].setTexture(self.tex3)
-                    self.floor_tile_dict[invisible_tile].setTransparency(TransparencyAttrib.MNone) 
-                    """
                     self.markChunkDirty(invisible_tile[0], invisible_tile[1])            
         self.old_tile_dict = tile_dict
     
