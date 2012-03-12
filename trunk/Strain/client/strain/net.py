@@ -86,6 +86,7 @@ class Net():
                 if self.parent.isThisMyUnit(unit_id):
                     self.parent.interface.refreshUnitInfo(unit_id)
             # play new turn animation, _message_in_process will be set to false after this
+            self.parent.sgm.level_mesh.setInvisibleTiles(self.parent.getInvisibleTiles())            
             self.parent.handleNewTurn()
         #========================================================================
         #
@@ -155,8 +156,8 @@ class Net():
             if self.parent.player == self.parent.turn_player and self.parent.sel_unit_id != None:
                 self.parent.movement.calcUnitAvailMove( self.parent.sel_unit_id )
                 self.parent.sgm.showVisibleEnemies( self.parent.sel_unit_id )
-                self.parent.sgm.level_mesh.setInvisibleTiles(self.parent.getInvisibleTiles())
-                self.parent.sgm.level_mesh.setInvisibleWalls(invisible_walls)
+            self.parent.sgm.level_mesh.setInvisibleTiles(self.parent.getInvisibleTiles())
+            self.parent.sgm.level_mesh.setInvisibleWalls(invisible_walls)
         #========================================================================
         #
         elif msg[0] == USE:
