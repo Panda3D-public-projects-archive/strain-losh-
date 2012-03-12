@@ -25,6 +25,8 @@ import utils as utils
 from strain.share import *
 from combat import Combat
 
+from pstat_debug import pstat
+
 #========================================================================
 #
 class Client(DirectObject):
@@ -55,7 +57,6 @@ class Client(DirectObject):
         
         # All of our graphics components are initialized, request graphics init
         self.sgm.initLights()
-        self.sgm.initAltRender()
         
         # Init combat
         self.combat = Combat()
@@ -89,7 +90,6 @@ class Client(DirectObject):
                 return p['name']
             
     def deselectUnit(self):
-        self.sgm.clearAltRenderModel()
         self.movement.deleteUnitAvailMove()
         self.sgm.hideVisibleEnemies()
         self.interface.clearUnitData()
@@ -108,7 +108,6 @@ class Client(DirectObject):
         if self.sel_unit_id != unit_id:
             self.deselectUnit()
             self.sel_unit_id = unit_id
-            self.sgm.loadAltRenderModel(unit_id)
             self.interface.refreshUnitData(unit_id) 
             # If it is our turn, display available move tiles
             if self.player == self.turn_player:
@@ -548,6 +547,7 @@ class Client(DirectObject):
                      )
         s.start()
         
+    @pstat
     def getInvisibleTiles(self):
         a = []
         for u in self.units:
@@ -557,7 +557,8 @@ class Client(DirectObject):
         l = levelVisibilityDict(a, self.level)
         print "timer:::", (time.clock()-t)*1000
         return l
-
+    
+    @pstat
     def getInvisibleWalls(self):
         a = []
         for u in self.units:
