@@ -108,7 +108,9 @@ class Client(DirectObject):
         if self.sel_unit_id != unit_id:
             self.deselectUnit()
             self.sel_unit_id = unit_id
-            self.interface.refreshUnitData(unit_id) 
+            self.interface.processUnitData(unit_id)
+            self.interface.printUnitData(unit_id)
+            self.interface.refreshUnitInfo(unit_id)
             # If it is our turn, display available move tiles
             if self.player == self.turn_player:
                 self.sgm.unit_np_dict[unit_id].setSelected()

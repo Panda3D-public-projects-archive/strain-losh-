@@ -262,9 +262,9 @@ class GuiUnitInfo:
                                   , parent = parent )
         self.frame.setBillboardPointEye()
         self.frame.setLightOff()
-        #self.frame.setBin("fixed", 40)
-        #self.frame.setDepthTest(False)
-        #self.frame.setDepthWrite(False)
+        self.frame.setBin("fixed", 40)
+        self.frame.setDepthTest(False)
+        self.frame.setDepthWrite(False)
         
         fixedWidthFont = loader.loadFont(GUI_FONT)#@UndefinedVariable        
         #fixedWidthFont.setPixelsPerUnit(60)

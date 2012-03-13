@@ -142,15 +142,6 @@ class Interface(DirectObject.DirectObject):
     def windowEvent(self, window=None):
         if window is not None: # window is none if panda3d is not started
             taskMgr.doMethodLater(0.05, self.redraw, 'Redraw task', extraArgs = [])
-            #self.redraw()
-             
-    def getMousePos(self):
-        """Returns mouse coordinates if mouse pointer is inside Panda window."""
-        if base.mouseWatcherNode.hasMouse(): #@UndefinedVariable
-            return base.mouseWatcherNode.getMouse() #@UndefinedVariable
-        return None
-
-
 
     def escapeEvent(self):
         if self.selected_unit:
@@ -160,13 +151,9 @@ class Interface(DirectObject.DirectObject):
       
     def refreshStatusBar(self):
         self.status_bar.write(1, "Player: "+self.parent.player+"     Turn:" + str(self.parent.turn_number))
-       
-    def refreshUnitData(self, unit_id):
-        if unit_id != None and self.parent.isThisMyUnit(unit_id):
-            self.processUnitData(unit_id)
     
     def processUnitData(self, unit_id):
-        self.printUnitData(unit_id)
+        """Refreshes status of action buttons for units."""
         self.setButtons(unit_id)
         if self.parent.units[unit_id]['overwatch'] == True:
             self.overwatch.turnOn()
@@ -180,6 +167,7 @@ class Interface(DirectObject.DirectObject):
                 self.set_up.turnOff()
                 
     def printUnitData(self, unit_id):
+        """Refreshes unit info on GUI."""
         unit = self.parent.getUnitData(unit_id)
         unit_type = unit['name']
         unit_HP = unit['hp']
@@ -200,9 +188,8 @@ class Interface(DirectObject.DirectObject):
         
         self.status_bar.write(1, "Player: "+self.parent.player+"     Turn:" + str(self.parent.turn_number))
         
-        self.refreshUnitInfo(unit_id)
-        
     def refreshUnitInfo(self, unit_id):
+        """Refreshes HP and AP bars, as well as buff/debuff status of units above unit models and on unit lists."""
         unit = self.parent.getUnitData(unit_id)
         unit_type = unit['name']
         unit_HP = unit['hp']
