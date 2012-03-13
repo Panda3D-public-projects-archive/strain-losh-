@@ -162,7 +162,7 @@ class Interface(DirectObject.DirectObject):
         self.status_bar.write(1, "Player: "+self.parent.player+"     Turn:" + str(self.parent.turn_number))
        
     def refreshUnitData(self, unit_id):
-        if unit_id != None:
+        if unit_id != None and self.parent.isThisMyUnit(unit_id):
             self.processUnitData(unit_id)
     
     def processUnitData(self, unit_id):
