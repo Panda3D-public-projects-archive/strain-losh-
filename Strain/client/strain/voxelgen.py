@@ -262,7 +262,11 @@ class VoxelGenerator():
                             i.start() 
         self.old_invisible_walls = invisible_walls
 
-    def setInvisibleTiles(self, tile_dict):
+    def setInvisibleTilesInThread(self):
+        taskMgr.add(self.setInvisibleTiles, 'invis_tiles', extraArgs = [], taskChain = 'thread_1')
+    
+    def setInvisibleTiles(self):
+        tile_dict = self.parent.parent.getInvisibleTiles()
         for invisible_tile in tile_dict:
             if self.old_tile_dict == None or tile_dict[invisible_tile] != self.old_tile_dict[invisible_tile]:
                 if tile_dict[invisible_tile] == 0:                   
@@ -273,7 +277,11 @@ class VoxelGenerator():
                     self.markChunkDirty(invisible_tile[0], invisible_tile[1])            
         self.old_tile_dict = tile_dict
     
-    def setInvisibleWalls(self, visible_wall_list):
+    def setInvisibleWallsInThread(self):
+        taskMgr.add(self.setInvisibleWalls, 'invis_walls', extraArgs = [], taskChain = 'thread_1')
+    
+    def setInvisibleWalls(self):
+        visible_wall_list = self.parent.parent.getInvisibleWalls()
         new_list = []
         for l in visible_wall_list:
             x,y,h = self.getWallPosition(l[0], l[1])
