@@ -144,8 +144,8 @@ class Interface(DirectObject.DirectObject):
             taskMgr.doMethodLater(0.05, self.redraw, 'Redraw task', extraArgs = [])
 
     def escapeEvent(self):
-        if self.selected_unit:
-            self.deselectUnit()
+        if self.parent.sel_unit_id != None:
+            self.parent.deselectUnit()
         else:
             messenger.send("shutdown-event")#@UndefinedVariable
       
