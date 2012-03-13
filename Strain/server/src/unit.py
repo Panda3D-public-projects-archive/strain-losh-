@@ -92,10 +92,9 @@ class Unit():
         if self.rotate( target.pos ):
             ret_lst.append( ( ROTATE, self.id, self.heading) )
             
-        #rotate opponent to us, if he has any ap left
-        if target.ap > 0:
-            if target.rotate( self.pos ):
-                ret_lst.append( ( ROTATE, target.id, target.heading) )
+        #rotate opponent to us, always
+        if target.rotate( self.pos ):
+            ret_lst.append( ( ROTATE, target.id, target.heading) )
          
         
         base += (self.ws - target.ws) * 10
