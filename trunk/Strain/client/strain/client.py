@@ -7,6 +7,7 @@ import time
 
 # panda3D imports
 from panda3d.core import TextNode, NodePath, Point2, Point3#@UnresolvedImport
+from panda3d.core import TP_normal#@UnresolvedImport
 from panda3d.core import ConfigVariableString, ConfigVariableInt#@UnresolvedImport
 from direct.interval.IntervalGlobal import Sequence, Parallel, Func, Wait, LerpColorScaleInterval#@UnresolvedImport
 from direct.showbase.DirectObject import DirectObject
@@ -42,6 +43,11 @@ class Client(DirectObject):
         self.players = {}
         self.sel_unit_id = None
         self.turn_number = None
+        
+        # task chain for threaded tasks
+        taskMgr.setupTaskChain('thread_1', numThreads = 2, tickClock = None,
+                       threadPriority = TP_normal, frameBudget = None,
+                       frameSync = None, timeslicePriority = None)
         
         # Init SceneGraph manager
         self.sgm = SceneGraph(self)

@@ -36,10 +36,12 @@ class Net():
     def handleMsg(self, msg):
         """Handles incoming messages."""
         self.log.info("Received message: %s", msg[0])
+        """
         print '--------START------------'
         print 'Incoming message', msg[0]
         print 'Message body', msg[1]
         print '----------END----------'
+        """
         #========================================================================
         #
         if msg[0] == ENGINE_STATE:
@@ -63,7 +65,7 @@ class Net():
             for unit_id in self.parent.units.iterkeys():
                 if self.parent.isThisMyUnit(unit_id):
                     self.parent.interface.refreshUnitInfo(unit_id) 
-            self.parent.sgm.level_mesh.setInvisibleTiles(self.parent.getInvisibleTiles())           
+            self.parent.sgm.level_mesh.setInvisibleTilesInThread()           
             self.parent._message_in_process = False
         #========================================================================
         #
@@ -86,7 +88,7 @@ class Net():
                 if self.parent.isThisMyUnit(unit_id):
                     self.parent.interface.refreshUnitInfo(unit_id)
             # play new turn animation, _message_in_process will be set to false after this
-            self.parent.sgm.level_mesh.setInvisibleTiles(self.parent.getInvisibleTiles())            
+            self.parent.sgm.level_mesh.setInvisibleTilesInThread()            
             self.parent.handleNewTurn()
         #========================================================================
         #
@@ -104,7 +106,7 @@ class Net():
                 self.parent.movement.calcUnitAvailMove( unit['id'] )
                 self.parent.sgm.showVisibleEnemies(unit['id'])
                 if unit['pos'][0] != old_x or unit['pos'][1] != old_y or unit['last_action']=='use':
-                    self.parent.sgm.level_mesh.setInvisibleTiles(self.parent.getInvisibleTiles())
+                    self.parent.sgm.level_mesh.setInvisibleTilesInThread()
                 self.parent.sgm.playUnitStateAnim( unit['id'] )
             self.parent._message_in_process = False
         #========================================================================
@@ -159,8 +161,8 @@ class Net():
             if self.parent.player == self.parent.turn_player and self.parent.sel_unit_id != None:
                 self.parent.movement.calcUnitAvailMove( self.parent.sel_unit_id )
                 self.parent.sgm.showVisibleEnemies( self.parent.sel_unit_id )
-            self.parent.sgm.level_mesh.setInvisibleTiles(self.parent.getInvisibleTiles())
-            self.parent.sgm.level_mesh.setInvisibleWalls(invisible_walls)
+            self.parent.sgm.level_mesh.setInvisibleTilesInThread()
+            self.parent.sgm.level_mesh.setInvisibleWallsInThread()
         #========================================================================
         #
         elif msg[0] == USE:
