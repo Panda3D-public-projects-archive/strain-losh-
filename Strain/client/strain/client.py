@@ -198,14 +198,20 @@ class Client(DirectObject):
             return self.units[unit_id]
     
     def isThisMyUnit(self, unit_id):
-        if self.units[unit_id]['owner_id'] == self.player_id:
-            return True
+        if self.units.has_key(unit_id):
+            if self.units[unit_id]['owner_id'] == self.player_id:
+                return True
+            else:
+                return False
         else:
             return False
-    
+        
     def isThisEnemyUnit(self, unit_id):
-        if self.units[unit_id]['owner_id'] != self.player_id:
-            return True
+        if self.units.has_key(unit_id):
+            if self.units[unit_id]['owner_id'] != self.player_id:
+                return True
+            else:
+                return False
         else:
             return False
         
