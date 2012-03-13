@@ -96,8 +96,8 @@ class Net():
             old_x = self.parent.units[unit['id']]['pos'][0]
             old_y = self.parent.units[unit['id']]['pos'][1]
             self.parent.refreshUnit(unit)
+            self.parent.interface.refreshUnitData( unit['id'] )            
             if self.parent.sel_unit_id == unit['id']:
-                self.parent.interface.refreshUnitData( unit['id'] )
                 self.parent.movement.calcUnitAvailMove( unit['id'] )
                 self.parent.sgm.showVisibleEnemies(unit['id'])
                 if unit['pos'][0] != old_x or unit['pos'][1] != old_y or unit['last_action']=='use':
