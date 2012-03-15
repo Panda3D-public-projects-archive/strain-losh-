@@ -8,7 +8,7 @@ import math
 from collections import deque
 
 # panda3D imports
-from panda3d.core import Texture, NodePath, TextureStage
+from panda3d.core import Texture, NodePath, TextureStage, OccluderNode
 from panda3d.core import Vec4, Vec3, Point3, TransparencyAttrib
 from direct.interval.IntervalGlobal import Sequence, LerpColorScaleInterval, LerpColorInterval, Wait#@UnresolvedImport
 
@@ -144,7 +144,7 @@ class VoxelGenerator():
                             model = loader.loadModel('cube')
                             model.setPos(x, y, i-1+utils.GROUND_LEVEL)
                             model.setTexture(ts, self.tex2)
-                            model.setTexture(self.ts_nm, self.tex_tile_nm) 
+                            #model.setTexture(self.ts_nm, self.tex_tile_nm) 
                             model.reparentTo(self.node_wall_usable) 
         self.floor_np.setTexture(self.tex3) 
         
@@ -164,7 +164,7 @@ class VoxelGenerator():
                         model.setPos(my_x, my_y, utils.GROUND_LEVEL)
                         model.setH(h)
                         self.wall_dict[(my_x, my_y, h)] = model                        
-                        model.reparentTo(self.node_wall_original)
+                        model.reparentTo(self.node_wall_original)                    
                     elif val2.name == "Wall2":
                         model = loader.loadModel("wall2")
                         model.setPos(my_x, my_y, utils.GROUND_LEVEL)
