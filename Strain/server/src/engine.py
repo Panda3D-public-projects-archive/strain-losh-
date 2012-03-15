@@ -51,6 +51,8 @@ class Engine( Thread ):
         
         self.turn = 0
         self.active_player = None
+
+        self.army_size = 1000
                 
         self.name = "EngineThread"
 
@@ -63,15 +65,15 @@ class Engine( Thread ):
         print "Engine started"
         EngMsg.startServer( notify )
         
-        lvl = "base2.txt"
+        lvl = "assassins.txt"
         self.level = Level( LEVELS_ROOT + lvl )
         notify.info("Loaded level:%s", lvl )
 
         self.loadArmyList()
       
-        self.firstTurn()
+        #self.firstTurn()
 
-        self.checkAndSendLevelMsgs()
+        #self.checkAndSendLevelMsgs()
         #+++++++++++++++++++++++++++++++++++++++++++++MAIN LOOP+++++++++++++++++++++++++++++++++++++++++++++
         #+++++++++++++++++++++++++++++++++++++++++++++MAIN LOOP+++++++++++++++++++++++++++++++++++++++++++++
         while( self.stop == False ):
@@ -116,6 +118,12 @@ class Engine( Thread ):
         elif( msg[0] == ENGINE_STATE ):                
             EngMsg.sendState( util.compileState( self, self.findPlayer( source ) ), source )
             
+        elif( msg[0] == ARMY_LIST ):                
+            self.handleArmyListMsg( msg[1], source )
+            
+        elif( msg[0] == FORCE_FIRST_TURN ):                
+            self.firstTurn()
+            
         elif( msg[0] == END_TURN ):
             self.endTurn( source )
                         
@@ -141,6 +149,56 @@ class Engine( Thread ):
             notify.error( "Unknown message Type: %s", msg )
         
  
+ 
+    def handleArmyListMsg(self, army_list, source ):
+        
+        if self.turn != 0:
+            EngMsg.error( "Cannot deploy now, game already in progress", source )
+            return
+        
+        player = self.findPlayer( source )
+        
+        if player.deployed:
+            EngMsg.error( "Already deployed.", source)
+            return
+        
+        #TODO: krav: check army size 
+        #TODO: krav: check position 
+
+        try:        
+            for x, y, unit_type in army_list:
+                
+                tmpUnit = unit.loadUnit(unit_type, self)
+                
+                #check if this is legal position for deployment
+                if (x,y, player.id) not in self.level.deploy:
+                    raise Exception( "Illegal position for deployment for unit " + tmpUnit.name + "@" + str( (x,y) ) )
+                
+                tmpUnit.init( self.getUID(), player, x, y )                
+                tmpUnit.heading = util.getHeading(tmpUnit.pos, self.level.center)
+                
+                if not self.level.putUnit( tmpUnit ):
+                    raise Exception( "Unit:" + tmpUnit.name + "@" + str( (x,y) ) + " cannot be put on level.")                            
+                
+                player.units.append( tmpUnit )                
+                self.units[tmpUnit.id] = tmpUnit
+                self.checkUnitCanUse( tmpUnit )
+        except Exception:
+            notify.critical( "Exception:%s", sys.exc_info()[1] )
+            EngMsg.error( sys.exc_info()[1], source )
+            return   
+
+        player.deployed = True
+        EngMsg.error( "Deployment ok.", source)
+ 
+        #if at least 1 more player needs to deploy, than wait for him
+        for plyr in self.players:
+            if not plyr.deployed:
+                return
+ 
+        #otherwise - start first turn
+        self.firstTurn()
+        
         
     def unitUpdate(self, unit_id, param, source ):
 
@@ -463,6 +521,8 @@ class Engine( Thread ):
         self.observer.addEngineStateMsg( util.compileState(self, p) )
         self.observer.addNewTurnMsg( util.compileNewTurn(self, p) )        
 
+        self.checkAndSendLevelMsgs()
+        
 
     def findNextPlayer(self):
         

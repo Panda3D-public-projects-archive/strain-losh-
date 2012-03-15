@@ -21,7 +21,9 @@ VANISH = 'vanish'               #value - id of unit vanishing
 SPOT = 'spot'                   #value - id of unit spotted
 ROTATE = 'rotate'               #value - new heading 
 TAUNT = 'taunt'                 #value - id of unit taunting
-
+DEPLOYMENT = 'deployment'       #value - dict with 2 keys - 'level' and 'army_size'
+ARMY_LIST = 'army_list'         #value - list of (x,y,unit_type)
+FORCE_FIRST_TURN = 'force_start'#no values
 
 class Msg:
     def __init__(self, in_type, value=None):
@@ -246,6 +248,14 @@ class ClientMsg:
     @staticmethod
     def taunt( unit_id ):
         ClientMsg._sendMsg( (TAUNT, unit_id) ) 
+
+    @staticmethod
+    def armyList( army_list ):
+        ClientMsg._sendMsg( (ARMY_LIST, army_list) ) 
+        
+    @staticmethod
+    def forceFirstTurn():
+        ClientMsg._sendMsg( (FORCE_FIRST_TURN, 1) ) 
         
     @staticmethod
     def endTurn():

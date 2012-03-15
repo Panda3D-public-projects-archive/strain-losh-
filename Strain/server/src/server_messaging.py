@@ -36,7 +36,9 @@ VANISH = 'vanish'               #value - id of unit vanishing
 SPOT = 'spot'                   #value - id of unit spotted
 ROTATE = 'rotate'               #value - new heading 
 TAUNT = 'taunt'                 #value - id of unit taunting
-
+DEPLOYMENT = 'deployment'       #value - dict with 2 keys - 'level' and 'army_size'
+ARMY_LIST = 'army_list'         #value - list of (x,y,unit_type)
+FORCE_FIRST_TURN = 'force_start'#no values
 
 
 class EngMsg:
@@ -132,13 +134,8 @@ class EngMsg:
                 EngMsg.log.info("Client connected: %s @ %s", tmp_player.name, conn.getAddress() )
                 EngMsg.activeConnections.append( ( conn, conn.getAddress(), tmp_player.name ) )
                 
-                #send all backlogged messages to this player
-                for msg in tmp_player.msg_lst:
-                    EngMsg.sendMsg( msg, conn )
                 
-                #clear all messages because we sent them, but not if this is observer
-                if tmp_player.name != 'observer':
-                    tmp_player.msg_lst = []
+                EngMsg.handleNewConnection( conn, tmp_player )
                 
             else:
                 #in this case, address and name parameter don't matter, cause there is nothing in activeConnections yet
@@ -173,6 +170,34 @@ class EngMsg:
             except:
                 pass
         
+        
+    @staticmethod
+    def handleNewConnection(conn, tmp_player):
+        
+        
+        #if the game hasnt started yet (turn == 0) and this player did not deploy
+        if engine._instance.turn == 0:
+            if not tmp_player.deployed:
+                EngMsg.sendDeploymentMsg( engine._instance.level, engine._instance.army_size, conn )
+            else:
+                EngMsg.error( "Other players not deployed yet", conn )
+                
+                
+            return
+        
+        
+        #send all backlogged messages to this player
+        for msg in tmp_player.msg_lst:
+            EngMsg.sendMsg( msg, conn )
+        
+        #clear all messages because we sent them, but not if this is observer
+        if tmp_player.name != 'observer':
+            tmp_player.msg_lst = []
+                
+        
+        
+        pass
+    
     
     @staticmethod
     def getData( socket, timeout ):
@@ -311,6 +336,16 @@ class EngMsg:
     @staticmethod
     def sendTaunt(unit_id, actions, source = None):
         EngMsg._sendMsg((TAUNT, (unit_id, actions)), source)
+
+    @staticmethod
+    def sendDeploymentMsg( level, army_size, source = None ):
+        deploy_dict = {}
+        
+        deploy_dict['level'] = util.compileLevel( level )
+        deploy_dict['army_size'] = army_size
+        
+        EngMsg._sendMsg( ( DEPLOYMENT, deploy_dict ), source  )
+        
 
     @staticmethod
     def sendMsg( msg, source = None):
