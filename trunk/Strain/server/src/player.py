@@ -14,6 +14,7 @@ class Player:
         self.connection = None
         self.msg_lst = []
         self.defeated = False
+        self.deployed = False
         pass
 
 
