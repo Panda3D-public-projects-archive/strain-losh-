@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
+<!--Generated with glade3 3.4.5 on Tue Sep  2 23:39:14 2008 -->
+<glade-interface>
+  <widget class="GtkWindow" id="MainWindow">
+    <property name="visible">True</property>
+    <property name="title" translatable="yes">Main Window</property>
+    <property name="modal">True</property>
+    <property name="window_position">GTK_WIN_POS_CENTER</property>
+    <property name="gravity">GDK_GRAVITY_WEST</property>
+    <child>
+      <widget class="GtkHPaned" id="hpaned1">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="border_width">2</property>
+        <property name="resize_mode">GTK_RESIZE_QUEUE</property>
+        <child>
+          <widget class="GtkVBox" id="vbox1">
+            <property name="visible">True</property>
+            <child>
+              <widget class="GtkButton" id="saveButton">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="tooltip" translatable="yes">tooltip of button1</property>
+                <property name="label" translatable="yes">gtk-save</property>
+                <property name="use_stock">True</property>
+                <property name="response_id">0</property>
+                <signal name="clicked" handler="on_saveButton_clicked"/>
+              </widget>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="padding">3</property>
+              </packing>
+            </child>
+            <child>
+              <widget class="GtkButton" id="loadButton">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="label" translatable="yes">gtk-open</property>
+                <property name="use_stock">True</property>
+                <property name="response_id">0</property>
+                <signal name="clicked" handler="on_loadButton_clicked"/>
+              </widget>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="padding">3</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+            <child>
+              <widget class="GtkButton" id="ClearLevel">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="label" translatable="yes">Clear level</property>
+                <property name="response_id">0</property>
+                <signal name="clicked" handler="on_ClearLevel_clicked"/>
+              </widget>
+              <packing>
+                <property name="expand">False</property>
+                <property name="position">2</property>
+              </packing>
+            </child>
+            <child>
+              <widget class="GtkDrawingArea" id="drawingarea2">
+                <!--<property name="width_request">800</property>
+                <property name="height_request">800</property>-->
+                <property name="visible">True</property>
+                <property name="app_paintable">True</property>
+                <property name="events">GDK_EXPOSURE_MASK | GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_MOTION_MASK | GDK_BUTTON1_MOTION_MASK | GDK_BUTTON2_MOTION_MASK | GDK_BUTTON3_MOTION_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK | GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK | GDK_FOCUS_CHANGE_MASK | GDK_STRUCTURE_MASK | GDK_PROPERTY_CHANGE_MASK | GDK_VISIBILITY_NOTIFY_MASK | GDK_PROXIMITY_IN_MASK | GDK_PROXIMITY_OUT_MASK | GDK_SUBSTRUCTURE_MASK | GDK_SCROLL_MASK</property>
+                <!--<signal name="button_press_event" handler="on_drawingarea2_button_press_event"/>
+                <signal name="motion_notify_event" handler="on_drawingarea2_motion_notify_event"/>
+                <signal name="button_release_event" handler="on_drawingarea2_button_release_event"/>-->
+                <signal name="expose_event" handler="on_drawingarea2_expose_event"/>
+              </widget>
+              <packing>
+                <property name="position">3</property>
+              </packing>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+          </widget>
+          <packing>
+            <property name="resize">False</property>
+            <property name="shrink">False</property>
+          </packing>
+        </child>
+        <child>
+          <widget class="GtkVPaned" id="vpaned1">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <child>
+              <widget class="GtkHBox" id="hbox1">
+                <property name="visible">True</property>
+                <property name="spacing">4</property>
+                <child>
+                  <widget class="GtkLabel" id="label2">
+                    <property name="visible">True</property>
+                    <property name="label" translatable="yes">columns:</property>
+                  </widget>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">False</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkSpinButton" id="spinbuttoncolumns">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="events">GDK_EXPOSURE_MASK | GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_MOTION_MASK | GDK_BUTTON1_MOTION_MASK | GDK_BUTTON2_MOTION_MASK | GDK_BUTTON3_MOTION_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK | GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK | GDK_FOCUS_CHANGE_MASK | GDK_STRUCTURE_MASK | GDK_PROPERTY_CHANGE_MASK | GDK_VISIBILITY_NOTIFY_MASK | GDK_PROXIMITY_IN_MASK | GDK_PROXIMITY_OUT_MASK | GDK_SUBSTRUCTURE_MASK | GDK_SCROLL_MASK</property>
+                    <property name="max_length">5</property>
+                    <property name="shadow_type">GTK_SHADOW_ETCHED_IN</property>
+                    <property name="adjustment">12 0 1000 1 10 10</property>
+                    <property name="numeric">True</property>
+                    <signal name="map_event" handler="on_spinbuttoncolumns_map_event"/>
+                    <signal name="value_changed" handler="on_spinbuttoncolumns_value_changed"/>
+                    <signal name="event" handler="on_spinbuttoncolumns_event"/>
+                  </widget>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">False</property>
+                    <property name="padding">2</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkLabel" id="label1">
+                    <property name="visible">True</property>
+                    <property name="label" translatable="yes">rows:</property>
+                  </widget>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">False</property>
+                    <property name="position">2</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkSpinButton" id="spinbuttonrows">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="events">GDK_STRUCTURE_MASK | GDK_SUBSTRUCTURE_MASK</property>
+                    <property name="extension_events">GDK_EXTENSION_EVENTS_ALL</property>
+                    <property name="max_length">5</property>
+                    <property name="shadow_type">GTK_SHADOW_ETCHED_IN</property>
+                    <property name="adjustment">10 0 1000 1 10 10</property>
+                    <property name="numeric">True</property>
+                    <signal name="map_event" handler="on_spinbuttonrows_map_event"/>
+                    <signal name="value_changed" handler="on_spinbuttonrows_value_changed"/>
+                  </widget>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">False</property>
+                    <property name="padding">2</property>
+                    <property name="position">3</property>
+                  </packing>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
+              </widget>
+              <packing>
+                <property name="resize">False</property>
+                <property name="shrink">False</property>
+              </packing>
+            </child>
+            <child>
+              <widget class="GtkDrawingArea" id="drawingarea1">
+                <property name="width_request">800</property>
+                <property name="height_request">800</property>
+                <property name="visible">True</property>
+                <property name="app_paintable">True</property>
+                <property name="events">GDK_EXPOSURE_MASK | GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_MOTION_MASK | GDK_BUTTON1_MOTION_MASK | GDK_BUTTON2_MOTION_MASK | GDK_BUTTON3_MOTION_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK | GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK | GDK_FOCUS_CHANGE_MASK | GDK_STRUCTURE_MASK | GDK_PROPERTY_CHANGE_MASK | GDK_VISIBILITY_NOTIFY_MASK | GDK_PROXIMITY_IN_MASK | GDK_PROXIMITY_OUT_MASK | GDK_SUBSTRUCTURE_MASK | GDK_SCROLL_MASK</property>
+                <signal name="button_press_event" handler="on_drawingarea1_button_press_event"/>
+                <signal name="expose_event" handler="on_drawingarea1_expose_event"/>
+                <signal name="motion_notify_event" handler="on_drawingarea1_motion_notify_event"/>
+                <signal name="button_release_event" handler="on_drawingarea1_button_release_event"/>
+              </widget>
+              <packing>
+                <property name="resize">True</property>
+                <property name="shrink">False</property>
+              </packing>
+            </child>
+          </widget>
+          <packing>
+            <property name="resize">False</property>
+            <property name="shrink">False</property>
+          </packing>
+        </child>
+      </widget>
+    </child>
+  </widget>
+</glade-interface>
