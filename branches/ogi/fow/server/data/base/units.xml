@@ -1,8 +1,0 @@
-<units>
-	<unit name="marine_standard" 	ws="4" hp="10" armour="Standard" 	ranged_weapon="Defaulter"/>
-	<unit name="marine_heavy" 		ws="4" hp="10" armour="Heavy" 		ranged_weapon="Heavy Defaulter"/>
-	<unit name="marine_sergeant"	ws="5" hp="10" armour="Sergeant" 	ranged_weapon="Plasma Pistol"		melee_weapon="Chain Sword"/>
-	<unit name="marine_scout"		ws="4" hp="10" armour="Scout" 		ranged_weapon="Default Pistol"		melee_weapon="Chain Sword"/>
-	<unit name="marine_medic" 		ws="3" hp="10" armour="Medic"		ranged_weapon="Default Pistol"		melee_weapon="Doctors Bag"/>
-	<unit name="marine_jumper"		ws="4" hp="10" armour="Jumper"		ranged_weapon="Default Pistol"		melee_weapon="Power Axe"/>
-</units>
