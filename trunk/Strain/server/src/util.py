@@ -55,7 +55,11 @@ class Notify():
 
 def compileNewTurn(engine, player):
     dic = compileState(engine, player)
-    del dic['level']
+    
+    if player.id != OBSERVER_ID:
+        del dic['level']    
+        dic['level'] = compileLevelWithDifferentGrid(engine.level, engine._grid_player[player.id])
+    
     return dic
 
 
