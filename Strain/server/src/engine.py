@@ -245,8 +245,6 @@ class Engine( Thread ):
                 unit.use()
                 player.addUseMsg( unit.id )
                 self.observer.addUseMsg( unit.id )
-                
-                #self.levelChanged()
             else:
                 return
                     
@@ -301,15 +299,6 @@ class Engine( Thread ):
         
         self.sendUNITMsgsAndRemoveDeadUnits( unit_ids_involved )
         
-        
-        
-    def levelChanged(self):
-        compiled_level = util.compileLevel( self.level )
-        for p in self.players:
-            p.addLevelMsg( compiled_level )
-        self.observer.addLevelMsg( compiled_level )
-        
-        self.updateVisibilityAndSendVanishAndSpotMessages()
         
         
     def chat(self, msg, source, to_allies):
@@ -408,17 +397,16 @@ class Engine( Thread ):
                     continue
 
                 for p in self.players:
+                    #TODO: krav: brijem da ova provjera ne radi bas tocno, treba provjerit
                     if (x,y) in vis_walls[p.id]:
                         if self.level._grid[x][y] != self._grid_player[p.id]:
                             self._grid_player[p.id][x][y] = self.level._grid[x][y]
                             changes[p.id] = p
-                        
-
+                            
+                            
         for p in changes.values():
             p.addLevelMsg( util.compileLevelWithDifferentGrid(self.level, self._grid_player[p.id]))
         
-        
-        pass
         
         
         
@@ -518,8 +506,15 @@ class Engine( Thread ):
             p.addEngineStateMsg( util.compileState(self, p) )
             p.addNewTurnMsg( util.compileNewTurn(self, p) )        
                                      
-        self.observer.addEngineStateMsg( util.compileState(self, p) )
-        self.observer.addNewTurnMsg( util.compileNewTurn(self, p) )        
+                                     
+        #ok so we have all units for this game initialized, add them all to observer's list
+        #so obs can see them all when adding engine_state and new_turn messages
+        for u in self.units.values():
+            self.observer.units.append( u )
+                                     
+                                     
+        self.observer.addEngineStateMsg( util.compileState(self, self.observer) )
+        self.observer.addNewTurnMsg( util.compileNewTurn(self, self.observer) )        
 
         self.checkAndSendLevelMsgs()
         
