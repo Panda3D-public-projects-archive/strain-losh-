@@ -200,7 +200,7 @@ def getUnitWeapons(unit):
     wpn_list = [unit['ranged_weapon']['name'], unit['melee_weapon']['name']]
     return wpn_list
 
-def loadUnit(race, type, team):
+def loadUnit(race, type, team, wpn1=None, wpn2=None):
     model = Actor(unit_type_dict[race][type])
     model.loadAnims(anim_dict[race])
     if team == '1':
@@ -208,6 +208,25 @@ def loadUnit(race, type, team):
     elif team == '2':
         tex = loader.loadTexture(unit_type_dict[race][type] + "2.png")
     model.setTexture(tex)
+    if wpn1 != None:
+        rnp = model.exposeJoint(None,"modelRoot","Wrist.R")
+        if wpn1 == 'Defaulter':
+            rwp = loader.loadModel('gun1')
+            rwp.setTexture(loader.loadTexture('gun.png'))
+            rwp.reparentTo(rnp)
+        elif wpn1 == 'Heavy Defaulter':
+            rwp = loader.loadModel('RPG-7')
+            rwp.setScale(0.3)
+            rwp.setHpr(90,0,90)
+            rwp.reparentTo(rnp)
+        elif wpn1 == 'Default Pistol':
+            rwp = loader.loadModel('gun1')
+            rwp.setTexture(loader.loadTexture('gun_green.png'))
+            rwp.reparentTo(rnp)
+        elif wpn1 == 'Plasma Pistol':
+            rwp = loader.loadModel('gun1')
+            rwp.setTexture(loader.loadTexture('gun_orange.png'))
+            rwp.reparentTo(rnp)
     return model 
 
 #===============================================================================
