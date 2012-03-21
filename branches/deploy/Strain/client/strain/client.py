@@ -533,6 +533,8 @@ class Client(DirectObject):
             self.deploy_unit.setScale(0.2)
             self.deploy_unit.setPos(-0.8, 0.5, 0.3)
             self.deploy_unit.setTag('type', unit_type.lower())
+        else:
+            self.deploy_unit = None
     
     def deployUnit(self):
         if self.deploy_unit != None:
@@ -544,28 +546,13 @@ class Client(DirectObject):
                 base.camLens.extrude(mpos, nearPoint, farPoint)
                 if self.plane.intersectsLine(pos3d, render.getRelativePoint(camera, nearPoint), render.getRelativePoint(camera, farPoint)):
                     pos = (int(pos3d.getX()), int(pos3d.getY()))
-                    if self.deploy_dict.has_key(pos):
-                        print pos
+                    if self.deploy_dict.has_key(pos) and self.deploy_dict[pos] == None:
                         unit = self.deploy_unit
                         unit.reparentTo(render)                        
                         unit.setScale(0.3)
                         unit.setPos(int(pos3d.getX()) + 0.5, int(pos3d.getY()) + 0.5, utils.GROUND_LEVEL)
                         self.deploy_dict[pos] = unit.getTag('type') 
                         self.getDeployee()
-    
-    def deployTask(self, task):
-        if self.deploy_unit != None:
-            if base.mouseWatcherNode.hasMouse():
-                mpos = base.mouseWatcherNode.getMouse()
-                pos3d = Point3()
-                nearPoint = Point3()
-                farPoint = Point3()
-                base.camLens.extrude(mpos, nearPoint, farPoint)
-                if self.plane.intersectsLine(pos3d, render.getRelativePoint(camera, nearPoint), render.getRelativePoint(camera, farPoint)):
-                    pos = (int(pos3d.getX()), int(pos3d.getY()))
-                    if self.deploy_dict.has_key(pos):
-                        print pos
-        return task.cont
     
     def endDeploy(self):
         if len(self.deploy_queue) > 0:
@@ -636,7 +623,6 @@ class ClientFSM(FSM.FSM):
         self.parent.plane = Plane(Vec3(0, 0, 1), Point3(0, 0, utils.GROUND_LEVEL)) 
         self.parent.accept('mouse1', self.parent.deployUnit)
         self.parent.accept('g', self.parent.endDeploy)
-        taskMgr.add(self.parent.deployTask, 'deploy_task')
     
     def exitDeploy(self):
         None

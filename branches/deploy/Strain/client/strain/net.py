@@ -150,6 +150,7 @@ class Net():
         #========================================================================
         #
         elif msg[0] == ERROR:
+            return
             self.parent._message_in_process = True            
             self.parent.interface.console.consoleOutput(str(msg[1]), utils.CONSOLE_SYSTEM_ERROR)
             self.parent.interface.console.show()

@@ -2,10 +2,10 @@
 <?eclipse-pydev version="1.0"?>
 
 <pydev_project>
-<pydev_property name="org.python.pydev.PYTHON_PROJECT_INTERPRETER">panda1.8.0.</pydev_property>
+<pydev_property name="org.python.pydev.PYTHON_PROJECT_INTERPRETER">Panda3D-1.8.0</pydev_property>
 <pydev_property name="org.python.pydev.PYTHON_PROJECT_VERSION">python 2.7</pydev_property>
 <pydev_pathproperty name="org.python.pydev.PROJECT_SOURCE_PATH">
-<path>/Strain-deployment branch/client</path>
-<path>/Strain-deployment branch/server/src</path>
+<path>/Strain-deploy branch/client</path>
+<path>/Strain-deploy branch/server/src</path>
 </pydev_pathproperty>
 </pydev_project>
