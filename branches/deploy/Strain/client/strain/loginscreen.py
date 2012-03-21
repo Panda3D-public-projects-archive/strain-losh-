@@ -57,29 +57,49 @@ class LoginScreen():
         self.parent.login.button.remove()
         self.parent.login.button_red.remove()
         self.parent.login.button_blue.remove()
-        self.parent.login.commander.delete()
-        self.parent.login.jumper.delete()
-        self.parent.login.textObject.remove() 
+        self.parent.login.textObject.remove()
+        self.unit1.cleanup()
+        self.unit1.remove()
+        self.unit2.cleanup()
+        self.unit2.remove()
+        self.unit3.cleanup()
+        self.unit3.remove()
+        self.unit4.cleanup()
+        self.unit4.remove()
+        self.plane.remove()
+        self.shadowCameraRotNode.remove()
+        self.initial.remove()
+        render.clearLight(self.ambientLight)
+        render.clearLight(self.sun)
+        self.ambientLight.remove()
+        self.sun.remove()
+        
+        render.setShaderOff()
+         
         self.parent = None
     
     def loginButPressed(self, text=None):
+        # TODO: ogs: loginButPressed bi trebao inicijalizirati net konekciju prema login serveru
         self.parent.player = self.entry_username.get()
         if self.parent.player != "Blue" and self.parent.player != "Red":
             self.parent.player = "Red"
-        #self.parent.startClient(type="Game")
 
     def loginButRedPressed(self, text=None):
         self.parent.player = "Red"
-        #self.parent.startClient(type="Game")
+        # TODO: ogs: Inace cu znati player_id kad se ulogiram
+        self.parent.player_id = '1'
+        self.parent.fsm.request('Browser')
         
     def loginButBluePressed(self, text=None):
         self.parent.player = "Blue"
-        #self.parent.startClient(type="Game")
+        # TODO: ogs: Inace cu znati player_id kad se ulogiram
+        self.parent.player_id = '2'
+        self.parent.fsm.request('Browser')
 
     def setScene(self):
         # Set up the camera
-        base.cam.setPos(0, -15, 15)
-        base.cam.lookAt(0, 0, 0)
+        #base.cam.setPos(0, -15, 15)
+        #base.cam.lookAt(0, 0, 0)
         
         # Load the background
         self.plane = loader.loadModel("plane")
@@ -141,35 +161,35 @@ class LoginScreen():
         self.unit1 = utils.loadUnit('marine', 'sergeant', '1', 'Defaulter')
         self.unit1.reparentTo(render)
         self.unit1.setPosHpr(-5, 3, 0, 90, 0, 0)
-        self.unit1.loop('shoot')
+        #self.unit1.loop('shoot')
         
         self.unit2 = utils.loadUnit('marine', 'medic', '1', 'Defaulter')
         self.unit2.reparentTo(render)
         self.unit2.setPosHpr(-3, 4, 0, 90, 0, 0)
         self.unit2.setPlayRate(1.5,'walk')
-        self.unit2.loop('walk')
+        #self.unit2.loop('walk')
         
         self.unit3 = utils.loadUnit('marine', 'heavy', '2', 'Heavy Defaulter')
         self.unit3.reparentTo(render)
         self.unit3.setPosHpr(6, 4, 0, -90, 0, 0)
         self.unit3.setPlayRate(1.5,'shoot')
-        self.unit3.loop('shoot') 
+        #self.unit3.loop('shoot') 
         
         self.unit4 = utils.loadUnit('marine', 'jumper', '2', 'Default Pistol')       
         self.unit4.reparentTo(render)
         self.unit4.setPosHpr(4.5, 3, 0, -90, 0, 0)
-        self.unit4.loop('jet_hover') 
+        #self.unit4.loop('jet_hover') 
         
         # Lighting:
         sun = DirectionalLight('Sun')
         sun.setColor(Vec4(.7,.7,.7,1))
-        sun = render.attachNewNode(sun)
-        sun.setHpr(45,-45,0)
-        render.setLight(sun)
+        self.sun = render.attachNewNode(sun)
+        self.sun.setHpr(45,-45,0)
+        render.setLight(self.sun)
         ambientLight = AmbientLight('AmbientLight')
         ambientLight.setColor(VBase4(.5,.5,.5,1))
-        ambientLight = render.attachNewNode(ambientLight)
-        render.setLight(ambientLight)
+        self.ambientLight = render.attachNewNode(ambientLight)
+        render.setLight(self.ambientLight)
         
         #base.disableMouse()
         render.setShaderAuto()

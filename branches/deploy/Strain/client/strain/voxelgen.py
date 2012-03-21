@@ -63,7 +63,7 @@ class VoxelGenerator():
         self.frames_between = 3
         self.frames_counter = 0
         taskMgr.add(self.flattenTask, "flatten_task")  
-
+    
     def markChunkDirty(self, x, y):
         chunk_x = int(x / self.chunk_size[0])
         chunk_y = int(y / self.chunk_size[0])
@@ -73,15 +73,10 @@ class VoxelGenerator():
     
     def markAllChunksDirty(self):
         self.pause_flatten_task = True
-        self.markChunkDirty(0, 0)
-        self.markChunkDirty(0, 1)
-        self.markChunkDirty(0, 2)
-        self.markChunkDirty(1, 0)
-        self.markChunkDirty(1, 1)
-        self.markChunkDirty(1, 2)
-        self.markChunkDirty(2, 0)
-        self.markChunkDirty(2, 1)
-        self.markChunkDirty(2, 2)
+        for idx, val in enumerate(self.floor_np_list):
+            for idy, v in enumerate(val):
+                payload = self.floor_np_list[idx][idy], idx, idy
+                self.dirty_chunks.append(payload)
         self.pause_flatten_task = False
     
     def createLevel(self):

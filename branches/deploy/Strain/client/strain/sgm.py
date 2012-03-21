@@ -33,7 +33,6 @@ class SceneGraph():
         self.comp_inited['level'] = False
         self.comp_inited['lights'] = False
         self.comp_inited['units'] = False
-        self.comp_inited['alt_render'] = False
         
         # Set up dictionary for unit nodepaths
         self.unit_np_dict = {}
@@ -286,6 +285,16 @@ class SceneGraph():
                 None
     def deleteTurnNode(self, d):
         d.removeNode()
+
+    def showDeployTiles(self):
+        for idx, l in enumerate(self.parent.level._deploy):
+            for idy, val in enumerate(l):
+                if val == 1:
+                    self.tile_cards[idx][idy].reparentTo(self.tile_cards_np)
+                    self.tile_cards[idx][idy].setColor(1, 0, 0, 0.5)
+                elif val == 2:
+                    self.tile_cards[idx][idy].reparentTo(self.tile_cards_np)
+                    self.tile_cards[idx][idy].setColor(0, 0, 1, 0.5)
 
     def initOutlineShader(self):  
         self.light_dummy = NodePath("outline_light_dummy_node")      

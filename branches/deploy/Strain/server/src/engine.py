@@ -65,7 +65,7 @@ class Engine( Thread ):
         print "Engine started"
         EngMsg.startServer( notify )
         
-        lvl = "assassins.txt"
+        lvl = "base2.txt"
         self.level = Level( LEVELS_ROOT + lvl )
         notify.info("Loaded level:%s", lvl )
 
@@ -167,11 +167,10 @@ class Engine( Thread ):
 
         try:        
             for x, y, unit_type in army_list:
-                
                 tmpUnit = unit.loadUnit(unit_type, self)
                 
                 #check if this is legal position for deployment
-                if (x,y, player.id) not in self.level.deploy:
+                if (x,y, player.id) not in self.level._deploy:
                     raise Exception( "Illegal position for deployment for unit " + tmpUnit.name + "@" + str( (x,y) ) )
                 
                 tmpUnit.init( self.getUID(), player, x, y )                

@@ -10,10 +10,13 @@ from direct.showbase.ShowBase import ShowBase#@UnresolvedImport
 from panda3d.core import loadPrcFile, WindowProperties, VBase4, ConfigVariableInt#@UnresolvedImport
 from direct.fsm import FSM#@UnresolvedImport
 from panda3d.core import PStatClient#@UnresolvedImport
+from direct.showbase.DirectObject import DirectObject
 
 
 # strain related imports
 from strain.loginscreen import LoginScreen
+from strain.browser import Browser
+from strain.client import Client
 
 
 #############################################################################
@@ -57,12 +60,8 @@ class AppFSM(FSM.FSM):
         self.parent = parent
 
         self.defaultTransitions = {
-            'Login' : [ 'Login2Browser' ],
-            'Login2Browser' : [ 'Browser' ],
-            'Browser' : [ 'Browser2NewGame', 'Browser2ContinueGame', 'Browser2ReplayViewer' ],
-            'Browser2NewGame' : [ 'NewGame' ],
-            'Browser2ContinueGame' : [ 'ContinueGame' ],
-            'Browser2ReplayViewer' : [ 'ReplayViewer' ]
+            'Login' : [ 'Browser' ],
+            'Browser' : [ 'NewGame', 'ContinueGame', 'ReplayViewer' ]
             }
 
     def enterLogin(self):
@@ -72,11 +71,36 @@ class AppFSM(FSM.FSM):
     def exitLogin(self):
         self.parent.login.cleanup()      
         del self.parent.login
+        
+    def enterBrowser(self):
+        self.parent.browser = Browser(self.parent)
+        
+    def exitBrowser(self):
+        self.parent.browser.cleanup()
+        del self.parent.browser
+        
+    def enterNewGame(self):
+        self.parent.client = Client(self.parent, self.parent.player, self.parent.player_id, "NewGame")
+    
+    def exitNewGame(self):
+        None
+        
+    def enterContinueGame(self):
+        self.parent.client = Client(self.parent, self.parent.player, self.parent.player_id, "ContGame")
+    
+    def exitContinueGame(self):
+        None
+        
+    def enterReplayViewer(self):
+        None
+        
+    def exitReplayViewer(self):
+        None
 
 
 #========================================================================
 #
-class Screen():
+class Screen(DirectObject):
     """The Screen Class manages window."""
     def __init__(self, parent, res=(1024,768)):
         self.parent = parent
@@ -90,6 +114,9 @@ class Screen():
         win.setSize(xsize, ysize)
         win.setFullscreen(False)
         base.openDefaultWindow(win)
+        
+        base.accept('1', render.ls)
+        base.accept('2', aspect2d.ls)
 
 #############################################################################
 # MAIN

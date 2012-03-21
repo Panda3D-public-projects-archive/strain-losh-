@@ -216,8 +216,9 @@ def loadUnit(race, type, team, wpn1=None, wpn2=None):
             rwp.reparentTo(rnp)
         elif wpn1 == 'Heavy Defaulter':
             rwp = loader.loadModel('RPG-7')
-            rwp.setScale(0.3)
-            rwp.setHpr(90,0,90)
+            rwp.setScale(0.2)
+            rwp.setTexture(loader.loadTexture('gun.png'))
+            rwp.setHpr(-90,0,90)
             rwp.reparentTo(rnp)
         elif wpn1 == 'Default Pistol':
             rwp = loader.loadModel('gun1')
