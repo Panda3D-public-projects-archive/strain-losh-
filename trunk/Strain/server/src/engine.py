@@ -165,6 +165,12 @@ class Engine( Thread ):
         #TODO: krav: check army size 
         #TODO: krav: check position 
 
+        #delete old units
+        for u in player.units:
+            del self.units[u.id]
+        player.units = []
+
+
         try:        
             for x, y, unit_type in army_list:
                 tmpUnit = unit.loadUnit(unit_type, self)
