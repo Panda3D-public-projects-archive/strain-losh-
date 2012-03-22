@@ -6,9 +6,8 @@
 import time
 
 # panda3D imports
-from panda3d.core import TextNode, NodePath, Point2, Point3#@UnresolvedImport
+from panda3d.core import TextNode, NodePath, Point2, Point3, VBase4, Plane, Vec3#@UnresolvedImport
 from panda3d.core import TP_normal#@UnresolvedImport
-from panda3d.core import ConfigVariableString, ConfigVariableInt#@UnresolvedImport
 from direct.interval.IntervalGlobal import Sequence, Parallel, Func, Wait, LerpColorScaleInterval#@UnresolvedImport
 from direct.showbase.DirectObject import DirectObject
 from direct.fsm import FSM
@@ -18,77 +17,43 @@ from direct.fsm import FSM
 from client_messaging import *
 from sgm import SceneGraph
 from camera import Camera
-#from cam2 import Camera
-from net import Net
 from interface import Interface
 from movement import Movement
 import utils as utils
 from strain.share import *
 from combat import Combat
+from strain.net import Net
+from strain.squadselector import SquadSelector
 
 from pstat_debug import pstat
 
 #========================================================================
 #
 class Client(DirectObject):
-    def __init__(self, parent, player, type="Game"):
+    def __init__(self, parent, player, player_id, type="ContGame"):
         self.parent = parent
         self.player = player
-        self.player_id = None
+        self.player_id = player_id
+        self.type = type
         
-        # Set up important game logic variables
-        self.level = None
-        self.units = {}
-        self.inactive_units = {}
-        self.players = {}
-        self.sel_unit_id = None
-        self.turn_number = None
-        
-        # task chain for threaded tasks
-        taskMgr.setupTaskChain('thread_1', numThreads = 2, tickClock = None,
-                       threadPriority = TP_normal, frameBudget = None,
-                       frameSync = None, timeslicePriority = None)
-        
-        # Init SceneGraph manager
-        self.sgm = SceneGraph(self)
-        
-        # Init Movement
-        self.movement = Movement(self)
-        
-        # Init Camera
-        self.camera = Camera(self, 20, 20)
-        
-        # Init Interface
-        self.interface = Interface(self)
-        
-        # All of our graphics components are initialized, request graphics init
-        self.sgm.initLights()
-        
-        # Init combat
-        self.combat = Combat()
-        
-        # Init Network
-        self.server_ip = ConfigVariableString("server-ip", "127.0.0.1").getValue()
-        self.server_port = ConfigVariableInt("server-port", "56005").getValue()
-
         # Flags
+        self._game_initialized = False
         # This handles message queue - we will process messages in sync one by one
         self._message_in_process = False
         # This handles interface interactions - we will not allow interaction if current animation is not done
         self._anim_in_process = False 
-
+        
+        self.fsm = ClientFSM(self, 'ClientFSM')
+        
         # Initialize game mode (network)
-        if type == "Game":
+        if type == "NewGame":
             self.net = Net(self)
             self.net.startNet()
-        elif type == "Replay":
+        elif type == "ContGame":
             self.net = Net(self)
-            self.net.startReplay("replay_2011-12-19_1.rpl")
-            
-        # Turn number and player on turn
-        self.turn_number = 0
-        self.turn_player = None        
-
+            self.net.startNet()
+            if self.player == 'Red':
+                taskMgr.doMethodLater(1, ClientMsg.forceFirstTurn, 'ForceTurn', extraArgs = [])        
         
     def getPlayerName(self, player_id):
         for p in self.players:
@@ -559,7 +524,47 @@ class Client(DirectObject):
                      Func(self.afterAnimHook)
                      )
         s.start()
-        
+    
+    def getDeployee(self):
+        if len(self.deploy_queue) > 0:
+            unit_type = self.deploy_queue.popleft()
+            self.deploy_unit = utils.loadUnit('marine', unit_type.lower(), self.player_id)
+            self.deploy_unit.reparentTo(aspect2d)
+            self.deploy_unit.setScale(0.2)
+            self.deploy_unit.setPos(-0.8, 0.5, 0.3)
+            self.deploy_unit.setTag('type', unit_type.lower())
+        else:
+            self.deploy_unit = None
+    
+    def deployUnit(self):
+        if self.deploy_unit != None:
+            if base.mouseWatcherNode.hasMouse():
+                mpos = base.mouseWatcherNode.getMouse()
+                pos3d = Point3()
+                nearPoint = Point3()
+                farPoint = Point3()
+                base.camLens.extrude(mpos, nearPoint, farPoint)
+                if self.plane.intersectsLine(pos3d, render.getRelativePoint(camera, nearPoint), render.getRelativePoint(camera, farPoint)):
+                    pos = (int(pos3d.getX()), int(pos3d.getY()))
+                    if self.deploy_dict.has_key(pos) and self.deploy_dict[pos] == None:
+                        unit = self.deploy_unit
+                        unit.reparentTo(self.deploy_unit_np)                        
+                        unit.setScale(0.3)
+                        unit.setPos(int(pos3d.getX()) + 0.5, int(pos3d.getY()) + 0.5, utils.GROUND_LEVEL)
+                        self.deploy_dict[pos] = unit.getTag('type') 
+                        self.getDeployee()
+    
+    def endDeploy(self):
+        if len(self.deploy_queue) > 0:
+            print "You must deploy all units"
+        else:
+            army_list = []
+            for key in self.deploy_dict:
+                if self.deploy_dict[key] != None:
+                    tup = (key[0], key[1], 'marine_'+self.deploy_dict[key])
+                    army_list.append(tup)
+            ClientMsg.armyList(army_list)
+      
     @pstat
     def getInvisibleTiles(self):
         a = []
@@ -581,3 +586,93 @@ class Client(DirectObject):
         l = visibleWalls(a, self.level)
         print "walls timer:::", (time.clock()-t)*1000
         return l
+
+#========================================================================
+#
+class ClientFSM(FSM.FSM):
+    def __init__(self, parent, name):
+        FSM.FSM.__init__(self, name)
+        self.parent = parent
+
+        self.defaultTransitions = {
+            'Selector' : [ 'Deploy' ],
+            'Deploy' : ['Game']
+            }
+
+    def enterSelector(self):
+        base.win.setClearColor(VBase4(0, 0, 0, 0))
+        self.parent.selector = SquadSelector(self.parent, self.parent.player, self.parent.budget)
+        
+    def exitSelector(self):
+        self.parent.selector.cleanup()      
+        del self.parent.selector        
+        
+    def enterDeploy(self):
+        self.parent.sgm = SceneGraph(self.parent)
+        self.parent.camera = Camera(self.parent, 20, 20)
+        self.parent.sgm.loadLevel(self.parent.level)
+        self.parent.sgm.initLights() 
+        self.parent.deploy_dict = {}
+        for idx, l in enumerate(self.parent.level._deploy):
+            for idy, val in enumerate(l):
+                if str(val) == self.parent.player_id:
+                    self.parent.deploy_dict[(idx, idy)] = None
+        self.parent.sgm.showDeployTiles()
+        self.parent.deploy_unit = None
+        self.parent.deploy_unit_np = render.attachNewNode('Deploy_unit_np')
+        self.parent.getDeployee()
+        self.parent.plane = Plane(Vec3(0, 0, 1), Point3(0, 0, utils.GROUND_LEVEL)) 
+        self.parent.accept('mouse1', self.parent.deployUnit)
+        self.parent.accept('g', self.parent.endDeploy)
+    
+    def exitDeploy(self):
+        self.parent.sgm.clearLights()
+        self.parent.sgm.node.removeNode()
+        taskMgr.remove("texTask")
+        self.parent.deploy_unit_np.removeNode()
+        for child in self.parent.sgm.tile_cards_np.getChildren():
+            child.detachNode()
+        self.parent.sgm.deleteLevel()            
+        del self.parent.sgm
+        
+    def enterGame(self):
+        # Set up important game logic variables
+        self.parent.level = None
+        self.parent.units = {}
+        self.parent.inactive_units = {}
+        self.parent.players = {}
+        self.parent.sel_unit_id = None
+        self.parent.turn_number = None
+        
+        # task chain for threaded tasks
+        taskMgr.setupTaskChain('thread_1', numThreads = 2, tickClock = None,
+                       threadPriority = TP_normal, frameBudget = None,
+                       frameSync = None, timeslicePriority = None)
+        
+        # Init SceneGraph manager
+        self.parent.sgm = SceneGraph(self.parent)
+        
+        # Init Movement
+        self.parent.movement = Movement(self.parent)
+        
+        # Init Camera
+        self.parent.camera = Camera(self.parent, 20, 20)
+        
+        # Init Interface
+        self.parent.interface = Interface(self.parent)
+        
+        # All of our graphics components are initialized, request graphics init
+        self.parent.sgm.initLights()
+        
+        # Init combat
+        self.parent.combat = Combat()
+            
+        # Turn number and player on turn
+        self.parent.turn_number = 0
+        self.parent.turn_player = None  
+        
+        self.parent._game_initialized = True      
+        
+    def exitGame(self):
+        None
+        

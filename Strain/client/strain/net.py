@@ -8,6 +8,7 @@ import time as time
 import copy
 
 # panda3D imports
+from panda3d.core import ConfigVariableString, ConfigVariableInt#@UnresolvedImport
 
 
 # strain related imports
@@ -23,9 +24,13 @@ class Net():
         # Set logging through our global logger
         self.log = self.parent.parent.logger
         ClientMsg.log = self.parent.parent.logger
-       
+        
+        # Init Network parameters
+        self.server_ip = ConfigVariableString("server-ip", "127.0.0.1").getValue()
+        self.server_port = ConfigVariableInt("server-port", "56005").getValue()
+           
     def startNet(self):
-        # Create main network messaging task which initiates connection
+        # Create main network messaging task
         taskMgr.add(self.msgTask, "msg_task") 
         
     def startReplay(self, replay):
@@ -36,23 +41,25 @@ class Net():
     def handleMsg(self, msg):
         """Handles incoming messages."""
         self.log.info("Received message: %s", msg[0])
-        """
+        
         print '--------START------------'
         print 'Incoming message', msg[0]
         print 'Message body', msg[1]
         print '----------END----------'
-        """
+        
         #========================================================================
         #
-        if msg[0] == ENGINE_STATE:
+        if msg[0] == DEPLOYMENT and self.parent.type == 'NewGame':
+            self.parent.budget = msg[1]['army_size']
+            self.parent.level = msg[1]['level']
+            self.parent.fsm.request('Selector')
+        elif msg[0] == ENGINE_STATE:
+            if not self.parent._game_initialized:
+                self.parent.fsm.request('Game')
             self.parent._message_in_process = True
             self.parent.level = pickle.loads(msg[1]['level'])
             self.parent.turn_number = msg[1]['turn']
             self.parent.players = pickle.loads(msg[1]['players'])
-            # TODO: ogs: Inace cu znati player_id kad se ulogiram pa necu morati ovako dekodirati
-            for p in self.parent.players:
-                if p['name'] == self.parent.player:
-                    self.parent.player_id = p['id']
             self.parent.turn_player = self.parent.getPlayerName(msg[1]['active_player_id'])
             self.parent.units = pickle.loads(msg[1]['units'])
             self.parent.inactive_units = pickle.loads(msg[1]['dead_units'])
@@ -75,10 +82,18 @@ class Net():
         #========================================================================
         #
         elif msg[0] == NEW_TURN:
-            self.parent._message_in_process = True            
-            self.parent.deselectUnit()
+            if not self.parent._game_initialized:
+                self.parent.fsm.request('Game')            
+            self.parent._message_in_process = True  
+            self.parent.level = pickle.loads(msg[1]['level']) 
+            self.parent.players = pickle.loads(msg[1]['players'])         
             self.parent.turn_number = msg[1]['turn']
             self.parent.turn_player = self.parent.getPlayerName(msg[1]['active_player_id'])
+            if not self.parent.sgm.comp_inited['level']:
+                self.parent.sgm.loadLevel(self.parent.level)
+            if not self.parent.sgm.comp_inited['units']:
+                self.parent.units = pickle.loads(msg[1]['units'])               
+                self.parent.sgm.loadUnits()
             units = pickle.loads(msg[1]['units'])
             self.parent.interface.refreshStatusBar()
             for unit in units.itervalues():
@@ -87,8 +102,9 @@ class Net():
             for unit_id in self.parent.units.iterkeys():
                 if self.parent.isThisMyUnit(unit_id):
                     self.parent.interface.refreshUnitInfo(unit_id)
+            self.parent.deselectUnit()
+            self.parent.sgm.level_mesh.setInvisibleTilesInThread()
             # play new turn animation, _message_in_process will be set to false after this
-            self.parent.sgm.level_mesh.setInvisibleTilesInThread()            
             self.parent.handleNewTurn()
         #========================================================================
         #
@@ -134,6 +150,7 @@ class Net():
         #========================================================================
         #
         elif msg[0] == ERROR:
+            return
             self.parent._message_in_process = True            
             self.parent.interface.console.consoleOutput(str(msg[1]), utils.CONSOLE_SYSTEM_ERROR)
             self.parent.interface.console.show()
@@ -193,7 +210,7 @@ class Net():
     def msgTask(self, task):
         """Task that listens for messages on client queue."""
         # Needs to be called every frame, this takes care of connection
-        ClientMsg.handleConnection(self.parent.player, self.parent.server_ip, self.parent.server_port)
+        ClientMsg.handleConnection(self.parent.player, self.server_ip, self.server_port)
         
         if self.parent._message_in_process == False:
             msg = ClientMsg.readMsg()        
