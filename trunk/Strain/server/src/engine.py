@@ -167,11 +167,10 @@ class Engine( Thread ):
 
         try:        
             for x, y, unit_type in army_list:
-                
                 tmpUnit = unit.loadUnit(unit_type, self)
                 
                 #check if this is legal position for deployment
-                if (x,y, player.id) not in self.level.deploy:
+                if self.level._deploy[x][y] != int(player.id):
                     raise Exception( "Illegal position for deployment for unit " + tmpUnit.name + "@" + str( (x,y) ) )
                 
                 tmpUnit.init( self.getUID(), player, x, y )                

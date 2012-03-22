@@ -4,6 +4,7 @@
 
 # python imports
 import string
+from collections import deque
 
 # panda3D imports
 from panda3d.core import *
@@ -50,7 +51,7 @@ class Selector():
             self.cost = unit_dict[arg_mod]['cost']
             self.parent.refreshBudget(cost_diff)
        
-class Squadselector():
+class SquadSelector():
     def __init__(self, parent, player, budget):
         self.parent = parent
         self.player = player
@@ -80,22 +81,24 @@ class Squadselector():
         self.go.setScale(0.05)
         self.go.reparentTo(self.root)
         
-        self.cancel = DirectButton(text='Cancel!', command=self.cancel)
+        self.cancel = DirectButton(text='Cancel!', command=self.cleanup)
         self.cancel.setPos(0,0,-0.2)
         self.cancel.setScale(0.05)
         self.cancel.reparentTo(self.root)
     
     def go(self):
+        self.parent.deploy_queue = deque()
+        self.parent.deployed_dict = {}
         for p in self.pickers:
             l = p.dom.get()
             ind = l.find(' ')
             l_mod = l[0:ind]
             if l_mod != 'NONE':
-                print l_mod
+                self.parent.deploy_queue.append(l_mod)
+        self.parent.fsm.request('Deploy')
     
-    def cancel(self):
+    def cleanup(self):
         self.root.removeNode()
-        self.parent.fsm.request('LoginScreen')
     
     def refreshBudget(self, val):
         self.budget += val

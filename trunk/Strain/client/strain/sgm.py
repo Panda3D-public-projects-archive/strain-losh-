@@ -33,7 +33,6 @@ class SceneGraph():
         self.comp_inited['level'] = False
         self.comp_inited['lights'] = False
         self.comp_inited['units'] = False
-        self.comp_inited['alt_render'] = False
         
         # Set up dictionary for unit nodepaths
         self.unit_np_dict = {}
@@ -147,9 +146,9 @@ class SceneGraph():
         dlight1 = DirectionalLight("dlight1")
         dlight1.setColor(VBase4(0.5, 0.5, 0.5, 1.0))
         #dlight1.setShadowCaster(True, 512, 512)
-        dlnp1 = render.attachNewNode(dlight1)
-        dlnp1.setHpr(0, -60, 0)
-        render.setLight(dlnp1)
+        self.dlnp1 = render.attachNewNode(dlight1)
+        self.dlnp1.setHpr(0, -60, 0)
+        render.setLight(self.dlnp1)
         """
         plight = PointLight('plight')
         plight.setColor(VBase4(1, 1, 1, 1))
@@ -163,8 +162,8 @@ class SceneGraph():
         """
         alight = AmbientLight("alight")
         alight.setColor(VBase4(0.4, 0.4, 0.4, 1.0))
-        alnp = render.attachNewNode(alight)
-        render.setLight(alnp) 
+        self.alnp = render.attachNewNode(alight)
+        render.setLight(self.alnp) 
         self.comp_inited['lights'] = True
         
         """
@@ -184,6 +183,13 @@ class SceneGraph():
         slight.showFrustum()
         slight.setExponent(1)
         """
+        
+    def clearLights(self):
+        render.clearLight(self.alnp)
+        render.clearLight(self.dlnp1)
+        self.alnp.removeNode()
+        self.dlnp1.removeNode()
+    
     def loadUnits(self):
         if self.comp_inited['units']:
             return
@@ -286,6 +292,16 @@ class SceneGraph():
                 None
     def deleteTurnNode(self, d):
         d.removeNode()
+
+    def showDeployTiles(self):
+        for idx, l in enumerate(self.parent.level._deploy):
+            for idy, val in enumerate(l):
+                if val == 1:
+                    self.tile_cards[idx][idy].reparentTo(self.tile_cards_np)
+                    self.tile_cards[idx][idy].setColor(1, 0, 0, 0.5)
+                elif val == 2:
+                    self.tile_cards[idx][idy].reparentTo(self.tile_cards_np)
+                    self.tile_cards[idx][idy].setColor(0, 0, 1, 0.5)
 
     def initOutlineShader(self):  
         self.light_dummy = NodePath("outline_light_dummy_node")      

@@ -58,7 +58,7 @@ def compileNewTurn(engine, player):
     
     if player.id != OBSERVER_ID:
         del dic['level']    
-        dic['level'] = compileLevelWithDifferentGrid(engine.level, engine._grid_player[player.id])
+        dic['level'] = pickle.dumps(compileLevelWithDifferentGrid(engine.level, engine._grid_player[player.id]))
     
     return dic
 
