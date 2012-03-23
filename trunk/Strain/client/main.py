@@ -116,7 +116,10 @@ class Screen(DirectObject):
         base.openDefaultWindow(win)
         
         base.accept('1', render.ls)
-        base.accept('2', aspect2d.ls)
+        base.accept('2', self.debug)
+    
+    def debug(self):
+        print taskMgr
 
 #############################################################################
 # MAIN

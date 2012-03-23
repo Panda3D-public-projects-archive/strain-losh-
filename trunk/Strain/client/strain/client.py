@@ -629,11 +629,29 @@ class ClientFSM(FSM.FSM):
         self.parent.sgm.clearLights()
         self.parent.sgm.node.removeNode()
         taskMgr.remove("texTask")
+        taskMgr.remove("camera_update_task")
+        taskMgr.remove("flatten_task")
         self.parent.deploy_unit_np.removeNode()
         for child in self.parent.sgm.tile_cards_np.getChildren():
             child.detachNode()
         self.parent.sgm.deleteLevel()            
         del self.parent.sgm
+        self.parent.camera.node.removeNode()
+        self.parent.camera.ignore('w')
+        self.parent.camera.ignore('w-up')
+        self.parent.camera.ignore('s')
+        self.parent.camera.ignore('s-up')                   
+        self.parent.camera.ignore('a')
+        self.parent.camera.ignore('a-up')
+        self.parent.camera.ignore('d')
+        self.parent.camera.ignore('d-up')
+        self.parent.camera.ignore('wheel_down')
+        self.parent.camera.ignore('wheel_up')
+        self.parent.camera.ignore('mouse3')
+        self.parent.camera.ignore('mouse3-up')
+        self.parent.camera.ignore('space')
+        self.parent.camera.ignore('f5')        
+        del self.parent.camera
         
     def enterGame(self):
         # Set up important game logic variables
