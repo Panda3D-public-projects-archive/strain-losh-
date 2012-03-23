@@ -39,8 +39,6 @@ class SceneGraph():
         
         self.off_model = None
         
-        self.turn_np = NodePath("turn_arrows_np")
-        self.turn_np.reparentTo(render)
         self.dummy_turn_pos_node = NodePath("dummy_turn_pos_node")
         self.dummy_turn_dest_node = NodePath("dummy_turn_dest_node")        
         self.unit_move_destination = None
@@ -50,7 +48,7 @@ class SceneGraph():
         self.enemyunittiles_np = None
         
         self.tile_cards = []
-        self.tile_cards_np = render.attachNewNode('tile_cards_np')
+        self.tile_cards_np = self.node.attachNewNode('tile_cards_np')
         self.tile_cards_np.setLightOff()
         
         self.initOutlineShader()
