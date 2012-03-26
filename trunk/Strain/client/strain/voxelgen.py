@@ -9,8 +9,9 @@ from collections import deque
 
 # panda3D imports
 from panda3d.core import Texture, NodePath, TextureStage, OccluderNode
-from panda3d.core import Vec4, Vec3, Point3, TransparencyAttrib
+from panda3d.core import Vec4, Vec3, Point3, TransparencyAttrib, LineSegs
 from direct.interval.IntervalGlobal import Sequence, LerpColorScaleInterval, LerpColorInterval, Wait#@UnresolvedImport
+from direct.showbase.DirectObject import DirectObject
 
 # strain related imports
 import strain.utils as utils
@@ -19,7 +20,7 @@ import strain.utils as utils
 # METHODS
 #############################################################################
 
-class VoxelGenerator():
+class VoxelGenerator(DirectObject):
     def __init__(self, parent, level, chunk_size=(7,7,1)):        
         self.parent = parent
         self.level = level
@@ -63,6 +64,29 @@ class VoxelGenerator():
         self.frames_between = 3
         self.frames_counter = 0
         taskMgr.add(self.flattenTask, "flatten_task")  
+        self.grid_display = False
+        self.createGrid()
+        self.accept('z', self.toggleGrid)
+    
+    def createGrid(self):
+        segs = LineSegs( )
+        segs.setThickness( 4.0 )
+        segs.setColor( Vec4(1,1,0,1) )
+        for i in xrange(self.level.maxX):
+            segs.moveTo(i+1, 0, utils.GROUND_LEVEL)
+            segs.drawTo(i+1, self.level.maxY, utils.GROUND_LEVEL+0.02)
+        for j in xrange(self.level.maxY):
+            segs.moveTo(0, j+1, utils.GROUND_LEVEL)
+            segs.drawTo(self.level.maxX, j+1, utils.GROUND_LEVEL+0.02)
+        self.grid = NodePath(segs.create( ))
+    
+    def toggleGrid(self):
+        if not self.grid_display:
+            self.grid.reparentTo(self.parent.level_node)
+            self.grid_display = True
+        else:
+            self.grid.detachNode()
+            self.grid_display = False
     
     def markChunkDirty(self, x, y):
         chunk_x = int(x / self.chunk_size[0])
