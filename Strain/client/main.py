@@ -8,8 +8,8 @@ import logging
 # panda3D imports
 from direct.showbase.ShowBase import ShowBase#@UnresolvedImport
 from panda3d.core import loadPrcFile, WindowProperties, VBase4, ConfigVariableInt#@UnresolvedImport
-from direct.fsm import FSM#@UnresolvedImport
 from panda3d.core import PStatClient#@UnresolvedImport
+from direct.fsm import FSM#@UnresolvedImport
 from direct.showbase.DirectObject import DirectObject
 
 

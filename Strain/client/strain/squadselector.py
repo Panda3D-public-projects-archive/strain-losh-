@@ -19,15 +19,15 @@ from direct.gui.DirectGui import *
 
 unit_dict = {}
 unit_dict['NONE'] = {'name':'NONE', 'cost':0}
-unit_dict['Standard'] = {'name':'Standard', 'cost':200}
-unit_dict['Sergeant'] = {'name':'Sergeant', 'cost':250}
-unit_dict['Medic'] = {'name':'Medic', 'cost':200}
-unit_dict['Heavy'] = {'name':'Heavy', 'cost':220}
-unit_dict['Scout'] = {'name':'Scout', 'cost':180}
-unit_dict['Jumper'] = {'name':'Jumper', 'cost':200}
+unit_dict['Standard'] = {'name':'Standard', 'cost':100}
+unit_dict['Sergeant'] = {'name':'Sergeant', 'cost':150}
+unit_dict['Medic'] = {'name':'Medic', 'cost':100}
+unit_dict['Heavy'] = {'name':'Heavy', 'cost':100}
+unit_dict['Scout'] = {'name':'Scout', 'cost':100}
+unit_dict['Jumper'] = {'name':'Jumper', 'cost':100}
 
 
-name_list = ['NONE (0)', 'Standard (200)', 'Sergeant (250)', 'Medic (200)', 'Heavy (220)', 'Scout (180)', 'Jumper (200)']
+name_list = ['NONE (0)', 'Standard (100)', 'Sergeant (150)', 'Medic (100)', 'Heavy (100)', 'Scout (100)', 'Jumper (100)']
 
 class Selector():
     def __init__(self, parent, x, y, i):
