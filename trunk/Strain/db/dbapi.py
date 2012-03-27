@@ -10,15 +10,19 @@ class DBApi():
     
     def createPlayer(self, email, username, password):
         cur = self.conn.cursor()
+        id = cur.var(NUMBER)        
         cur.execute('INSERT INTO STR_PLAYER(ID, EMAIL, USERNAME, PASSWORD) ' \
-                    'VALUES (str_ply_seq.nextval,:email,:username,:password)',
+                    'VALUES (str_ply_seq.nextval,:email,:username,:password) ' \
+                    'RETURNING ID INTO :id',
                     {'email' : email,
                      'username' : username,
-                     'password' : password
+                     'password' : password,
+                     'id' : id
                     }
                    )
         cur.close()
         self.conn.commit()
+        return id.getvalue()        
     
     def deletePlayer(self, username):
         cur = self.conn.cursor()
@@ -59,8 +63,42 @@ class DBApi():
             # Housekeeping...
             cur.close()
         return return_rows
+    
+    def createGame(self, level_name):
+        level_row = self.returnLevel(level_name)
+        cur = self.conn.cursor()
+        id = cur.var(NUMBER)
+        cur.execute('INSERT INTO STR_GAME(ID, LVL_ID) ' \
+                    'VALUES (str_gam_seq.nextval,:lvl_id) ' \
+                    'RETURNING ID INTO :id',
+                    {'lvl_id' : level_row[0][0],
+                     'id' : id
+                    }
+                   )
+        cur.close()
+        self.conn.commit()
+        return id.getvalue()
+        
+    def addPlayerToGame(self, game_id, player_name, team):
+        player_id = self.returnPlayer(player_name)[0][0]
+        cur = self.conn.cursor()
+        cur.execute('INSERT INTO STR_GAME_PLAYERS(ID, GAM_ID, PLY_ID, TEAM_ID) ' \
+                    'VALUES (str_gpl_seq.nextval,:gam_id, :ply_id, :team_id)',
+                    {'gam_id' : game_id,
+                     'ply_id' : player_id,
+                     'team_id' : team
+                    }
+                   )
+        cur.close()
+        self.conn.commit()
+        
         
 #MAIN
 dbapi = DBApi()
-#dbapi.createPlayer('asd', 'asd', 'asd')
-print dbapi.returnLevel('base2')
+#dbapi.createPlayer('ogi@loshdev', 'ogi', 'ogi')
+#dbapi.createPlayer('krav@loshdev', 'krav', 'krav')
+#dbapi.createPlayer('vjeko@loshdev', 'vjeko', 'vjeko')
+#print dbapi.returnLevel('base2')
+#id = dbapi.createGame('base2')
+#dbapi.addPlayerToGame(int(id), 'ogi', 1)
+#dbapi.addPlayerToGame(int(id), 'krav', 2)
