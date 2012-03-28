@@ -1,4 +1,4 @@
-# Prerequisites: sqlalchemy, cx_oracle
+# Prerequisites:  cx_oracle
 from cx_Oracle import *
 
 class DBApi():
@@ -77,28 +77,65 @@ class DBApi():
                    )
         cur.close()
         self.conn.commit()
+        self.addPlayerToGame(id.getvalue(), 'REPLAY', 0)
         return id.getvalue()
         
-    def addPlayerToGame(self, game_id, player_name, team):
+    def addPlayerToGame(self, game_id, player_name, team, order):
         player_id = self.returnPlayer(player_name)[0][0]
         cur = self.conn.cursor()
+        id = cur.var(NUMBER)        
         cur.execute('INSERT INTO STR_GAME_PLAYERS(ID, GAM_ID, PLY_ID, TEAM_ID) ' \
-                    'VALUES (str_gpl_seq.nextval,:gam_id, :ply_id, :team_id)',
+                    'VALUES (str_gpl_seq.nextval,:gam_id, :ply_id, :team_id, :order)' \
+                    'RETURNING ID INTO :id',
                     {'gam_id' : game_id,
                      'ply_id' : player_id,
-                     'team_id' : team
+                     'team_id' : team,
+                     'order' : order,
+                     'id' : id
                     }
                    )
         cur.close()
         self.conn.commit()
+        return id.getvalue()        
+                
+    def returnPlayerInGame(self, game_id, player_name):
+        cur = self.conn.cursor()
+        cur.execute('SELECT GPL.ID, GPL.GAM_ID, GPL.PLY_ID, GPL.TEAM_ID, ' \
+                    'GPL.ORDER, GPL.VICTORY_POINTS ' \
+                    'FROM STR_GAME_PLAYERS GPL, STR_PLAYER PLY ' \
+                    'WHERE GPL.PLY_ID = PLY.ID AND PLY.username = :username AND GPL.GAM_ID = :gam_id', 
+                    {'username' : player_name,
+                     'gam_id' : game_id
+                    }
+                   )
+        row = cur.fetchall()
+        cur.close()
+        return row
         
+    def addMessage(self, game_id, player_name, message_type, message, turn_number):
+        cur = self.conn.cursor()
+        id = cur.var(NUMBER)
+        game_player_id = self.returnPlayerInGame(game_id, player_name)[0]
+        cur.execute('INSERT INTO STR_GPL_MESSAGE(ID, GPL_ID, MESSAGE_ID, MESSAGE, TURN_NUMBER) ' \
+                    'VALUES (str_gpm_seq.nextval,:gpl_id, :message_id, :message, :turn_number)' \
+                    'RETURNING ID INTO :id',
+                    {'gpl_id' : game_player_id,
+                     'message_id' : message_type,
+                     'message' : message,
+                     'turn_number' : turn_number,
+                     'id' : id
+                    }
+                   )
+        cur.close()
+        self.conn.commit()
+        return id.getvalue()        
         
 #MAIN
 dbapi = DBApi()
 #dbapi.createPlayer('ogi@loshdev', 'ogi', 'ogi')
 #dbapi.createPlayer('krav@loshdev', 'krav', 'krav')
 #dbapi.createPlayer('vjeko@loshdev', 'vjeko', 'vjeko')
-#print dbapi.returnLevel('base2')
+print dbapi.returnPlayer('ogi') == None
 #id = dbapi.createGame('base2')
 #dbapi.addPlayerToGame(int(id), 'ogi', 1)
 #dbapi.addPlayerToGame(int(id), 'krav', 2)
