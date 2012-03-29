@@ -11,17 +11,24 @@ class DBApi():
     def createPlayer(self, email, username, password):
         cur = self.conn.cursor()
         id = cur.var(NUMBER)        
-        cur.execute('INSERT INTO STR_PLAYER(ID, EMAIL, USERNAME, PASSWORD) ' \
-                    'VALUES (str_ply_seq.nextval,:email,:username,:password) ' \
-                    'RETURNING ID INTO :id',
-                    {'email' : email,
-                     'username' : username,
-                     'password' : password,
-                     'id' : id
-                    }
-                   )
-        cur.close()
-        self.conn.commit()
+        try:
+            cur.execute('INSERT INTO STR_PLAYER(ID, EMAIL, USERNAME, PASSWORD) ' \
+                        'VALUES (str_ply_seq.nextval,:email,:username,:password) ' \
+                        'RETURNING ID INTO :id',
+                        {'email' : email,
+                         'username' : username,
+                         'password' : password,
+                         'id' : id
+                         }
+                        )
+            self.conn.commit()
+        except DatabaseError, exception:
+            error, = exception
+            print "Oracle error: ", error.message
+        else:
+            print "Row inserted..."
+        finally:
+            cur.close()
         return id.getvalue()        
     
     def deletePlayer(self, username):
@@ -64,33 +71,34 @@ class DBApi():
             cur.close()
         return return_rows
     
-    def createGame(self, level_name):
+    def createGame(self, level_name, army_size):
         level_row = self.returnLevel(level_name)
         cur = self.conn.cursor()
         id = cur.var(NUMBER)
-        cur.execute('INSERT INTO STR_GAME(ID, LVL_ID) ' \
-                    'VALUES (str_gam_seq.nextval,:lvl_id) ' \
+        cur.execute('INSERT INTO STR_GAME(ID, LVL_ID, ARMY_SIZE, TURN_NUMBER) ' \
+                    'VALUES (str_gam_seq.nextval,:lvl_id, :army_size, 0) ' \
                     'RETURNING ID INTO :id',
                     {'lvl_id' : level_row[0][0],
+                     'army_size' : army_size,
                      'id' : id
                     }
                    )
         cur.close()
         self.conn.commit()
-        self.addPlayerToGame(id.getvalue(), 'REPLAY', 0)
+        self.addPlayerToGame(id.getvalue(), 'REPLAY', 0, 0)
         return id.getvalue()
         
     def addPlayerToGame(self, game_id, player_name, team, order):
         player_id = self.returnPlayer(player_name)[0][0]
         cur = self.conn.cursor()
         id = cur.var(NUMBER)        
-        cur.execute('INSERT INTO STR_GAME_PLAYERS(ID, GAM_ID, PLY_ID, TEAM_ID) ' \
-                    'VALUES (str_gpl_seq.nextval,:gam_id, :ply_id, :team_id, :order)' \
+        cur.execute('INSERT INTO STR_GAME_PLAYERS(ID, GAM_ID, PLY_ID, TEAM_ID, ORDER_NUM) ' \
+                    'VALUES (str_gpl_seq.nextval,:gam_id, :ply_id, :team_id, :order_num) ' \
                     'RETURNING ID INTO :id',
                     {'gam_id' : game_id,
                      'ply_id' : player_id,
                      'team_id' : team,
-                     'order' : order,
+                     'order_num' : order,
                      'id' : id
                     }
                    )
@@ -101,7 +109,7 @@ class DBApi():
     def returnPlayerInGame(self, game_id, player_name):
         cur = self.conn.cursor()
         cur.execute('SELECT GPL.ID, GPL.GAM_ID, GPL.PLY_ID, GPL.TEAM_ID, ' \
-                    'GPL.ORDER, GPL.VICTORY_POINTS ' \
+                    'GPL.ORDER_NUM, GPL.VICTORY_POINTS ' \
                     'FROM STR_GAME_PLAYERS GPL, STR_PLAYER PLY ' \
                     'WHERE GPL.PLY_ID = PLY.ID AND PLY.username = :username AND GPL.GAM_ID = :gam_id', 
                     {'username' : player_name,
@@ -115,27 +123,36 @@ class DBApi():
     def addMessage(self, game_id, player_name, message_type, message, turn_number):
         cur = self.conn.cursor()
         id = cur.var(NUMBER)
-        game_player_id = self.returnPlayerInGame(game_id, player_name)[0]
-        cur.execute('INSERT INTO STR_GPL_MESSAGE(ID, GPL_ID, MESSAGE_ID, MESSAGE, TURN_NUMBER) ' \
-                    'VALUES (str_gpm_seq.nextval,:gpl_id, :message_id, :message, :turn_number)' \
-                    'RETURNING ID INTO :id',
-                    {'gpl_id' : game_player_id,
-                     'message_id' : message_type,
-                     'message' : message,
-                     'turn_number' : turn_number,
-                     'id' : id
-                    }
-                   )
-        cur.close()
-        self.conn.commit()
+        game_player_id = self.returnPlayerInGame(game_id, player_name)[0][0]
+        cur.setinputsizes(message=CLOB)
+        try:
+            cur.execute('INSERT INTO STR_GPL_MESSAGE(ID, GPL_ID, MESSAGE_ID, MESSAGE, TURN_NUMBER) ' \
+                        'VALUES (str_gpm_seq.nextval,:gpl_id, :message_id, :message, :turn_number)' \
+                        'RETURNING ID INTO :id',
+                        {'gpl_id' : game_player_id,
+                         'message_id' : message_type,
+                         'message' : message,
+                         'turn_number' : turn_number,
+                         'id' : id
+                        }
+                       )
+            self.conn.commit()
+        except DatabaseError, exception:
+            error, = exception
+            print "Oracle error: ", error.message
+        else:
+            print "Row inserted..."
+        finally:
+            cur.close()
+            
         return id.getvalue()        
         
 #MAIN
-dbapi = DBApi()
+#dbapi = DBApi()
+#dbapi.addMessage(6, 'ogi', 1, 'asd', 1)
 #dbapi.createPlayer('ogi@loshdev', 'ogi', 'ogi')
 #dbapi.createPlayer('krav@loshdev', 'krav', 'krav')
 #dbapi.createPlayer('vjeko@loshdev', 'vjeko', 'vjeko')
-print dbapi.returnPlayer('ogi') == None
-#id = dbapi.createGame('base2')
-#dbapi.addPlayerToGame(int(id), 'ogi', 1)
-#dbapi.addPlayerToGame(int(id), 'krav', 2)
+#id = dbapi.createGame('base2', 1000)
+#dbapi.addPlayerToGame(int(id), 'ogi', 1, 1)
+#dbapi.addPlayerToGame(int(id), 'krav', 2, 1)
