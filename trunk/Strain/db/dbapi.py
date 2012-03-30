@@ -3,7 +3,7 @@ from cx_Oracle import *
 
 class DBApi():
     def __init__(self):
-        self.conn = Connection(user='ognjenk', password='ogs', dsn=makedsn('zg-invplusdb', '1521', 'inv10dev'))
+        self.conn = Connection(user='straindb', password='straindb', dsn=makedsn('178.79.164.4', '1521', 'XE'))
     
     def close(self):
         self.conn.close()
@@ -148,7 +148,7 @@ class DBApi():
         return id.getvalue()        
         
 #MAIN
-#dbapi = DBApi()
+dbapi = DBApi()
 #dbapi.addMessage(6, 'ogi', 1, 'asd', 1)
 #dbapi.createPlayer('ogi@loshdev', 'ogi', 'ogi')
 #dbapi.createPlayer('krav@loshdev', 'krav', 'krav')
