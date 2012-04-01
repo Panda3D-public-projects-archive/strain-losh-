@@ -18,7 +18,7 @@
 			}
 		</style>
 	</head>
-	<body template="pywindow">
+	<body >
 		<input type="text">username</input>
 		<input type="text">password</input>
 		<button id="log_in">Log in</button><br />
