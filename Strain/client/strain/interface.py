@@ -112,6 +112,9 @@ class Interface(DirectObject.DirectObject):
         
         self.unit_info = {}
         self.unit_panel = {}
+        self.panel_pos = {}
+        self.panel_idx = 0
+        #self.calcPanelPos()
         
         self.console = GuiConsole(self, base.a2dBottomLeft, 1.503, 0.8, self.aspect, "bottom")#@UndefinedVariable
         self.stats = GuiTextFrame(Point3(0.3, 0, 0), 0.4, 0.22, 4, "bottom")#@UndefinedVariable
@@ -202,7 +205,8 @@ class Interface(DirectObject.DirectObject):
                                                 , unit_type[7:100]
                                                 , unit_default_HP, unit_HP
                                                 , unit_default_AP, unit_AP)
-            self.unit_panel[unit_id] = GuiUnitPanel(self.aspect, unit_id, unit_type[7:100]
+            self.unit_panel[unit_id] = GuiUnitPanel(self.aspect, unit_id, self.getPanelPos(unit_id)
+                                                , unit_type[7:100]
                                                 , unit_default_HP, unit_HP
                                                 , unit_default_AP, unit_AP)
         else:
@@ -344,4 +348,17 @@ class Interface(DirectObject.DirectObject):
     def clearButtons(self):
         for button in self.action_buttons.itervalues():
             button.disable()
+            
+    def getPanelPos(self, unit_id):
+        if not unit_id in self.panel_pos:
+            self.panel_idx = self.panel_idx + 1
+            self.panel_pos[unit_id] = self.panel_idx
+            
+        return self.panel_pos[unit_id]
 
+    def calcPanelPos(self):
+        i = 0
+        for unit_id in self.parent.units.iterkeys():
+            if self.parent.isThisMyUnit(unit_id):
+                i = i + 1
+                self.panel_pos[unit_id] = i
