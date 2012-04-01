@@ -11,53 +11,75 @@ from direct.gui.DirectGui import DirectButton, DirectEntry, DirectLabel#@Unresol
 from direct.gui.OnscreenText import OnscreenText#@UnresolvedImport
 from direct.gui.OnscreenImage import OnscreenImage
 from direct.filter.CommonFilters import CommonFilters#@UnresolvedImport
-
+from panda3d.rocket import *
 # strain related imports
 import strain.utils as utils
 
 
 class LoginScreen():
+    
     def __init__(self, parent):
         self.parent = parent
         font = loader.loadFont('frizqt__.ttf')
         legofont = loader.loadFont('legothick.ttf')
-        self.label_username = DirectLabel(text = "Username:", scale=.05, frameColor=(0,0,0,0), text_font=font, text_align=TextNode.ARight, text_fg=(1,1,1,1))
-        self.label_password = DirectLabel(text = "Password:", scale=.05, frameColor=(0,0,0,0), text_font=font, text_align=TextNode.ARight, text_fg=(1,1,1,1))
-        self.button = DirectButton(text = ("Login"),scale=.05,command=self.loginButPressed, text_font=font, text_align=TextNode.ACenter)
-        self.entry_username = DirectEntry(scale=.05,initialText="", numLines = 1,focus=1,command=self.loginButPressed, text_font=font)
-        self.entry_password = DirectEntry(scale=.05,initialText="", numLines = 1,command=self.loginButPressed, text_font=font)
-        self.label_username.reparentTo(aspect2d)
-        self.label_username.setPos(-0.2, 0, -0.4)
-        self.label_password.reparentTo(aspect2d)
-        self.label_password.setPos(-0.2, 0, -0.5)        
-        self.entry_username.reparentTo(aspect2d)
-        self.entry_username.setPos(-0.1, 0, -0.4)    
-        self.entry_password.reparentTo(aspect2d)
-        self.entry_password.setPos(-0.1, 0, -0.5)
-        self.button.reparentTo(aspect2d)
-        self.button.setPos(0, 0, -0.6) 
+#        self.label_username = DirectLabel(text = "Username:", scale=.05, frameColor=(0,0,0,0), text_font=font, text_align=TextNode.ARight, text_fg=(1,1,1,1))
+#        self.label_password = DirectLabel(text = "Password:", scale=.05, frameColor=(0,0,0,0), text_font=font, text_align=TextNode.ARight, text_fg=(1,1,1,1))
+#        self.button = DirectButton(text = ("Login"),scale=.05,command=self.loginButPressed, text_font=font, text_align=TextNode.ACenter)
+#        self.entry_username = DirectEntry(scale=.05,initialText="", numLines = 1,focus=1,command=self.loginButPressed, text_font=font)
+#        self.entry_password = DirectEntry(scale=.05,initialText="", numLines = 1,command=self.loginButPressed, text_font=font)
+#        self.label_username.reparentTo(aspect2d)
+#        self.label_username.setPos(-0.2, 0, -0.4)
+#        self.label_password.reparentTo(aspect2d)
+#        self.label_password.setPos(-0.2, 0, -0.5)        
+#        self.entry_username.reparentTo(aspect2d)
+#        self.entry_username.setPos(-0.1, 0, -0.4)    
+#        self.entry_password.reparentTo(aspect2d)
+#        self.entry_password.setPos(-0.1, 0, -0.5)
+#        self.button.reparentTo(aspect2d)
+#        self.button.setPos(0, 0, -0.6) 
+#        
+#        self.button_red = DirectButton(text = ("Login as RED"),scale=.05,command=self.loginButRedPressed,text_font=font, text_align=TextNode.ACenter)
+#        self.button_red.reparentTo(aspect2d)
+#        self.button_red.setPos(0.5, 0, -0.6) 
+#        
+#        self.button_blue = DirectButton(text = ("Login as BLUE"),scale=.05,command=self.loginButBluePressed, text_font=font, text_align=TextNode.ACenter)
+#        self.button_blue.reparentTo(aspect2d)
+#        self.button_blue.setPos(0.5, 0, -0.7)         
+#        
+#        self.textObject = OnscreenText(text = 'STRAIN', pos = (0, 0.4), scale = 0.2, font=legofont, fg = (1,0,0,1))
+#    
+        LoadFontFace("data/rml/Delicious-Roman.otf")
+
         
-        self.button_red = DirectButton(text = ("Login as RED"),scale=.05,command=self.loginButRedPressed,text_font=font, text_align=TextNode.ACenter)
-        self.button_red.reparentTo(aspect2d)
-        self.button_red.setPos(0.5, 0, -0.6) 
+        self.r = RocketRegion.make('pandaRocket', base.win)
+        self.r.setActive(1)
+        context =self.r.getContext()
         
-        self.button_blue = DirectButton(text = ("Login as BLUE"),scale=.05,command=self.loginButBluePressed, text_font=font, text_align=TextNode.ACenter)
-        self.button_blue.reparentTo(aspect2d)
-        self.button_blue.setPos(0.5, 0, -0.7)         
+        #context.LoadDocument('assets/background.rml').Show()
         
-        self.textObject = OnscreenText(text = 'STRAIN', pos = (0, 0.4), scale = 0.2, font=legofont, fg = (1,0,0,1))
-    
+        doc = context.LoadDocument('data/rml/login_screen.rml')
+        doc.Show()
+        
+        ih = RocketInputHandler()
+        base.mouseWatcher.attachNewNode(ih)
+        self.r.setInputHandler(ih)
+        
+        element = doc.GetElementById('log_in_red')
+        element.AddEventListener('click', self.loginButRedPressed, True)
+        element = doc.GetElementById('log_in_blue')
+        element.AddEventListener('click', self.loginButBluePressed, True)
+
         self.setScene()
     
     def cleanup(self):
-        self.label_username.remove()
-        self.label_password.remove()
-        self.entry_username.remove()          
-        self.entry_password.remove()        
-        self.parent.login.button.remove()
-        self.parent.login.button_red.remove()
-        self.parent.login.button_blue.remove()
-        self.parent.login.textObject.remove()
+#        self.label_username.remove()
+#        self.label_password.remove()
+#        self.entry_username.remove()          
+#        self.entry_password.remove()        
+#        self.parent.login.button.remove()
+#        self.parent.login.button_red.remove()
+#        self.parent.login.button_blue.remove()
+#        self.parent.login.textObject.remove()
         self.unit1.cleanup()
         self.unit1.remove()
         self.unit2.cleanup()
@@ -73,7 +95,7 @@ class LoginScreen():
         render.clearLight(self.sun)
         self.ambientLight.remove()
         self.sun.remove()
-        
+        self.r.setActive(0)
         render.setShaderOff()
          
         self.parent = None
@@ -84,13 +106,13 @@ class LoginScreen():
         if self.parent.player != "Blue" and self.parent.player != "Red":
             self.parent.player = "Red"
 
-    def loginButRedPressed(self, text=None):
+    def loginButRedPressed(self):
         self.parent.player = "Red"
         # TODO: ogs: Inace cu znati player_id kad se ulogiram
         self.parent.player_id = '1'
         self.parent.fsm.request('Browser')
         
-    def loginButBluePressed(self, text=None):
+    def loginButBluePressed(self):
         self.parent.player = "Blue"
         # TODO: ogs: Inace cu znati player_id kad se ulogiram
         self.parent.player_id = '2'
