@@ -114,7 +114,6 @@ class Interface(DirectObject.DirectObject):
         self.unit_panel = {}
         self.panel_pos = {}
         self.panel_idx = 0
-        #self.calcPanelPos()
         
         self.console = GuiConsole(self, base.a2dBottomLeft, 1.503, 0.8, self.aspect, "bottom")#@UndefinedVariable
         self.stats = GuiTextFrame(Point3(0.3, 0, 0), 0.4, 0.22, 4, "bottom")#@UndefinedVariable
@@ -355,10 +354,3 @@ class Interface(DirectObject.DirectObject):
             self.panel_pos[unit_id] = self.panel_idx
             
         return self.panel_pos[unit_id]
-
-    def calcPanelPos(self):
-        i = 0
-        for unit_id in self.parent.units.iterkeys():
-            if self.parent.isThisMyUnit(unit_id):
-                i = i + 1
-                self.panel_pos[unit_id] = i
