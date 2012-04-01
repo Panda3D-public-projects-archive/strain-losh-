@@ -380,7 +380,7 @@ class GuiUnitInfo:
         self.refreshIcons()
 
 class GuiUnitPanel:
-    def __init__(self, aspect, unit_id, unit_type, default_hp, hp, default_ap, ap):
+    def __init__(self, aspect, unit_id, panel_pos, unit_type, default_hp, hp, default_ap, ap):
         self.unit_id = unit_id
         self.frameWidth = 0.30
         self.frameHeight = 0.06
@@ -389,7 +389,8 @@ class GuiUnitPanel:
                                   , frameSize = (0, self.frameWidth, 0, -self.frameHeight)
                                   , frameColor = (0.2, 0.2, 0.2, 0.8)
                                   , parent = base.a2dTopLeft )#@UndefinedVariable
-        self.pos = Point3(0, 0, -GUI_TOP_OFFSET-0.05 - (0.069*unit_id))        
+        
+        self.pos = Point3(0, 0, -GUI_TOP_OFFSET-0.05 - (0.069*panel_pos))        
         self.frame.setPos(self.pos)
         
         self.ap_bar = DirectWaitBar(parent = self.frame
