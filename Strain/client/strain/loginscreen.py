@@ -51,22 +51,20 @@ class LoginScreen():
         LoadFontFace("data/rml/Delicious-Roman.otf")
 
         
-        self.r = RocketRegion.make('pandaRocket', base.win)
-        self.r.setActive(1)
-        context =self.r.getContext()
+        
+        self.parent.fsm.rRegion.setActive(1)
+        self.parent.fsm.rContext = self.parent.fsm.rRegion.getContext()
         
         #context.LoadDocument('assets/background.rml').Show()
         
-        doc = context.LoadDocument('data/rml/login_screen.rml')
-        doc.Show()
+        self.doc = self.parent.fsm.rContext.LoadDocument('data/rml/login_screen.rml')
+        self.doc.Show()
         
-        ih = RocketInputHandler()
-        base.mouseWatcher.attachNewNode(ih)
-        self.r.setInputHandler(ih)
-        
-        element = doc.GetElementById('log_in_red')
+        element = self.doc.GetElementById('log_in')
+        element.AddEventListener('click', self.loginButPressed, True)
+        element = self.doc.GetElementById('log_in_red')
         element.AddEventListener('click', self.loginButRedPressed, True)
-        element = doc.GetElementById('log_in_blue')
+        element = self.doc.GetElementById('log_in_blue')
         element.AddEventListener('click', self.loginButBluePressed, True)
 
         self.setScene()
@@ -95,14 +93,21 @@ class LoginScreen():
         render.clearLight(self.sun)
         self.ambientLight.remove()
         self.sun.remove()
-        self.r.setActive(0)
         render.setShaderOff()
-         
+        
+        self.parent.fsm.rRegion.setActive(0)
+        self.parent.fsm.rContext.UnloadAllDocuments()
         self.parent = None
     
-    def loginButPressed(self, text=None):
+    def loginButPressed(self):
         # TODO: ogs: loginButPressed bi trebao inicijalizirati net konekciju prema login serveru
-        self.parent.player = self.entry_username.get()
+        username = self.doc.GetElementById("username").value
+        password = self.doc.GetElementById("password").value
+        print "Username:", username
+        print "Password:", password
+        
+        self.parent.player = username
+#        self.parent.player = self.entry_username.get()
         if self.parent.player != "Blue" and self.parent.player != "Red":
             self.parent.player = "Red"
 
