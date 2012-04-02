@@ -19,11 +19,11 @@
 		</style>
 	</head>
 	<body >
-		<input type="text">username</input>
-		<input type="text">password</input>
+		<input id="username" type="text"></input>
+		<input id="password" type="password"></input>
 		<button id="log_in">Log in</button><br />
 		<button id="log_in_red">Log in as Red</button><br />
-		<button id="log_in_blue">Log in as blue</button><br />
+		<button id="log_in_blue">Log in as Blue</button><br />
 		<button onclick="exit()">Exit</button>
 	</body>
 </rml>
