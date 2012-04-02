@@ -11,7 +11,7 @@ from panda3d.core import loadPrcFile, WindowProperties, VBase4, ConfigVariableIn
 from panda3d.core import PStatClient#@UnresolvedImport
 from direct.fsm import FSM#@UnresolvedImport
 from direct.showbase.DirectObject import DirectObject
-
+from panda3d.rocket import *
 
 # strain related imports
 from strain.loginscreen import LoginScreen
@@ -63,7 +63,13 @@ class AppFSM(FSM.FSM):
             'Login' : [ 'Browser' ],
             'Browser' : [ 'NewGame', 'ContinueGame', 'ReplayViewer' ]
             }
-
+        
+        self.rRegion = RocketRegion.make('pandaRocket', base.win)
+        self.rContext = self.rRegion.getContext()
+        ih = RocketInputHandler()
+        base.mouseWatcher.attachNewNode(ih)
+        self.rRegion.setInputHandler(ih)
+        
     def enterLogin(self):
         base.win.setClearColor(VBase4(0, 0, 0, 0))
         self.parent.login = LoginScreen(self.parent)
