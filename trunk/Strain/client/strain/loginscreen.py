@@ -46,7 +46,7 @@ class LoginScreen():
 #        self.button_blue.reparentTo(aspect2d)
 #        self.button_blue.setPos(0.5, 0, -0.7)         
 #        
-#        self.textObject = OnscreenText(text = 'STRAIN', pos = (0, 0.4), scale = 0.2, font=legofont, fg = (1,0,0,1))
+        self.textObject = OnscreenText(text = 'STRAIN', pos = (0, 0.4), scale = 0.2, font=legofont, fg = (1,0,0,1))
 #    
         LoadFontFace("data/rml/Delicious-Roman.otf")
 
@@ -77,7 +77,7 @@ class LoginScreen():
 #        self.parent.login.button.remove()
 #        self.parent.login.button_red.remove()
 #        self.parent.login.button_blue.remove()
-#        self.parent.login.textObject.remove()
+        self.parent.login.textObject.remove()
         self.unit1.cleanup()
         self.unit1.remove()
         self.unit2.cleanup()
