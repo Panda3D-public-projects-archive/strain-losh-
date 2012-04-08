@@ -11,7 +11,7 @@ from panda3d.core import TP_normal#@UnresolvedImport
 from direct.interval.IntervalGlobal import Sequence, Parallel, Func, Wait, LerpColorScaleInterval#@UnresolvedImport
 from direct.showbase.DirectObject import DirectObject
 from direct.fsm import FSM
-
+from panda3d.rocket import *
 
 # strain related imports
 from client_messaging import *
@@ -44,7 +44,11 @@ class Client(DirectObject):
         self._anim_in_process = False 
         
         self.fsm = ClientFSM(self, 'ClientFSM')
-        
+        self.rRegion = RocketRegion.make('squad_select', base.win)
+        self.rContext = self.rRegion.getContext()
+        ih = RocketInputHandler()
+        base.mouseWatcher.attachNewNode(ih)
+        self.rRegion.setInputHandler(ih)
         # Initialize game mode (network)
         if type == "NewGame":
             self.net = Net(self)
