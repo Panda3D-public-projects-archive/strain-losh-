@@ -52,12 +52,12 @@ class LoginScreen():
 
         
         
-        self.parent.fsm.rRegion.setActive(1)
-        self.parent.fsm.rContext = self.parent.fsm.rRegion.getContext()
+        self.parent.rRegion.setActive(1)
+        self.parent.rContext = self.parent.rRegion.getContext()
         
         #context.LoadDocument('assets/background.rml').Show()
         
-        self.doc = self.parent.fsm.rContext.LoadDocument('data/rml/login_screen.rml')
+        self.doc = self.parent.rContext.LoadDocument('data/rml/login_screen.rml')
         self.doc.Show()
         
         element = self.doc.GetElementById('log_in')
@@ -95,8 +95,8 @@ class LoginScreen():
         self.sun.remove()
         render.setShaderOff()
         
-        self.parent.fsm.rRegion.setActive(0)
-        self.parent.fsm.rContext.UnloadAllDocuments()
+        self.parent.rRegion.setActive(0)
+        self.parent.rContext.UnloadAllDocuments()
         self.parent = None
     
     def loginButPressed(self):
