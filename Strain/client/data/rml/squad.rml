@@ -1,0 +1,43 @@
+<rml>
+	<head>
+		<title>Game Menu</title>
+		<link type="text/template" href="window.rml" />
+		<style>
+			body
+			{
+				width: 300px;
+				height: 500px;
+
+				margin: auto;
+			}
+			
+			
+		</style>
+
+	</head>
+	<body >
+		<div id="player">
+		Player: <span id="plr"></span>
+		</div>
+		<div id="budget">
+		<span>
+		Budget: <span id="bgt"></span>
+		</span>
+		</div>
+		
+		<div>
+			<dataselect id="soldier1" source="squad_data.squad" fields="name,cost" valuefield="name" formatter="frm"></dataselect>
+			<dataselect id="soldier2" source="squad_data.squad" fields="name,cost" valuefield="name" formatter="frm"></dataselect>
+			<dataselect id="soldier3" source="squad_data.squad" fields="name,cost" valuefield="name" formatter="frm"></dataselect>
+			<dataselect id="soldier4" source="squad_data.squad" fields="name,cost" valuefield="name" formatter="frm"></dataselect>
+			<dataselect id="soldier5" source="squad_data.squad" fields="name,cost" valuefield="name" formatter="frm"></dataselect>
+			<dataselect id="soldier6" source="squad_data.squad" fields="name,cost" valuefield="name" formatter="frm"></dataselect>
+			<dataselect id="soldier7" source="squad_data.squad" fields="name,cost" valuefield="name" formatter="frm"></dataselect>
+			<dataselect id="soldier8" source="squad_data.squad" fields="name,cost" valuefield="name" formatter="frm"></dataselect>
+		</div>
+		<div>
+			<button id="ok">Deploy!</button><br />
+			<button id="cancel">Cancel</button><br />
+		</div>
+	</body>
+</rml>
