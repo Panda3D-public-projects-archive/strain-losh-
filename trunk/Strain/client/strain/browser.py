@@ -39,12 +39,12 @@ class Browser():
 #        self.but_rep.setPos(-0.8, 0, 0.4)
     
 
-        self.parent.fsm.rRegion.setActive(1)
-        self.parent.fsm.rContext = self.parent.fsm.rRegion.getContext()
+        self.parent.rRegion.setActive(1)
+        self.parent.rContext = self.parent.rRegion.getContext()
         
         #context.LoadDocument('assets/background.rml').Show()
         
-        doc = self.parent.fsm.rContext.LoadDocument('data/rml/game.rml')
+        doc = self.parent.rContext.LoadDocument('data/rml/game.rml')
         doc.Show()
         
         
@@ -67,8 +67,8 @@ class Browser():
 #        self.but_cont.remove()
 #        self.but_obs.remove()
 #        self.but_rep.remove()
-        self.parent.fsm.rRegion.setActive(0)
-        self.parent.fsm.rContext.UnloadAllDocuments()
+        self.parent.rRegion.setActive(0)
+        self.parent.rContext.UnloadAllDocuments()
         self.parent = None
     
     def newGame(self):
