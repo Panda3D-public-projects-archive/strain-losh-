@@ -64,7 +64,12 @@ div#title_bar span
 	background-right-image: invader.tga 231px 0px 246px 85px;
 }
 
-
+div#player,
+div#budget
+{
+	font-size: 22;
+	font-weight: bold;
+}
 
 div#window
 {
@@ -122,7 +127,7 @@ input,
 select,
 dataselect
 {
-	margin-left: 20px;
+	margin-left: 0px;
 }
 
 input.submit
