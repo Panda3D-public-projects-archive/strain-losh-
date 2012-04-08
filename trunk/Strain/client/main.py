@@ -45,7 +45,11 @@ class App():
         
         #setup screen (initialize ShowBase to create window)
         self.screen = Screen(self, (800,600))
-        
+        self.rRegion = RocketRegion.make('main_menu', base.win)
+        self.rContext = self.rRegion.getContext()
+        ih = RocketInputHandler()
+        base.mouseWatcher.attachNewNode(ih)
+        self.rRegion.setInputHandler(ih)
         #setup FSM
         self.fsm = AppFSM(self, 'AppFSM')
         
@@ -63,12 +67,6 @@ class AppFSM(FSM.FSM):
             'Login' : [ 'Browser' ],
             'Browser' : [ 'NewGame', 'ContinueGame', 'ReplayViewer' ]
             }
-        
-        self.rRegion = RocketRegion.make('pandaRocket', base.win)
-        self.rContext = self.rRegion.getContext()
-        ih = RocketInputHandler()
-        base.mouseWatcher.attachNewNode(ih)
-        self.rRegion.setInputHandler(ih)
         
     def enterLogin(self):
         base.win.setClearColor(VBase4(0, 0, 0, 0))
