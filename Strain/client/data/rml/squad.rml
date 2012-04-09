@@ -16,16 +16,16 @@
 
 	</head>
 	<body >
-		<div id="player">
+		<div id="menu_center">
 		Player: <span id="plr"></span>
 		</div>
-		<div id="budget">
+		<div id="menu_center">
 		<span>
 		Budget: <span id="bgt"></span>
 		</span>
 		</div>
 		
-		<div>
+		<div id="menu_center">
 			<dataselect id="soldier1" source="squad_data.squad" fields="name,cost" valuefield="name" formatter="frm"></dataselect>
 			<dataselect id="soldier2" source="squad_data.squad" fields="name,cost" valuefield="name" formatter="frm"></dataselect>
 			<dataselect id="soldier3" source="squad_data.squad" fields="name,cost" valuefield="name" formatter="frm"></dataselect>
@@ -35,7 +35,7 @@
 			<dataselect id="soldier7" source="squad_data.squad" fields="name,cost" valuefield="name" formatter="frm"></dataselect>
 			<dataselect id="soldier8" source="squad_data.squad" fields="name,cost" valuefield="name" formatter="frm"></dataselect>
 		</div>
-		<div>
+		<div id="menu_center">
 			<button id="ok">Deploy!</button><br />
 			<button id="cancel">Cancel</button><br />
 		</div>
