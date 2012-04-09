@@ -1,6 +1,6 @@
 body
 {
-	font-family: Delicious;
+	font-family: Verdana;
 	font-weight: normal;
 	font-style: normal;
 	font-size: 15;
@@ -18,6 +18,35 @@ body.window
 	max-height: 700px;
 }
 
+
+div#logo
+{
+	width: 800px;
+	height: 150px;
+	padding-top: 50px;
+	
+}
+
+div#logo_image
+{
+	width: 328px;
+	height: 101px;
+	logo-decorator: image;
+    logo-image: strain_logo.png;
+    margin: auto;
+}
+
+div#menu_center
+{
+	width: 300px;
+	height: auto;
+	margin: auto;
+	text-align: center;
+	font-family: Verdana;
+	font-weight: normal;
+	font-style: normal;
+	font-size: 15;
+}
 
 
 div#title_bar
@@ -127,7 +156,8 @@ input,
 select,
 dataselect
 {
-	margin-left: 0px;
+	margin-left:auto;
+	margin-right:auto;
 }
 
 input.submit
@@ -141,17 +171,22 @@ button,
 input.submit
 {
 	display: inline-block;
-
+	margin-left:auto;
+	margin-right:auto;
 	width: 159px;
 	height: 37px;
 
 	padding-top: 8px;
 	vertical-align: -18px;
 
-	font-size: 18;
+	font-size: 16;
 	text-align: center;
 	tab-index: auto;
-
+	font-weight: bold;
+	shadow-font-effect: shadow;
+    shadow-offset: 1px 1px;
+    shadow-color: black;
+    
 	background-decorator: image;
 	background-image: invader.tga 247px 0px 406px 45px;
 }
