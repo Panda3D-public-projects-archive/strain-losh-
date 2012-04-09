@@ -17,15 +17,22 @@ import traceback
 
 
 class SquadDataSource(DataSource): 
-    def __init__(self, name): 
+    def __init__(self, name, unit_dict): 
         self.squad = [] # could be any name 
-        self.squad.append({'name':'NONE', 'cost':'0'})
-        self.squad.append({'name':'Standard', 'cost':'100'}) 
-        self.squad.append({'name':'Sergeant', 'cost':'150'}) 
-        self.squad.append({'name':'Medic', 'cost':'100'}) 
-        self.squad.append({'name':'Heavy', 'cost':'100'}) 
-        self.squad.append({'name':'Scout', 'cost':'100'}) 
-        self.squad.append({'name':'Jumper', 'cost':'100'})  
+        
+        for key in unit_dict:
+            if unit_dict[key]['cost'] == 0:
+                self.squad.insert(0, {'name':unit_dict[key]['name'], 'cost':unit_dict[key]['cost']})
+            else:
+                self.squad.append({'name':unit_dict[key]['name'], 'cost':unit_dict[key]['cost']})
+
+#        self.squad.append({'name':'NONE', 'cost':'0'})
+#        self.squad.append({'name':'Standard', 'cost':'100'}) 
+#        self.squad.append({'name':'Sergeant', 'cost':'150'}) 
+#        self.squad.append({'name':'Medic', 'cost':'100'}) 
+#        self.squad.append({'name':'Heavy', 'cost':'100'}) 
+#        self.squad.append({'name':'Scout', 'cost':'100'}) 
+#        self.squad.append({'name':'Jumper', 'cost':'100'})  
         
         DataSource.__init__(self, name) 
 
