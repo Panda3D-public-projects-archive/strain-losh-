@@ -20,8 +20,8 @@ class LoginScreen():
     
     def __init__(self, parent):
         self.parent = parent
-        font = loader.loadFont('frizqt__.ttf')
-        legofont = loader.loadFont('legothick.ttf')
+#        font = loader.loadFont('frizqt__.ttf')
+#        legofont = loader.loadFont('legothick.ttf')
 #        self.label_username = DirectLabel(text = "Username:", scale=.05, frameColor=(0,0,0,0), text_font=font, text_align=TextNode.ARight, text_fg=(1,1,1,1))
 #        self.label_password = DirectLabel(text = "Password:", scale=.05, frameColor=(0,0,0,0), text_font=font, text_align=TextNode.ARight, text_fg=(1,1,1,1))
 #        self.button = DirectButton(text = ("Login"),scale=.05,command=self.loginButPressed, text_font=font, text_align=TextNode.ACenter)
@@ -46,9 +46,10 @@ class LoginScreen():
 #        self.button_blue.reparentTo(aspect2d)
 #        self.button_blue.setPos(0.5, 0, -0.7)         
 #        
-        self.textObject = OnscreenText(text = 'STRAIN', pos = (0, 0.4), scale = 0.2, font=legofont, fg = (1,0,0,1))
+#        self.textObject = OnscreenText(text = 'STRAIN', pos = (0, 0.4), scale = 0.2, font=legofont, fg = (1,0,0,1))
 #    
-        LoadFontFace("data/rml/Delicious-Roman.otf")
+        LoadFontFace("data/fonts/Delicious-Roman.otf")
+        LoadFontFace("data/fonts/verdana.ttf")
 
         
         
@@ -77,7 +78,7 @@ class LoginScreen():
 #        self.parent.login.button.remove()
 #        self.parent.login.button_red.remove()
 #        self.parent.login.button_blue.remove()
-        self.parent.login.textObject.remove()
+#        self.parent.login.textObject.remove()
         self.unit1.cleanup()
         self.unit1.remove()
         self.unit2.cleanup()
