@@ -90,7 +90,7 @@ class SquadSelector():
         self.parent.rRegion.setActive(1)
         self.parent.rContext = self.parent.rRegion.getContext()
         
-        self.squadData = SquadDataSource("squad_data")
+        self.squadData = SquadDataSource("squad_data", unit_dict)
         self.squadDataFormatter = SquadDataFormatter("frm")
         
         self.doc = self.parent.rContext.LoadDocument('data/rml/squad.rml')
