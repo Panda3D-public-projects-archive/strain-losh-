@@ -5,8 +5,8 @@
 		<style>
 			body
 			{
-				width: 300px;
-				height: 225px;
+				width: 800px;
+				height: 600px;
 
 				margin: auto;
 			}
@@ -19,11 +19,23 @@
 		</style>
 	</head>
 	<body >
-		<input id="username" type="text"></input>
-		<input id="password" type="password"></input>
-		<button id="log_in">Log in</button><br />
-		<button id="log_in_red">Log in as Red</button><br />
-		<button id="log_in_blue">Log in as Blue</button><br />
-		<button onclick="exit()">Exit</button>
+		<div id="logo">
+			<div id="logo_image">
+			</div>
+		</div>
+		<div id="menu_center">
+			Username:
+			<input id="username" type="text"></input>
+			Password:
+			<input id="password" type="password"></input>
+		</div>
+		<div id="menu_center">
+			<button id="log_in">Log in</button><br />
+			<br />
+			<button id="log_in_red">Log in as Red</button><br />
+			<button id="log_in_blue">Log in as Blue</button><br />
+			<br />
+			<button onclick="exit()">Exit</button>
+		</div>
 	</body>
 </rml>
