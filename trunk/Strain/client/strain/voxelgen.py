@@ -71,7 +71,7 @@ class VoxelGenerator(DirectObject):
     def createGrid(self):
         segs = LineSegs( )
         segs.setThickness( 4.0 )
-        segs.setColor( Vec4(1,1,0,1) )
+        segs.setColor( Vec4(1,1,0,0.3) )
         for i in xrange(self.level.maxX):
             segs.moveTo(i+1, 0, utils.GROUND_LEVEL)
             segs.drawTo(i+1, self.level.maxY, utils.GROUND_LEVEL+0.02)
@@ -79,6 +79,7 @@ class VoxelGenerator(DirectObject):
             segs.moveTo(0, j+1, utils.GROUND_LEVEL)
             segs.drawTo(self.level.maxX, j+1, utils.GROUND_LEVEL+0.02)
         self.grid = NodePath(segs.create( ))
+        self.grid.setTransparency(TransparencyAttrib.MAlpha)
     
     def toggleGrid(self):
         if not self.grid_display:
