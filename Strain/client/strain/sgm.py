@@ -292,13 +292,16 @@ class SceneGraph():
         d.removeNode()
 
     def showDeployTiles(self):
+        t = loader.loadTexture('star.png')
         for idx, l in enumerate(self.parent.level._deploy):
             for idy, val in enumerate(l):
                 if val == 1:
                     self.tile_cards[idx][idy].reparentTo(self.tile_cards_np)
+                    self.tile_cards[idx][idy].setTexture(t)
                     self.tile_cards[idx][idy].setColor(1, 0, 0, 0.5)
                 elif val == 2:
                     self.tile_cards[idx][idy].reparentTo(self.tile_cards_np)
+                    self.tile_cards[idx][idy].setTexture(t)
                     self.tile_cards[idx][idy].setColor(0, 0, 1, 0.5)
 
     def initOutlineShader(self):  
