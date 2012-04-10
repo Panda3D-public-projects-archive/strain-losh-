@@ -6,7 +6,7 @@
 import time
 
 # panda3D imports
-from panda3d.core import TextNode, NodePath, Point2, Point3, VBase4, Plane, Vec3#@UnresolvedImport
+from panda3d.core import TextNode, NodePath, Point2, Point3, VBase4, Plane, Vec3, CardMaker, Camera, AmbientLight, Spotlight, Texture#@UnresolvedImport
 from panda3d.core import TP_normal#@UnresolvedImport
 from direct.interval.IntervalGlobal import Sequence, Parallel, Func, Wait, LerpColorScaleInterval#@UnresolvedImport
 from direct.showbase.DirectObject import DirectObject
@@ -16,7 +16,7 @@ from panda3d.rocket import *
 # strain related imports
 from client_messaging import *
 from sgm import SceneGraph
-from camera import Camera
+from camera import Camera as AppCamera
 from interface import Interface
 from movement import Movement
 import utils as utils
@@ -529,14 +529,107 @@ class Client(DirectObject):
                      )
         s.start()
     
+    def setCamPoss(self, off):
+        self.altCam.setPos(self.altCam.getPos() + Point3(0, 0, 0.1)*off)
+        print self.altCam.getPos()
+   
+    def setCamLook(self, off):
+        self.altCam.setP(self.altCam.getP() + 0.5*off)
+        print self.altCam.getP()     
+        
+    
+    def deploySquadScreen(self):
+        """
+        self.accept('m', self.setCamPoss, [1])
+        self.accept('n', self.setCamPoss, [-1])
+        self.accept('y', self.setCamLook, [1])
+        self.accept('x', self.setCamLook, [-1])
+        """
+        self.dr2 = base.win.makeDisplayRegion(0.0, 0.5, 0.65, 1.0)
+        self.dr2.setClearColor(VBase4(0, 0, 0, 0.3))
+        self.dr2.setClearColorActive(False)
+        self.dr2.setClearDepthActive(True)
+
+        self.render2 = NodePath('render2')
+        self.cam2 = self.render2.attachNewNode(Camera('cam2'))
+        self.cam2.node().getLens().setAspectRatio(1.8)
+        self.dr2.setCamera(self.cam2)
+        
+        self.floor2np = self.render2.attachNewNode('floor2')
+        tex = loader.loadTexture('scifi_floor.png')  
+        tex.setMagfilter(Texture.FTLinearMipmapLinear)
+        tex.setMinfilter(Texture.FTLinearMipmapLinear)
+        cm = CardMaker('cm_floor')
+        cm.setFrame(0, 1, 0, 1)        
+        for x in xrange(10):
+            for y in xrange(10):        
+                cpos = self.floor2np.attachNewNode(cm.generate())
+                cpos.setPos(x-5, y-5, 0)
+                cpos.setP(-90)
+                cpos.setTexture(tex)
+        self.floor2np.flattenStrong()
+        
+
+        self.cam2.setPos(0, -10, 5)
+        self.cam2.setP(-20)
+        
+        for idx, u in enumerate(self.deploy_queue):
+            unit = utils.loadUnit('marine', u.lower(), self.player_id)
+            unit.reparentTo(self.render2)
+            unit.setScale(1)
+            if idx == 0:
+                unit.setPos(0, 0, 0)
+            elif idx == 1:
+                unit.setPos(1.5, 1.5, 0)
+                unit.setH(-20)
+            elif idx == 2:
+                unit.setPos(-1.5, 1.8, 0)
+                unit.setH(-10)
+            elif idx == 3:
+                unit.setPos(2.2, 2.5, 0)
+                unit.setH(-20)
+            elif idx == 4:
+                unit.setPos(-1.4, 3.5, 0)
+            elif idx == 5:
+                unit.setPos(3.5, -0.5, 0)
+                unit.setH(-35)
+            elif idx == 6:
+                unit.setPos(-2.6, 2.5, 0)
+                unit.setH(30)
+            elif idx == 7:
+                unit.setPos(-4.5, 0, 0)
+                unit.setH(40)
+            unit.setTag('id', str(idx))
+            unit.setTag('type', u.lower())
+        
+        self.altalight = AmbientLight("alight")
+        self.altalight.setColor(VBase4(0.2, 0.2, 0.2, 1.0))
+        self.altalnp = self.render2.attachNewNode(self.altalight)
+        self.render2.setLight(self.altalnp)
+        
+        self.altalight2 = AmbientLight("alight2")
+        self.altalight2.setColor(VBase4(0.4, 0.4, 0.4, 1.0))
+        self.altalnp2 = self.render2.attachNewNode(self.altalight2)
+        
+
+        self.altslight = Spotlight('slight')
+        self.altslight.setColor(VBase4(0.6, 0.6, 0.6, 1))
+        self.altslnp = self.render2.attachNewNode(self.altslight)
+        self.altslnp.setPos(5, 1, 15)
+        self.altslnp.lookAt(0, 0, 0)
+        self.render2.setLight(self.altslnp) 
+        
+        self.render2.setShaderAuto()
+        
+        self.deploy_index = 0
+        self.deploy_unit_np = render.attachNewNode('deploy_unit_np')
+        self.getDeployee()
+        
     def getDeployee(self):
-        if len(self.deploy_queue) > 0:
-            unit_type = self.deploy_queue.popleft()
-            self.deploy_unit = utils.loadUnit('marine', unit_type.lower(), self.player_id)
-            self.deploy_unit.reparentTo(aspect2d)
-            self.deploy_unit.setScale(0.2)
-            self.deploy_unit.setPos(-0.8, 0.5, 0.3)
-            self.deploy_unit.setTag('type', unit_type.lower())
+        if len(self.deploy_queue) > self.deploy_index:
+            self.deploy_unit = self.render2.find('=id='+str(self.deploy_index))
+            self.deploy_unit.setLight(self.altalnp2)
+            self.deploy_index += 1
         else:
             self.deploy_unit = None
     
@@ -556,10 +649,11 @@ class Client(DirectObject):
                         unit.setScale(0.3)
                         unit.setPos(int(pos3d.getX()) + 0.5, int(pos3d.getY()) + 0.5, utils.GROUND_LEVEL)
                         self.deploy_dict[pos] = unit.getTag('type') 
+                        self.deploy_unit.setLightOff()
                         self.getDeployee()
     
     def endDeploy(self):
-        if len(self.deploy_queue) > 0:
+        if len(self.deploy_queue) > self.deploy_index:
             print "You must deploy all units"
         else:
             army_list = []
@@ -613,21 +707,20 @@ class ClientFSM(FSM.FSM):
         
     def enterDeploy(self):
         self.parent.sgm = SceneGraph(self.parent)
-        self.parent.camera = Camera(self.parent, 20, 20)
         self.parent.sgm.loadLevel(self.parent.level)
         self.parent.sgm.initLights() 
+        
+        self.parent.camera = AppCamera(self.parent, 20, 20)        
         self.parent.deploy_dict = {}
         for idx, l in enumerate(self.parent.level._deploy):
             for idy, val in enumerate(l):
                 if str(val) == self.parent.player_id:
                     self.parent.deploy_dict[(idx, idy)] = None
         self.parent.sgm.showDeployTiles()
-        self.parent.deploy_unit = None
-        self.parent.deploy_unit_np = render.attachNewNode('Deploy_unit_np')
-        self.parent.getDeployee()
         self.parent.plane = Plane(Vec3(0, 0, 1), Point3(0, 0, utils.GROUND_LEVEL)) 
         self.parent.accept('mouse1', self.parent.deployUnit)
         self.parent.accept('g', self.parent.endDeploy)
+        self.parent.deploySquadScreen()
     
     def exitDeploy(self):
         self.parent.sgm.clearLights()
@@ -656,6 +749,7 @@ class ClientFSM(FSM.FSM):
         self.parent.camera.ignore('space')
         self.parent.camera.ignore('f5')        
         del self.parent.camera
+        base.win.removeDisplayRegion(self.parent.dr2)
         
     def enterGame(self):
         # Set up important game logic variables
@@ -670,7 +764,7 @@ class ClientFSM(FSM.FSM):
         taskMgr.setupTaskChain('thread_1', numThreads = 2, tickClock = None,
                        threadPriority = TP_normal, frameBudget = None,
                        frameSync = None, timeslicePriority = None)
-        
+
         # Init SceneGraph manager
         self.parent.sgm = SceneGraph(self.parent)
         
@@ -678,7 +772,7 @@ class ClientFSM(FSM.FSM):
         self.parent.movement = Movement(self.parent)
         
         # Init Camera
-        self.parent.camera = Camera(self.parent, 20, 20)
+        self.parent.camera = AppCamera(self.parent, 20, 20)
         
         # Init Interface
         self.parent.interface = Interface(self.parent)

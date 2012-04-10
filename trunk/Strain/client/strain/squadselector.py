@@ -4,7 +4,6 @@
 
 # python imports
 import string
-from collections import deque
 
 # panda3D imports
 from panda3d.core import *
@@ -114,7 +113,7 @@ class SquadSelector():
         element.inner_rml = str(self.budget)
 
     def go(self):
-        self.parent.deploy_queue = deque()
+        self.parent.deploy_queue = []
         self.parent.deployed_dict = {}
         for p in self.pickers:
             l = p.value
