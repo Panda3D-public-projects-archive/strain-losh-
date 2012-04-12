@@ -11,9 +11,11 @@ from panda3d.core import TransparencyAttrib, AntialiasAttrib#@UnresolvedImport
 from panda3d.core import CollisionNode, CollisionPolygon, CollisionSphere#@UnresolvedImport
 from direct.interval.IntervalGlobal import Sequence, LerpColorScaleInterval, LerpColorInterval, Wait#@UnresolvedImport
 from direct.gui.OnscreenText import OnscreenText#@UnresolvedImport
+from direct.fsm import FSM
 
 # strain related imports
 import utils
+import random
     
 #===============================================================================
 # CLASS UnitModel --- DEFINITION
@@ -24,6 +26,7 @@ class UnitModel:
         self.id = str(unit_id)
 
         self.node = NodePath("unit_"+self.id)
+        self.fsm = UnitModelFSM(self, 'UnitModelFSM')
         
         # Get unit data from the Client
         unit = self.parent.parent.getUnitData(unit_id)
@@ -176,10 +179,7 @@ class UnitModel:
         self.node_2d = aspect2d.attachNewNode('node_2d')
         self.model.setShaderAuto()
         
-    def pauseAllAnims(self):
-        self.overwatch_anim.pause()
-        self.standup_anim.pause()
-        self.setup_anim.pause()
+        self.fsm.request('Idle')
     
     def markHovered(self):
         if self.owner_id == self.parent.parent.player_id:
@@ -274,3 +274,70 @@ class UnitModel:
     def remove(self):
         self.node_2d.removeNode()
         self.model.remove()  
+        
+class UnitModelFSM(FSM.FSM):
+    def __init__(self, parent, name):
+        FSM.FSM.__init__(self, name)
+        self.parent = parent
+
+        # Available states
+        # IDLE, WALK, SHOOT
+
+    def unitIdleTask(self, task):
+        self.parent.model.play('idle')
+        task.delayTime = random.randint(10, 20)
+        return task.again
+
+    def enterIdle(self):
+        taskMgr.doMethodLater(0.1, self.unitIdleTask, 'unit_idle_task_'+self.parent.id)
+        
+    def exitIdle(self):
+        self.parent.model.stop('idle')
+        taskMgr.remove('unit_idle_task_'+self.parent.id)
+        
+    def enterWalk(self):
+        self.parent.model.loop('walk')
+        
+    def exitWalk(self):
+        self.parent.model.stop('walk')
+        
+    def enterShoot(self):
+        self.parent.model.play('shoot')
+        
+    def exitShoot(self):
+        self.parent.model.stop('shoot')
+        
+    def enterMelee(self):
+        self.parent.model.play('melee')
+        
+    def exitMelee(self):
+        self.parent.model.stop('melee')
+        
+    def enterGetHit(self):
+        self.parent.model.play('get_hit')
+        
+    def exitGetHit(self):
+        self.parent.model.stop('get_hit')
+        
+    def enterDie(self):
+        self.parent.model.play('die')
+        
+    def enterOverwatch(self):
+        self.parent.model.play('overwatch')
+        
+    def exitOverwatch(self):
+        self.parent.model.stop('overwatch')
+        
+    def enterStandUp(self):
+        self.parent.model.play('stand_up')
+        
+    def exitStandUp(self):
+        self.parent.model.stop('stand_up')
+        
+    def enterSetUp(self):
+        self.parent.model.play('set_up')
+    
+    def exitSetUp(self):
+        self.parent.model.stop('set_up')
+        
+

@@ -294,10 +294,7 @@ class Client(DirectObject):
                 action_list = action[1]
                 i = self.buildOverwatchAnim(action_list)
                 s.append(i)
-        
-        anim = unit_model.model.actorInterval('walk', loop = 1, duration = d)
-        anim_end = unit_model.model.actorInterval('idle', startFrame=1, endFrame=1)
-        move = Sequence(Parallel(anim, s), Sequence(anim_end))
+        move = Sequence(Func(unit_model.fsm.request, 'Walk'), s, Func(unit_model.fsm.request, 'Idle'))
         return move
         
     def buildMoveAnim(self, unit_model, start_pos, end_pos, start_h):
@@ -419,7 +416,7 @@ class Client(DirectObject):
     
     def buildShootAnim(self, unit_model, weapon):
         # Unit shooting animation
-        shoot_anim = unit_model.model.actorInterval('shoot')
+        shoot_anim = Func(unit_model.fsm.request, 'Shoot')
         return shoot_anim
     
     def buildBulletAnim(self, start_pos, target_tile):
@@ -447,7 +444,7 @@ class Client(DirectObject):
 
     def buildMeleeAnim(self, unit_model, target_tile, weapon):
         # Unit melee animation
-        melee_anim = unit_model.model.actorInterval('melee')
+        melee_anim = Func(unit_model.fsm.request, 'Melee')
         return melee_anim
     
     def buildDamageAnim(self, damage_list):
@@ -459,20 +456,20 @@ class Client(DirectObject):
             target_unit = self.sgm.unit_np_dict[target_unit_id]
             t = TextNode('dmg')
             if damage_type == "bounce":
-                target_anim = target_unit.model.actorInterval("get_hit")
+                target_anim = Func(target_unit.fsm.request, 'GetHit') 
                 dmg = 'bounce'
             elif damage_type == "miss":
-                target_anim = target_unit.model.actorInterval("get_hit")
+                target_anim = Func(target_unit.fsm.request, 'GetHit') 
                 dmg = 'miss'                
             elif damage_type == "damage":
                 color_interval = Sequence(LerpColorScaleInterval(target_unit.model, 0.2, (10,10,10,1))
                                          ,LerpColorScaleInterval(target_unit.model, 0.2, (1,1,1,1)))
-                target_anim = Parallel(target_unit.model.actorInterval("get_hit"), color_interval)
+                target_anim = Sequence(Func(target_unit.fsm.request, 'GetHit') , color_interval)
                 dmg = str(action[2])
             elif damage_type == "kill":
                 color_interval = Sequence(LerpColorScaleInterval(target_unit.model, 0.2, (10,10,10,1))
                                          ,LerpColorScaleInterval(target_unit.model, 0.2, (1,1,1,1)))                
-                target_anim = Parallel(target_unit.model.actorInterval("die"), color_interval)
+                target_anim = Parallel(Func(target_unit.fsm.request, 'Die') , color_interval)
                 dmg = str(action[2])
             t.setText( "%s" % dmg)
             t.setTextColor(1, 0, 0, 1)
