@@ -266,26 +266,22 @@ class SceneGraph():
         unit_model = self.unit_np_dict[unit_id]
         if unit_model.isOverwatch == False and unit['overwatch'] == True:
             unit_model.isOverwatch = True
-            unit_model.pauseAllAnims()
-            unit_model.overwatch_anim.start()
+            unit_model.fsm.request('Overwatch')
         elif unit_model.isOverwatch == True and unit['overwatch'] == False:
             unit_model.isOverwatch = False
-            unit_model.pauseAllAnims()
-            unit_model.standup_anim.start()
+            unit_model.fsm.request('StandUp')
         elif unit_model.isSetup == False:
             try:
                 if unit['set_up'] == True:
                     unit_model.isSetup = True
-                    unit_model.pauseAllAnims()
-                    unit_model.setup_anim.start()
+                    unit_model.fsm.request('SetUp')
             except:
                 None
         elif unit_model.isSetup == True:
             try:
                 if unit['set_up'] == False:
                     unit_model.isSetup = False
-                    unit_model.pauseAllAnims()
-                    unit_model.standup_anim.start()
+                    unit_model.fsm.request('StandUp')
             except:
                 None
     def deleteTurnNode(self, d):
