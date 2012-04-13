@@ -7,11 +7,12 @@ import time
 
 # panda3D imports
 from panda3d.core import TextNode, NodePath, Point2, Point3, VBase4, Plane, Vec3, CardMaker, Camera, AmbientLight, Spotlight, Texture#@UnresolvedImport
-from panda3d.core import TP_normal#@UnresolvedImport
+from panda3d.core import TP_normal, BitMask32, TextureStage#@UnresolvedImport
 from direct.interval.IntervalGlobal import Sequence, Parallel, Func, Wait, LerpColorScaleInterval#@UnresolvedImport
 from direct.showbase.DirectObject import DirectObject
 from direct.fsm import FSM
 from panda3d.rocket import *
+from direct.filter.CommonFilters import CommonFilters#@UnresolvedImport
 
 # strain related imports
 from client_messaging import *
@@ -294,7 +295,11 @@ class Client(DirectObject):
                 action_list = action[1]
                 i = self.buildOverwatchAnim(action_list)
                 s.append(i)
-        move = Sequence(Func(unit_model.fsm.request, 'Walk'), s, Func(unit_model.fsm.request, 'Idle'))
+        if unit_model.fsm.state == 'Overwatch':
+            #move = Sequence(unit_model.model.actorInterval('stand_up'), Func(unit_model.fsm.request, 'Walk'), s, Func(unit_model.fsm.request, 'Idle'))
+            move = Sequence(unit_model.model.actorInterval('stand_up'), Func(unit_model.fsm.request, 'Walk'), s, Func(unit_model.fsm.request, 'Idle'))
+        else:
+            move = Sequence(Func(unit_model.fsm.request, 'Walk'), s, Func(unit_model.fsm.request, 'Idle'))
         return move
         
     def buildMoveAnim(self, unit_model, start_pos, end_pos, start_h):
@@ -536,12 +541,6 @@ class Client(DirectObject):
         
     
     def deploySquadScreen(self):
-        """
-        self.accept('m', self.setCamPoss, [1])
-        self.accept('n', self.setCamPoss, [-1])
-        self.accept('y', self.setCamLook, [1])
-        self.accept('x', self.setCamLook, [-1])
-        """
         self.dr2 = base.win.makeDisplayRegion(0.0, 0.5, 0.65, 1.0)
         self.dr2.setClearColor(VBase4(0, 0, 0, 0.3))
         self.dr2.setClearColorActive(False)
@@ -565,8 +564,6 @@ class Client(DirectObject):
                 cpos.setP(-90)
                 cpos.setTexture(tex)
         self.floor2np.flattenStrong()
-        
-
         self.cam2.setPos(0, -10, 5)
         self.cam2.setP(-20)
         

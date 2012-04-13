@@ -280,11 +280,13 @@ class UnitModelFSM(FSM.FSM):
         FSM.FSM.__init__(self, name)
         self.parent = parent
 
-        # Available states
-        # IDLE, WALK, SHOOT
-
     def unitIdleTask(self, task):
         self.parent.model.play('idle')
+        task.delayTime = random.randint(10, 20)
+        return task.again
+    
+    def unitOverwatchTask(self, task):
+        self.parent.model.play('overwatch')
         task.delayTime = random.randint(10, 20)
         return task.again
 
@@ -292,8 +294,8 @@ class UnitModelFSM(FSM.FSM):
         taskMgr.doMethodLater(0.1, self.unitIdleTask, 'unit_idle_task_'+self.parent.id)
         
     def exitIdle(self):
+        taskMgr.remove('unit_idle_task_'+self.parent.id)        
         self.parent.model.stop('idle')
-        taskMgr.remove('unit_idle_task_'+self.parent.id)
         
     def enterWalk(self):
         self.parent.model.loop('walk')
@@ -323,16 +325,14 @@ class UnitModelFSM(FSM.FSM):
         self.parent.model.play('die')
         
     def enterOverwatch(self):
-        self.parent.model.play('overwatch')
+        s = Sequence(self.parent.model.actorInterval('crouch'), self.parent.model.actorInterval('overwatch'))
+        s.start()
+        taskMgr.doMethodLater(15, self.unitOverwatchTask, 'unit_overwatch_task_'+self.parent.id)
         
     def exitOverwatch(self):
-        self.parent.model.stop('overwatch')
+        taskMgr.remove('unit_overwatch_task_'+self.parent.id)
+        self.parent.model.stop()
         
-    def enterStandUp(self):
-        self.parent.model.play('stand_up')
-        
-    def exitStandUp(self):
-        self.parent.model.stop('stand_up')
         
     def enterSetUp(self):
         self.parent.model.play('set_up')
