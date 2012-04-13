@@ -171,8 +171,6 @@ class Net():
             for unit in self.parent.units.itervalues():
                 level.putUnitDict(unit)
             self.parent.level = level
-            invisible_walls = self.parent.getInvisibleWalls()
-            self.parent.sgm.level_mesh.processLevel(invisible_walls)
             # if our enemy opens doors, we need to update visibility
             # enemy's visibility gets updated when he gets UNIT message
             if self.parent.player == self.parent.turn_player and self.parent.sel_unit_id != None:

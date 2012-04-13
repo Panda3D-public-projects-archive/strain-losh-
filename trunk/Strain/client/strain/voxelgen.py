@@ -302,6 +302,7 @@ class VoxelGenerator(DirectObject):
     
     def setInvisibleWalls(self):
         visible_wall_list = self.parent.parent.getInvisibleWalls()
+        self.processLevel(visible_wall_list)
         new_list = []
         for l in visible_wall_list:
             x,y,h = self.getWallPosition(l[0], l[1])

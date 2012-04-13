@@ -259,7 +259,8 @@ class SceneGraph():
         
     def deleteDamageNode(self, d):
         d.removeNode()  
-        
+    
+    # TODO: ogs: move this out of this class
     def playUnitStateAnim(self, unit_id):
         # Check if we have toggled overwatch
         unit = self.parent.units[unit_id]
@@ -284,6 +285,8 @@ class SceneGraph():
                     unit_model.fsm.request('StandUp')
             except:
                 None
+
+    
     def deleteTurnNode(self, d):
         d.removeNode()
 
