@@ -17,7 +17,7 @@ from panda3d.rocket import *
 from strain.loginscreen import LoginScreen
 from strain.browser import Browser
 from strain.client import Client
-
+from strain.gametype import GameType
 
 #############################################################################
 # GLOBALS
@@ -65,7 +65,8 @@ class AppFSM(FSM.FSM):
 
         self.defaultTransitions = {
             'Login' : [ 'Browser' ],
-            'Browser' : [ 'NewGame', 'ContinueGame', 'ReplayViewer' ]
+            'Browser' : [ 'NewGame', 'ContinueGame', 'ReplayViewer' ],
+            'NewGame' : ['Deploy']
             }
         
     def enterLogin(self):
@@ -84,9 +85,16 @@ class AppFSM(FSM.FSM):
         del self.parent.browser
         
     def enterNewGame(self):
-        self.parent.client = Client(self.parent, self.parent.player, self.parent.player_id, "NewGame")
+        self.parent.gametype = GameType(self.parent)
     
     def exitNewGame(self):
+        self.parent.gametype.cleanup()
+        del self.parent.gametype
+        
+    def enterDeploy(self):
+        self.parent.client = Client(self.parent, self.parent.player, self.parent.player_id, "NewGame")
+    
+    def exitDeploy(self):
         None
         
     def enterContinueGame(self):
