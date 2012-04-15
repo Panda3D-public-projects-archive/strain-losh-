@@ -136,25 +136,23 @@ div#game_type_container
 	margin-right: auto;
 	margin-top: 30px
 	margin-bottom: 30px;
-	background-color: teal;
 }
 
 div#level_list
 {
-	width: 245px;
+	width: 230px;
 	height: 440px;
-	background-color: red;
 	float: left;
 	margin-left: 5px;
 	margin-top: 5px;
 	margin-bottom: 5px;
+	
 }
 
 div#info
 {
 	width: 500px;
 	height: 445px;
-	background-color: black;
 	float: right;
 }
 
@@ -165,7 +163,6 @@ div#level_info_left
 	margin-left: 5px;
 	margin-top: 5px;
 	margin-bottom: 5px;
-	background-color: black;
 	float: left;
 }
 
@@ -177,7 +174,6 @@ div#level_info_right
 	margin-right: 5px;
 	margin-top: 5px;
 	margin-bottom: 5px;
-	background-color: black;
 	float: right;
 }
 
@@ -189,7 +185,6 @@ div#game_info
 	margin-right: 5px;
 	margin-top: 225px;
 	margin-bottom: 5px;
-	background-color: black;
 }
 
 
@@ -376,7 +371,20 @@ dataselect selectbox
 }
 
 select selectbox,
-dataselect selectbox,
+dataselect selectbox
+{
+	background-decorator: tiled-box;
+	background-top-left-image: invader.tga 281px 275px 292px 284px;
+	background-top-right-image: invader.tga 294px 275px 305px 284px;
+	background-top-image: invader.tga stretch 292px 275px 293px 284px;
+	background-bottom-left-image: invader.tga 281px 285px 292px 296px;
+	background-bottom-right-image: invader.tga 294px 285px 305px 296px;
+	background-bottom-image: invader.tga stretch 292px 285px 293px 296px;
+	background-left-image: invader.tga stretch 281px 283px 292px 284px;
+	background-center-image: invader.tga stretch 292px 283px 293px 284px;
+	background: white;
+}
+
 datagrid datagridbody
 {
 	background-decorator: tiled-box;
@@ -398,11 +406,28 @@ dataselect selectbox option
 }
 
 select selectbox option:nth-child(even),
-dataselect selectbox option:nth-child(even),
-datagrid datagridrow:nth-child(even)
+dataselect selectbox option:nth-child(even)
 {
 	background: #FFFFFFA0;
 }
+
+datagrid datagridrow:nth-child(even)
+{
+	background: black;
+}
+
+datagrid datagridrow:hover
+{
+	background: #710000;
+	color: white;
+}
+
+datagrid datagridrow.selected
+{
+	background: green;
+	color: white;
+}
+
 
 select selectbox option:hover,
 dataselect selectbox option:hover
@@ -503,8 +528,9 @@ datagrid datagridheader
 
 datagrid datagridbody
 {
-	color: black;
-
+ 	overflow-y: scroll;
+	color: white;
+	height: 400px;
 	margin-left: 4px;
 	margin-right: 3px;
 	padding: 0px 4px 4px 4px;
@@ -541,13 +567,21 @@ datagridexpand.collapsed
 
 
 
-scrollbarvertical
+scrollbarvertical1
 {
 	margin-top: -6px;
 	margin-bottom: -6px;
 	margin-right: -11px;
 	width: 27px;
 }
+
+scrollbarvertical
+{
+	margin-right: 3px;
+	margin-bottom: 3px;
+	width: 27px;
+}
+
 
 scrollbarvertical slidertrack
 {
