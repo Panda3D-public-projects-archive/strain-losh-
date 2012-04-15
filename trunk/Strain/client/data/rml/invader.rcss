@@ -128,6 +128,69 @@ div#content
 	text-align: center;
 }
 
+div#game_type_container
+{
+	width: 750px;
+	height: 500px;
+	margin-left: auto;
+	margin-right: auto;
+	margin-top: 30px
+	margin-bottom: 30px;
+	background-color: teal;
+}
+
+div#level_list
+{
+	width: 245px;
+	height: 440px;
+	background-color: red;
+	float: left;
+	margin-left: 5px;
+	margin-top: 5px;
+	margin-bottom: 5px;
+}
+
+div#info
+{
+	width: 500px;
+	height: 445px;
+	background-color: yellow;
+	float: right;
+}
+
+div#level_info_left
+{
+	width: 245px;
+	height: 215px;
+	margin-left: 5px;
+	margin-top: 5px;
+	margin-bottom: 5px;
+	background-color: green;
+	float: left;
+}
+
+div#level_info_right
+{
+	width: 240px;
+	height: 215px;
+	margin-left: 5px;
+	margin-right: 5px;
+	margin-top: 5px;
+	margin-bottom: 5px;
+	background-color: orange;
+	float: right;
+}
+
+div#game_info
+{
+	width: 490px;
+	height: 215px;
+	margin-left: 5px;
+	margin-right: 5px;
+	margin-top: 225px;
+	margin-bottom: 5px;
+	background-color: blue;
+}
 
 
 p
