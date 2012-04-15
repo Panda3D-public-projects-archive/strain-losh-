@@ -24,10 +24,24 @@
 			</div>
 			<div id="info">
 				<div id="level_info_left">
+					<img id="level_big" src="../levels/assasins.png" width = 215px height=215px/>
 				</div>
 				<div id="level_info_right">
+				<p id="players">Max players: 2</p>
+				<p id="size">Map size: 20x20</p>
+				<p>Description:</p>
+				<p id="description">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
 				</div>
 				<div id="game_info">
+					<p>Army size:</p>
+					<select id="army_size_select"/>
+					<p>Number of players:</p>
+					<select id="no_of_players_select"/>
+					<br/>
+					<br/>
+					<p>Password protect:
+					<input type="checkbox" /></p>
+					<input id="password" type="password" visible="false"></input>
 				</div>
 			</div>
 		</div>
