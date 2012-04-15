@@ -21,6 +21,9 @@
 	<body >
 		<div id="game_type_container">
 			<div id="level_list">
+				<datagrid id="datagrid" source="level_list.levels" width=100px>
+					<col fields="name" width=190px>Select level:</col>
+				</datagrid>
 			</div>
 			<div id="info">
 				<div id="level_info_left">
@@ -34,9 +37,9 @@
 				</div>
 				<div id="game_info">
 					<p>Army size:</p>
-					<select id="army_size_select"/>
+					<dataselect id="army_size_select" source="army_size.size" fields="size" valuefield="size"/>
 					<p>Number of players:</p>
-					<select id="no_of_players_select"/>
+					<dataselect id="no_of_players_select" source="player_number.number" fields="number" valuefield="number"/>
 					<br/>
 					<br/>
 					<p>Password protect:
@@ -46,7 +49,7 @@
 			</div>
 		</div>
 		<div id = "menu_center">
-			<button id="deploy">Pick your team!</button><br />
+			<button id="deploy">Create Game</button><br />
 		</div>
 	</body>
 </rml>
