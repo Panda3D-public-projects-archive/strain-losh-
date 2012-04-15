@@ -19,8 +19,16 @@
 		</style>
 	</head>
 	<body >
-		<div id="logo">
-			<div id="logo_image">
+		<div id="game_type_container">
+			<div id="level_list">
+			</div>
+			<div id="info">
+				<div id="level_info_left">
+				</div>
+				<div id="level_info_right">
+				</div>
+				<div id="game_info">
+				</div>
 			</div>
 		</div>
 		<div id = "menu_center">
