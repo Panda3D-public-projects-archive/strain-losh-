@@ -9,7 +9,7 @@
 from panda3d.core import TextNode#@UnresolvedImport
 from direct.gui.DirectGui import DirectButton, DirectLabel#@UnresolvedImport
 from panda3d.rocket import *
-
+from gametypedatasource import *
 # strain related imports
 
 
@@ -19,6 +19,10 @@ class GameType():
 
         self.parent.rRegion.setActive(1)
         self.parent.rContext = self.parent.rRegion.getContext()
+        
+        self.levelData = LevelListDataSource("level_list")
+        self.armySize = ArmySizeDataSource("army_size")
+        self.playerNumber = PlayerNumberDataSource("player_number")
         
         doc = self.parent.rContext.LoadDocument('data/rml/game_type.rml')
         doc.Show()
