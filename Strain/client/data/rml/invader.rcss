@@ -154,7 +154,7 @@ div#info
 {
 	width: 500px;
 	height: 445px;
-	background-color: yellow;
+	background-color: black;
 	float: right;
 }
 
@@ -165,7 +165,7 @@ div#level_info_left
 	margin-left: 5px;
 	margin-top: 5px;
 	margin-bottom: 5px;
-	background-color: green;
+	background-color: black;
 	float: left;
 }
 
@@ -177,7 +177,7 @@ div#level_info_right
 	margin-right: 5px;
 	margin-top: 5px;
 	margin-bottom: 5px;
-	background-color: orange;
+	background-color: black;
 	float: right;
 }
 
@@ -189,14 +189,14 @@ div#game_info
 	margin-right: 5px;
 	margin-top: 225px;
 	margin-bottom: 5px;
-	background-color: blue;
+	background-color: black;
 }
 
 
 p
 {
 	text-align: left;
-	margin-bottom: 1em;
+	margin-bottom: 0em;
 }
 
 h1
