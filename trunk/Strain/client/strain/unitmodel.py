@@ -51,7 +51,7 @@ class UnitModel:
             self.model = utils.loadUnit('marine', 'jumper', unit['owner_id'])            
         self.model.reparentTo(self.node)
         
-        scale = 0.3
+        scale = utils.UNIT_SCALE
         h = 180
         pos = Point3(int(unit['pos'][0]), int(unit['pos'][1]), 0)
         pos = self.calcWorldPos(pos)
@@ -263,7 +263,7 @@ class UnitModel:
         self.isEnemyVisible = False
     
     def calcWorldPos(self, pos):
-        return pos + Point3(0.5, 0.5, utils.GROUND_LEVEL)
+        return Point3(utils.TILE_SIZE * (pos.getX() + 0.5), utils.TILE_SIZE * (pos.getY() + 0.5), utils.GROUND_LEVEL)
     
     def setHeading(self, heading):
         self.model.setH(utils.getHeadingAngle(heading))

@@ -13,7 +13,8 @@ from panda3d.core import SceneGraphAnalyzerMeter#@UnresolvedImport
 
 
 # strain related imports
-from strain.voxelgen import VoxelGenerator
+#from strain.voxelgen import VoxelGenerator
+from strain.renderer import LevelRenderer
 from strain.unitmodel import UnitModel
 import strain.utils as utils
 from strain.share import *
@@ -67,15 +68,13 @@ class SceneGraph():
     def loadLevel(self, level):
         if self.comp_inited['level']:
             return
-        
-        self.level_node = self.node.attachNewNode("level_node")        
-        self.level_mesh = VoxelGenerator(self, level)
-        self.level_mesh.createLevel()
+                
+        #self.level_mesh = VoxelGenerator(self, level)
+        #self.level_mesh.createLevel()
+        self.level_model = LevelRenderer(self)
+        self.level_model.load('NEBITNO', self.parent.level.maxX, self.parent.level.maxY)
         self.comp_inited['level'] = True
         
-        #grid_tex = loader.loadTexture('grid2.png')
-        #grid_tex.setMagfilter(Texture.FTLinearMipmapLinear)
-        #grid_tex.setMinfilter(Texture.FTLinearMipmapLinear)
         for i in xrange(0, level.maxX):
             l = []
             for j in xrange(0, level.maxY):
@@ -91,42 +90,7 @@ class SceneGraph():
                 cpos.setCollideMask(0)
                 cpos.detachNode()
                 l.append(cpos)
-            self.tile_cards.append(l)
-  
-        for i in xrange(0, level.maxX):
-            t = TextNode('node name')
-            t.setText( "%s" % i)
-            tnp = self.level_node.attachNewNode(t)
-            tnp.setColor(1, 1, 1)
-            tnp.setScale(0.5, 0.5, 0.5)
-            tnp.setPos(i+0.3, -0.3, 0.5)
-            tnp.setBillboardPointEye()
-            tnp.setLightOff()
-            t = TextNode('node name')
-            t.setText( "%s" % i)
-            tnp = self.level_node.attachNewNode(t)
-            tnp.setColor(1, 1, 1)
-            tnp.setScale(0.5, 0.5, 0.5)
-            tnp.setPos(i+0.3, level.maxY+0.3, 0.5)
-            tnp.setBillboardPointEye()
-            tnp.setLightOff()            
-        for i in xrange(0, level.maxY):
-            t = TextNode('node name')
-            t.setText( "%s" % i)
-            tnp = self.level_node.attachNewNode(t)
-            tnp.setColor(1, 1, 1)
-            tnp.setScale(0.5, 0.5, 0.5)
-            tnp.setPos(-0.3, i+0.3, 0.5)
-            tnp.setBillboardPointEye()
-            tnp.setLightOff()
-            t = TextNode('node name')
-            t.setText( "%s" % i)
-            tnp = self.level_node.attachNewNode(t)
-            tnp.setColor(1, 1, 1)
-            tnp.setScale(0.5, 0.5, 0.5)
-            tnp.setPos(level.maxX+0.3, i+0.3, 0.5)
-            tnp.setBillboardPointEye()
-            tnp.setLightOff()            
+            self.tile_cards.append(l)            
         
     def deleteLevel(self):
         if self.comp_inited['level'] == False:
@@ -331,6 +295,7 @@ class SceneGraph():
         np.setShaderAuto()
         
     def texTask(self, task):
+        return task.done
         if self.comp_inited['level']:
             dt = globalClock.getDt()
             self.tex_offset += dt * 0.5

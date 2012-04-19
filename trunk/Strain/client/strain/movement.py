@@ -92,13 +92,11 @@ class Movement(DirectObject.DirectObject):
                 text = TextNode('node name')
                 text.setText( "%s" % move_dict[tile])
                 text.setAlign(TextNode.ACenter)
-                #text.setCardColor(0.2, 0.2, 0.2, 0.4)
-                #text.setCardAsMargin(0, 0, 0, 0)
                 textNodePath = self.move_node.attachNewNode(text)
                 textNodePath.setColor(1, 1, 1)
                 textNodePath.setScale(0.05)    
                 textNodePath.setPythonTag('pos', tile)
-                pos2d = utils.pointCoordIn2d(Point3(tile[0]+0.5, tile[1]+0.5, utils.GROUND_LEVEL))
+                pos2d = utils.pointCoordIn2d(Point3(utils.TILE_SIZE * (tile[0]+0.5), utils.TILE_SIZE * (tile[1]+0.5), utils.GROUND_LEVEL))
                 textNodePath.setPos(pos2d)            
                 self.move_np_list.append(textNodePath)
         self.move_node.reparentTo(aspect2d)
@@ -233,7 +231,7 @@ class Movement(DirectObject.DirectObject):
         # If turn node is displayed, you have to cancel turning or turn to be able to pick another unit or another tile to move to
         if self.turn_node.getTag('show') == '1':
             for tile in self.turn_np_list:
-                pos = Point3(tile.getPythonTag('pos')[0]+0.5, tile.getPythonTag('pos')[1]+0.5, utils.GROUND_LEVEL)
+                pos = Point3(utils.TILE_SIZE*(tile.getPythonTag('pos')[0]+0.5), utils.TILE_SIZE*(tile.getPythonTag('pos')[1])+0.5, utils.GROUND_LEVEL)
                 pos2d = utils.pointCoordIn2d(pos)
                 tile.setPos(pos2d)        
         else:
@@ -242,7 +240,7 @@ class Movement(DirectObject.DirectObject):
                 p = utils.nodeCoordIn2d(u.model)
                 u.node_2d.setPos(p)
             for tile in self.move_np_list:
-                pos = Point3(tile.getPythonTag('pos')[0]+0.5, tile.getPythonTag('pos')[1]+0.5, utils.GROUND_LEVEL)
+                pos = Point3(utils.TILE_SIZE*(tile.getPythonTag('pos')[0]+0.5), utils.TILE_SIZE*(tile.getPythonTag('pos')[1]+0.5), utils.GROUND_LEVEL)
                 pos2d = utils.pointCoordIn2d(pos)
                 tile.setPos(pos2d)
         
