@@ -41,11 +41,11 @@ HEADING_SW        = 6
 HEADING_S         = 7
 HEADING_SE        = 8
 
-GROUND_LEVEL = 0.5
-MODEL_OFFSET = 0.5
+TILE_SIZE = 2
+GROUND_LEVEL = 1.0
+MODEL_OFFSET = TILE_SIZE/2
+UNIT_SCALE = 0.7
 BULLET_SPEED = 15
-
-WALKABLE_TILE_COLOR = Vec4(0.2, 1.0, 0.3, 0.5)
 
 marine_anim_dict = {}
 marine_anim_dict['crouch'] = 'marine-crouch'

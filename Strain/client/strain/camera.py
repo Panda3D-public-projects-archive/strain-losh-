@@ -50,12 +50,12 @@ class Camera(DirectObject):
         base.camera.setPos(0, -24, 0)
         base.camera.lookAt(self.node)
 
-        self.zoom_velocity = 0.75
+        self.zoom_velocity = 2.75
         self.pan_velocity = 10  
         self.anim_velocity = 15
         self.dist = base.camera.getDistance(self.node)
-        self.distmax = 30
-        self.distmin = 5
+        self.distmax = 75
+        self.distmin = 15
 
         self.setupKeys()
         self.isFollowing = False   

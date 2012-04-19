@@ -231,7 +231,7 @@ class Client(DirectObject):
         d = 0.0
         
         if self.units.has_key(unit_id):
-            pos = Point3(self.units[unit_id]['pos'][0] + utils.MODEL_OFFSET, self.units[unit_id]['pos'][1] + utils.MODEL_OFFSET, utils.GROUND_LEVEL)
+            pos = Point3(utils.TILE_SIZE*(self.units[unit_id]['pos'][0] + 0.5), utils.TILE_SIZE*(self.units[unit_id]['pos'][1] + 0.5), utils.GROUND_LEVEL)
             heading = utils.getHeadingAngle(self.units[unit_id]['heading'])
             if self.sgm.unit_np_dict.has_key(unit_id):
                 unit_model = self.sgm.unit_np_dict[unit_id]
@@ -243,12 +243,12 @@ class Client(DirectObject):
         for idx, action in enumerate(action_list):
             action_type = action[0]
             if action_type == "move":
-                end_pos = Point3(action[1][0] + utils.MODEL_OFFSET, action[1][1] + utils.MODEL_OFFSET, utils.GROUND_LEVEL)
+                end_pos = Point3(utils.TILE_SIZE*(action[1][0] + 0.5), utils.TILE_SIZE*(action[1][1] + 0.5), utils.GROUND_LEVEL)
                 i, duration, pos, heading = self.buildMoveAnim(unit_model, pos, end_pos, heading)
                 d += duration
                 s.append(i)
             elif action_type == "rotate":
-                end_pos = Point3(action[1][0] + utils.MODEL_OFFSET, action[1][1] + utils.MODEL_OFFSET, utils.GROUND_LEVEL)
+                end_pos = Point3(utils.TILE_SIZE*(action[1][0] + 0.5), utils.TILE_SIZE*(action[1][1] + 0.5), utils.GROUND_LEVEL)
                 i, duration, pos, heading = self.buildRotateAnim(unit_model, pos, end_pos, heading)
                 d += duration
                 s.append(i)
@@ -267,8 +267,8 @@ class Client(DirectObject):
                 # If this is enemy move message, means we have spotted a moving enemy and we will set unit_model variable
                 if self.isThisEnemyUnit(unit_id):
                     unit_model = spotted_unit_model
-                    pos = Point3(self.units[spotted_unit['id']]['pos'][0] + utils.MODEL_OFFSET, 
-                                 self.units[spotted_unit['id']]['pos'][1] + utils.MODEL_OFFSET,
+                    pos = Point3(utils.TILE_SIZE*(self.units[spotted_unit['id']]['pos'][0] + 0.5), 
+                                 utils.TILE_SIZE*(self.units[spotted_unit['id']]['pos'][1] + 0.5),
                                  utils.GROUND_LEVEL
                                  )
                     heading = utils.getHeadingAngle(self.units[spotted_unit['id']]['heading'])
@@ -373,8 +373,8 @@ class Client(DirectObject):
                 if shooter_id >= 0:
                     shooter_model = self.sgm.unit_np_dict[shooter_id]
                     a = self.buildShootAnim(shooter_model, weapon)
-                    shooter_pos =  Point3(self.units[shooter_id]['pos'][0] + utils.MODEL_OFFSET, 
-                                          self.units[shooter_id]['pos'][1] + utils.MODEL_OFFSET,
+                    shooter_pos =  Point3(utils.TILE_SIZE*(self.units[shooter_id]['pos'][0] + 0.5), 
+                                          utils.TILE_SIZE*(self.units[shooter_id]['pos'][1] + 0.5),
                                           utils.GROUND_LEVEL
                                           )
                     b = self.buildBulletAnim(shooter_pos, shoot_tile)
@@ -429,7 +429,7 @@ class Client(DirectObject):
         self.bullet = loader.loadModel("sphere")
         self.bullet.setScale(0.05)
         start_pos = Point3(start_pos.getX(), start_pos.getY(), 0.9)
-        end_pos = Point3(target_tile[0] + utils.MODEL_OFFSET, target_tile[1] + utils.MODEL_OFFSET, 0.9)
+        end_pos = Point3(utils.TILE_SIZE*(target_tile[0] + 0.5), utils.TILE_SIZE*(target_tile[1] + 0.5), 0.9)
         dest_node = NodePath("dest_node")
         dest_node.setPos(end_pos)
         start_node = NodePath("start_node")
@@ -505,8 +505,8 @@ class Client(DirectObject):
         wpn_list = utils.getUnitWeapons(unit)
         spotted_unit_model = self.sgm.loadUnit(unit['id'], wpn_list)
 
-        pos = Point3(self.units[unit['id']]['pos'][0] + utils.MODEL_OFFSET, 
-                     self.units[unit['id']]['pos'][1] + utils.MODEL_OFFSET,
+        pos = Point3(utils.TILE_SIZE*(self.units[unit['id']]['pos'][0] + 0.5), 
+                     utils.TILE_SIZE*(self.units[unit['id']]['pos'][1] + 0.5),
                      utils.GROUND_LEVEL
                      )
         heading = utils.getHeadingAngle(self.units[unit['id']]['heading'])
