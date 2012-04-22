@@ -119,7 +119,7 @@ particle-path $MAIN_DIR/data/particles/
 # Set this true to yield the timeslice at the end of the frame to be more polite to other applications that are trying to run.
 yield-timeslice #t
 
-threading-model /Draw
+#threading-model /Draw
 
 # Custom Strain parameters
 server-ip 127.0.0.1

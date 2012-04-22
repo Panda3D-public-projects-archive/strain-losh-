@@ -74,7 +74,7 @@ class Movement(DirectObject.DirectObject):
                 key = utils.HEADING_NONE
             textNodePath = self.turn_node.attachNewNode(text)
             textNodePath.setColor(1, 1, 1)
-            textNodePath.setScale(0.05)
+            textNodePath.setScale(0.06)
             textNodePath.setTag('key', str(key)) 
             self.turn_np_list.append(textNodePath) 
     
@@ -94,7 +94,7 @@ class Movement(DirectObject.DirectObject):
                 text.setAlign(TextNode.ACenter)
                 textNodePath = self.move_node.attachNewNode(text)
                 textNodePath.setColor(1, 1, 1)
-                textNodePath.setScale(0.05)    
+                textNodePath.setScale(0.06)    
                 textNodePath.setPythonTag('pos', tile)
                 pos2d = utils.pointCoordIn2d(Point3(utils.TILE_SIZE * (tile[0]+0.5), utils.TILE_SIZE * (tile[1]+0.5), utils.GROUND_LEVEL))
                 textNodePath.setPos(pos2d)            

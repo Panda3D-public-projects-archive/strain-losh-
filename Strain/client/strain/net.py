@@ -123,6 +123,7 @@ class Net():
                 self.parent.sgm.showVisibleEnemies(unit['id'])
                 if unit['pos'][0] != old_x or unit['pos'][1] != old_y or unit['last_action']=='use':
                     #self.parent.sgm.level_mesh.setInvisibleTilesInThread()
+                    self.parent.sgm.level_model.getInvisibleTiles()
                     None
                 self.parent.sgm.playUnitStateAnim( unit['id'] )
             self.parent._message_in_process = False
