@@ -51,6 +51,9 @@ class Client(DirectObject):
         base.mouseWatcher.attachNewNode(ih)
         self.rRegion.setInputHandler(ih)
         # Initialize game mode (network)
+        base.accept('n', render.setShaderAuto)
+        base.accept('m', render.setShaderOff)
+        
         if type == "NewGame":
             self.net = Net(self)
             self.net.startNet()

@@ -103,14 +103,14 @@ class SceneGraph():
         if self.comp_inited['lights']:
             return
         
-        shade = ShadeModelAttrib.make(ShadeModelAttrib.MSmooth)
-        render.setAttrib(shade)
+        #shade = ShadeModelAttrib.make(ShadeModelAttrib.MSmooth)
+        #render.setAttrib(shade)
         dlight1 = DirectionalLight("dlight1")
-        dlight1.setColor(VBase4(0.5, 0.5, 0.5, 1.0))
-        #dlight1.setShadowCaster(True, 512, 512)
+        dlight1.setColor(VBase4(0.2, 0.2, 0.2, 1.0))
+        #dlight1.setShadowCaster(True)
         self.dlnp1 = render.attachNewNode(dlight1)
-        self.dlnp1.setHpr(0, -60, 0)
-        render.setLight(self.dlnp1)
+        self.dlnp1.setHpr(0, -80, 0)
+        #render.setLight(self.dlnp1)
         """
         plight = PointLight('plight')
         plight.setColor(VBase4(1, 1, 1, 1))
@@ -128,23 +128,25 @@ class SceneGraph():
         render.setLight(self.alnp) 
         self.comp_inited['lights'] = True
         
-        """
+        
         slight = Spotlight('slight')
-        slight.setColor(VBase4(3, 3, 3, 1))
+        slight.setColor(VBase4(1, 1, 1, 1))
         lens = PerspectiveLens()
-        lens.setFov(40, 20)
+        lens.setFov(75)
         slight.setLens(lens)
+        slight.setShadowCaster(True)
         slnp = render.attachNewNode(slight)
-        slnp.setPos(5, 10, utils.GROUND_LEVEL+0.1)
-        slnp.setH(-180)
-        #slnp.setP(-90)
+        slnp.setPos(25, 20, 50)
+        slnp.setP(-90)
         render.setLight(slnp) 
         m = loader.loadModel('camera')
         m.setScale(0.3,0.3,0.3)
         m.reparentTo(slnp)       
         slight.showFrustum()
         slight.setExponent(1)
-        """
+        
+        render.setShaderAuto()
+        
         
     def clearLights(self):
         render.clearLight(self.alnp)

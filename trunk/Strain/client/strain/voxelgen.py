@@ -146,7 +146,7 @@ class VoxelGenerator(DirectObject):
                     model.setPos(x, y, utils.GROUND_LEVEL)
                     model.setTexture(ts, self.tex1)
                     #model.setTexture(self.ts_nm, self.tex_tile_nm)
-                    model.reparentTo(self.node_wall_original) 
+                    model.reparentTo(self.node_wall_usable) 
                 else:
                     for i in xrange(0, self.level.getHeight( (x, y) )):
                         if i == 0:
@@ -165,7 +165,7 @@ class VoxelGenerator(DirectObject):
                             model.setPos(x, y, i-1+utils.GROUND_LEVEL)
                             model.setTexture(ts, self.tex2)
                             #model.setTexture(self.ts_nm, self.tex_tile_nm) 
-                            model.reparentTo(self.node_wall_original) 
+                            model.reparentTo(self.node_wall_usable) 
         self.floor_np.setTexture(self.tex3) 
         
         #Calculate and place walls between tiles
