@@ -13,7 +13,7 @@ from panda3d.core import SceneGraphAnalyzerMeter#@UnresolvedImport
 
 
 # strain related imports
-#from strain.voxelgen import VoxelGenerator
+from strain.voxelgen import VoxelGenerator
 from strain.renderer import LevelRenderer
 from strain.unitmodel import UnitModel
 import strain.utils as utils
@@ -69,10 +69,10 @@ class SceneGraph():
         if self.comp_inited['level']:
             return
                 
-        #self.level_mesh = VoxelGenerator(self, level)
-        #self.level_mesh.createLevel()
-        self.level_model = LevelRenderer(self)
-        self.level_model.load('NEBITNO', self.parent.level.maxX, self.parent.level.maxY)
+        self.level_model = VoxelGenerator(self, level)
+        self.level_model.createLevel()
+        #self.level_model = LevelRenderer(self)
+        #self.level_model.load('NEBITNO', self.parent.level.maxX, self.parent.level.maxY)
         self.comp_inited['level'] = True
         
         for i in xrange(0, level.maxX):
@@ -169,7 +169,7 @@ class SceneGraph():
         lens = PerspectiveLens()
         lens.setFov(75)
         slight.setLens(lens)
-        slight.setShadowCaster(True)
+        #slight.setShadowCaster(True)
         slnp = render.attachNewNode(slight)
         slnp.setPos(25, 20, 50)
         slnp.setP(-90)

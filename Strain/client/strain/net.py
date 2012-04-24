@@ -72,7 +72,7 @@ class Net():
             for unit_id in self.parent.units.iterkeys():
                 if self.parent.isThisMyUnit(unit_id):
                     self.parent.interface.refreshUnitInfo(unit_id) 
-            #self.parent.sgm.level_mesh.setInvisibleTilesInThread()           
+            self.parent.sgm.level_model.setInvisibleTilesInThread()           
             self.parent._message_in_process = False
         #========================================================================
         #
@@ -103,7 +103,7 @@ class Net():
                 if self.parent.isThisMyUnit(unit_id):
                     self.parent.interface.refreshUnitInfo(unit_id)
             self.parent.deselectUnit()
-            #self.parent.sgm.level_mesh.setInvisibleTilesInThread()
+            self.parent.sgm.level_model.setInvisibleTilesInThread()
             # play new turn animation, _message_in_process will be set to false after this
             self.parent.handleNewTurn()
         #========================================================================
@@ -122,8 +122,7 @@ class Net():
                 self.parent.movement.calcUnitAvailMove( unit['id'] )
                 self.parent.sgm.showVisibleEnemies(unit['id'])
                 if unit['pos'][0] != old_x or unit['pos'][1] != old_y or unit['last_action']=='use':
-                    #self.parent.sgm.level_mesh.setInvisibleTilesInThread()
-                    self.parent.sgm.level_model.getInvisibleTiles()
+                    self.parent.sgm.level_model.setInvisibleTilesInThread()
                     None
                 self.parent.sgm.playUnitStateAnim( unit['id'] )
             self.parent._message_in_process = False
@@ -178,8 +177,8 @@ class Net():
             if self.parent.player == self.parent.turn_player and self.parent.sel_unit_id != None:
                 self.parent.movement.calcUnitAvailMove( self.parent.sel_unit_id )
                 self.parent.sgm.showVisibleEnemies( self.parent.sel_unit_id )
-            #self.parent.sgm.level_mesh.setInvisibleTilesInThread()
-            #self.parent.sgm.level_mesh.setInvisibleWallsInThread()
+            self.parent.sgm.level_model.setInvisibleTilesInThread()
+            self.parent.sgm.level_model.setInvisibleWallsInThread()
         #========================================================================
         #
         elif msg[0] == USE:
