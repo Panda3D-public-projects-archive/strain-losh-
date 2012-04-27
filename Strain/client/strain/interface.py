@@ -61,7 +61,10 @@ class Interface(DirectObject.DirectObject):
         self.accept("r", self.redraw)
         self.accept( 'window-event', self.windowEvent)
         
-        taskMgr.add(self.processGui, 'processGui_task')#@UndefinedVariable 
+        taskMgr.add(self.processGui, 'processGui_task')#@UndefinedVariable
+        taskMgr.add(self.markEnemyUnits, 'markEnemyUnits_task')#@UndefinedVariable  
+        
+        self.enemy_markers = {}
     
     def init_gui(self):
         wp = base.win.getProperties() #@UndefinedVariable
@@ -288,9 +291,61 @@ class Interface(DirectObject.DirectObject):
         else:
             self.console.unfocus()    
 
+    def setMarker(self, unit_id):
+        if self.enemy_markers.has_key(str(unit_id)):
+            self.enemy_markers[str(unit_id)]['node'].reparentTo(aspect2d)
+            self.enemy_markers[str(unit_id)]['visible'] = True
+        else:
+            cm = CardMaker('')
+            cm.setFrame(-0.05, 0.05, -0.05, 0.05)
+            self.enemy_markers[unit_id] = {}
+            self.enemy_markers[unit_id]['node'] = aspect2d.attachNewNode(cm.generate())
+            self.enemy_markers[unit_id]['node'].setTexture(loader.loadTexture('action_preview_arrow.png'))
+            self.enemy_markers[unit_id]['node'].setTransparency(TransparencyAttrib.MAlpha)
+            self.enemy_markers[unit_id]['visible'] = True
+            
+    def clearMarker(self, unit_id):
+        if self.enemy_markers.has_key(str(unit_id)):
+            self.enemy_markers[str(unit_id)]['node'].detachNode()
+            self.enemy_markers[str(unit_id)]['visible'] = False
+
 #===============================================================================
 # CLASS Interface --- TASKS
 #===============================================================================
+    def markEnemyUnits(self, task):
+        for unit_id in self.enemy_markers:
+            if self.enemy_markers[unit_id]['visible'] == True:
+                if self.parent.sgm.unit_np_dict.has_key(int(unit_id)): 
+                    unit = self.parent.sgm.unit_np_dict[int(unit_id)] 
+                    p = utils.nodeCoordInRender2d(unit.model)
+                    if p.x >= -0.95 and p.x <= 0.95 and p.z >= -0.95 and p.z <= 0.95: 
+                        pos = aspect2d.getRelativePoint(render2d, p)
+                    else:
+                        if p.x == 0:
+                            rez_x = 0
+                            if p.z > 0.95:
+                                rez_z = 0.95
+                            elif p.z < -0.95:
+                                rez_z = -0.95
+                        else:
+                            if abs(p.x) > abs(p.z):
+                                if p.x > 0.95:
+                                    rez_x = 0.95
+                                elif p.x < -0.95:
+                                    rez_x = -0.95
+                                rez_z = p.z/p.x * rez_x
+                            elif abs(p.x) <= abs(p.z): 
+                                if p.z > 0.95:
+                                    rez_z = 0.95
+                                elif p.z < -0.95:
+                                    rez_z = -0.95
+                                rez_x = p.x/p.z * rez_z
+                            
+                        rez = Point3(rez_x, 0, rez_z)
+                        pos = aspect2d.getRelativePoint(render2d, rez)
+                    self.enemy_markers[unit_id]['node'].setPos(pos)
+        return task.cont
+    
     def processGui(self, task):
         """Visually marks and selects GUI element over which mouse cursor hovers."""
         if base.mouseWatcherNode.hasMouse(): #@UndefinedVariable
