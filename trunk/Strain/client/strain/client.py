@@ -343,12 +343,13 @@ class Client(DirectObject):
     def buildSpotAnim(self, unit_model, pos, heading):
         return Sequence(Func(self.sgm.showUnit, unit_model, pos, None)
                        ,Wait(0.2)
+                       ,Func(self.interface.setMarker, unit_model.id)
                        ,Func(self.interface.console.consoleOutput, 'Unit spotted!', utils.CONSOLE_SYSTEM_MESSAGE)
                        ,Func(self.interface.console.show)
                        )
     
     def buildDeleteAnim(self, unit_id):
-        return Sequence(Func(self.sgm.hideUnit, unit_id), Func(self.deleteUnit, unit_id), Wait(0.2))
+        return Sequence(Func(self.interface.clearMarker, unit_id), Func(self.sgm.hideUnit, unit_id), Func(self.deleteUnit, unit_id), Wait(0.2))
     
     def buildDetachAnim(self, unit_id):
         return Sequence(Func(self.sgm.detachUnit, unit_id), Wait(0.2))
