@@ -4,43 +4,45 @@
 		<link type="text/rcss" href="strain.rcss"/>
 	</head>
 	<body>
-			<div id="container">
-				<div class="text_container">
-					<div class="left_text">Choose your units:</div>
-					<div id = "funds" class="right_text"></div>
+		<div id="status_bar" class="text_container">
+		</div>
+		<div id="container">
+			<div class="text_container">
+				<div class="left_text">Choose your units:</div>
+				<div id = "funds" class="right_text"></div>
+			</div>
+			<div class="text_container">
+				
+				<div class="right_text">Your squad:</div>
+			</div>
+			<div id="list_container">
+				
+			</div>
+			<div id="middle_container">
+				
+			</div>
+			<div id="squad_container">
+				<div class="unit_item_empty"></div>
+				<div class="unit_item_empty"></div>
+				<div class="unit_item_empty"></div>
+				<div class="unit_item_empty"></div>
+				<div class="unit_item_empty"></div>
+				<div class="unit_item_empty"></div>
+				<div class="unit_item_empty"></div>
+				<div class="unit_item_empty"></div>
+				<div class="unit_item_empty"></div>
+				<div class="unit_item_empty"></div>
+				<div class="unit_item_empty"></div>
+				<div class="unit_item_empty"></div>
+			</div>
+			<div id="button_container">
+				<div id="btn_recruit" class="middle_button">
+					<div class="button_text">Recruit</div>
 				</div>
-				<div class="text_container">
-					
-					<div class="right_text">Your squad:</div>
-				</div>
-				<div id="list_container">
-					
-				</div>
-				<div id="middle_container">
-					
-				</div>
-				<div id="squad_container">
-					<div class="unit_item_empty"></div>
-					<div class="unit_item_empty"></div>
-					<div class="unit_item_empty"></div>
-					<div class="unit_item_empty"></div>
-					<div class="unit_item_empty"></div>
-					<div class="unit_item_empty"></div>
-					<div class="unit_item_empty"></div>
-					<div class="unit_item_empty"></div>
-					<div class="unit_item_empty"></div>
-					<div class="unit_item_empty"></div>
-					<div class="unit_item_empty"></div>
-					<div class="unit_item_empty"></div>
-				</div>
-				<div id="button_container">
-					<div id="btn_recruit" class="middle_button">
-						<div class="button_text">Recruit</div>
-					</div>
-					<div id="btn_deploy" class="right_button">
-						<div class="button_text">Deploy</div>
-					</div>
+				<div id="btn_deploy" class="right_button">
+					<div class="button_text">Deploy</div>
 				</div>
 			</div>
+		</div>
 	</body>
 </rml>
