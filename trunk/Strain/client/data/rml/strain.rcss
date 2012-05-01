@@ -7,7 +7,6 @@ body
 	font-size: 14px;
 	font-weight: normal;
 	font-style: normal;
-	
 	margin: auto;
 }
 
@@ -237,7 +236,7 @@ div.middle_button:active,
 div.right_button:active,
 div.middle_button_default:active,
 {
-	background: #cb4040;
+	background: #8b0000;
 }
 
 div.item_image
@@ -276,6 +275,318 @@ div.right_text
 	font-weight:bold;
 	float:right;
 }
+
+div#game_type_container
+{
+	width: 750px;
+	height: 500px;
+	margin-left: auto;
+	margin-right: auto;
+	margin-top: 30px
+	margin-bottom: 30px;
+}
+
+div#level_list_filler
+{
+	width: 10px;
+	height: 440px;
+	float:left;
+	background: #8b0000;
+	margin-right: 5px;
+}
+
+div#level_list
+{
+	width: 215px;
+	height: 440px;
+	float: left;
+}
+
+div#info
+{
+	width: 500px;
+	height: 445px;
+	float: right;
+}
+
+div#level_info_left
+{
+	width: 245px;
+	height: 215px;
+	margin-left: 5px;
+	margin-top: 5px;
+	margin-bottom: 5px;
+	float: left;
+}
+
+div#level_info_right
+{
+	width: 240px;
+	height: 215px;
+	margin-left: 5px;
+	margin-right: 5px;
+	margin-top: 5px;
+	margin-bottom: 5px;
+	float: right;
+}
+
+div#game_info
+{
+	width: 490px;
+	height: 215px;
+	margin-left: 5px;
+	margin-right: 5px;
+	margin-top: 225px;
+	margin-bottom: 5px;
+}
+
+
+input,
+select,
+dataselect
+{
+	margin-left:auto;
+	margin-right:auto;
+	shadow-font-effect: none;
+}
+
+datagrid input.text
+{
+	width: 100%;
+	height: auto;
+	margin: 0px;
+	padding: 0px 2px 0px;
+
+	border-width: 1px;
+	border-color: black;
+	background-color: white;
+
+	font-size: 15;
+	
+	background-decorator: none;
+}
+
+select,
+dataselect
+{
+	width: 165px;
+	height: 20px;
+	
+	background: white;
+	color:black;
+}
+
+select selectvalue,
+dataselect selectvalue
+{
+	width: auto;
+	margin-right: 30px;
+	
+	height: 20px;
+	padding: 0px 0px 0px 3px;
+
+}
+
+select selectarrow,
+dataselect selectarrow
+{
+	width: 20px;
+	height: 20px;
+	
+	background: #8b0000;
+	
+	icon-decorator: image;
+	icon-image: strain_arrow_dec.png;
+}
+
+select selectarrow:hover,
+dataselect selectarrow:hover
+{
+	background: #ab2020;
+}
+
+select selectarrow:active,
+select selectarrow:checked,
+dataselect selectarrow:active,
+dataselect selectarrow:checked
+{
+	background: #cb4040;
+}
+
+select selectbox,
+dataselect selectbox
+{
+	margin-left: 1px;
+	margin-top: -7px;
+	width: 165px;
+	padding: 1px 4px 4px 4px;
+}
+
+
+datagrid datagridbody
+{
+ 	overflow-y: scroll;
+	color: white;
+	height: 420px;
+	padding: 0px 0px 0px 3px;
+	float: left;
+}
+
+select selectbox option,
+dataselect selectbox option
+{
+	width: auto;
+	padding-left: 3px;
+	background: white;
+}
+
+select selectbox option:nth-child(even),
+dataselect selectbox option:nth-child(even)
+{
+	background: #ffffff;
+}
+
+datagrid datagridrow:nth-child(even)
+{
+	background: black;
+}
+
+datagrid datagridrow:hover
+{
+	background: #004b00;
+	color: white;
+	shadow-font-effect: shadow;
+	shadow-offset: 1px 1px;
+	shadow-color: black;
+}
+
+datagrid datagridrow.selected
+{
+	background: #8b0000;
+	color: white;
+}
+
+
+select selectbox option:hover,
+dataselect selectbox option:hover
+{
+	background: #cb4040;
+	color: white;
+	shadow-font-effect: shadow;
+	shadow-offset: 1px 1px;
+	shadow-color: black;
+}
+
+input.checkbox
+{
+	width: 20px;
+	height: 20px;
+	
+	background: white;
+}
+
+input.checkbox:checked
+{
+	icon-decorator: image;
+	icon-image: strain_checkbox_checked.png;
+}
+
+
+datagrid datagridheader
+{
+	width: auto;
+	height: 22px;
+	padding: 0px 0px 0px 3px;
+
+	background: #8b0000;
+	
+	shadow-font-effect: shadow;
+	shadow-offset: 1px 1px;
+	shadow-color: black;
+}
+
+
+
+scrollbarvertical1
+{
+	margin-top: -6px;
+	margin-bottom: -6px;
+	margin-right: -11px;
+	width: 20px;
+}
+
+scrollbarvertical
+{
+	width: 20px;
+}
+
+
+scrollbarvertical slidertrack
+{
+	background: #3b0000;
+}
+
+scrollbarvertical sliderbar
+{
+	width: 20px;
+	background: #8b0000;
+}
+
+scrollbarvertical sliderbar:hover
+{
+	background: #ab2020;
+}
+
+scrollbarvertical sliderbar:active
+{
+	background: #8b0000;
+}
+
+scrollbarvertical sliderarrowdec
+{
+	width: 20px;
+	height: 20px;
+	
+	background: #8b0000;
+	
+	icon-decorator: image;
+	icon-image: strain_arrow_inc.png;
+}
+
+scrollbarvertical sliderarrowdec:hover,
+scrollbarvertical sliderarrowinc:hover
+{
+	background: #ab2020;
+}
+
+scrollbarvertical sliderarrowdec:active,
+scrollbarvertical sliderarrowinc:active
+{
+	background: #8b0000;
+}
+
+scrollbarvertical sliderarrowinc
+{
+	width: 20px;
+	height: 20px;
+	
+	background: #8b0000;
+	
+	icon-decorator: image;
+	icon-image: strain_arrow_dec.png;
+}
+
+
+
+scrollbarhorizontal
+{
+	width: 0px;
+	height: 0px;
+}
+
+
+
+
 
 
 
