@@ -64,7 +64,10 @@ class SquadSelector():
         
         funds_label = self.doc.GetElementById('funds')
         funds_label.inner_rml = 'Funds left: ' + str(self.budget)
-            
+        
+        element = self.doc.GetElementById('status_bar')
+        element.inner_rml = 'Username: ' + self.parent.player
+        
         self.doc.Show()
         
     def deploySquad(self):
