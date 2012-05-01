@@ -55,6 +55,7 @@ class SquadSelector():
         
         for child in element.child_nodes:
             child.AddEventListener('click', self.selectUnit, True)
+            child.AddEventListener('dblclick', self.recruitUnit, True)
         
         element = self.doc.GetElementById('btn_recruit')
         element.AddEventListener('click', self.recruitUnit, True)
