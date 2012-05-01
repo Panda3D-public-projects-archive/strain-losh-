@@ -25,13 +25,17 @@ class GameType():
         self.playerNumber = PlayerNumberDataSource("player_number")
         
         self.doc = self.parent.rContext.LoadDocument('data/rml/game_type.rml')
-        self.doc.Show()
+        
+        element = self.doc.GetElementById('status_bar')
+        element.inner_rml = 'Username: ' + self.parent.player
         
         element = self.doc.GetElementById('deploy')
         element.AddEventListener('click', self.deployUnits, True)
         
         self.datagrid = self.doc.GetElementById('datagrid')
         self.datagrid.AddEventListener('click', self.rowSelected, True)
+        
+        self.doc.Show()
         
     def cleanup(self):
         self.parent.rRegion.setActive(0)
