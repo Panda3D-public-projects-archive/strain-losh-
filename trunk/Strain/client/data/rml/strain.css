@@ -1,0 +1,188 @@
+body
+{
+	width: 800px;
+	height: 600px;
+	
+	font-family: arial;
+	font-size: 15;
+	font-weight: normal;
+	color: white;
+}
+
+div#body
+{
+	width: 800px;
+	height: 600px;
+	background-color: black;
+}
+
+div#container
+{
+	width: 700px;
+	height: 500px;
+	
+	margin-top: 50px;
+	margin-left: 50px;
+	float: left;
+}
+
+div.text_container
+{
+	width: 700px;
+	height: 20px;
+	float:left;
+}
+
+div#list_container
+{
+	width:150px;
+	height: auto;
+	background-color: #8b0000;
+	float:left;
+}
+
+div#button_container
+{
+	width: 700px;
+	height: 40px;
+	float: left;
+}
+
+div#middle_container
+{
+	width: 435px;
+	height: 420px;
+	float: left;
+}
+
+div#squad_container
+{
+	width: 115px;
+	height: 420px;
+	float: right;
+}
+
+div.unit_item
+{
+	width: 50px;
+	height: 50px;
+	margin: 5px 0px 0px 5px;
+	background-color: #8b0000;
+	float: left;
+}
+
+div.unit_item:hover
+{
+	background-color: #ab2020;
+}
+
+div.unit_item:active
+{
+	background-color: #cb4040;
+}
+
+div.unit_item_image
+{
+	width: 32px;
+	height: 32px;
+	margin: 9px;
+}
+
+div.list_item_filler
+{
+	width: 5px;
+	height: 50px;
+	background-color: black;
+	float:left;
+}
+
+div.list_item
+{
+	width: 150px;
+	height: 50px;
+	margin-left: 10px;
+	background-color: black;
+}
+
+div.list_item:hover
+{
+	background-color: #8b0000;
+}
+
+div.middle_button
+{
+	width: 105px;
+	height: 40px;
+	margin-left: 295px;
+	background-color: #8b0000;
+	float:left;
+}
+
+div.right_button
+{
+	width: 105px;
+	height: 40px;
+	margin-right: 5px;
+	background-color: #8b0000;
+	float:right;
+}
+
+
+div.button_text
+{
+	width: 110px;
+	height: 20px;
+	margin: 10px 0px 10px 0px;
+	float: left;
+	color: white;
+	font-size: 14px;
+	text-align: center;
+}
+
+div.button:hover
+{
+	background-color: #ab2020;
+}
+
+div.button:active
+{
+	background-color: #cb4040;
+}
+
+div.item_image
+{
+	width: 32px;
+	height: 32px;
+	margin: 9px;
+	float: left;
+}
+
+div.item_text
+{
+	shadow-font-effect: shadow;
+    shadow-offset: 1px 1px;
+    shadow-color: black;
+}
+
+div.item_name
+{
+	padding-top: 8px;
+}
+
+div.left_text
+{
+	width: 150px;
+	height: 20px;
+	font-weight:bold;
+	margin-left: 15px;
+	float:left;
+}
+
+div.right_text
+{
+	width: 110px;
+	height: 20px;
+	font-weight:bold;
+	float:right;
+}
+
