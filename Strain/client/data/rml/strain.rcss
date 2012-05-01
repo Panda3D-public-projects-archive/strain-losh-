@@ -145,16 +145,55 @@ div.list_item_selected:hover
 
 div.middle_button
 {
-	width: 105px;
+	width: 165px;
 	height: 40px;
-	margin-left: 295px;
+	margin-left: 265px;
 	background: #8b0000;
 	float:left;
 }
 
+div.middle_button_default
+{
+	width: 165px;
+	height: 40px;
+	margin-left: auto;
+	margin-right: auto;
+	margin-bottom: 5px;
+	background: #8b0000;
+	float:left;
+}
+
+div#middle_button_container
+{
+	width: 165px;
+	height: auto;
+	margin-left: auto;
+	margin-right: auto;
+	float:left;
+{
+
+div#logo
+{
+	width: 700px;
+	height: 150px;
+	padding-top: 50px;
+	float:left;
+}
+
+div#logo_image
+{
+	width: 328px;
+	height: 101px;
+	logo-decorator: image;
+    logo-image: strain_logo.png;
+    margin-left: auto;
+	margin-right: auto;
+	float: left;
+}
+
 div.right_button
 {
-	width: 105px;
+	width: 165px;
 	height: 40px;
 	margin-right: 5px;
 	background: #8b0000;
@@ -164,7 +203,7 @@ div.right_button
 
 div.button_text
 {
-	width: 110px;
+	width: 165px;
 	height: 20px;
 	margin: 8px 0px 12px 0px;
 	float: left;
@@ -177,13 +216,15 @@ div.button_text
 }
 
 div.middle_button:hover,
-div.right_button:hover
+div.right_button:hover,
+div.middle_button_default:hover
 {
 	background: #ab2020;
 }
 
 div.middle_button:active,
-div.right_button:active
+div.right_button:active,
+div.middle_button_default:active,
 {
 	background: #cb4040;
 }
