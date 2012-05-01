@@ -1,43 +1,46 @@
 <rml>
 	<head>
-		<title>Game Menu</title>
-		<link type="text/template" href="window.rml" />
-		<style>
-			body
-			{
-				width: 300px;
-				height: 500px;
-
-				margin: auto;
-			}
-			
-			
-		</style>
-
+		<link type="text/rcss" href="rkt.rcss"/>
+		<link type="text/rcss" href="strain.rcss"/>
 	</head>
-	<body >
-		<div id="menu_center">
-		Player: <span id="plr"></span>
-		</div>
-		<div id="menu_center">
-		<span>
-		Budget: <span id="bgt"></span>
-		</span>
-		</div>
-		
-		<div id="menu_center">
-			<dataselect id="soldier1" source="squad_data.squad" fields="name,cost" valuefield="name" formatter="frm"></dataselect>
-			<dataselect id="soldier2" source="squad_data.squad" fields="name,cost" valuefield="name" formatter="frm"></dataselect>
-			<dataselect id="soldier3" source="squad_data.squad" fields="name,cost" valuefield="name" formatter="frm"></dataselect>
-			<dataselect id="soldier4" source="squad_data.squad" fields="name,cost" valuefield="name" formatter="frm"></dataselect>
-			<dataselect id="soldier5" source="squad_data.squad" fields="name,cost" valuefield="name" formatter="frm"></dataselect>
-			<dataselect id="soldier6" source="squad_data.squad" fields="name,cost" valuefield="name" formatter="frm"></dataselect>
-			<dataselect id="soldier7" source="squad_data.squad" fields="name,cost" valuefield="name" formatter="frm"></dataselect>
-			<dataselect id="soldier8" source="squad_data.squad" fields="name,cost" valuefield="name" formatter="frm"></dataselect>
-		</div>
-		<div id="menu_center">
-			<button id="ok">Deploy!</button><br />
-			<button id="cancel">Cancel</button><br />
-		</div>
+	<body>
+			<div id="container">
+				<div class="text_container">
+					<div class="left_text">Choose your units:</div>
+					<div id = "funds" class="right_text"></div>
+				</div>
+				<div class="text_container">
+					
+					<div class="right_text">Your squad:</div>
+				</div>
+				<div id="list_container">
+					
+				</div>
+				<div id="middle_container">
+					
+				</div>
+				<div id="squad_container">
+					<div class="unit_item_empty"></div>
+					<div class="unit_item_empty"></div>
+					<div class="unit_item_empty"></div>
+					<div class="unit_item_empty"></div>
+					<div class="unit_item_empty"></div>
+					<div class="unit_item_empty"></div>
+					<div class="unit_item_empty"></div>
+					<div class="unit_item_empty"></div>
+					<div class="unit_item_empty"></div>
+					<div class="unit_item_empty"></div>
+					<div class="unit_item_empty"></div>
+					<div class="unit_item_empty"></div>
+				</div>
+				<div id="button_container">
+					<div id="btn_recruit" class="middle_button">
+						<div class="button_text">Recruit</div>
+					</div>
+					<div id="btn_deploy" class="right_button">
+						<div class="button_text">Deploy</div>
+					</div>
+				</div>
+			</div>
 	</body>
 </rml>
