@@ -1,7 +1,7 @@
 <rml>
 	<head>
-		<title>Main Menu</title>
-		<link type="text/template" href="window.rml" />
+		<link type="text/rcss" href="rkt.rcss"/>
+		<link type="text/rcss" href="strain.rcss"/>
 		<style>
 			body
 			{
@@ -19,23 +19,31 @@
 		</style>
 	</head>
 	<body >
-		<div id="logo">
-			<div id="logo_image">
+		<div id="status_bar" class="text_container">
+		</div>
+		<div id="container">
+			<div id="logo">
+				<div id="logo_image">
+				</div>
 			</div>
-		</div>
-		<div id="menu_center">
-			Username:
-			<input id="username" type="text"></input>
-			Password:
-			<input id="password" type="password"></input>
-		</div>
-		<div id="menu_center">
-			<button id="log_in">Log in</button><br />
-			<br />
-			<button id="log_in_red">Log in as Red</button><br />
-			<button id="log_in_blue">Log in as Blue</button><br />
-			<br />
-			<button onclick="exit()">Exit</button>
+			<div id="middle_button_container" style="text-align:center;">
+				Username:
+				<input id="username" type="text"></input>
+				Password:
+				<input id="password" type="password"></input>
+				<div id="log_in" class="middle_button_default">
+					<div class="button_text">Log in</div>
+				</div>
+				<div id="log_in_red" class="middle_button_default">
+					<div class="button_text">Log in as Red</div>
+				</div>
+				<div id="log_in_blue" class="middle_button_default">
+					<div class="button_text">Log in as Blue</div>
+				</div>
+				<div onclick="exit()" class="middle_button_default">
+					<div class="button_text">Exit</div>
+				</div>
+			</div>
 		</div>
 	</body>
 </rml>
