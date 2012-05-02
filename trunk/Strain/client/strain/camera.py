@@ -51,7 +51,7 @@ class Camera(DirectObject):
         base.camera.lookAt(self.node)
 
         self.zoom_velocity = 2.75
-        self.pan_velocity = 10  
+        self.pan_velocity = 30  
         self.anim_velocity = 15
         self.dist = base.camera.getDistance(self.node)
         self.distmax = 75
