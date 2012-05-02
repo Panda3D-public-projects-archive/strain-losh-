@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <armours>
-<armour name="Standard"		front="3" 	sides_back="2" action_points="4"/>
-<armour name="Heavy" 		front="4" 	sides_back="4" action_points="3"/>
-<armour name="Sergeant"		front="2" 	sides_back="2" action_points="4"/>
-<armour name="Medic"	 	front="2" 	sides_back="1" action_points="4"/>
-<armour name="Jumper" 		front="3" 	sides_back="1" action_points="4"/>
-<armour name="Scout" 		front="1" 	sides_back="1" action_points="5"/>
+<armour name="Standard"		front="3" 	sides_back="2" action_points="6"/>
+<armour name="Heavy" 		front="4" 	sides_back="4" action_points="4"/>
+<armour name="Sergeant"		front="2" 	sides_back="2" action_points="6"/>
+<armour name="Medic"	 	front="2" 	sides_back="1" action_points="6"/>
+<armour name="Jumper" 		front="3" 	sides_back="1" action_points="6"/>
+<armour name="Scout" 		front="1" 	sides_back="1" action_points="10"/>
 </armours>

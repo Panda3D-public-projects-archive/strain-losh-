@@ -72,15 +72,15 @@ class Unit():
         
         ret_lst = []
         
-        if self.ap < 1:
-            return None
-        
         #set up heavy weapons cannot do melee
         if self.hasHeavyWeapon() and self.set_up:
                 return None 
+            
+        if self.ap < self.melee_weapon.ap_cost:
+            return None
         
         #TODO: krav: melee bi trebao obojici trosit ap, i da bude contest of skill - dakle bilo ko moze dobit
-        self.ap -= 1
+        self.ap -= self.melee_weapon.ap_cost
         
         base = 90
         
