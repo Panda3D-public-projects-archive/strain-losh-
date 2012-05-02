@@ -17,13 +17,79 @@ import copy
 from util import OBSERVER_ID
 from strain.share import *
 
+
 notify = util.Notify()
 
 
 LEVELS_ROOT = "./data/levels/"
 
+engine_state_filename = "engine_state.txt"
 
-class Engine( Thread ):
+
+######################################################################################################
+######################################################################################################
+class EngineThread( Thread ):
+    
+    
+    def __init__(self):
+        Thread.__init__(self)
+        
+        self.name = "EngineThread"
+            
+        self.new_engine = None
+        
+        #to check if we need to load Engine from file/db..
+        saved_engine = None 
+        
+        
+        try:
+            saved_engine = open( engine_state_filename, "r" )
+        except:
+            pass
+        
+        if saved_engine:
+            self.engine = loadFromPickle( saved_engine )
+        else:
+            self.engine = Engine()
+            self.engine.InitDefault()
+
+
+        #start listening to network
+        EngMsg.startServer( notify )        
+        
+        
+    def run(self):
+        
+        if self.new_engine:
+            self.engine.Shutdown()
+            self.engine = self.new_engine
+            self.new_engine = None
+            
+        
+        while True:
+            self.engine.runOneTick()
+        
+        
+        
+        #we are shutting down everything   
+        EngMsg.stopServer()       
+        
+        notify.info( "++++++++++++++++++++++++EngineThread stopped!++++++++++++++++++++++++" )
+        
+        #TODO: krav: restart server, nije vise ovo 
+        #Engine().start()
+        
+        
+        
+    pass
+    
+    
+########################################################################################################
+########################################################################################################
+########################################################################################################
+########################################################################################################
+########################################################################################################
+class Engine():
     
         
     __index_uid = 0
@@ -36,7 +102,6 @@ class Engine( Thread ):
         
     #====================================init======================================0
     def __init__(self):
-        Thread.__init__(self)
         notify.info("------------------------Engine Starting------------------------")
 
         self.stop = False
@@ -53,52 +118,46 @@ class Engine( Thread ):
         self.active_player = None
 
         self.army_size = 1000
-                
-        self.name = "EngineThread"
 
         self.observer = Player( OBSERVER_ID, 'observer', None )
         self.observer.defeated = True
 
-
-    def run(self):
+        #we need this for server_messaging, and for singleton
         engine._instance = self
-        print "Engine started"
-        EngMsg.startServer( notify )
         
-        lvl = "LevelBlockout.txt"
-        self.level = Level( LEVELS_ROOT + lvl )
-        notify.info("Loaded level:%s", lvl )
+        print "Engine started"
+
+
+        
+
+    def InitDefault(self):
+        
+        level_filename = "LevelBlockout.txt"
+        self.level = Level( LEVELS_ROOT + level_filename )
+        notify.info("Loaded level:%s", level_filename )
 
         self.loadArmyList()
-      
-        #self.firstTurn()
+        
 
-        #self.checkAndSendLevelMsgs()
-        #+++++++++++++++++++++++++++++++++++++++++++++MAIN LOOP+++++++++++++++++++++++++++++++++++++++++++++
-        #+++++++++++++++++++++++++++++++++++++++++++++MAIN LOOP+++++++++++++++++++++++++++++++++++++++++++++
-        while( self.stop == False ):
-
-            time.sleep( 0.1 )
-
-            #see if there is a new client connected
-            EngMsg.handleConnections()
-
-            #get a message if there is one
-            msg = EngMsg.readMsg()
-            if msg:
-                self.handleMsg( msg[0], msg[1] )
+    def runOneTick(self):
         
         #+++++++++++++++++++++++++++++++++++++++++++++MAIN LOOP+++++++++++++++++++++++++++++++++++++++++++++
         #+++++++++++++++++++++++++++++++++++++++++++++MAIN LOOP+++++++++++++++++++++++++++++++++++++++++++++
+        #while( self.stop == False ):
+
+        time.sleep( 0.1 )
+
+        #see if there is a new client connected
+        EngMsg.handleConnections()
+
+        #get a message if there is one
+        msg = EngMsg.readMsg()
+        if msg:
+            self.handleMsg( msg[0], msg[1] )
         
-        #we are shutting down everything   
-        EngMsg.stopServer()       
-        
-        notify.info( "++++++++++++++++++++++++Engine stopped!++++++++++++++++++++++++" )
-        
-        #restart server 
-        Engine().start()
-        
+        #+++++++++++++++++++++++++++++++++++++++++++++MAIN LOOP+++++++++++++++++++++++++++++++++++++++++++++
+        #+++++++++++++++++++++++++++++++++++++++++++++MAIN LOOP+++++++++++++++++++++++++++++++++++++++++++++
+              
         return 0
 
 
@@ -219,6 +278,13 @@ class Engine( Thread ):
                 unit.overwatch = not unit.overwatch
             else:
                 EngMsg.error("Not enough AP for overwatch.", source)
+
+            #a = pickle.dumps(self)
+            dump_file = open( engine_state_filename, "w" )
+            self.pickleSelf()
+            pickle.dump(self, dump_file )
+            print "pickled level to:", engine_state_filename
+            exit()
 
             
         elif param == SET_UP:
@@ -383,8 +449,7 @@ class Engine( Thread ):
             return
 
         self.beginTurn()
-        
-        
+                
         
     def checkAndSendLevelMsgs(self):
         
@@ -1231,5 +1296,30 @@ class Engine( Thread ):
         return False
 
 
+    def pickleSelf(self):
+        
+        for p in self.players:
+            p.connection = None
+            
+            
+        pass
+
+
+def loadFromPickle( pickled_engine ):
+    
+    #eng = pickle.loads(pickled_engine)
+    eng = pickle.load(pickled_engine)
+
+    engine._instance = eng
+    #now cleanup all things that are session related
+    #remove connections from each player, if it exists
+    for p in eng.players:
+        p.connection = None
+    
+    print "loaded from pickle"
+    
+    return eng
+    
+
 if __name__ == "__main__":
-    Engine().start()
+    EngineThread().start()
