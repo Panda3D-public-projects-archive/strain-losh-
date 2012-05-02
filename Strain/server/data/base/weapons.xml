@@ -10,7 +10,7 @@
 	<weapon name="Karate"						Str="3"	ap_cost="1"		shots="1"/>
 	<weapon name="Doctors Bag"					Str="3"	ap_cost="1"		shots="1"/>
 	<weapon name="Chain Sword" 					Str="6"	ap_cost="1"		shots="1"	parry="1"/>
-	<weapon name="Power Axe" 					Str="7"	ap_cost="1"		shots="1"	special="power"/>
+	<weapon name="Power Axe" 					Str="7"	ap_cost="2"		shots="1"	special="power"/>
 		
 	
 	
