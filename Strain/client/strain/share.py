@@ -31,6 +31,10 @@ TAUNT = 'taunt'                 #value - id of unit taunting
 DEPLOYMENT = 'deployment'       #value - dict with 2 keys - 'level' and 'army_size'
 ARMY_LIST = 'army_list'         #value - list of (x,y,unit_type)
 FORCE_FIRST_TURN = 'force_start'#no values
+PING = 'ping'                   #value - time.clock()
+PONG = 'pong'                   #value - time.clock()
+UNDEFINED_MSG_1 = 'msg1'        #value undefined
+UNDEFINED_MSG_2 = 'msg2'        #value undefined
 
 #---------------------------------------------------------------------------------------
 

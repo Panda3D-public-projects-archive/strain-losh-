@@ -201,6 +201,16 @@ class Engine():
         elif( msg[0] == TAUNT ):
             self.unitUpdate( msg[1], TAUNT, source)
                         
+        elif( msg[0] == PING ):
+            #print "ping: %2.2fms" % ((time.time() - msg[1]) * 1000)
+            EngMsg.pong( source )            
+                        
+        elif( msg[0] == UNDEFINED_MSG_1 ):
+            pass
+                        
+        elif( msg[0] == UNDEFINED_MSG_2 ):
+            pass
+                        
         elif( msg[0] == SHOOT ):
             self.handleShoot( msg[1]['shooter_id'], msg[1]['target_id'], source )
                         

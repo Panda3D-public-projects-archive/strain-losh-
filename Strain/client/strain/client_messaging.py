@@ -241,4 +241,16 @@ class ClientMsg:
     def endTurn():
         ClientMsg._sendMsg((END_TURN,0))
         
+    @staticmethod
+    def ping():
+        ClientMsg._sendMsg( (PING, time.time()) )
+        
+    @staticmethod
+    def undefMsg1( value = 0 ):
+        ClientMsg._sendMsg( (UNDEFINED_MSG_1, value ) )
+        
+    @staticmethod
+    def undefMsg2( value = 0 ):
+        ClientMsg._sendMsg( (UNDEFINED_MSG_2, value ) )
+        
         
