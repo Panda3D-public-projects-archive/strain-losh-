@@ -15,11 +15,16 @@ from panda3d.core import ConfigVariableString, ConfigVariableInt#@UnresolvedImpo
 from client_messaging import *
 import utils as utils
 
+
+PING_TIMER =   42  #seconds
+
 #========================================================================
 #
 class Net():
     def __init__(self, parent):
         self.parent = parent
+        
+        self.ping_timer = time.time()
         
         # Set logging through our global logger
         self.log = self.parent.parent.logger
@@ -214,5 +219,11 @@ class Net():
         if self.parent._message_in_process == False:
             msg = ClientMsg.readMsg()        
             if msg:
-                self.handleMsg(msg)         
+                self.handleMsg(msg)
+                
+        t = time.time()
+        if t - self.ping_timer >= PING_TIMER:
+            self.ping_timer = t
+            ClientMsg.ping()
+                         
         return task.cont

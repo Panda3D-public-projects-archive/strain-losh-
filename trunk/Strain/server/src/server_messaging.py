@@ -327,9 +327,16 @@ class EngMsg:
         EngMsg._sendMsg( ( DEPLOYMENT, deploy_dict ), source  )
         
 
+
+
     @staticmethod
     def sendMsg( msg, source = None):
         EngMsg._sendMsg( msg, source )
+
+
+    @staticmethod
+    def pong( source = None ):
+        EngMsg._sendMsg( (PONG, time.time()), source )
 
         
       
