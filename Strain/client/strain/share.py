@@ -7,9 +7,32 @@ import math
 import time
 from xml.dom import minidom
 
-
+#-------------------------------------NETWORK----------------------------------------
 COMMUNICATION_PROTOCOL = 0.1
 
+
+MOVE = 'move'                   #values - list of actions ('move',tile) ('rotate',tile) ('overwatch',overwatchresult) ('detected',enemy)
+NEW_TURN = 'new_turn'           #value - turn number
+ENGINE_SHUTDOWN = 'shutdown'    #no values
+ERROR = 'error'                 #value - error message
+ENGINE_STATE = 'engine_state'   #value - dictionary of values
+LEVEL = 'level'                 #value - pickled level
+END_TURN = 'end_turn'           #no values
+UNIT = 'unit'                   #value - pickled unit
+SHOOT = 'shoot'                 #value - (which unit, target unit)
+CHAT = 'chat'                   #value - string for chat
+OVERWATCH = 'overwatch'         #value - id of unit going on overwatch, this message toggles overwatch on/off
+SET_UP = 'set_up'               #value - id of unit setting up heavy weapon
+USE = 'use'                     #value - id of unit trying to use
+VANISH = 'vanish'               #value - id of unit vanishing
+SPOT = 'spot'                   #value - id of unit spotted
+ROTATE = 'rotate'               #value - new heading 
+TAUNT = 'taunt'                 #value - id of unit taunting
+DEPLOYMENT = 'deployment'       #value - dict with 2 keys - 'level' and 'army_size'
+ARMY_LIST = 'army_list'         #value - list of (x,y,unit_type)
+FORCE_FIRST_TURN = 'force_start'#no values
+
+#---------------------------------------------------------------------------------------
 
 DYNAMICS_EMPTY = 0
 DYNAMICS_UNIT = 1
