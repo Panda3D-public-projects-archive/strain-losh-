@@ -78,8 +78,8 @@ class Interface(DirectObject.DirectObject):
         #self.punit_button = GuiButton2("top", Point3(0.0, 0, -0.3), aspect, plane, "prev_unit")
         self.nunit_button = GuiButton2("bottom", Point3(0.0, 0, -0.09), self.aspect, plane, "next_unit")
         self.endturn_button = GuiButton2("right", Point3(-0.1, 0, 0.24), self.aspect, plane, "end_turn")
-        self.action_a = GuiButton2("right", Point3(-0.1, 0, 0.13), self.aspect, plane, "empty")
-        self.action_b = GuiButton2("right", Point3(-0.1, 0, 0.02), self.aspect, plane, "empty")
+        self.action_a = GuiButton2("right", Point3(-0.1, 0, 0.13), self.aspect, plane, "action_a")
+        self.action_b = GuiButton2("right", Point3(-0.1, 0, 0.02), self.aspect, plane, "action_b")
         self.action_c = GuiButton2("right", Point3(-0.1, 0, -0.09), self.aspect, plane, "empty")
         self.action_d = GuiButton2("right", Point3(-0.1, 0, -0.2), self.aspect, plane, "empty")
         
@@ -284,6 +284,10 @@ class Interface(DirectObject.DirectObject):
         elif self.hovered_gui == self.taunt:
             ClientMsg.taunt( self.parent.sel_unit_id )
             self.console.unfocus()
+        elif self.hovered_gui == self.action_a:
+            ClientMsg.undefMsg1()
+        elif self.hovered_gui == self.action_b:
+            ClientMsg.undefMsg2()
         #elif self.hovered_gui == self.console:
         #    self.console.focus()
         elif self.panel != None and self.hovered_gui == self.panel:
