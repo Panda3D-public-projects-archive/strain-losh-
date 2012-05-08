@@ -1,9 +1,23 @@
 # Prerequisites:  cx_oracle
 from cx_Oracle import *
 
+DB_SCHEMA_OWNER = 'straindb'
+DB_SCHEMA_PASS = 'straindb'
+DB_IP = '178.79.164.4'
+DB_PORT = '1521'
+DB_SID = 'XE'
+
+"""
+DB_SCHEMA_OWNER = 'ognjenk'
+DB_SCHEMA_PASS = 'ogs'
+DB_IP = 'zg-invplusdb'
+DB_PORT = '1521'
+DB_SID = 'inv10dev'
+"""
+
 class DBApi():
     def __init__(self):
-        self.conn = Connection(user='straindb', password='straindb', dsn=makedsn('178.79.164.4', '1521', 'XE'))
+        self.conn = Connection(user=DB_SCHEMA_OWNER, password=DB_SCHEMA_PASS, dsn=makedsn(DB_IP, DB_PORT, DB_SID))
     
     def close(self):
         self.conn.close()
@@ -149,6 +163,7 @@ class DBApi():
         
 #MAIN
 dbapi = DBApi()
+print dbapi.returnPlayer('ogi')
 #dbapi.addMessage(6, 'ogi', 1, 'asd', 1)
 #dbapi.createPlayer('ogi@loshdev', 'ogi', 'ogi')
 #dbapi.createPlayer('krav@loshdev', 'krav', 'krav')
