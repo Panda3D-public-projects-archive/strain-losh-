@@ -2,7 +2,7 @@ from xml.dom import minidom
 import math
 import util
 from strain.share import *
-from util import compileUnit
+
 
 
 SPECIAL_SET_UP = "set_up"
