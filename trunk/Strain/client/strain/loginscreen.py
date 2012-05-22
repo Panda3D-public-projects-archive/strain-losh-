@@ -14,6 +14,7 @@ from direct.filter.CommonFilters import CommonFilters#@UnresolvedImport
 from panda3d.rocket import *
 # strain related imports
 import strain.utils as utils
+from strain.client_messaging import ClientMsg
 
 
 class LoginScreen():
@@ -101,11 +102,21 @@ class LoginScreen():
         self.parent = None
     
     def loginButPressed(self):
-        # TODO: ogs: loginButPressed bi trebao inicijalizirati net konekciju prema login serveru
         username = self.doc.GetElementById("username").value
         password = self.doc.GetElementById("password").value
         print "Username:", username
         print "Password:", password
+        
+        #TODO: ogi_net: ovdje sredit kaj se desi ak ne uspije logirat
+        #----<<<<<<<<---oprez! ClientMsg.login() vraca 0 ak je uspio, inace vraca error msg ------->>>>>>>>------- 
+        login_error = ClientMsg.login(username, password) 
+        if not login_error:
+            #sve je ok
+            pass
+        else:
+            #greska
+            print "LOGIN FAILED: - ", login_error
+            return 
         
         self.parent.player = username
 #        self.parent.player = self.entry_username.get()

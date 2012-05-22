@@ -18,7 +18,7 @@ from util import OBSERVER_ID
 from strain.share import *
 
 
-notify = util.Notify()
+notify = util.Notify( 'EngineLog' )
 
 
 LEVELS_ROOT = "./data/levels/"
@@ -36,8 +36,6 @@ class EngineThread( Thread ):
         
         self.name = "EngineThread"
             
-        self.new_engine = None
-        
         #to check if we need to load Engine from file/db..
         saved_engine = None 
         
@@ -59,12 +57,6 @@ class EngineThread( Thread ):
         
         
     def run(self):
-        
-        if self.new_engine:
-            self.engine.Shutdown()
-            self.engine = self.new_engine
-            self.new_engine = None
-            
         
         while True:
             self.engine.runOneTick()

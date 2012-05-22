@@ -7,7 +7,7 @@ import logging
 
 # panda3D imports
 from direct.showbase.ShowBase import ShowBase#@UnresolvedImport
-from panda3d.core import loadPrcFile, WindowProperties, VBase4, ConfigVariableInt#@UnresolvedImport
+from panda3d.core import loadPrcFile, WindowProperties, VBase4, ConfigVariableInt, ConfigVariableString#@UnresolvedImport
 from panda3d.core import PStatClient#@UnresolvedImport
 from direct.fsm import FSM#@UnresolvedImport
 from direct.showbase.DirectObject import DirectObject
@@ -18,6 +18,8 @@ from strain.loginscreen import LoginScreen
 from strain.browser import Browser
 from strain.client import Client
 from strain.gametype import GameType
+from strain.client_messaging import ClientMsg
+import strain.net
 
 #############################################################################
 # GLOBALS
@@ -52,6 +54,17 @@ class App():
         self.rRegion.setInputHandler(ih)
         #setup FSM
         self.fsm = AppFSM(self, 'AppFSM')
+        
+        
+        # Init Network parameters
+        server_ip = ConfigVariableString("server-ip", "127.0.0.1").getValue()
+        server_port = ConfigVariableInt("server-port", "56005").getValue()         
+        ClientMsg.setupAddress(server_ip, server_port)
+        ClientMsg.log = self.logger
+
+        #start network handling task
+        taskMgr.add( strain.net.handleConnection, "handle_net_task" ) 
+
         
         #start with Login screen
         self.fsm.request('Login')
