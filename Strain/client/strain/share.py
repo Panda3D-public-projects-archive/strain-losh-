@@ -8,7 +8,14 @@ import time
 from xml.dom import minidom
 
 #-------------------------------------NETWORK----------------------------------------
-COMMUNICATION_PROTOCOL = 0.1
+COMMUNICATION_PROTOCOL_VERSION = 0.1
+COMMUNICATION_PROTOCOL_STRING = 'comm_version'
+HANDSHAKE_SUCCESS = 'Everything is fine' 
+
+STERNER_ID = 0                  #Sterner's id, as opposed to game id
+STERNER_LOGIN = 'login'         #(STERNER_ID, STERNER_LOGIN, username, password)
+LOGIN_SUCCESS = 'Welcome'       #sent by Sterner when u successfully log in
+
 
 
 MOVE = 'move'                   #values - list of actions ('move',tile) ('rotate',tile) ('overwatch',overwatchresult) ('detected',enemy)
@@ -1173,7 +1180,7 @@ class Wall:
 #-------WALL LOADING---------
 
 def loadWalls():
-    #TODO: krav: a jebiga kako drugacije sad?
+    #a jebiga kako drugacije sad?
     try:
         xmldoc = minidom.parse('data/base/walls.xml')
     except:

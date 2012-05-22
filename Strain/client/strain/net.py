@@ -7,9 +7,6 @@ import cPickle as pickle
 import time as time
 import copy
 
-# panda3D imports
-from panda3d.core import ConfigVariableString, ConfigVariableInt#@UnresolvedImport
-
 
 # strain related imports
 from client_messaging import *
@@ -28,11 +25,8 @@ class Net():
         
         # Set logging through our global logger
         self.log = self.parent.parent.logger
-        ClientMsg.log = self.parent.parent.logger
         
-        # Init Network parameters
-        self.server_ip = ConfigVariableString("server-ip", "127.0.0.1").getValue()
-        self.server_port = ConfigVariableInt("server-port", "56005").getValue()
+               
            
     def startNet(self):
         # Create main network messaging task
@@ -213,9 +207,7 @@ class Net():
     
     def msgTask(self, task):
         """Task that listens for messages on client queue."""
-        # Needs to be called every frame, this takes care of connection
-        ClientMsg.handleConnection(self.parent.player, self.server_ip, self.server_port)
-        
+    
         if self.parent._message_in_process == False:
             msg = ClientMsg.readMsg()        
             if msg:
@@ -225,5 +217,16 @@ class Net():
         if t - self.ping_timer >= PING_TIMER:
             self.ping_timer = t
             ClientMsg.ping()
-                         
+                     
         return task.cont
+
+
+#------------------------END OF NET CLASS---------------------------------------------
+
+
+def handleConnection(task):
+    # Needs to be called every frame, this takes care of connection
+    ClientMsg.handleConnection()
+    
+    return task.cont
+    

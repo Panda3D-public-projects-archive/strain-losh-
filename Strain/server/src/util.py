@@ -29,9 +29,9 @@ _7_PI_8 = 7 * _PI / 8
 
 class Notify():
     
-    def __init__(self):
-        self.logger = logging.getLogger('EngineLog')
-        self.hdlr = logging.handlers.RotatingFileHandler('Engine.log', maxBytes = 1024*1024*3 )
+    def __init__(self, name):
+        self.logger = logging.getLogger( name )
+        self.hdlr = logging.handlers.RotatingFileHandler( name, maxBytes = 1024*1024*3 )
         self.formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
         self.hdlr.setFormatter(self.formatter)
         if len( self.logger.handlers ) < 1:
@@ -49,7 +49,7 @@ class Notify():
             
     def error(self, msg,*args ):
         self.logger.critical(msg, *args)
-        #print msg%args
+        print msg%args
     
 
 
