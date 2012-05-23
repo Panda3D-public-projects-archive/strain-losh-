@@ -145,7 +145,7 @@ class Sterner:
         
             #print self.logged_in_players
             
-            if time.time() - t > 2:
+            if time.time() - t > 25:
                 break
         #-----------------main loop------------------
         
