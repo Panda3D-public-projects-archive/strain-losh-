@@ -207,6 +207,8 @@ def loadUnit(race, type, team, wpn1=None, wpn2=None):
         tex = loader.loadTexture(unit_type_dict[race][type] + ".png")
     elif team == '2':
         tex = loader.loadTexture(unit_type_dict[race][type] + "2.png")
+    else:
+        tex = loader.loadTexture(unit_type_dict[race][type] + ".png")
     model.setTexture(tex)
     if wpn1 != None:
         rnp = model.exposeJoint(None,"modelRoot","Wrist.R")
