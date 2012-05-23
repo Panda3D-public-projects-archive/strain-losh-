@@ -104,14 +104,14 @@ def compilePlayers(players, active_player):
             continue
         
         if p == active_player:
-            plyr = compileTarget(p, ['units', 'connection', 'msg_lst'] )
+            plyr = compileTarget(p, ['units', 'connection', 'msg_lst', 'parent'] )
             plyr['units'] = compileAllUnits( p.units )
             plyr['visible_enemies'] = compileAllEnemyUnits( p.visible_enemies ) 
             plyr['detected_enemies'] = compileAllDetectedUnits( p.detected_enemies ) 
             ret.append( plyr )
             
         else:
-            plyr = compileTarget(p, ['units', 'connection', 'visible_enemies', 'detected_enemies', 'msg_lst']) 
+            plyr = compileTarget(p, ['units', 'connection', 'visible_enemies', 'detected_enemies', 'msg_lst', 'parent']) 
             ret.append( plyr )
     
     return ret

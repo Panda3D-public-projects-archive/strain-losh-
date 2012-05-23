@@ -50,8 +50,8 @@ class Unit():
                 
         self.ws = -1
         
-    def init(self, in_id, owner, x, y ):
         
+    def init(self, in_id, owner, x, y ):
         self.id = in_id
         self.owner = owner
         self.owner_id = owner.id
@@ -69,7 +69,6 @@ class Unit():
         
 
     def melee(self, target):
-        
         ret_lst = []
         
         #set up heavy weapons cannot do melee

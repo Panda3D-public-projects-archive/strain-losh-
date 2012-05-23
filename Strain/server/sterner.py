@@ -9,6 +9,7 @@ import sys
 import time
 from server_messaging import *
 from util import *
+from engine import EngineThread
 
 
 
@@ -34,19 +35,18 @@ class LockedDict:
             if id not in self.msg_dict:
                 return
     
-            #if there are msgs, save them, delete them and release lock
+            #if there are msgs, save them, delete them from dict and release lock
             msgs = self.msg_dict[id]
             del self.msg_dict[id]
             
         finally:
             self.lock.release()
 
-        return msgs
+        return ( msgs, id )
 
     
     
-    def putSingleMsg(self, id, msg):
-    
+    def putMsgList(self, id, msg):
         #try to acquire lock
         if not self.lock.acquire( False ):
             return None
@@ -54,15 +54,28 @@ class LockedDict:
         try:            
             #if there are no msgs for this id create new list
             if id not in self.msg_dict:
-                self.msg_dict[id] = [msg]
+                self.msg_dict[id] = msg
             else:
                 #if there are msgs, append these msg
-                self.msg_dict[id].append( msg )
-            
+                self.msg_dict[id].extend( msg )
         finally:
             self.lock.release()
 
-   
+
+
+    def getAllMsgsDict(self):
+        all_msgs = {}
+        
+        #try to acquire lock
+        if not self.lock.acquire( False ):
+            return None
+        try:            
+            all_msgs = self.msg_dict
+            self.msg_dict = {}
+        finally:
+            self.lock.release()
+    
+        return all_msgs
     
     
 class Sterner:
@@ -76,12 +89,15 @@ class Sterner:
         
         #LockedDict for distributing messages from network to Engine threads
         self.from_network = LockedDict()
+        #LockedDict for sending msgs to network
+        self.to_network = LockedDict()
         
         #dict to save logged in players 
         # K: player_id , V: panda connection
         self.logged_in_players = {}
         
-        
+        self.test_thread = EngineThread( 100, self.from_network, self.to_network )
+        self.test_thread.start()
         
         self.notify.info( "Sterner started." )
         print "Sterner started."
@@ -99,63 +115,90 @@ class Sterner:
             self.network.handleConnections()
         
             #get msg from network
-            msg = self.network.readMsg()
-            if msg:
-                print msg
-                self.handleMsg( msg )
+            tmp_msg = self.network.readMsg()
+            if tmp_msg:
+                
+                print "sterner dobio:",tmp_msg
+                msg, source = tmp_msg
+                
+                #chek if this messge is for sterner or not
+                if msg[0] == STERNER_ID:
+                    self.handleMsg( msg, source )
+                else:
+                    self.from_network.putMsgList( self.getIdFromConnection(source), msg )
             
+            
+            #put msgs on network            
+            all_msgs = self.to_network.getAllMsgsDict()
+            if all_msgs:
+                for player_id in all_msgs:
+                    for msg in all_msgs[player_id]:
+                        #print "trazim: %s... svi: %s" % (player_id, str(self.logged_in_players))
+                        try:
+                            self.network._sendMsg( msg, self.logged_in_players[ int(player_id)] )
+                        except:
+                            print "ex"
+                            pass
+
             
             time.sleep(0.1) 
         
             #print self.logged_in_players
             
-            if time.time() - t > 20:
+            if time.time() - t > 25:
                 break
         #-----------------main loop------------------
         
         
         self.network.stopServer()
-        
+        self.test_thread._Thread__stop()
+
         pass
         
     
+    def getIdFromConnection(self, connection):
+        for player in self.logged_in_players:
+            if self.logged_in_players[player] == connection:
+                return player
+        return None
     
-    def handleMsg(self, message):
+    
+    def handleMsg(self, message, source):
         #if this is msg for Sterner, handle it
-        msg = message[0]
-        source = message[1]
+        msg = message
+        
         print source.getAddress()
         
-        if msg[0] == STERNER_ID:            
             
-            if msg[1] == STERNER_LOGIN:
-                print "user:", msg[2]
-                print "pass:", msg[3]
+        
+        if msg[1] == STERNER_LOGIN:
+            print "user:", msg[2]
+            print "pass:", msg[3]
+            
+            if msg[2] == '':
+                player_id = 100
+            else:
+                player_id = 101
                 
-                if msg[2] == '':
-                    player_id = 101
-                else:
-                    player_id = 102
-                    
-                    
-                #check if this player already logged in, if so disconnect him
-                if player_id in self.logged_in_players:
-                    self.network.disconnect(self.logged_in_players[player_id])
+                
+            #check if this player already logged in, if so disconnect him
+            if player_id in self.logged_in_players:
+                self.network.disconnect(self.logged_in_players[player_id])
 
-                #remember this new player, if this player had some previous connection, in logged_in_players, this will overwrite it                
-                self.logged_in_players[ player_id ] = source
+            #remember this new player, if this player had some previous connection, in logged_in_players, this will overwrite it                
+            self.logged_in_players[ player_id ] = source
+            
+            #send LOGIN_SUCCESS to client
+            self.network.sendMsg( LOGIN_SUCCESS, source )
+            
                 
-                #send LOGIN_SUCCESS to client
-                self.network.sendMsg( LOGIN_SUCCESS, source)
                 
-                
-                
-            return
+        return
         
 
             
         #otherwise delegate msg to some engine thread
-        #self.from_network.putSingleMsg(msg[0], msg[1])
+        #self.from_network.putMsgList(msg[0], msg[1])
             
         
         
