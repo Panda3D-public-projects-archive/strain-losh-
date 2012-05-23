@@ -191,7 +191,7 @@ class Network:
             netDatagram = NetDatagram()
             netDatagram.addString(pickle.dumps(msg, pickle.HIGHEST_PROTOCOL))
             if self.cWriter.send(netDatagram, connection):
-                self.log.debug( "Sent client:%s \tmessage:%s" , connection.getAddress(), msg )
+                self.log.debug( "Sent client:%s \tmessage:%s" , connection.getAddress(), msg[0] )
         
   
     
@@ -218,14 +218,14 @@ class Network:
                         netDatagram = NetDatagram()
                         netDatagram.addString(pickle.dumps(msg, pickle.HIGHEST_PROTOCOL))
                         if self.cWriter.send(netDatagram, connection):
-                            self.log.debug( "Sent client: %s \tmessage:%s" , connection.getAddress(), msg )
+                            self.log.debug( "Sent client: %s \tmessage:%s" , connection.getAddress(), msg[0] )
             else:
                 self.broadcastMsg(msg)
         except:
             self.log.critical("Could not send message to clients, reason : %s", sys.exc_info()[1])
             return
         
-        self.log.info("Sterner posted a message: %s" , msg )
+        self.log.info("Sterner posted a message: %s" , msg[0] )
     
     
     def move( self, unit_id, move_actions, source = None ):

@@ -4,7 +4,8 @@ import cPickle as pickle
 
 class Player:
     
-    def __init__ (self, in_id , name, team):
+    def __init__ (self, in_id , name, team, parent):
+        self.parent = parent
         self.id = in_id
         self.name = name 
         self.team = team
@@ -20,77 +21,77 @@ class Player:
 
     def addMoveMsg(self, unit_id, move_actions):
         if self.connection:
-            EngMsg.move( unit_id, move_actions, self.connection )
+            self.parent.move( unit_id, move_actions, self.connection )
         else:
             self.msg_lst.append( (MOVE, (unit_id, move_actions)) )
             
             
     def addShootMsg(self, shoot_actions):
         if self.connection:
-            EngMsg.shootMsg( shoot_actions, self.connection )
+            self.parent.shootMsg( shoot_actions, self.connection )
         else:
             self.msg_lst.append( (SHOOT, shoot_actions) )
             
             
     def addUnitMsg(self, pickled_unit):
         if self.connection:
-            EngMsg.sendUnit( pickled_unit, self.connection )
+            self.parent.sendUnit( pickled_unit, self.connection )
         else:
             self.msg_lst.append( (UNIT, pickled_unit) )
 
 
     def addUseMsg(self, unit_id):
         if self.connection:
-            EngMsg.sendUse( unit_id, self.connection )
+            self.parent.sendUse( unit_id, self.connection )
         else:
             self.msg_lst.append( (UNIT, unit_id) )
 
 
     def addTauntMsg(self, unit_id, actions):
         if self.connection:
-            EngMsg.sendTaunt( unit_id, actions, self.connection )
+            self.parent.sendTaunt( unit_id, actions, self.connection )
         else:
             self.msg_lst.append( (TAUNT, (unit_id, actions)) )
 
 
     def addNewTurnMsg(self, data):
-        if self.connection:
-            EngMsg.sendNewTurn( data, self.connection )
-        else:
-            self.msg_lst.append( (NEW_TURN, data) )
+        #if self.connection:
+        self.parent.sendNewTurn( data, self.id )
+        #else:
+        #    self.msg_lst.append( (NEW_TURN, data) )
             
 
     def addEngineStateMsg(self, state ):
-        if self.connection:
-            EngMsg.sendNewTurn( state, self.connection )
-        else:
-            self.msg_lst.append( (ENGINE_STATE, state) )
+        #if self.connection:
+        self.parent.sendState( state, self.id )
+        #else:
+        #    self.msg_lst.append( (ENGINE_STATE, state) )
             
 
     def addLevelMsg(self, compiled_level ):
         if self.connection:
-            EngMsg.sendLevel( compiled_level, self.connection )
+            self.parent.sendLevel( compiled_level, self.connection )
         else:
             self.msg_lst.append( (LEVEL, compiled_level) )
             
 
     def addMsg(self, msg ):
         if self.connection:
-            EngMsg.sendMsg( msg, self.connection )
+            self.parent.sendMsg( msg, self.connection )
         else:
             self.msg_lst.append( msg )
 
 
     def addErrorMsg(self, msg ):
         if self.connection:
-            EngMsg.error( msg, self.connection )
+            self.parent.error( msg, self.connection )
         else:
             self.msg_lst.append( (ERROR, msg) )
 
 
     def addChatMsg(self, msg, sender):
         if self.connection:
-            EngMsg.chat( msg, sender, self.connection )
+            self.parent.chat( msg, sender, self.connection )
         else:
             self.msg_lst.append( (CHAT, msg, sender) )
         

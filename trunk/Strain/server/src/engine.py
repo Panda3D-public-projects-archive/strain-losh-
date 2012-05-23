@@ -18,7 +18,7 @@ from util import OBSERVER_ID
 from strain.share import *
 
 
-notify = util.Notify( 'EngineLog' )
+notify = util.Notify( 'Engine.log' )
 
 
 LEVELS_ROOT = "./data/levels/"
@@ -31,50 +31,32 @@ engine_state_filename = "engine_state.txt"
 class EngineThread( Thread ):
     
     
-    def __init__(self):
+    def __init__( self, game_id, from_network, to_network ):
         Thread.__init__(self)
         
         self.name = "EngineThread"
             
         #to check if we need to load Engine from file/db..
         saved_engine = None 
-        
-        
         try:
             saved_engine = open( engine_state_filename, "r" )
         except:
             pass
         
         if saved_engine:
-            self.engine = loadFromPickle( saved_engine )
+            self.engine = loadFromPickle( saved_engine, from_network, to_network ) 
         else:
-            self.engine = Engine()
+            self.engine = Engine( game_id, from_network, to_network )
             self.engine.InitDefault()
 
 
-        #start listening to network
-        EngMsg.startServer( notify )        
-        
         
     def run(self):
-        
         while True:
             self.engine.runOneTick()
-        
-        
-        
-        #we are shutting down everything   
-        EngMsg.stopServer()       
-        
         notify.info( "++++++++++++++++++++++++EngineThread stopped!++++++++++++++++++++++++" )
         
-        #TODO: krav: restart server, nije vise ovo 
-        #Engine().start()
-        
-        
-        
-    pass
-    
+       
     
 ########################################################################################################
 ########################################################################################################
@@ -93,8 +75,12 @@ class Engine():
 
         
     #====================================init======================================0
-    def __init__(self):
+    def __init__(self, game_id, from_network, to_network):
         notify.info("------------------------Engine Starting------------------------")
+
+        self.game_id = game_id
+        self.from_network = from_network
+        self.to_network = to_network
 
         self.stop = False
         self.level = None         
@@ -111,11 +97,8 @@ class Engine():
 
         self.army_size = 1000
 
-        self.observer = Player( OBSERVER_ID, 'observer', None )
+        self.observer = Player( OBSERVER_ID, 'observer', None, self )
         self.observer.defeated = True
-
-        #we need this for server_messaging, and for singleton
-        engine._instance = self
         
         print "Engine started"
 
@@ -123,7 +106,6 @@ class Engine():
         
 
     def InitDefault(self):
-        
         level_filename = "LevelBlockout.txt"
         self.level = Level( LEVELS_ROOT + level_filename )
         notify.info("Loaded level:%s", level_filename )
@@ -139,12 +121,10 @@ class Engine():
 
         time.sleep( 0.1 )
 
-        #see if there is a new client connected
-        EngMsg.handleConnections()
-
         #get a message if there is one
-        msg = EngMsg.readMsg()
+        msg = self.from_network.getMyMsgs( self.game_id )
         if msg:
+            print "engine dobio from_network:", msg
             self.handleMsg( msg[0], msg[1] )
         
         #+++++++++++++++++++++++++++++++++++++++++++++MAIN LOOP+++++++++++++++++++++++++++++++++++++++++++++
@@ -157,17 +137,17 @@ class Engine():
         """This method is the main method for handling incoming messages to the Engine"""     
         
         if( msg[0] == ENGINE_SHUTDOWN ):
-            EngMsg.error("Server is shutting down")
+            self.error("Server is shutting down")
             self.stop = True
             
         elif( msg[0] == MOVE ):            
             self.moveUnit( msg[1]['unit_id'], msg[1]['new_position'], msg[1]['orientation'], source )
             
         elif( msg[0] == LEVEL ):                
-            EngMsg.sendLevel( util.compileLevel( self.level ), source )
+            self.sendLevel( util.compileLevel( self.level ), source )
                         
         elif( msg[0] == ENGINE_STATE ):                
-            EngMsg.sendState( util.compileState( self, self.findPlayer( source ) ), source )
+            self.sendState( util.compileState( self, self.findPlayer( source ) ), source )
             
         elif( msg[0] == ARMY_LIST ):                
             self.handleArmyListMsg( msg[1], source )
@@ -195,7 +175,7 @@ class Engine():
                         
         elif( msg[0] == PING ):
             #print "ping: %2.2fms" % ((time.time() - msg[1]) * 1000)
-            EngMsg.pong( source )            
+            self.pong( source )            
                         
         elif( msg[0] == UNDEFINED_MSG_1 ):
             pass
@@ -214,13 +194,13 @@ class Engine():
     def handleArmyListMsg(self, army_list, source ):
         
         if self.turn != 0:
-            EngMsg.error( "Cannot deploy now, game already in progress", source )
+            self.error( "Cannot deploy now, game already in progress", source )
             return
         
         player = self.findPlayer( source )
         
         if player.deployed:
-            EngMsg.error( "Already deployed.", source)
+            self.error( "Already deployed.", source)
             return
         
         #TODO: krav: check army size 
@@ -251,11 +231,11 @@ class Engine():
                 self.checkUnitCanUse( tmpUnit )
         except Exception:
             notify.critical( "Exception:%s", sys.exc_info()[1] )
-            EngMsg.error( sys.exc_info()[1], source )
+            self.error( sys.exc_info()[1], source )
             return   
 
         player.deployed = True
-        EngMsg.error( "Deployment ok.", source)
+        self.error( "Deployment ok.", source)
  
         #if at least 1 more player needs to deploy, than wait for him
         for plyr in self.players:
@@ -272,46 +252,46 @@ class Engine():
         player = self.findPlayer( source )
         
         if player != self.active_player:
-            EngMsg.error( "It is not your turn.", source )
+            self.error( "It is not your turn.", source )
             return                    
         
         if param == OVERWATCH:
             if unit.ap >= 2:
                 unit.overwatch = not unit.overwatch
             else:
-                EngMsg.error("Not enough AP for overwatch.", source)
+                self.error("Not enough AP for overwatch.", source)
 
             #a = pickle.dumps(self)
             dump_file = open( engine_state_filename, "w" )
             self.pickleSelf()
             pickle.dump(self, dump_file )
-            print "pickled level to:", engine_state_filename
+            print "pickled engine to:", engine_state_filename
             exit()
 
             
         elif param == SET_UP:
             if not unit.hasHeavyWeapon():
-                EngMsg.error( "The unit does not have any heavy weapons.", source )
+                self.error( "The unit does not have any heavy weapons.", source )
                 return
 
             if unit.set_up:
                 msg = unit.tearDown()
                 if msg:
-                    EngMsg.error( msg, source )
+                    self.error( msg, source )
                     return
             else:
                 msg = unit.setUp()
                 if msg:
-                    EngMsg.error( msg, source )
+                    self.error( msg, source )
                     return
                     
         elif param == USE:
             if not unit.can_use:
-                EngMsg.error( "Unit cannot use anything.", source )
+                self.error( "Unit cannot use anything.", source )
                 return
                     
             if unit.ap < 1:
-                EngMsg.error( "Not enough AP for using.", source )
+                self.error( "Not enough AP for using.", source )
                 return
                     
             if self.use( unit ):
@@ -323,7 +303,7 @@ class Engine():
                     
         elif param == TAUNT:
             if unit.ap < 1:
-                EngMsg.error( "Not enough AP for taunting.", source )
+                self.error( "Not enough AP for taunting.", source )
                 return
                     
             unit.taunt()            
@@ -402,7 +382,7 @@ class Engine():
         
         
         for p in xmldoc.getElementsByTagName( 'player' ):
-            player = Player( p.attributes['id'].value, p.attributes['name'].value, p.attributes['team'].value )                        
+            player = Player( p.attributes['id'].value, p.attributes['name'].value, p.attributes['team'].value, self )                        
             
             for u in p.getElementsByTagName( 'unit' ):
                 
@@ -440,11 +420,11 @@ class Engine():
         
 #        player = self.findPlayer( source )       
 #        if player != self.active_player:
-#            EngMsg.error( "It's not your turn.", source)
+#            self.error( "It's not your turn.", source)
 #            return
         
         if self.checkVictoryConditions():
-            EngMsg.error( "Server restarting" )
+            self.error( "Server restarting" )
             self.observer.saveMsgs()
             time.sleep(3)
             self.stop = True
@@ -490,7 +470,7 @@ class Engine():
                 continue
             if not p.units:
                 p.addErrorMsg( 'U have no more units... hahahhhah' )
-                EngMsg.error( p.name + ' was defeated!!!' )
+                self.error( p.name + ' was defeated!!!' )
                 p.defeated = True
                 
         
@@ -721,7 +701,7 @@ class Engine():
     def findAndValidateUnit(self, unit_id, source):
         if( unit_id in self.units ) == False:
             notify.critical( "Got wrong unit id:%s", unit_id )
-            EngMsg.error( "Wrong unit id.", source )
+            self.error( "Wrong unit id.", source )
             return None
 
         unit = self.units[unit_id]
@@ -729,7 +709,7 @@ class Engine():
         #check to see if this is the owner
         if unit.owner.connection != source:
             notify.critical( "Client:%s\ttried to do an action with unit that he does not own" % source.getAddress() )
-            EngMsg.error( "You cannot do this to a unit you do not own.", source )
+            self.error( "You cannot do this to a unit you do not own.", source )
             return None
 
         return unit
@@ -739,7 +719,7 @@ class Engine():
         if self.active_player.connection == source:
             return self.active_player
         
-        EngMsg.error( 'It is not your turn.', source )
+        self.error( 'It is not your turn.', source )
         return None
         
         
@@ -757,7 +737,7 @@ class Engine():
         if unit.pos != new_position:
             msg = unit.amIStuck()
             if msg:
-                EngMsg.error( msg, source )            
+                self.error( msg, source )            
                 return 
         
         #list that we will send to owning player        
@@ -793,7 +773,7 @@ class Engine():
                 path = self.getPath( unit, new_position )
             except Exception:
                 notify.critical( "Exception:%s", sys.exc_info()[1] )
-                EngMsg.error( sys.exc_info()[1], source )
+                self.error( sys.exc_info()[1], source )
                 return   
             
             #everything checks out, do the actual moving
@@ -1008,7 +988,7 @@ class Engine():
         
         if target_id not in self.units:
             notify.critical( "Got wrong target id:%s", target_id )
-            EngMsg.error( "Wrong target id.", source )
+            self.error( "Wrong target id.", source )
             return
 
         target = self.units[target_id]
@@ -1016,19 +996,19 @@ class Engine():
         #check to see if the owner is trying to shoot his own units
         if target.owner == owner:
             notify.critical( "Client:%s\ttried to shoot his own unit." % source.getAddress() )
-            EngMsg.error( "You cannot shoot you own units.", source )
+            self.error( "You cannot shoot you own units.", source )
             return
         
          
         to_hit, msg = toHit( util.compileUnit(shooter), util.compileUnit(target), self.level)
         if not to_hit:
-            EngMsg.error( msg, source)
+            self.error( msg, source)
             return
                  
         
         if shooter.hasHeavyWeapon() and not shooter.set_up:
             if distanceTupple(shooter.pos, target.pos) > 2:
-                EngMsg.error( "Need to set up heavy weapon before shooting.", source )
+                self.error( "Need to set up heavy weapon before shooting.", source )
                 return
         
         #---------------- main shoot event ------------------------
@@ -1086,6 +1066,8 @@ class Engine():
                             unit_ids_involved[ trgt[1] ] = 0
             
         return unit_ids_involved
+        
+        
         
     def updateVisibilityAndSendVanishAndSpotMessages(self):
         
@@ -1299,24 +1281,97 @@ class Engine():
 
 
     def pickleSelf(self):
-        
         for p in self.players:
             p.connection = None
-            
-            
-        pass
 
 
-def loadFromPickle( pickled_engine ):
+    def _sendMsg( self, msg, source = None ):
+        if source:
+            self.to_network.putMsgList( source, [msg] )
+        else:
+            for player in self.players:
+                self.to_network.putMsgList( player.id, [msg] )
+        
+        
+    def move( self, unit_id, move_actions, source = None ):
+        self._sendMsg((MOVE, (unit_id, move_actions)), source) 
+                                                                      
+    
+    def shootMsg( self, shoot_actions, source = None ):
+        self._sendMsg( (SHOOT, shoot_actions), source ) 
+                                                                      
+    
+    def chatMsg( self, msg, sender, source = None ):
+        self._sendMsg( (CHAT, msg, sender), source) 
+                                                                      
+    
+    def sendState( self, engine_state, source ):
+        self._sendMsg((ENGINE_STATE, engine_state), source)
+    
+    
+    def sendLevel( self, compiled_level, source ):
+        self._sendMsg((LEVEL, compiled_level), source)
+    
+    
+    def error( self, error_msg, source = None ):
+        self._sendMsg((ERROR, error_msg), source)
+    
+    
+    def sendNewTurn( self, data, source ):
+        self._sendMsg( (NEW_TURN, data), source )
+    
+    
+    def sendUnit( self, pickled_unit, source = None ):
+        self._sendMsg((UNIT, pickled_unit), source)
+
+    
+    def sendUse( self, unit_id, source = None ):
+        self._sendMsg((USE, unit_id), source)
+
+    
+    def sendTaunt( self, unit_id, actions, source = None ):
+        self._sendMsg((TAUNT, (unit_id, actions)), source)
+
+    
+    def sendDeploymentMsg( self, level, army_size, source = None ):
+        deploy_dict = {}
+        
+        deploy_dict['level'] = util.compileLevel( level )
+        deploy_dict['army_size'] = army_size
+        
+        self._sendMsg( ( DEPLOYMENT, deploy_dict ), source  )
+        
+
+    
+
+    
+    def sendMsg( self, msg, source = None):
+        self._sendMsg( msg, source )
+
+
+    
+    def pong( self, source = None ):
+        self._sendMsg( (PONG, time.time()), source )
+
+        
+
+
+
+#-----------------------------------------------------------------------
+def loadFromPickle( pickled_engine, from_network, to_network ):
     
     #eng = pickle.loads(pickled_engine)
     eng = pickle.load(pickled_engine)
 
-    engine._instance = eng
+
     #now cleanup all things that are session related
     #remove connections from each player, if it exists
     for p in eng.players:
         p.connection = None
+
+    #set the msg queue
+    eng.from_network = from_network
+    eng.to_network = to_network
     
     print "loaded from pickle"
     
