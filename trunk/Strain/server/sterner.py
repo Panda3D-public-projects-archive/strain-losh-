@@ -145,13 +145,13 @@ class Sterner:
         
             #print self.logged_in_players
             
-            if time.time() - t > 25:
+            if time.time() - t > 2:
                 break
         #-----------------main loop------------------
         
         
         self.network.stopServer()
-        self.test_thread._Thread__stop()
+        
 
         pass
         
