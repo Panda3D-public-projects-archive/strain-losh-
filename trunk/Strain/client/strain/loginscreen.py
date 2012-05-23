@@ -126,7 +126,7 @@ class LoginScreen():
     def loginButRedPressed(self):
         self.parent.player = "Red"
         # TODO: ogs: Inace cu znati player_id kad se ulogiram
-        self.parent.player_id = '1'
+        self.parent.player_id = '100'
         self.parent.fsm.request('Browser')
         
     def loginButBluePressed(self):
