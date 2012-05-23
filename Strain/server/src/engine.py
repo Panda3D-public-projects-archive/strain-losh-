@@ -36,6 +36,8 @@ class EngineThread( Thread ):
         
         self.name = "EngineThread"
             
+        self.setDaemon(True)
+            
         #to check if we need to load Engine from file/db..
         saved_engine = None 
         try:
