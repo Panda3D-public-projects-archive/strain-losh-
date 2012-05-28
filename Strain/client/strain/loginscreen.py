@@ -112,6 +112,7 @@ class LoginScreen():
         login_error = ClientMsg.login(username, password) 
         if not login_error:
             #sve je ok
+            self.parent.player_id = ClientMsg.loggedIn()
             pass
         else:
             #greska
@@ -119,20 +120,32 @@ class LoginScreen():
             return 
         
         self.parent.player = username
-#        self.parent.player = self.entry_username.get()
-        if self.parent.player != "Blue" and self.parent.player != "Red":
-            self.parent.player = "Red"
+        self.parent.fsm.request('Browser')
+
 
     def loginButRedPressed(self):
-        self.parent.player = "Red"
-        # TODO: ogs: Inace cu znati player_id kad se ulogiram
-        self.parent.player_id = '100'
+        username = 'Red'
+        login_error = ClientMsg.login(username, '') 
+        if not login_error:
+            self.parent.player_id = ClientMsg.loggedIn()
+        else:
+            print "LOGIN FAILED: - ", login_error
+            return 
+        
+        self.parent.player = username
         self.parent.fsm.request('Browser')
         
+        
     def loginButBluePressed(self):
-        self.parent.player = "Blue"
-        # TODO: ogs: Inace cu znati player_id kad se ulogiram
-        self.parent.player_id = '2'
+        username = 'Blue'
+        login_error = ClientMsg.login(username, '') 
+        if not login_error:
+            self.parent.player_id = ClientMsg.loggedIn()
+        else:
+            print "LOGIN FAILED: - ", login_error
+            return 
+        
+        self.parent.player = username
         self.parent.fsm.request('Browser')
 
     def setScene(self):

@@ -77,6 +77,7 @@ class LockedDict:
     
         return all_msgs
     
+
     
 class Sterner:
     
@@ -96,13 +97,12 @@ class Sterner:
         # K: player_id , V: panda connection
         self.logged_in_players = {}
         
-        self.test_thread = EngineThread( 100, self.from_network, self.to_network )
+        self.test_thread = EngineThread( TEST_GAME_ID, self.from_network, self.to_network, self.notify )
         self.test_thread.start()
         
         self.notify.info( "Sterner started." )
-        print "Sterner started."
         
-        pass
+        
     
     
     
@@ -123,9 +123,9 @@ class Sterner:
                 
                 #chek if this messge is for sterner or not
                 if msg[0] == STERNER_ID:
-                    self.handleMsg( msg, source )
+                    self.handleSternerMsg( msg, source )
                 else:
-                    self.from_network.putMsgList( self.getIdFromConnection(source), msg )
+                    self.from_network.putMsgList( msg[0], msg[1:] )
             
             
             #put msgs on network            
@@ -133,19 +133,17 @@ class Sterner:
             if all_msgs:
                 for player_id in all_msgs:
                     for msg in all_msgs[player_id]:
-                        #print "trazim: %s... svi: %s" % (player_id, str(self.logged_in_players))
                         try:
                             self.network._sendMsg( msg, self.logged_in_players[ int(player_id)] )
                         except:
-                            print "ex"
-                            pass
+                            print "trazim: %s... svi: %s" % (player_id, str(self.logged_in_players))
 
             
             time.sleep(0.1) 
         
-            #print self.logged_in_players
             
-            if time.time() - t > 25:
+            if time.time() - t > 25000:
+                self.test_thread.stop = True
                 break
         #-----------------main loop------------------
         
@@ -156,6 +154,7 @@ class Sterner:
         pass
         
     
+    
     def getIdFromConnection(self, connection):
         for player in self.logged_in_players:
             if self.logged_in_players[player] == connection:
@@ -163,22 +162,19 @@ class Sterner:
         return None
     
     
-    def handleMsg(self, message, source):
-        #if this is msg for Sterner, handle it
-        msg = message
+    
+    def handleSternerMsg(self, message, source):
         
-        print source.getAddress()
-        
+        if message[1] == STERNER_LOGIN:
+            print "user:", message[2]
+            print "pass:", message[3]
             
-        
-        if msg[1] == STERNER_LOGIN:
-            print "user:", msg[2]
-            print "pass:", msg[3]
-            
-            if msg[2] == '':
+            if message[2] == 'Red':
                 player_id = 100
-            else:
+            elif message[2] == 'Blue':
                 player_id = 101
+            else:
+                player_id = 202
                 
                 
             #check if this player already logged in, if so disconnect him
@@ -189,22 +185,10 @@ class Sterner:
             self.logged_in_players[ player_id ] = source
             
             #send LOGIN_SUCCESS to client
-            self.network.sendMsg( LOGIN_SUCCESS, source )
-            
+            self.network.sendMsg( (LOGIN_SUCCESS, player_id), source )
+            return
                 
                 
-        return
-        
-
-            
-        #otherwise delegate msg to some engine thread
-        #self.from_network.putMsgList(msg[0], msg[1])
-            
-        
-        
-        
-        pass
-
 
     def playerDisconnected(self, source):
         

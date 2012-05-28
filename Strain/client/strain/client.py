@@ -31,10 +31,12 @@ from pstat_debug import pstat
 #========================================================================
 #
 class Client(DirectObject):
-    def __init__(self, parent, player, player_id, type="ContGame"):
+    def __init__(self, parent, player, player_id, type="ContGame", game_id = TEST_GAME_ID ):
         self.parent = parent
         self.player = player
         self.player_id = player_id
+        self.game_id = game_id
+        ClientMsg.setGameId( game_id )
         self.type = type
         
         # Flags
@@ -54,14 +56,11 @@ class Client(DirectObject):
         base.accept('n', render.setShaderAuto)
         base.accept('m', render.setShaderOff)
         
-        if type == "NewGame":
-            self.net = Net(self)
-            self.net.startNet()
-        elif type == "ContGame":
-            self.net = Net(self)
-            self.net.startNet()
-            if self.player == 'Red':
-                taskMgr.doMethodLater(1, ClientMsg.forceFirstTurn, 'ForceTurn', extraArgs = [])        
+        self.net = Net(self)
+        self.net.startNet()
+        
+        if type == "ContGame":
+            taskMgr.doMethodLater(1, ClientMsg.forceFirstTurn, 'ForceTurn', extraArgs = [])        
         
     def getPlayerName(self, player_id):
         for p in self.players:

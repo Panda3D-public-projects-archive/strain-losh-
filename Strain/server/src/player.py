@@ -12,88 +12,59 @@ class Player:
         self.units = []
         self.visible_enemies = []
         self.detected_enemies = []
-        self.connection = None
         self.msg_lst = []
         self.defeated = False
         self.deployed = False
-        pass
+
+
+
+    def _doMsg(self, msg):
+        self.parent.to_network.putMsgList( self.id, [msg] )        
+
 
 
     def addMoveMsg(self, unit_id, move_actions):
-        if self.connection:
-            self.parent.move( unit_id, move_actions, self.connection )
-        else:
-            self.msg_lst.append( (MOVE, (unit_id, move_actions)) )
+        self._doMsg( (MOVE, (unit_id, move_actions)) )
             
             
     def addShootMsg(self, shoot_actions):
-        if self.connection:
-            self.parent.shootMsg( shoot_actions, self.connection )
-        else:
-            self.msg_lst.append( (SHOOT, shoot_actions) )
+        self._doMsg( (SHOOT, shoot_actions) )
             
             
     def addUnitMsg(self, pickled_unit):
-        if self.connection:
-            self.parent.sendUnit( pickled_unit, self.connection )
-        else:
-            self.msg_lst.append( (UNIT, pickled_unit) )
+        self._doMsg( (UNIT, pickled_unit) )
 
 
     def addUseMsg(self, unit_id):
-        if self.connection:
-            self.parent.sendUse( unit_id, self.connection )
-        else:
-            self.msg_lst.append( (UNIT, unit_id) )
+        self._doMsg( (UNIT, unit_id) )
 
 
     def addTauntMsg(self, unit_id, actions):
-        if self.connection:
-            self.parent.sendTaunt( unit_id, actions, self.connection )
-        else:
-            self.msg_lst.append( (TAUNT, (unit_id, actions)) )
+        self._doMsg( (TAUNT, (unit_id, actions)) )
 
 
     def addNewTurnMsg(self, data):
-        #if self.connection:
-        self.parent.sendNewTurn( data, self.id )
-        #else:
-        #    self.msg_lst.append( (NEW_TURN, data) )
+        self._doMsg( (NEW_TURN, data) )
             
 
     def addEngineStateMsg(self, state ):
-        #if self.connection:
-        self.parent.sendState( state, self.id )
-        #else:
-        #    self.msg_lst.append( (ENGINE_STATE, state) )
+        self._doMsg( (ENGINE_STATE, state) )
             
 
     def addLevelMsg(self, compiled_level ):
-        if self.connection:
-            self.parent.sendLevel( compiled_level, self.connection )
-        else:
-            self.msg_lst.append( (LEVEL, compiled_level) )
+        self._doMsg( (LEVEL, compiled_level) )
             
 
     def addMsg(self, msg ):
-        if self.connection:
-            self.parent.sendMsg( msg, self.connection )
-        else:
-            self.msg_lst.append( msg )
+        self._doMsg( msg )
 
 
     def addErrorMsg(self, msg ):
-        if self.connection:
-            self.parent.error( msg, self.connection )
-        else:
-            self.msg_lst.append( (ERROR, msg) )
+        self._doMsg( (ERROR, msg) )
 
 
     def addChatMsg(self, msg, sender):
-        if self.connection:
-            self.parent.chat( msg, sender, self.connection )
-        else:
-            self.msg_lst.append( (CHAT, msg, sender) )
+        self._doMsg( (CHAT, msg, sender) )
         
 
     def saveMsgs(self):
