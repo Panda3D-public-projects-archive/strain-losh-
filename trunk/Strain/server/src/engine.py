@@ -1,7 +1,5 @@
 from xml.dom import minidom
 import unit
-#from level import Level
-#import level
 import math
 from server_messaging import *
 from threading import Thread
@@ -18,9 +16,6 @@ from util import OBSERVER_ID
 from strain.share import *
 
 
-notify = util.Notify( 'Engine.log' )
-
-
 LEVELS_ROOT = "./data/levels/"
 
 engine_state_filename = "engine_state.txt"
@@ -31,12 +26,17 @@ engine_state_filename = "engine_state.txt"
 class EngineThread( Thread ):
     
     
-    def __init__( self, game_id, from_network, to_network ):
+    def __init__( self, game_id, from_network, to_network, notify ):
         Thread.__init__(self)
         
         self.name = "EngineThread"
             
         self.setDaemon(True)
+        self.stop = False
+
+        self.game_id = game_id
+
+        self.notify = notify
             
         #to check if we need to load Engine from file/db..
         saved_engine = None 
@@ -46,9 +46,9 @@ class EngineThread( Thread ):
             pass
         
         if saved_engine:
-            self.engine = loadFromPickle( saved_engine, from_network, to_network ) 
+            self.engine = loadFromPickle( saved_engine, from_network, to_network, notify ) 
         else:
-            self.engine = Engine( game_id, from_network, to_network )
+            self.engine = Engine( game_id, from_network, to_network, notify )
             self.engine.InitDefault()
 
 
@@ -56,7 +56,10 @@ class EngineThread( Thread ):
     def run(self):
         while True:
             self.engine.runOneTick()
-        notify.info( "++++++++++++++++++++++++EngineThread stopped!++++++++++++++++++++++++" )
+            if self.stop:
+                break
+            
+        self.notify.info( "++++++++++++EngineThread stopped!+++++++++++++ game_id:%d" % self.game_id )
         
        
     
@@ -77,8 +80,9 @@ class Engine():
 
         
     #====================================init======================================0
-    def __init__(self, game_id, from_network, to_network):
-        notify.info("------------------------Engine Starting------------------------")
+    def __init__(self, game_id, from_network, to_network, notify):
+        self.notify = notify
+        self.notify.info("------------------------Engine Starting------------------------")
 
         self.game_id = game_id
         self.from_network = from_network
@@ -110,7 +114,7 @@ class Engine():
     def InitDefault(self):
         level_filename = "LevelBlockout.txt"
         self.level = Level( LEVELS_ROOT + level_filename )
-        notify.info("Loaded level:%s", level_filename )
+        self.notify.info("Loaded level:%s", level_filename )
 
         self.loadArmyList()
         
@@ -126,8 +130,7 @@ class Engine():
         #get a message if there is one
         msg = self.from_network.getMyMsgs( self.game_id )
         if msg:
-            print "engine dobio from_network:", msg
-            self.handleMsg( msg[0], msg[1] )
+            self.handleMsg( msg[0][1:], msg[0][0] )
         
         #+++++++++++++++++++++++++++++++++++++++++++++MAIN LOOP+++++++++++++++++++++++++++++++++++++++++++++
         #+++++++++++++++++++++++++++++++++++++++++++++MAIN LOOP+++++++++++++++++++++++++++++++++++++++++++++
@@ -137,7 +140,7 @@ class Engine():
 
     def handleMsg(self, msg, source):
         """This method is the main method for handling incoming messages to the Engine"""     
-        
+ 
         if( msg[0] == ENGINE_SHUTDOWN ):
             self.error("Server is shutting down")
             self.stop = True
@@ -189,7 +192,7 @@ class Engine():
             self.handleShoot( msg[1]['shooter_id'], msg[1]['target_id'], source )
                         
         else:
-            notify.error( "Unknown message Type: %s", msg )
+            self.notify.error( "Unknown message Type: %s", msg )
         
  
  
@@ -232,7 +235,7 @@ class Engine():
                 self.units[tmpUnit.id] = tmpUnit
                 self.checkUnitCanUse( tmpUnit )
         except Exception:
-            notify.critical( "Exception:%s", sys.exc_info()[1] )
+            self.notify.critical( "Exception:%s", sys.exc_info()[1] )
             self.error( sys.exc_info()[1], source )
             return   
 
@@ -374,7 +377,7 @@ class Engine():
                 
     def loadArmyList(self):
         
-        notify.debug( "Army lists loading" )
+        self.notify.debug( "Army lists loading" )
         
         xmldoc = minidom.parse('data/base/armylist.xml')
         #print xmldoc.firstChild.toxml()
@@ -384,7 +387,7 @@ class Engine():
         
         
         for p in xmldoc.getElementsByTagName( 'player' ):
-            player = Player( p.attributes['id'].value, p.attributes['name'].value, p.attributes['team'].value, self )                        
+            player = Player( int(p.attributes['id'].value), p.attributes['name'].value, p.attributes['team'].value, self )                        
             
             for u in p.getElementsByTagName( 'unit' ):
                 
@@ -415,7 +418,7 @@ class Engine():
     
         xmldoc.unlink()
         
-        notify.info( "Army lists loaded OK" )
+        self.notify.info( "Army lists loaded OK" )
 
 
     def endTurn(self, source):
@@ -651,7 +654,7 @@ class Engine():
 
         #if target_tile tile is not in the move list
         if target_tile not in moveDict:
-            notify.critical("getPath() got an invalid target tile:%s", target_tile )
+            self.notify.critical("getPath() got an invalid target tile:%s", target_tile )
             raise Exception( "Trying to move to an invalid target_tile:%s", target_tile )
         
         x = target_tile[0]
@@ -702,15 +705,15 @@ class Engine():
                 
     def findAndValidateUnit(self, unit_id, source):
         if( unit_id in self.units ) == False:
-            notify.critical( "Got wrong unit id:%s", unit_id )
+            self.notify.critical( "Got wrong unit id:%s", unit_id )
             self.error( "Wrong unit id.", source )
             return None
 
         unit = self.units[unit_id]
 
         #check to see if this is the owner
-        if unit.owner.connection != source:
-            notify.critical( "Client:%s\ttried to do an action with unit that he does not own" % source.getAddress() )
+        if unit.owner.id != source:
+            self.notify.critical( "Client:%s\ttried to do an action with unit that he does not own" % source.getAddress() )
             self.error( "You cannot do this to a unit you do not own.", source )
             return None
 
@@ -718,7 +721,7 @@ class Engine():
         
         
     def validatePlayer(self, source):
-        if self.active_player.connection == source:
+        if self.active_player.id == source:
             return self.active_player
         
         self.error( 'It is not your turn.', source )
@@ -774,7 +777,7 @@ class Engine():
             try:
                 path = self.getPath( unit, new_position )
             except Exception:
-                notify.critical( "Exception:%s", sys.exc_info()[1] )
+                self.notify.critical( "Exception:%s", sys.exc_info()[1] )
                 self.error( sys.exc_info()[1], source )
                 return   
             
@@ -989,7 +992,7 @@ class Engine():
             return
         
         if target_id not in self.units:
-            notify.critical( "Got wrong target id:%s", target_id )
+            self.notify.critical( "Got wrong target id:%s", target_id )
             self.error( "Wrong target id.", source )
             return
 
@@ -997,7 +1000,7 @@ class Engine():
 
         #check to see if the owner is trying to shoot his own units
         if target.owner == owner:
-            notify.critical( "Client:%s\ttried to shoot his own unit." % source.getAddress() )
+            self.notify.critical( "Client:%s\ttried to shoot his own unit." % source.getAddress() )
             self.error( "You cannot shoot you own units.", source )
             return
         
@@ -1109,7 +1112,7 @@ class Engine():
             if unit.alive:
                 continue
                 
-            notify.info("Unit:%s died", unit.id )
+            self.notify.info("Unit:%s died", unit.id )
             print "unit died:", unit.id
             
             del self.units[unit.id]
@@ -1129,7 +1132,7 @@ class Engine():
 
     def findPlayer( self, source ):
         for p in self.players:
-            if p.connection == source:
+            if p.id == source:
                 return p
 
 
@@ -1282,98 +1285,43 @@ class Engine():
         return False
 
 
+
     def pickleSelf(self):
-        for p in self.players:
-            p.connection = None
+        self.notify = None
 
 
-    def _sendMsg( self, msg, source = None ):
-        if source:
-            self.to_network.putMsgList( source, [msg] )
-        else:
-            for player in self.players:
-                self.to_network.putMsgList( player.id, [msg] )
-        
-        
-    def move( self, unit_id, move_actions, source = None ):
-        self._sendMsg((MOVE, (unit_id, move_actions)), source) 
-                                                                      
-    
-    def shootMsg( self, shoot_actions, source = None ):
-        self._sendMsg( (SHOOT, shoot_actions), source ) 
-                                                                      
-    
-    def chatMsg( self, msg, sender, source = None ):
-        self._sendMsg( (CHAT, msg, sender), source) 
-                                                                      
-    
-    def sendState( self, engine_state, source ):
-        self._sendMsg((ENGINE_STATE, engine_state), source)
-    
-    
-    def sendLevel( self, compiled_level, source ):
-        self._sendMsg((LEVEL, compiled_level), source)
-    
-    
-    def error( self, error_msg, source = None ):
-        self._sendMsg((ERROR, error_msg), source)
-    
-    
-    def sendNewTurn( self, data, source ):
-        self._sendMsg( (NEW_TURN, data), source )
-    
-    
-    def sendUnit( self, pickled_unit, source = None ):
-        self._sendMsg((UNIT, pickled_unit), source)
-
-    
-    def sendUse( self, unit_id, source = None ):
-        self._sendMsg((USE, unit_id), source)
-
-    
-    def sendTaunt( self, unit_id, actions, source = None ):
-        self._sendMsg((TAUNT, (unit_id, actions)), source)
-
-    
-    def sendDeploymentMsg( self, level, army_size, source = None ):
+    def sendDeploymentMsg( self, level, army_size, source ):
         deploy_dict = {}
         
         deploy_dict['level'] = util.compileLevel( level )
         deploy_dict['army_size'] = army_size
         
-        self._sendMsg( ( DEPLOYMENT, deploy_dict ), source  )
+        self.to_network.putMsgList( source, [( DEPLOYMENT, deploy_dict )] )
+        
+    
+    
+    def pong( self, source ):
+        self.to_network.putMsgList( source, [(PONG, time.time())] )
         
 
-    
-
-    
-    def sendMsg( self, msg, source = None):
-        self._sendMsg( msg, source )
-
-
-    
-    def pong( self, source = None ):
-        self._sendMsg( (PONG, time.time()), source )
-
-        
-
+    def error(self, msg, source):
+        self.to_network.putMsgList( source, [(ERROR, msg)] )
 
 
 #-----------------------------------------------------------------------
-def loadFromPickle( pickled_engine, from_network, to_network ):
+def loadFromPickle( pickled_engine, from_network, to_network, notify ):
     
     #eng = pickle.loads(pickled_engine)
     eng = pickle.load(pickled_engine)
 
 
     #now cleanup all things that are session related
-    #remove connections from each player, if it exists
-    for p in eng.players:
-        p.connection = None
-
-    #set the msg queue
+    #set the msg queues
     eng.from_network = from_network
     eng.to_network = to_network
+    
+    #set logging
+    eng.notify = notify
     
     print "loaded from pickle"
     

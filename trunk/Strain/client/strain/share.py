@@ -15,7 +15,8 @@ HANDSHAKE_SUCCESS = 'Everything is fine'
 STERNER_ID = 0                  #Sterner's id, as opposed to game id
 STERNER_LOGIN = 'login'         #(STERNER_ID, STERNER_LOGIN, username, password)
 LOGIN_SUCCESS = 'Welcome'       #sent by Sterner when u successfully log in
-
+SELECT_GAME = 'select_game'
+TEST_GAME_ID = 66
 
 
 MOVE = 'move'                   #values - list of actions ('move',tile) ('rotate',tile) ('overwatch',overwatchresult) ('detected',enemy)

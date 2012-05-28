@@ -47,8 +47,8 @@ class ClientMsg:
     ip_address = None
     port = None
     
-    #set to true when we are logged into the main server
-    logged_in = False
+    #set to id when we are logged into the main server, otherwise 0
+    player_id = 0
     
     log = None
 
@@ -58,7 +58,7 @@ class ClientMsg:
     #for connecting thread to count failed attempts
     num_failed_attempts = 0
 
-
+    game_id = 0
 
 
     @staticmethod
@@ -97,7 +97,7 @@ class ClientMsg:
         #TODO: krav: vise verbose errori
         
         #if we are already logged in, just return
-        if ClientMsg.logged_in:
+        if ClientMsg.player_id:
             return "Already logged in."
         
         #if we are not yet connected, try once more
@@ -106,14 +106,14 @@ class ClientMsg:
                 return "Cannot connect to server."
         
         #try to log in
-        ClientMsg._sendMsg( (STERNER_ID, STERNER_LOGIN, username, password) )
+        ClientMsg._sendMsg( (STERNER_ID, STERNER_LOGIN, username, password), True )
         t1 = time.time()
         while True:
             msg = ClientMsg.readMsg()
             if msg:
-                if msg == LOGIN_SUCCESS:
-                    print "dobio welcome!!!!!!!!!!!!!"
-                    ClientMsg.logged_in = True
+                if msg[0] == LOGIN_SUCCESS:
+                    print "dobio welcome!!!\nid:", msg[1]
+                    ClientMsg.player_id = int(msg[1])
                     return 0
                 else:
                     #return error msg
@@ -132,11 +132,21 @@ class ClientMsg:
         if ClientMsg.myConnection:
             return True
         return False
+                 
                     
+    @staticmethod         
+    def setGameId( game_id ):
+        ClientMsg.game_id = game_id
+                         
+                 
+    @staticmethod         
+    def detGameId():
+        return ClientMsg.game_id
+                         
                  
     @staticmethod   
     def loggedIn():
-        return ClientMsg.logged_in
+        return ClientMsg.player_id
                         
                         
     @staticmethod
@@ -146,7 +156,7 @@ class ClientMsg:
             ClientMsg.cManager.closeConnection( ClientMsg.myConnection )
             
         ClientMsg.myConnection = None
-        ClientMsg.logged_in = False
+        ClientMsg.player_id = 0
             
             
             
@@ -256,11 +266,15 @@ class ClientMsg:
 
         
     @staticmethod
-    def _sendMsg(msg):        
+    def _sendMsg(msg, sterner = False):        
 
         if not ClientMsg.myConnection:
             return
-         
+        
+        
+        if not sterner:
+            msg = ( ClientMsg.game_id, ClientMsg.player_id, ) + msg
+            
         datagram = NetDatagram()        
         datagram.addString(pickle.dumps(msg, pickle.HIGHEST_PROTOCOL))   
         ClientMsg.cWriter.send(datagram, ClientMsg.myConnection)
@@ -333,5 +347,9 @@ class ClientMsg:
     @staticmethod
     def undefMsg2( value = 0 ):
         ClientMsg._sendMsg( (UNDEFINED_MSG_2, value ) )
+        
+    @staticmethod
+    def selectGame( game_id ):
+        ClientMsg._sendMsg( (STERNER_ID, SELECT_GAME, game_id ), True )
         
         
