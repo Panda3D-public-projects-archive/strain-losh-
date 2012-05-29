@@ -4,7 +4,6 @@ Created on 16 May 2012
 @author: krav
 '''
 import sys
-import dbapi
 sys.path.append('./../client')
 sys.path.append('./src')
 sys.path.append('./../db')
@@ -15,7 +14,7 @@ import time
 from server_messaging import *
 from util import *
 from engine import EngineThread
-from dbapi import *
+from dbproxyapi import DBProxyApi as DBApi
 
 
 STERNER_TIME_LIMIT = 0
@@ -209,7 +208,6 @@ class Sterner:
             print "user:", message[2]
             print "pass:", message[3]
             
-            """
             user_data = self.db_api.returnPlayer( message[2] )[0]
 
             print "user_data:",user_data
@@ -217,12 +215,11 @@ class Sterner:
                 #send error
                 self.network._sendMsg( (ERROR, "Wrong username/password"), source )
                 return
-            """
             
-            a = { 'Red':17, 'Blue':18, 'krav':19, 'ogi':20, 'vjeko':21 }
-             
-            #player_id = user_data[0]
-            player_id = a[ message[2] ]
+            player_id = int(user_data[0])
+            
+            #a = { 'Red':17, 'Blue':18, 'krav':19, 'ogi':20, 'vjeko':21 }
+            #player_id = a[ message[2] ]
 
             #check if this player already logged in, if so disconnect him
             if player_id in self.logged_in_players:
