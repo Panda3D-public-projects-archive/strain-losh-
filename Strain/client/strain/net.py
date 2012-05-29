@@ -117,8 +117,7 @@ class Net():
                 self.parent.game_instance.movement.calcUnitAvailMove( unit['id'] )
                 #self.parent.sgm.showVisibleEnemies(unit['id'])
                 if unit['pos'][0] != old_x or unit['pos'][1] != old_y or unit['last_action']=='use':
-                    #self.parent.game_instance.render_manager.level_model.setInvisibleTilesInThread()
-                    None
+                    self.parent.game_instance.render_manager.refreshFow()
                 #self.parent.sgm.playUnitStateAnim( unit['id'] )
             self._message_in_process = False
         #========================================================================
@@ -173,8 +172,7 @@ class Net():
             if self.parent.game_instance.player_id == self.parent.game_instance.turn_player and self.parent.game_instance.sel_unit_id != None:
                 self.parent.game_instance.movement.calcUnitAvailMove( self.parent.game_instance.sel_unit_id )
                 #self.parent.sgm.showVisibleEnemies( self.parent.sel_unit_id )
-            #self.parent.sgm.level_model.setInvisibleTilesInThread()
-            #self.parent.sgm.level_model.setInvisibleWallsInThread()
+            self.parent.game_instance.render_manager.refreshFow()
         #========================================================================
         #
         elif msg[0] == USE:

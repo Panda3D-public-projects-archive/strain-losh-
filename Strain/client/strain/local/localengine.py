@@ -1,6 +1,8 @@
 from panda3d.core import *
 from strain.share import *
 
+from pstat_debug import pstat
+
 class LocalEngine():
     def __init__(self, parent):
         self.parent = parent
@@ -64,4 +66,26 @@ class LocalEngine():
                 player_name = player['name']
                 break
         return player_name
+    
+    @pstat
+    def getInvisibleTiles(self):
+        a = []
+        for u in self.units:
+            if self.isThisMyUnit(u):
+                a.append(self.units[u])
+        t = time.clock()
+        l = levelVisibilityDict(a, self.level)
+        print "tiles timer:::", (time.clock()-t)*1000
+        return l
+    
+    @pstat
+    def getInvisibleWalls(self):
+        a = []
+        for u in self.units:
+            if self.isThisMyUnit(u):
+                a.append(self.units[u])
+        t = time.clock()
+        l = visibleWalls(a, self.level)
+        print "walls timer:::", (time.clock()-t)*1000
+        return l     
         
