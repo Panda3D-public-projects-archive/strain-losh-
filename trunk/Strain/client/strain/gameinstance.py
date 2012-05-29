@@ -109,7 +109,6 @@ class GameInstance():
                         new_unit_id = i
                         break
             self.selectUnit(new_unit_id)
-    
 
 class GameInstanceFSM(FSM.FSM):
     def __init__(self, parent, name):
