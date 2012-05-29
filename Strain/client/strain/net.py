@@ -75,7 +75,7 @@ class Net():
         #
         elif msg[0] == MOVE:
             self._message_in_process = True
-            self.parent.handleMove(msg[1])
+            self.parent.game_instance.render_manager.animation_manager.handleMove(msg[1])
         #========================================================================
         #
         elif msg[0] == NEW_TURN:
@@ -107,20 +107,20 @@ class Net():
         elif msg[0] == UNIT:
             self._message_in_process = True            
             unit = msg[1]
-            old_x = self.parent.units[unit['id']]['pos'][0]
-            old_y = self.parent.units[unit['id']]['pos'][1]
-            self.parent.refreshUnit(unit)
-            if self.parent.isThisMyUnit(unit['id']):
-                self.parent.interface.refreshUnitInfo(unit['id'])          
-            if self.parent.sel_unit_id == unit['id']:
-                self.parent.interface.processUnitData( unit['id'] )                  
-                self.parent.interface.printUnitData( unit['id'] )
-                self.parent.movement.calcUnitAvailMove( unit['id'] )
-                self.parent.sgm.showVisibleEnemies(unit['id'])
+            old_x = self.parent.game_instance.local_engine.units[unit['id']]['pos'][0]
+            old_y = self.parent.game_instance.local_engine.units[unit['id']]['pos'][1]
+            self.parent.game_instance.local_engine.refreshUnit(unit)
+            if self.parent.game_instance.local_engine.isThisMyUnit(unit['id']):
+                self.parent.game_instance.interface.refreshUnitInfo(unit['id'])          
+            if self.parent.game_instance.sel_unit_id == unit['id']:
+                self.parent.game_instance.interface.processUnitData( unit['id'] )                  
+                self.parent.game_instance.interface.printUnitData( unit['id'] )
+                self.parent.game_instance.movement.calcUnitAvailMove( unit['id'] )
+                #self.parent.sgm.showVisibleEnemies(unit['id'])
                 if unit['pos'][0] != old_x or unit['pos'][1] != old_y or unit['last_action']=='use':
-                    self.parent.sgm.level_model.setInvisibleTilesInThread()
+                    #self.parent.game_instance.render_manager.level_model.setInvisibleTilesInThread()
                     None
-                self.parent.sgm.playUnitStateAnim( unit['id'] )
+                #self.parent.sgm.playUnitStateAnim( unit['id'] )
             self._message_in_process = False
         #========================================================================
         #
@@ -163,23 +163,22 @@ class Net():
         #========================================================================
         #
         elif msg[0] == LEVEL:
-            return
-            self.parent.old_level = self.parent.level
+            self.parent.game_instance.local_engine.old_level = self.parent.game_instance.local_engine.level
             level = msg[1]
-            for unit in self.parent.units.itervalues():
+            for unit in self.parent.game_instance.local_engine.units.itervalues():
                 level.putUnitDict(unit)
-            self.parent.level = level
+            self.parent.game_instance.local_engine.level = level
             # if our enemy opens doors, we need to update visibility
             # enemy's visibility gets updated when he gets UNIT message
-            if self.parent.player == self.parent.turn_player and self.parent.sel_unit_id != None:
-                self.parent.movement.calcUnitAvailMove( self.parent.sel_unit_id )
-                self.parent.sgm.showVisibleEnemies( self.parent.sel_unit_id )
-            self.parent.sgm.level_model.setInvisibleTilesInThread()
-            self.parent.sgm.level_model.setInvisibleWallsInThread()
+            if self.parent.game_instance.player_id == self.parent.game_instance.turn_player and self.parent.game_instance.sel_unit_id != None:
+                self.parent.game_instance.movement.calcUnitAvailMove( self.parent.game_instance.sel_unit_id )
+                #self.parent.sgm.showVisibleEnemies( self.parent.sel_unit_id )
+            #self.parent.sgm.level_model.setInvisibleTilesInThread()
+            #self.parent.sgm.level_model.setInvisibleWallsInThread()
         #========================================================================
         #
         elif msg[0] == USE:
-            self.parent.sgm.unit_np_dict[msg[1]].model.play('use')    
+            self.parent.game_instance.render_manager.unit_renderer_dict[msg[1]].model.play('use')    
         #========================================================================
         #
         elif msg[0] == TAUNT:

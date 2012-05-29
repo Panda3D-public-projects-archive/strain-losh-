@@ -6,16 +6,17 @@ import strain.utils as utils
 class AnimationManager():
     def __init__(self, parent):
         self.parent = parent
+        self._anim_in_process = False
         
-    """
+    
     def beforeAnimHook(self):
         self._anim_in_process = True
-        self.movement.deleteUnitAvailMove()
-        self.sgm.hideVisibleEnemies()
-        for u in self.sgm.unit_np_dict.itervalues():
-            u.clearTargeted()
-        self.movement.hovered_unit_id = None
-    """
+        self.parent.parent.movement.deleteUnitAvailMove()
+        #self.sgm.hideVisibleEnemies()
+        #for u in self.sgm.unit_np_dict.itervalues():
+        #    u.clearTargeted()
+        #self.movement.hovered_unit_id = None
+    
     def afterAnimHook(self):     
         self._anim_in_process = False
         self.parent.parent.parent.net_manager._message_in_process = False
@@ -23,7 +24,10 @@ class AnimationManager():
     
     def handleMove(self, move_msg):
         move = self.buildMove(move_msg)
-        s = Sequence(Func(self.beforeAnimHook), move, Func(self.afterAnimHook))
+        s = Sequence(Func(self.beforeAnimHook), 
+                     move, 
+                     Func(self.afterAnimHook)
+                     )
         s.start()
     
     def buildMove(self, move_msg):
@@ -37,11 +41,13 @@ class AnimationManager():
         s = Sequence()
         d = 0.0
         
-        if self.units.has_key(unit_id):
-            pos = Point3(utils.TILE_SIZE*(self.units[unit_id]['pos'][0] + 0.5), utils.TILE_SIZE*(self.units[unit_id]['pos'][1] + 0.5), utils.GROUND_LEVEL)
-            heading = utils.getHeadingAngle(self.units[unit_id]['heading'])
-            if self.sgm.unit_np_dict.has_key(unit_id):
-                unit_model = self.sgm.unit_np_dict[unit_id]
+        if self.parent.parent.local_engine.units.has_key(unit_id):
+            pos = Point3(utils.TILE_SIZE*(self.parent.parent.local_engine.units[unit_id]['pos'][0] + 0.5), 
+                         utils.TILE_SIZE*(self.parent.parent.local_engine.units[unit_id]['pos'][1] + 0.5), 
+                         utils.GROUND_LEVEL)
+            heading = utils.getHeadingAngle(self.parent.parent.local_engine.units[unit_id]['heading'])
+            if self.parent.unit_renderer_dict.has_key(unit_id):
+                unit_renderer = self.parent.unit_renderer_dict[unit_id]
         else:
             # This is the first time we see this unit, we have no record of it in client.units dict or sgm nodepath list and dict
             # First action we MUST receive here is 'spot', otherwise client will break as we dont have unit_model defined
@@ -50,41 +56,44 @@ class AnimationManager():
         for idx, action in enumerate(action_list):
             action_type = action[0]
             if action_type == "move":
-                end_pos = Point3(utils.TILE_SIZE*(action[1][0] + 0.5), utils.TILE_SIZE*(action[1][1] + 0.5), utils.GROUND_LEVEL)
-                i, duration, pos, heading = self.buildMoveAnim(unit_model, pos, end_pos, heading)
+                end_pos = Point3(utils.TILE_SIZE*(action[1][0] + 0.5), 
+                                 utils.TILE_SIZE*(action[1][1] + 0.5), 
+                                 utils.GROUND_LEVEL)
+                i, duration, pos, heading = self.buildMoveAnim(unit_renderer, pos, end_pos, heading)
                 d += duration
                 s.append(i)
             elif action_type == "rotate":
-                end_pos = Point3(utils.TILE_SIZE*(action[1][0] + 0.5), utils.TILE_SIZE*(action[1][1] + 0.5), utils.GROUND_LEVEL)
-                i, duration, pos, heading = self.buildRotateAnim(unit_model, pos, end_pos, heading)
+                end_pos = Point3(utils.TILE_SIZE*(action[1][0] + 0.5), 
+                                 utils.TILE_SIZE*(action[1][1] + 0.5), 
+                                 utils.GROUND_LEVEL)
+                i, duration, pos, heading = self.buildRotateAnim(unit_renderer, pos, end_pos, heading)
                 d += duration
                 s.append(i)
             elif action_type == "spot":
                 spotted_unit = action[1]
-                self.units[spotted_unit['id']] = spotted_unit
+                self.parent.parent.local_engine.units[spotted_unit['id']] = spotted_unit
                 # Check if we have this unit in our scene graph records
-                if self.sgm.unit_np_dict.has_key(spotted_unit['id']):
-                    spotted_unit_model = self.sgm.unit_np_dict[spotted_unit['id']]
+                if self.parent.unit_renderer_dict.has_key(spotted_unit['id']):
+                    spotted_unit_renderer = self.parent.unit_renderer_dict[spotted_unit['id']]
                 # This is the first time we see this unit, fill out starting variables for move and rotate actions
                 else:
-                    wpn_list = utils.getUnitWeapons(spotted_unit)
-                    spotted_unit_model = self.sgm.loadUnit(spotted_unit['id'], wpn_list)
+                    spotted_unit_renderer = self.parent.loadUnit(spotted_unit['id'])
                 
                 # If this is our move message, means we spotted an enemy, and he will not be moving
                 # If this is enemy move message, means we have spotted a moving enemy and we will set unit_model variable
-                if self.isThisEnemyUnit(unit_id):
-                    unit_model = spotted_unit_model
-                    pos = Point3(utils.TILE_SIZE*(self.units[spotted_unit['id']]['pos'][0] + 0.5), 
-                                 utils.TILE_SIZE*(self.units[spotted_unit['id']]['pos'][1] + 0.5),
+                if self.parent.parent.local_engine.isThisEnemyUnit(unit_id):
+                    unit_model = spotted_unit_renderer
+                    pos = Point3(utils.TILE_SIZE*(self.parent.parent.local_engine.units[spotted_unit['id']]['pos'][0] + 0.5), 
+                                 utils.TILE_SIZE*(self.parent.parent.local_engine.units[spotted_unit['id']]['pos'][1] + 0.5),
                                  utils.GROUND_LEVEL
                                  )
-                    heading = utils.getHeadingAngle(self.units[spotted_unit['id']]['heading'])
+                    heading = utils.getHeadingAngle(self.parent.parent.local_engine.units[spotted_unit['id']]['heading'])
                     spotted_pos = pos
                     spotted_h = heading
                 else:
                     spotted_pos = None
                     spotted_h = None
-                i = self.buildSpotAnim(spotted_unit_model, spotted_pos, spotted_h)
+                i = self.buildSpotAnim(spotted_unit_renderer, spotted_pos, spotted_h)
                 s.append(i)
             elif action_type == "vanish":
                 vanish_unit_id = action[1]
@@ -102,11 +111,10 @@ class AnimationManager():
                 action_list = action[1]
                 i = self.buildOverwatchAnim(action_list)
                 s.append(i)
-        if unit_model.fsm.state == 'Overwatch':
-            #move = Sequence(unit_model.model.actorInterval('stand_up'), Func(unit_model.fsm.request, 'Walk'), s, Func(unit_model.fsm.request, 'Idle'))
-            move = Sequence(unit_model.model.actorInterval('stand_up'), Func(unit_model.fsm.request, 'Walk'), s, Func(unit_model.fsm.request, 'Idle'))
-        else:
-            move = Sequence(Func(unit_model.fsm.request, 'Walk'), s, Func(unit_model.fsm.request, 'Idle'))
+        
+        anim = unit_renderer.model.actorInterval('walk', loop = 1, duration = d)
+        anim_end = unit_renderer.model.actorInterval('idle', startFrame=1, endFrame=1)
+        move = Sequence(Parallel(anim, s), Sequence(anim_end))
         return move
         
     def buildMoveAnim(self, unit_model, start_pos, end_pos, start_h):
