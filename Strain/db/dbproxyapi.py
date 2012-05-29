@@ -148,6 +148,10 @@ if __name__ == "__main__":
     #dbapi.addPlayerToGame(game_id, dbapi.returnPlayer('ogi')[0], 1, 1)
     print dbapi.getAllLevels()
     
+    all_players = dbapi.getAllPlayers()
+    print [ x for x,y in all_players ] 
+    
+    
     dbapi.close()
 #MAIN
 #dbapi = DBApi()

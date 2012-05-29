@@ -138,8 +138,7 @@ class Sterner:
             #get msg from network
             tmp_msg = self.network.readMsg()
             if tmp_msg:
-                
-                print "sterner dobio:",tmp_msg
+                #print "sterner dobio:",tmp_msg
                 msg, source = tmp_msg
                 
                 #chek if this messge is for sterner or not
@@ -205,22 +204,14 @@ class Sterner:
         print "handleSternerMessage message:", message, "   source:", source
         
         if message[1] == STERNER_LOGIN:
-            print "user:", message[2]
-            print "pass:", message[3]
-            
             user_data = self.db_api.returnPlayer( message[2] )[0]
 
-            print "user_data:",user_data
             if user_data[3] != message[3]:            
-                #send error
                 self.network._sendMsg( (ERROR, "Wrong username/password"), source )
                 return
             
             player_id = int(user_data[0])
             
-            #a = { 'Red':17, 'Blue':18, 'krav':19, 'ogi':20, 'vjeko':21 }
-            #player_id = a[ message[2] ]
-
             #check if this player already logged in, if so disconnect him
             if player_id in self.logged_in_players:
                 self.network.disconnect(self.logged_in_players[player_id][0])
@@ -231,7 +222,7 @@ class Sterner:
             #send LOGIN_SUCCESS to client
             self.network._sendMsg( (LOGIN_SUCCESS, player_id), source )
 
-            #send all levels and all players to client so he can create new games
+            #send all levels and all player_ids to client so he can create new games
             self.network._sendMsg( (ALL_PLAYERS, self.db_api.getAllPlayers()), source)
             self.network._sendMsg( (ALL_LEVELS, self.db_api.getAllLevels()), source)
             return
@@ -239,9 +230,33 @@ class Sterner:
                 
         elif message[1] == START_NEW_GAME:
             print "+++++new game:", message
+            level = message[2]
+            budget = message[3]
+            player_ids = message[4]
+            
+            #check if level is ok
+            all_levels = self.db_api.getAllLevels()
+            if level not in all_levels:
+                self.network._sendMsg( (ERROR, "Wrong level"), source )
+                return
+                 
+            #TODO: krav: check if budget is ok
+            
+            #check if player_ids are ok
+            all_player_ids = [ int(x) for x,y in self.db_api.getAllPlayers() ]
+            for p_id in player_ids:
+                if p_id not in all_player_ids:
+                    self.network._sendMsg( (ERROR, "Wrong player id:%d"%p_id), source )
+                    return
+                    
+            i = 0
+            game_id = self.db_api.createGame(level, budget)
+            for p_id in player_ids:
+                self.db_api.addPlayerToGame(game_id, p_id, i, i)
+                i += 1
             
             #TODO: 0: prvo stavit sve u bazu ako se tred e digne da moze kasnije sve procitat iz baze
-            self.new_game_queue.append( (self.getGameId(), self.getIdFromConnection(source), message[2], message[3], message[4] ) )
+            self.new_game_queue.append( (game_id, self.getIdFromConnection(source), level, budget, player_ids ) )
                 
                 
         elif message[1] == GET_MY_GAMES:
