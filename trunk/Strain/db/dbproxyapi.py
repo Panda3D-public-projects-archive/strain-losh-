@@ -88,15 +88,16 @@ class DBProxyApi():
     def getMyGames(self, player_id):
         lst = []
         for g in self.game_players:
-            if g[0] == player_id:
-                lst.append( self.getGame(g[1]) )
+            if int(g[2]) == int(player_id):
+                lst.append( self.getGame(g[1])[0] )
         
-        return self.lst
+        print lst
+        return lst
     
     
     def getGame(self, game_id):
         for g in self.games:
-            if g[0] == game_id:
+            if int(g[0]) == int(game_id):
                 return [g]
 
     
@@ -143,13 +144,14 @@ if __name__ == "__main__":
     dbapi = DBProxyApi()
     #dbapi.createPlayer("emailv@@@vvv", "ihaaa", "po")
     #print dbapi.returnPlayer('ogi')
+    #print dbapi.getGame(100)
     #game_id = dbapi.createGame("test", 1000)
     #dbapi.addPlayerToGame(game_id, dbapi.returnPlayer('Red')[0], 0, 0)
     #dbapi.addPlayerToGame(game_id, dbapi.returnPlayer('ogi')[0], 1, 1)
-    print dbapi.getAllLevels()
-    
-    all_players = dbapi.getAllPlayers()
-    print [ x for x,y in all_players ] 
+    #print dbapi.getAllLevels()
+    #all_players = dbapi.getAllPlayers()
+    #print [ x for x,y in all_players ]
+    #dbapi.getMyGames( 17 ) 
     
     
     dbapi.close()
