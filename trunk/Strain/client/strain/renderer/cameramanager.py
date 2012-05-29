@@ -13,8 +13,6 @@ from direct.interval.IntervalGlobal import *
 from direct.showbase.DirectObject import *
 from direct.task import Task
 
-# strain related imports
-import utils as utils
 
 #############################################################################
 # CLASSES
@@ -22,15 +20,12 @@ import utils as utils
 
 #========================================================================
 #
-class Camera(DirectObject):
-    def __init__(self,parent,x,y):
+class CameraManager(DirectObject):
+    def __init__(self,parent):
         # Disable standard Panda3d mouse
         base.disableMouse()
         self.parent = parent
         self.target = None
-        
-        self.maxX = x
-        self.maxY = y
         
         self.rightMouseIsDown = False
         
@@ -54,8 +49,8 @@ class Camera(DirectObject):
         self.pan_velocity = 30  
         self.anim_velocity = 15
         self.dist = base.camera.getDistance(self.node)
-        self.distmax = 75
-        self.distmin = 15
+        self.distmax = 25
+        self.distmin = 5
 
         self.setupKeys()
         self.isFollowing = False   
@@ -71,13 +66,7 @@ class Camera(DirectObject):
         """
         return min(max(val, min_val), max_val)    
     
-    def update(self, task):
-        
-        # If our camera is following a unit and user presses move keys, change to free camera style
-        if self.keys['up'] == 1 or self.keys['down'] == 1 or self.keys['left'] == 1 or self.keys['right'] == 1:
-            if self.isFollowing:
-                self.toggleFollow()
-                
+    def update(self, task):                
         cam_pos = Vec3(0,0,0)
         dx = 0
         dy = 0
@@ -85,8 +74,8 @@ class Camera(DirectObject):
         if self.rightMouseIsDown: 
             newPos=[base.win.getPointer(0).getX(), base.win.getPointer(0).getY()]
             self.mInc=[newPos[0] - self.mPos[0], newPos[1] - self.mPos[1]]
-        else:
-            self.mInc = [self.mInc[0] * 0.4, self.mInc[1] * 0.4]
+        #else:
+        #    self.mInc = [self.mInc[0] * 0.4, self.mInc[1] * 0.4]
         
         self.mPos[0] += self.mInc[0] * 0.2
         self.mPos[1] += self.mInc[1] * 0.2
@@ -113,42 +102,9 @@ class Camera(DirectObject):
         
         base.camera.setPos(render, base.camera.getPos(render) + cam_pos)
         
-        
         return task.cont
 
-    def toggleFollow(self):
-        if self.isFollowing:
-            self.setUnfollow()
-        else:
-            if self.parent.sel_unit_id != None:
-                self.setFollow(self.parent.sgm.unit_np_dict[self.parent.sel_unit_id].node)
-
-
-    def setFollow(self, node):
-        self.node.reparentTo(node)
-        self.node.setPos(0, 0, 0)
-        self.node.setH(0)
-        cam_pos = base.camera.getPos()
-        base.camera.setPos(0, cam_pos.getY(), cam_pos.getZ())
-        base.camera.lookAt(self.node)
-        self.dist = base.camera.getDistance(self.node)
-        self.parent.interface.console.consoleOutput('Camera type = FOLLOW', utils.CONSOLE_SYSTEM_MESSAGE)
-        self.parent.interface.console.show()
-        self.isFollowing = True        
-        
-    def setUnfollow(self):
-        pos = self.node.getPos(render)
-        h = self.node.getH(render)
-        self.node.reparentTo(render)
-        self.node.setPos(pos) 
-        self.node.setH(h)
-        self.parent.interface.console.consoleOutput('Camera type = FREE', utils.CONSOLE_SYSTEM_MESSAGE)
-        self.parent.interface.console.show()
-        self.isFollowing = False        
-
-    def animate(self):
-        if self.parent.sel_unit_id != None:
-            node = self.parent.sgm.unit_np_dict[self.parent.sel_unit_id].node
+    def animate(self, node):
             dist = self.node.getDistance(node)
             duration = self.clamp(dist/self.anim_velocity, 0.2, 2)
             i = self.node.posInterval(duration = duration, pos = node.getPos(), blendType = 'easeInOut')
@@ -182,7 +138,6 @@ class Camera(DirectObject):
         self.accept('mouse3', self.rightMouseDown, [])
         self.accept('mouse3-up', self.rightMouseUp, [])
         self.accept('space', self.animate, [])
-        self.accept('f5', self.toggleFollow)
 
         self.keys = {}
         self.keys['up'] = 0

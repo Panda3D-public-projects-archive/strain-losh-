@@ -7,7 +7,6 @@ import string
 
 # panda3D imports
 from panda3d.core import GeomNode, NodePath, TextureStage, Vec4, Point2, Point3
-from direct.actor.Actor import Actor
 
 # strain related imports
 
@@ -41,10 +40,10 @@ HEADING_SW        = 6
 HEADING_S         = 7
 HEADING_SE        = 8
 
-TILE_SIZE = 2
+TILE_SIZE = 1
 GROUND_LEVEL = 0.0
 MODEL_OFFSET = TILE_SIZE/2
-UNIT_SCALE = 0.8
+UNIT_SCALE = 0.4
 BULLET_SPEED = 15
 
 marine_anim_dict = {}
@@ -194,41 +193,6 @@ def getHeadingTile(h, dest):
     else:
         offset = (0, 0)
     return tuple([item1 + item2 for item1, item2 in zip(dest, offset)])
-
-
-def getUnitWeapons(unit):
-    wpn_list = [unit['ranged_weapon']['name'], unit['melee_weapon']['name']]
-    return wpn_list
-
-def loadUnit(race, type, team, wpn1=None, wpn2=None):
-    model = Actor(unit_type_dict[race][type])
-    model.loadAnims(anim_dict[race])
-    if team == '1':
-        tex = loader.loadTexture(unit_type_dict[race][type] + ".png")
-    elif team == '2':
-        tex = loader.loadTexture(unit_type_dict[race][type] + "2.png")
-    else:
-        tex = loader.loadTexture(unit_type_dict[race][type] + ".png")
-    model.setTexture(tex)
-    if wpn1 != None:
-        rnp = model.exposeJoint(None,"modelRoot","Wrist.R")
-        if wpn1 == 'Defaulter':
-            rwp = loader.loadModel('gun1')
-            rwp.setTexture(loader.loadTexture('gun.png'))
-            rwp.reparentTo(rnp)
-        elif wpn1 == 'Heavy Defaulter':
-            rwp = loader.loadModel('gun1')
-            rwp.setTexture(loader.loadTexture('gun.png'))
-            rwp.reparentTo(rnp)
-        elif wpn1 == 'Default Pistol':
-            rwp = loader.loadModel('gun1')
-            rwp.setTexture(loader.loadTexture('gun_green.png'))
-            rwp.reparentTo(rnp)
-        elif wpn1 == 'Plasma Pistol':
-            rwp = loader.loadModel('gun1')
-            rwp.setTexture(loader.loadTexture('gun_orange.png'))
-            rwp.reparentTo(rnp)
-    return model 
 
 #===============================================================================
 # nodeCoordIn2d

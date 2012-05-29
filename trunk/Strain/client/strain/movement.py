@@ -81,12 +81,12 @@ class Movement(DirectObject.DirectObject):
     def calcUnitAvailMove(self, unit_id):
         """Displays visual indicator of tiles which are in movement range of the selected unit."""
         self.deleteUnitAvailMove()
-        unit = self.parent.units[unit_id]
-        if self.parent.turn_player != self.parent.player:
+        unit = self.parent.local_engine.units[unit_id]
+        if self.parent.turn_player != self.parent.player_id:
             return
         if unit:
-            unit['move_dict'] = getMoveDict(unit, self.parent.level, self.parent.units)
-            self.parent.units[unit_id]['move_dict'] = unit['move_dict']
+            unit['move_dict'] = getMoveDict(unit, self.parent.local_engine.level, self.parent.local_engine.units)
+            self.parent.local_engine.units[unit_id]['move_dict'] = unit['move_dict']
             move_dict = unit['move_dict']
             for tile in move_dict:
                 text = TextNode('node name')
@@ -168,29 +168,29 @@ class Movement(DirectObject.DirectObject):
         
         if self.hovered_unit_id != None:
             unit_id = int(self.hovered_unit_id)
-            pickedCoord = self.parent.getCoordsByUnit(unit_id) 
+            pickedCoord = self.parent.local_engine.getCoordsByUnit(unit_id) 
             # Player can only select his own units
-            if self.parent.isThisMyUnit(unit_id):
+            if self.parent.local_engine.isThisMyUnit(unit_id):
                 if unit_id != self.parent.sel_unit_id:
                     self.parent.selectUnit(unit_id)
                 else:
                     # Remember movement tile so we can send orientation message when mouse is depressed
                     # Do this only if it is our turn
-                    if self.parent.player == self.parent.turn_player:
+                    if self.parent.player_id == self.parent.turn_player:
                         self.unit_move_destination = pickedCoord   
                         self.showMoveCompass(self.unit_move_destination)                       
-            elif self.parent.isThisEnemyUnit(unit_id):
-                if self.parent.sel_unit_id != None and self.parent.player == self.parent.turn_player:
-                    self.parent.sgm.unit_np_dict[self.parent.sel_unit_id].target_unit = self.parent.sgm.unit_np_dict[unit_id]
+            elif self.parent.local_engine.isThisEnemyUnit(unit_id):
+                if self.parent.sel_unit_id != None and self.parent.player_id == self.parent.turn_player:
+                    self.parent.render_manager.unit_renderer_dict[self.parent.sel_unit_id].target_unit = self.parent.render_manager.unit_renderer_dict[unit_id]
                     if self.parent._anim_in_process == False:
                         ClientMsg.shoot(self.parent.sel_unit_id, unit_id)
         
         elif self.hovered_tile != None:
-            if self.parent.sel_unit_id != None and self.parent.player == self.parent.turn_player:
+            if self.parent.sel_unit_id != None and self.parent.player_id == self.parent.turn_player:
                 # Remember movement tile so we can send movement message when mouse is depressed
                 # Do this only if it is our turn
                 move_coord = self.hovered_tile.getPythonTag('pos')
-                if self.parent.units[self.parent.sel_unit_id]['move_dict'].has_key(move_coord):
+                if self.parent.local_engine.units[self.parent.sel_unit_id]['move_dict'].has_key(move_coord):
                     self.unit_move_destination = move_coord
                     self.showMoveCompass(self.unit_move_destination)
 
@@ -235,10 +235,9 @@ class Movement(DirectObject.DirectObject):
                 pos2d = utils.pointCoordIn2d(pos)
                 tile.setPos(pos2d)        
         else:
-            for unit_id in self.parent.sgm.unit_np_dict:
-                u = self.parent.sgm.unit_np_dict[unit_id]
-                p = utils.nodeCoordIn2d(u.model)
-                u.node_2d.setPos(p)
+            for unit in self.parent.render_manager.unit_renderer_dict.itervalues():
+                p = utils.nodeCoordIn2d(unit.model)
+                unit.node_2d.setPos(p)
             for tile in self.move_np_list:
                 pos = Point3(utils.TILE_SIZE*(tile.getPythonTag('pos')[0]+0.5), utils.TILE_SIZE*(tile.getPythonTag('pos')[1]+0.5), utils.GROUND_LEVEL)
                 pos2d = utils.pointCoordIn2d(pos)
@@ -262,7 +261,7 @@ class Movement(DirectObject.DirectObject):
         
         if self.parent.interface.hovered_gui != None:
             if self.hovered_unit_id != None:
-                self.parent.sgm.unit_np_dict[int(self.hovered_unit_id)].unmarkHovered()
+                self.parent.render_manager.unit_marker_renderer.unmarkHovered(self.hovered_unit_id)
                 self.hovered_unit_id = None
             if self.hovered_tile != None and not self.hovered_tile.isEmpty():
                 self.hovered_tile.setColor(1, 1, 1)
@@ -301,18 +300,17 @@ class Movement(DirectObject.DirectObject):
                         min_compass_tile = tile
             else:
                 # Get 2d coordinates of all units
-                for unit_id in self.parent.sgm.unit_np_dict:
-                    if self.parent.isThisMyUnit(unit_id):
-                        u = self.parent.sgm.unit_np_dict[unit_id]
+                for unit_id in self.parent.render_manager.unit_renderer_dict:
+                    unit = self.parent.render_manager.unit_renderer_dict[unit_id]
+                    if self.parent.local_engine.isThisMyUnit(unit_id):
                         # Calculate distance between every friendly unit and mouse cursor and remember closest unit
-                        d = self.mouse_node.getDistance(u.node_2d)
+                        d = self.mouse_node.getDistance(unit.node_2d)
                         if d < min_distance:
                             min_distance = d
                             min_unit_id = unit_id
-                    elif self.parent.isThisEnemyUnit(unit_id):
-                        u = self.parent.sgm.unit_np_dict[unit_id]
+                    else:
                         # Calculate distance between every enemy unit and mouse cursor and remember closest unit
-                        d = self.mouse_node.getDistance(u.node_2d)
+                        d = self.mouse_node.getDistance(unit.node_2d)
                         # To target enemy unit, distance has to be even smaller than needed for regular selection/movement
                         if d < min_distance and d < 0.1:
                             min_distance = d
@@ -357,9 +355,9 @@ class Movement(DirectObject.DirectObject):
         elif min_unit_id != None:
             self.move_node.detachNode() 
             if min_unit_id != self.hovered_unit_id and self.hovered_unit_id != None:
-                if self.parent.sgm.unit_np_dict.has_key(int(self.hovered_unit_id)):
-                    self.parent.sgm.unit_np_dict[int(self.hovered_unit_id)].unmarkHovered()
-            self.parent.sgm.unit_np_dict[int(min_unit_id)].markHovered()
+                if self.parent.render_manager.unit_renderer_dict.has_key(int(self.hovered_unit_id)):
+                    self.parent.render_manager.unit_marker_renderer.unmarkHovered(self.hovered_unit_id)
+            self.parent.render_manager.unit_marker_renderer.markHovered(min_unit_id)
             if self.hovered_tile != None and not self.hovered_tile.isEmpty():
                 self.hovered_tile.setColor(1, 1, 1)
                 self.hovered_tile.setScale(0.05)   
@@ -373,8 +371,8 @@ class Movement(DirectObject.DirectObject):
         # - mark new hovered tile
         elif min_tile != None:
             if self.hovered_unit_id != None:
-                if self.parent.sgm.unit_np_dict.has_key(int(self.hovered_unit_id)):
-                    self.parent.sgm.unit_np_dict[int(self.hovered_unit_id)].unmarkHovered() 
+                if self.parent.render_manager.unit_renderer_dict.has_key(int(self.hovered_unit_id)):
+                    self.parent.render_manager.unit_marker_renderer.unmarkHovered(self.hovered_unit_id) 
                 self.hovered_unit_id = None         
             if min_tile != self.hovered_tile:
                 self.move_node.reparentTo(aspect2d)
@@ -395,8 +393,8 @@ class Movement(DirectObject.DirectObject):
         # - unmark last hovered tile
         else:
             if self.hovered_unit_id != None:
-                if self.parent.sgm.unit_np_dict.has_key(int(self.hovered_unit_id)):
-                    self.parent.sgm.unit_np_dict[int(self.hovered_unit_id)].unmarkHovered()
+                if self.parent.render_manager.unit_renderer_dict.has_key(int(self.hovered_unit_id)):
+                    self.parent.render_manager.unit_marker_renderer.unmarkHovered(self.hovered_unit_id)
                 self.hovered_unit_id = None
             if self.hovered_tile != None and not self.hovered_tile.isEmpty():
                 self.hovered_tile.setColor(1, 1, 1)
