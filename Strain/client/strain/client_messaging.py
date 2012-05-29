@@ -105,8 +105,8 @@ class ClientMsg:
             if not ClientMsg.connect():
                 return "Cannot connect to server."
         
-        if not password:
-            password = None
+        #if not password:
+        #    password = None
         
         #try to log in
         ClientMsg._sendMsg( (STERNER_ID, STERNER_LOGIN, username, password), True )
