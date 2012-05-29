@@ -230,6 +230,10 @@ class Sterner:
             
             #send LOGIN_SUCCESS to client
             self.network._sendMsg( (LOGIN_SUCCESS, player_id), source )
+
+            #send all levels and all players to client so he can create new games
+            self.network._sendMsg( (ALL_PLAYERS, self.db_api.getAllPlayers()), source)
+            self.network._sendMsg( (ALL_LEVELS, self.db_api.getAllLevels()), source)
             return
 
                 
