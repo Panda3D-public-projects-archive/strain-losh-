@@ -473,7 +473,7 @@ class Engine():
                 for p in self.players:
                     #TODO: krav: brijem da ova provjera ne radi bas tocno, treba provjerit
                     if (x,y) in vis_walls[p.id]:
-                        if self.level._grid[x][y] != self._grid_player[p.id]:
+                        if self.level._grid[x][y] != self._grid_player[p.id][x][y]:
                             self._grid_player[p.id][x][y] = self.level._grid[x][y]
                             changes[p.id] = p
                             
