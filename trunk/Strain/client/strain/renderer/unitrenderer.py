@@ -16,17 +16,22 @@ class UnitRenderer:
         self.id = str(unit['id'])
         self.node = self.parent_node.attachNewNode("UnitRendererNode_"+self.id)
 
-        if unit['owner_id'] == 100:
+        #TODO: ogs: maknuti kad se rijesi bug sa playerima i njihovim timovima
+        self.team_id = "2"
+        for player in self.parent.parent.local_engine.players:
+            if unit['owner_id'] == player['id']:
+                self.team_id = player['team']
+                break
+        
+        if self.team_id == "1":
             self.team_color = Vec4(0.7, 0.2, 0.3, 1)
-        elif unit['owner_id'] == 101:
+        elif self.team_id == "2":
             self.team_color = Vec4(0.106, 0.467, 0.878, 1)
         else:
             self.team_color = Vec4(0, 1, 0, 1)
         
-        self.owner_id = unit['owner_id']
-        
         i = string.index(unit['name'], '_')
-        self.model = self.loadModel(unit['name'][0:i], unit['name'][i+1:], unit['owner_id'])           
+        self.model = self.loadModel(unit['name'][0:i], unit['name'][i+1:], self.team_id)           
         self.model.reparentTo(self.node)
         
         scale = utils.UNIT_SCALE
@@ -44,7 +49,7 @@ class UnitRenderer:
         self.node.setTag("type", "unit")
         self.node.setTag("id", str(self.id))        
         self.node.setTag("player_id", str(unit['owner_id']))
-        self.node.setTag("team", str(unit['owner_id']))
+        self.node.setTag("team", str(self.team_id))
 
         # If unit model is not rendered for portrait, set its heading as received from server
         self.setHeading(unit['heading'])
@@ -82,9 +87,9 @@ class UnitRenderer:
     def loadModel(self, race, type, team=0):
         model = Actor(utils.unit_type_dict[race][type])
         model.loadAnims(utils.anim_dict[race])
-        if team == 100:
+        if team == "1":
             tex = loader.loadTexture(utils.unit_type_dict[race][type] + ".png")
-        elif team == 101:
+        elif team == "2":
             tex = loader.loadTexture(utils.unit_type_dict[race][type] + "2.png")
         else:
             tex = loader.loadTexture(utils.unit_type_dict[race][type] + ".png")
