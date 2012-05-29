@@ -14,7 +14,6 @@ from panda3d.core import SceneGraphAnalyzerMeter#@UnresolvedImport
 
 # strain related imports
 from strain.voxelgen import VoxelGenerator
-from strain.renderer import LevelRenderer
 from strain.unitmodel import UnitModel
 import strain.utils as utils
 from strain.share import *

@@ -160,20 +160,20 @@ class Interface(DirectObject.DirectObject):
     def processUnitData(self, unit_id):
         """Refreshes status of action buttons for units."""
         self.setButtons(unit_id)
-        if self.parent.units[unit_id]['overwatch'] == True:
+        if self.parent.local_engine.units[unit_id]['overwatch'] == True:
             self.overwatch.turnOn()
         else:
             self.overwatch.turnOff()
         
-        if 'set_up' in self.parent.units[unit_id]:
-            if self.parent.units[unit_id]['set_up'] == True:
+        if 'set_up' in self.parent.local_engine.units[unit_id]:
+            if self.parent.local_engine.units[unit_id]['set_up'] == True:
                 self.set_up.turnOn()
             else:
                 self.set_up.turnOff()
                 
     def printUnitData(self, unit_id):
         """Refreshes unit info on GUI."""
-        unit = self.parent.getUnitData(unit_id)
+        unit = self.parent.local_engine.units[unit_id]
         unit_type = unit['name']
         unit_HP = unit['hp']
         unit_AP = unit['ap']
@@ -195,7 +195,7 @@ class Interface(DirectObject.DirectObject):
         
     def refreshUnitInfo(self, unit_id):
         """Refreshes HP and AP bars, as well as buff/debuff status of units above unit models and on unit lists."""
-        unit = self.parent.getUnitData(unit_id)
+        unit = self.parent.local_engine.units[unit_id]
         unit_type = unit['name']
         unit_HP = unit['hp']
         unit_AP = unit['ap']
@@ -203,7 +203,7 @@ class Interface(DirectObject.DirectObject):
         unit_default_AP = unit['default_ap']
         if unit_id not in self.unit_info:
             self.unit_info[unit_id] = GuiUnitInfo(Point3(0, 0, 2.1)
-                                                , self.parent.sgm.unit_np_dict[unit_id].node
+                                                , self.parent.render_manager.unit_renderer_dict[unit_id].node
                                                 , unit_type[7:100]
                                                 , unit_default_HP, unit_HP
                                                 , unit_default_AP, unit_AP)
@@ -212,12 +212,12 @@ class Interface(DirectObject.DirectObject):
                                                 , unit_default_HP, unit_HP
                                                 , unit_default_AP, unit_AP)
         else:
-            self.unit_info[unit_id].reparentTo(self.parent.sgm.unit_np_dict[unit_id].node)
+            self.unit_info[unit_id].reparentTo(self.parent.render_manager.unit_renderer_dict[unit_id].node)
             self.unit_info[unit_id].refreshBars(unit_HP, unit_AP)
             self.unit_info[unit_id].show()
             self.unit_panel[unit_id].refreshBars(unit_HP, unit_AP)
         
-        if self.parent.units[unit_id]['overwatch'] == True:
+        if self.parent.local_engine.units[unit_id]['overwatch'] == True:
             self.overwatch.turnOn()
             self.unit_info[unit_id].showOverwatch()
             self.unit_panel[unit_id].showOverwatch()
@@ -226,8 +226,8 @@ class Interface(DirectObject.DirectObject):
             self.unit_info[unit_id].hideOverwatch()
             self.unit_panel[unit_id].hideOverwatch()
         
-        if 'set_up' in self.parent.units[unit_id]:
-            if self.parent.units[unit_id]['set_up'] == True:
+        if 'set_up' in self.parent.local_engine.units[unit_id]:
+            if self.parent.local_engine.units[unit_id]['set_up'] == True:
                 self.set_up.turnOn()
                 self.unit_info[unit_id].showSetUp()
                 self.unit_panel[unit_id].showSetUp()
@@ -396,11 +396,11 @@ class Interface(DirectObject.DirectObject):
         for button in self.action_buttons.itervalues():
             button.enable()
         #if self.parent.units[unit_id]['heavy_weapon'] == False:
-        if not 'set_up' in self.parent.units[unit_id]:
+        if not 'set_up' in self.parent.local_engine.units[unit_id]:
             self.set_up.disable()
             
-        if 'can_use' in self.parent.units[unit_id]:
-            if self.parent.units[unit_id]['can_use'] == False:
+        if 'can_use' in self.parent.local_engine.units[unit_id]:
+            if self.parent.local_engine.units[unit_id]['can_use'] == False:
                 self.use.disable()
             
     def clearButtons(self):

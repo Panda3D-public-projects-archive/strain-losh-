@@ -16,10 +16,10 @@ from panda3d.rocket import *
 # strain related imports
 from strain.loginscreen import LoginScreen
 from strain.browser import Browser
-from strain.client import Client
+#from strain.client import Client
 from strain.gametype import GameType
 from strain.client_messaging import ClientMsg
-import strain.net
+from strain.net import Net, handleConnection
 
 #############################################################################
 # GLOBALS
@@ -52,9 +52,9 @@ class App():
         ih = RocketInputHandler()
         base.mouseWatcher.attachNewNode(ih)
         self.rRegion.setInputHandler(ih)
-        #setup FSM
-        self.fsm = AppFSM(self, 'AppFSM')
         
+        # Setup FSM
+        self.fsm = AppFSM(self, 'AppFSM')
         
         # Init Network parameters
         server_ip = ConfigVariableString("server-ip", "127.0.0.1").getValue()
@@ -62,12 +62,21 @@ class App():
         ClientMsg.setupAddress(server_ip, server_port)
         ClientMsg.log = self.logger
 
-        #start network handling task
-        taskMgr.add( strain.net.handleConnection, "handle_net_task" ) 
-
+        # Start network handling task
+        taskMgr.add( handleConnection, "handle_net_task" ) 
         
-        #start with Login screen
+        # Initialize network communicator
+        self.net_manager = Net(self)
+        self.net_manager.startNet()
+
+        base.accept('i', render.ls)
+
+        # Start with Login screen
         self.fsm.request('Login')
+        
+    def newGameStarted(self, game_id):
+        from strain.gameinstance import GameInstance
+        self.game_instance = GameInstance(self, 'New', game_id)
 
 #========================================================================
 #
@@ -78,8 +87,7 @@ class AppFSM(FSM.FSM):
 
         self.defaultTransitions = {
             'Login' : [ 'Browser' ],
-            'Browser' : [ 'NewGame', 'ContinueGame', 'ReplayViewer' ],
-            'NewGame' : ['Deploy']
+            'Browser' : [ 'NewGame', 'ContinueGame' ]
             }
         
     def enterLogin(self):
@@ -98,28 +106,19 @@ class AppFSM(FSM.FSM):
         del self.parent.browser
         
     def enterNewGame(self):
-        self.parent.gametype = GameType(self.parent)
+        ClientMsg.startNewGame('level2', 1000, [17, 19])
+        #self.parent.gametype = GameType(self.parent)
     
     def exitNewGame(self):
         self.parent.gametype.cleanup()
         del self.parent.gametype
         
-    def enterDeploy(self):
-        self.parent.client = Client(self.parent, self.parent.player, self.parent.player_id, "NewGame")
-    
-    def exitDeploy(self):
-        None
-        
     def enterContinueGame(self):
-        self.parent.client = Client(self.parent, self.parent.player, self.parent.player_id, "ContGame")
+        from strain.gameinstance import GameInstance
+        self.parent.game_instance = GameInstance(self.parent, 'Continue')
     
     def exitContinueGame(self):
-        None
-        
-    def enterReplayViewer(self):
-        None
-        
-    def exitReplayViewer(self):
+        #TODO: ogs: kod za brisanje i deinicijalizaciju GameInstance
         None
 
 
@@ -139,12 +138,6 @@ class Screen(DirectObject):
         win.setSize(xsize, ysize)
         win.setFullscreen(False)
         base.openDefaultWindow(win)
-        
-        base.accept('1', render.ls)
-        base.accept('2', self.debug)
-    
-    def debug(self):
-        print taskMgr
 
 #############################################################################
 # MAIN
