@@ -28,7 +28,7 @@
 
 GRID
 1,10,HalfWall
-3,10,HalfWall
+3,10,ClosedDoor
 5,10,HalfWall
 5,34,HalfWall
 7,10,HalfWall
