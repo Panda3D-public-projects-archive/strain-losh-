@@ -345,5 +345,32 @@ class AnimationManager():
                      Func(textNodePath.removeNode),
                      Func(self.afterAnimHook)
                      )
-        s.start()        
+        s.start()     
+        
+
+    def playUnitStateAnim(self, unit_id):
+        # Check if we have toggled overwatch
+        unit = self.parent.units[unit_id]
+        unit_model = self.unit_np_dict[unit_id]
+        if unit_model.isOverwatch == False and unit['overwatch'] == True:
+            unit_model.isOverwatch = True
+            unit_model.fsm.request('Overwatch')
+        elif unit_model.isOverwatch == True and unit['overwatch'] == False:
+            unit_model.isOverwatch = False
+            unit_model.fsm.request('StandUp')
+        elif unit_model.isSetup == False:
+            try:
+                if unit['set_up'] == True:
+                    unit_model.isSetup = True
+                    unit_model.fsm.request('SetUp')
+            except:
+                None
+        elif unit_model.isSetup == True:
+            try:
+                if unit['set_up'] == False:
+                    unit_model.isSetup = False
+                    unit_model.fsm.request('StandUp')
+            except:
+                None
+
         
