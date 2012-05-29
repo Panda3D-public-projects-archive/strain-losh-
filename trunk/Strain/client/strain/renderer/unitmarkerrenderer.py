@@ -9,7 +9,8 @@ class UnitMarkerRenderer():
             self.setHovered(unit_id)
         else:
             None
-            #self.setTargeted(unit_id)
+            #if self.parent.parent.sel_unit_id != None:
+            #    self.setTargeted(unit_id)
             
     def unmarkHovered(self, unit_id):
         if self.parent.parent.local_engine.isThisMyUnit(unit_id):
@@ -40,4 +41,17 @@ class UnitMarkerRenderer():
     def clearSelected(self, unit_id):
         unit = self.parent.unit_renderer_dict[unit_id]
         unit.marker.detachNode()
-        unit.isSelected = False        
+        unit.isSelected = False 
+        
+    def setTargeted(self, unit_id):
+        unit = self.parent.unit_renderer_dict[unit_id]
+        #self.parent.setOutlineShader(self.model, color=Vec4(1,0,0,0)) 
+        self.parent.parent.movement.showTargetInfo(unit_id)
+        unit.isTargeted = True 
+    
+    def clearTargeted(self, unit_id):
+        unit = self.parent.unit_renderer_dict[unit_id]
+        if unit.isTargeted:
+            #self.parent.clearOutlineShader(self.model)
+            self.parent.parent.movement.clearTargetInfo(unit_id)
+            self.isTargeted = False               

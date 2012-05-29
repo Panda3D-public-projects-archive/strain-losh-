@@ -161,7 +161,7 @@ class AnimationManager():
                        )
     
     def buildDeleteAnim(self, unit_id):
-        return Sequence(Func(self.interface.clearMarker, unit_id), Func(self.sgm.hideUnit, unit_id), Func(self.deleteUnit, unit_id), Wait(0.2))
+        return Sequence(Func(self.parent.hideUnit, unit_id), Wait(0.2))
     
     def buildDetachAnim(self, unit_id):
         return Sequence(Func(self.sgm.detachUnit, unit_id), Wait(0.2))

@@ -8,6 +8,7 @@ class FowRenderer():
         self.parent_node = parent_node
         self.x = x
         self.y = y
+
         self.fow_coef = 16   
         self.display = False     
         
