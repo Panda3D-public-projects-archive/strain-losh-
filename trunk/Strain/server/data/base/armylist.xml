@@ -2,14 +2,14 @@
 
 <armylist>
 
-	<player name="Red" team="1" id="100">
-		<unit x="22" y="2" type="marine_sergeant"/>
-		<unit x="21" y="3" type="marine_standard"/>			
+	<player name="Red" team="1" id="17">
+		<unit x="2" y="2" type="marine_sergeant"/>
+		<unit x="1" y="3" type="marine_standard"/>			
 	</player>
 
-	<player name="Blue" team = "2" id="101">
-		<unit x="23" y="20" type="marine_sergeant"/>
-		<unit x="22" y="20" type="marine_standard"/> 	 	
+	<player name="Blue" team = "2" id="18">
+		<unit x="3" y="10" type="marine_sergeant"/>
+		<unit x="2" y="10" type="marine_standard"/> 	 	
 	</player>
 <!-- 
 	<player name="meta" team = "3" id="3">

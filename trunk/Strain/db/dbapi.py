@@ -1,12 +1,20 @@
 # Prerequisites:  cx_oracle
 from cx_Oracle import *
 
+
+DB_SCHEMA_OWNER = 'krav'
+DB_SCHEMA_PASS = 'goon666'
+DB_IP = '127.0.0.1'
+DB_PORT = '1521'
+DB_SID = 'XE'
+
+"""
 DB_SCHEMA_OWNER = 'straindb'
 DB_SCHEMA_PASS = 'straindb'
 DB_IP = '178.79.164.4'
 DB_PORT = '1521'
 DB_SID = 'XE'
-
+"""
 """
 DB_SCHEMA_OWNER = 'ognjenk'
 DB_SCHEMA_PASS = 'ogs'

@@ -19,7 +19,7 @@ class Player:
 
 
     def _doMsg(self, msg):
-        self.parent.to_network.putMsgList( self.id, [msg] )        
+        self.parent.to_network.putMsg( self.id, msg )        
 
 
 

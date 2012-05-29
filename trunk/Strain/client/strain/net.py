@@ -190,6 +190,10 @@ class Net():
                 self.parent.handleShoot(msg[1][1]) 
         #========================================================================
         #        
+        elif msg[0] == NEW_GAME_STARTED:
+            self.parent.newGameStarted( msg[1] )
+        #========================================================================
+        #        
         else:
             self.parent._message_in_process = True
             self.log.error("Unknown message Type: %s", msg[0])
@@ -211,6 +215,7 @@ class Net():
         if self.parent._message_in_process == False:
             msg = ClientMsg.readMsg()        
             if msg:
+                print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
                 self.handleMsg(msg)
                 
         t = time.time()
