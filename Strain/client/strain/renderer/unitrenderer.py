@@ -100,20 +100,7 @@ class UnitRenderer:
             
 
     
-    def setTargeted(self):
-        if self.isEnemyVisible and not self.isTargeted:
-            self.marker_interval.loop()
-            self.parent.setOutlineShader(self.model, color=Vec4(1,0,0,0)) 
-            self.parent.parent.movement.showTargetInfo(self)
-            self.isTargeted = True 
-    
-    def clearTargeted(self):
-        if self.isTargeted:
-            self.marker_interval.pause()
-            self.marker.setColor(1, 0, 0)
-            self.parent.clearOutlineShader(self.model)
-            self.parent.parent.movement.clearTargetInfo()
-            self.isTargeted = False
+
             
     def setEnemyVisible(self):
         if not self.isEnemyVisible:

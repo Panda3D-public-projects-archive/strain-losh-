@@ -130,10 +130,11 @@ class Movement(DirectObject.DirectObject):
             self.color_scale_parallel.pause()
             self.hovered_compass_tile = None
     
-    def showTargetInfo(self, node):
-        shooter = self.parent.units[self.parent.sel_unit_id]
-        target = self.parent.units[int(node.id)]    
-        hit, desc = toHit(shooter, target, self.parent.level)
+    def showTargetInfo(self, unit_id):
+        unit_renderer = self.parent.render_manager.unit_renderer_dict[unit_id]
+        shooter = self.parent.local_engine.units[self.parent.sel_unit_id]
+        target = self.parent.local_engine.units[unit_id]    
+        hit, desc = toHit(shooter, target, self.parent.local_engine.level)
         text = str(hit)  + '%\n' + str(desc)
         if hit < 35:
             bg = (1,0,0,0.7)
@@ -157,7 +158,7 @@ class Movement(DirectObject.DirectObject):
                           , font = loader.loadFont(utils.GUI_FONT)
                           , shadow = (0, 0, 0, 1))
     
-    def clearTargetInfo(self):
+    def clearTargetInfo(self, unit_id):
         if self.target_info_node:
             self.target_info_node.removeNode()
             self.target_info_node = None
