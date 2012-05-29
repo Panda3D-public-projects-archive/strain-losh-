@@ -105,6 +105,9 @@ class ClientMsg:
             if not ClientMsg.connect():
                 return "Cannot connect to server."
         
+        if not password:
+            password = None
+        
         #try to log in
         ClientMsg._sendMsg( (STERNER_ID, STERNER_LOGIN, username, password), True )
         t1 = time.time()
@@ -267,10 +270,8 @@ class ClientMsg:
         
     @staticmethod
     def _sendMsg(msg, sterner = False):        
-
         if not ClientMsg.myConnection:
             return
-        
         
         if not sterner:
             msg = ( ClientMsg.game_id, ClientMsg.player_id, ) + msg
@@ -346,10 +347,25 @@ class ClientMsg:
         
     @staticmethod
     def undefMsg2( value = 0 ):
-        ClientMsg._sendMsg( (UNDEFINED_MSG_2, value ) )
+        #ClientMsg._sendMsg( (UNDEFINED_MSG_2, value ) )
+        ClientMsg._sendMsg( (STERNER_ID, START_NEW_GAME, 'level2', 1000, ['Red', 'Blue'] ), True )
+
+
+    #-----------------------STERNER MESSAGES---------------------------------------
+    @staticmethod
+    def getMyGames():
+        ClientMsg._sendMsg( (STERNER_ID, GET_MY_GAMES ), True )
         
     @staticmethod
-    def selectGame( game_id ):
-        ClientMsg._sendMsg( (STERNER_ID, SELECT_GAME, game_id ), True )
+    def enterGame( game_id ):
+        ClientMsg._sendMsg( (STERNER_ID, ENTER_GAME, game_id ), True )
+        
+    @staticmethod
+    def startNewGame( map, budget, players ):
+        ClientMsg._sendMsg( (STERNER_ID, START_NEW_GAME, map, budget, players ), True )
+        
+    @staticmethod
+    def getAllPlayers():
+        ClientMsg._sendMsg( (STERNER_ID, GET_ALL_PLAYERS ), True )
         
         

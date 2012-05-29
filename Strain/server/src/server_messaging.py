@@ -8,15 +8,11 @@ import cPickle as pickle
 from pandac.PandaModules import QueuedConnectionManager, QueuedConnectionListener, QueuedConnectionReader, ConnectionWriter #@UnresolvedImport
 from pandac.PandaModules import NetAddress, NetDatagram, PointerToConnection #@UnresolvedImport
 from direct.distributed.PyDatagramIterator import PyDatagramIterator 
-import time
 import threading
 import collections
 import util
 from strain.share import *
-from socket import SHUT_RDWR
 
-
-TCP_PORT = 80808
 
 
 
@@ -227,66 +223,4 @@ class Network:
         
         self.log.info("Sterner posted a message: %s" , msg[0] )
     
-    
-    def move( self, unit_id, move_actions, source = None ):
-        self._sendMsg((MOVE, (unit_id, move_actions)), source) 
-                                                                      
-    
-    def shootMsg( self, shoot_actions, source = None ):
-        self._sendMsg( (SHOOT, shoot_actions), source ) 
-                                                                      
-    
-    def chat( self, msg, sender, source = None ):
-        self._sendMsg( (CHAT, msg, sender), source) 
-                                                                      
-    
-    def sendState( self, engine_state, source ):
-        self._sendMsg((ENGINE_STATE, engine_state), source)
-    
-    
-    def sendLevel( self, compiled_level, source ):
-        self._sendMsg((LEVEL, compiled_level), source)
-    
-    
-    def error( self, error_msg, source = None ):
-        self._sendMsg((ERROR, error_msg), source)
-    
-    
-    def sendNewTurn( self, data, source ):
-        self._sendMsg( (NEW_TURN, data), source )
-    
-    
-    def sendUnit( self, pickled_unit, source = None ):
-        self._sendMsg((UNIT, pickled_unit), source)
-
-    
-    def sendUse( self, unit_id, source = None ):
-        self._sendMsg((USE, unit_id), source)
-
-    
-    def sendTaunt( self, unit_id, actions, source = None ):
-        self._sendMsg((TAUNT, (unit_id, actions)), source)
-
-    
-    def sendDeploymentMsg( self, level, army_size, source = None ):
-        deploy_dict = {}
-        
-        deploy_dict['level'] = util.compileLevel( level )
-        deploy_dict['army_size'] = army_size
-        
-        self._sendMsg( ( DEPLOYMENT, deploy_dict ), source  )
-        
-
-    
-
-    
-    def sendMsg( self, msg, source = None):
-        self._sendMsg( msg, source )
-
-
-    
-    def pong( self, source = None ):
-        self._sendMsg( (PONG, time.time()), source )
-
-        
       

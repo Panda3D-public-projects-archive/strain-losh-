@@ -26,10 +26,10 @@ engine_state_filename = "engine_state.txt"
 class EngineThread( Thread ):
     
     
-    def __init__( self, game_id, from_network, to_network, notify ):
+    def __init__( self, game_id, from_network, to_network, notify, default = True, level = None, budget = None, players = None ):
         Thread.__init__(self)
         
-        self.name = "EngineThread"
+        self.name = ("EngineThread-" + str(game_id))
             
         self.setDaemon(True)
         self.stop = False
@@ -49,17 +49,22 @@ class EngineThread( Thread ):
             self.engine = loadFromPickle( saved_engine, from_network, to_network, notify ) 
         else:
             self.engine = Engine( game_id, from_network, to_network, notify )
-            self.engine.InitDefault()
+            if default:
+                self.engine.InitDefault()
+            else:
+                self.engine.Init( level, budget, players )
 
 
         
     def run(self):
+
         while True:
             self.engine.runOneTick()
             if self.stop:
                 break
             
-        self.notify.info( "++++++++++++EngineThread stopped!+++++++++++++ game_id:%d" % self.game_id )
+        tmp_msg = "++++++++++ " + self.name + " stopped ++++++++++"
+        self.notify.info( tmp_msg )
         
        
     
@@ -82,7 +87,7 @@ class Engine():
     #====================================init======================================0
     def __init__(self, game_id, from_network, to_network, notify):
         self.notify = notify
-        self.notify.info("------------------------Engine Starting------------------------")
+        self.notify.info("------------------------Engine Starting game_id:%d------------------------" %game_id)
 
         self.game_id = game_id
         self.from_network = from_network
@@ -119,18 +124,28 @@ class Engine():
         self.loadArmyList()
         
 
+    def Init(self, level, budget, players):
+        level_filename = level + ".txt"
+        self.level = Level( LEVELS_ROOT + level_filename )
+        self.notify.info("Loaded level:%s", level_filename )
+
+        self.loadArmyList()
+        
+
     def runOneTick(self):
         
         #+++++++++++++++++++++++++++++++++++++++++++++MAIN LOOP+++++++++++++++++++++++++++++++++++++++++++++
         #+++++++++++++++++++++++++++++++++++++++++++++MAIN LOOP+++++++++++++++++++++++++++++++++++++++++++++
-        #while( self.stop == False ):
+        while not self.stop:
 
-        time.sleep( 0.1 )
+            time.sleep( 0.1 )
+    
+            #get a message if there is one
+            msg = self.from_network.getMyMsgs( self.game_id )
+            if msg:
+                print "-----", msg
+                self.handleMsg( msg[0][1:], msg[0][0] )
 
-        #get a message if there is one
-        msg = self.from_network.getMyMsgs( self.game_id )
-        if msg:
-            self.handleMsg( msg[0][1:], msg[0][0] )
         
         #+++++++++++++++++++++++++++++++++++++++++++++MAIN LOOP+++++++++++++++++++++++++++++++++++++++++++++
         #+++++++++++++++++++++++++++++++++++++++++++++MAIN LOOP+++++++++++++++++++++++++++++++++++++++++++++
@@ -142,7 +157,7 @@ class Engine():
         """This method is the main method for handling incoming messages to the Engine"""     
  
         if( msg[0] == ENGINE_SHUTDOWN ):
-            self.error("Server is shutting down")
+            self.error("Engine is shutting down")
             self.stop = True
             
         elif( msg[0] == MOVE ):            
@@ -183,6 +198,8 @@ class Engine():
             self.pong( source )            
                         
         elif( msg[0] == UNDEFINED_MSG_1 ):
+            self.error("Engine is shutting down")
+            self.stop = True            
             pass
                         
         elif( msg[0] == UNDEFINED_MSG_2 ):
@@ -429,7 +446,7 @@ class Engine():
 #            return
         
         if self.checkVictoryConditions():
-            self.error( "Server restarting" )
+            self.error( "Game over, engine stopping" )
             self.observer.saveMsgs()
             time.sleep(3)
             self.stop = True
@@ -439,7 +456,7 @@ class Engine():
                 
         
     def checkAndSendLevelMsgs(self):
-        
+        #TODO: krav: ovo popravit
         vis_walls = {}
         changes = {}
         
@@ -549,8 +566,6 @@ class Engine():
                 self._grid_player[p.id].append(line[:])
                 
 
-        #check visibility
-        self.updateVisibilityAndSendVanishAndSpotMessages()
 
         #go through all units of active player and reset them
         for unit in self.units.itervalues():   
@@ -563,6 +578,8 @@ class Engine():
             p.addEngineStateMsg( util.compileState(self, p) )
             p.addNewTurnMsg( util.compileNewTurn(self, p) )        
                                      
+        #check visibility
+        self.updateVisibilityAndSendVanishAndSpotMessages()
                                      
         #ok so we have all units for this game initialized, add them all to observer's list
         #so obs can see them all when adding engine_state and new_turn messages
@@ -1296,16 +1313,21 @@ class Engine():
         deploy_dict['level'] = util.compileLevel( level )
         deploy_dict['army_size'] = army_size
         
-        self.to_network.putMsgList( source, [( DEPLOYMENT, deploy_dict )] )
+        self.to_network.putMsg( source, ( DEPLOYMENT, deploy_dict ) )
         
     
     
     def pong( self, source ):
-        self.to_network.putMsgList( source, [(PONG, time.time())] )
+        self.to_network.putMsg( source, (PONG, time.time()) )
         
 
-    def error(self, msg, source):
-        self.to_network.putMsgList( source, [(ERROR, msg)] )
+    def error(self, msg, source = None):
+        if not source:
+            for p in self.players:
+                p.addErrorMsg( msg )
+            return
+        
+        self.to_network.putMsg( source, (ERROR, msg) )
 
 
 #-----------------------------------------------------------------------

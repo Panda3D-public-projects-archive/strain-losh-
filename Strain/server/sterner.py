@@ -3,6 +3,11 @@ Created on 16 May 2012
 
 @author: krav
 '''
+import sys
+import dbapi
+sys.path.append('./../client')
+sys.path.append('./src')
+sys.path.append('./../db')
 import engine
 import threading
 import sys
@@ -10,7 +15,10 @@ import time
 from server_messaging import *
 from util import *
 from engine import EngineThread
+from dbapi import *
 
+
+STERNER_TIME_LIMIT = 0
 
 
 class LockedDict:
@@ -23,30 +31,33 @@ class LockedDict:
         
 
     def getMyMsgs(self, id ):
-
-        msgs = []
+        msg = []
 
         #try to acquire lock
         if not self.lock.acquire( False ):
             return None
             
         try:            
-            #if there are no msgs for us return
+            #if there are no msg for us return
             if id not in self.msg_dict:
-                return
+                return None
     
-            #if there are msgs, save them, delete them from dict and release lock
-            msgs = self.msg_dict[id]
-            del self.msg_dict[id]
+            #if the list is empty return
+            if not self.msg_dict[id]:
+                return None
+    
+            #if there is a msg, get first and delete it from
+            msg = self.msg_dict[id][0]
+            self.msg_dict[id] = self.msg_dict[id][1:] 
             
         finally:
             self.lock.release()
 
-        return ( msgs, id )
+        return ( msg, id )
 
     
     
-    def putMsgList(self, id, msg):
+    def putMsg(self, id, msg):
         #try to acquire lock
         if not self.lock.acquire( False ):
             return None
@@ -54,10 +65,10 @@ class LockedDict:
         try:            
             #if there are no msgs for this id create new list
             if id not in self.msg_dict:
-                self.msg_dict[id] = msg
+                self.msg_dict[id] = [msg]
             else:
                 #if there are msgs, append these msg
-                self.msg_dict[id].extend( msg )
+                self.msg_dict[id].append( msg )
         finally:
             self.lock.release()
 
@@ -78,7 +89,10 @@ class LockedDict:
         return all_msgs
     
 
-    
+###################################################################################    
+###################################################################################    
+###################################################################################    
+###################################################################################    
 class Sterner:
     
     
@@ -94,22 +108,30 @@ class Sterner:
         self.to_network = LockedDict()
         
         #dict to save logged in players 
-        # K: player_id , V: panda connection
+        # K: player_id , V: [panda connection, active_game]
         self.logged_in_players = {}
         
         self.test_thread = EngineThread( TEST_GAME_ID, self.from_network, self.to_network, self.notify )
         self.test_thread.start()
         
         self.notify.info( "Sterner started." )
+    
+        self._game_id_counter = 200    
+        self.new_game_queue = collections.deque()
+        self.engine_handler = EngineHandlerThread( self.new_game_queue, self.from_network, self.to_network, self.notify )
+        self.engine_handler.start()
         
         
-    
-    
+        self.db_api = DBApi()
+        
+
     
     def start( self ):
         
         t = time.time()
-        #-----------------main loop------------------
+        #-----------================------main loop---------=====================---------
+        #-----------================------main loop---------=====================---------
+        #-----------================------main loop---------=====================---------
         while True:
         
             self.network.handleConnections()
@@ -125,7 +147,7 @@ class Sterner:
                 if msg[0] == STERNER_ID:
                     self.handleSternerMsg( msg, source )
                 else:
-                    self.from_network.putMsgList( msg[0], msg[1:] )
+                    self.putMsgOnQueue( msg[0], msg[1:] )
             
             
             #put msgs on network            
@@ -134,69 +156,109 @@ class Sterner:
                 for player_id in all_msgs:
                     for msg in all_msgs[player_id]:
                         try:
-                            self.network._sendMsg( msg, self.logged_in_players[ int(player_id)] )
+                            self.network._sendMsg( msg, self.logged_in_players[ int(player_id) ][0] )
                         except:
-                            print "trazim: %s... svi: %s" % (player_id, str(self.logged_in_players))
+                            #print "trazim: %s... svi: %s" % (player_id, str(self.logged_in_players))
+                            pass
 
             
             time.sleep(0.1) 
         
             
-            if time.time() - t > 25000:
+            if STERNER_TIME_LIMIT and time.time() - t > STERNER_TIME_LIMIT:
                 self.test_thread.stop = True
                 break
-        #-----------------main loop------------------
+        #---------================--------main loop--------==================----------
+        #---------================--------main loop--------==================----------
+        #---------================--------main loop--------==================----------
         
-        
+        #shutdown everything we can
+        self.test_thread.stop = True        
+        self.engine_handler.stop = True
         self.network.stopServer()
-        
 
-        pass
+        time.sleep(3)
         
+    
+    def putMsgOnQueue(self, game_id, msg):
+        
+        #put this message in queue only if there are active games with this id
+        for tmp_value in self.logged_in_players.values():
+            try:
+                if tmp_value[1] == game_id:
+                    self.from_network.putMsg(game_id, msg)
+                    return
+            except:
+                pass
+            
+        print "nisam naso:", game_id, "  msg:", msg
     
     
     def getIdFromConnection(self, connection):
-        for player in self.logged_in_players:
-            if self.logged_in_players[player] == connection:
-                return player
+        for player_id in self.logged_in_players:
+            if self.logged_in_players[player_id][0] == connection:
+                return player_id
         return None
     
     
     
     def handleSternerMsg(self, message, source):
+        print "handleSternerMessage message:", message, "   source:", source
         
         if message[1] == STERNER_LOGIN:
             print "user:", message[2]
             print "pass:", message[3]
             
-            if message[2] == 'Red':
-                player_id = 100
-            elif message[2] == 'Blue':
-                player_id = 101
-            else:
-                player_id = 202
+            user_data = self.db_api.returnPlayer( message[2] )[0]
+
+            print "user_data:",user_data
+            if user_data[3] != message[3]:            
+                #send error
+                self.network._sendMsg( (ERROR, "Wrong username/password"), source )
+                return
                 
-                
+            player_id = user_data[0]
+
             #check if this player already logged in, if so disconnect him
             if player_id in self.logged_in_players:
-                self.network.disconnect(self.logged_in_players[player_id])
+                self.network.disconnect(self.logged_in_players[player_id][0])
 
             #remember this new player, if this player had some previous connection, in logged_in_players, this will overwrite it                
-            self.logged_in_players[ player_id ] = source
+            self.logged_in_players[ player_id ] = [source]
             
             #send LOGIN_SUCCESS to client
-            self.network.sendMsg( (LOGIN_SUCCESS, player_id), source )
+            self.network._sendMsg( (LOGIN_SUCCESS, player_id), source )
             return
+
+                
+        elif message[1] == START_NEW_GAME:
+            print "+++++new game:", message
+            
+            #TODO: 0: prvo stavit sve u bazu ako se tred e digne da moze kasnije sve procitat iz baze
+            self.new_game_queue.append( (self.getGameId(), self.getIdFromConnection(source), message[2], message[3], message[4] ) )
+                
+                
+        elif message[1] == GET_MY_GAMES:
+            pass
+                
+                
+        elif message[1] == ENTER_GAME:
+            player_id = self.getIdFromConnection(source)
+            self.logged_in_players[player_id] = self.logged_in_players[player_id][:1] 
+            self.logged_in_players[player_id].append( message[2] )
+
+
+        pass
                 
                 
 
     def playerDisconnected(self, source):
-        
+
         #go through all logged in players
-        for pid in self.logged_in_players.keys():
+        for pid in self.logged_in_players:
             
             #if we find the one with this connection
-            if self.logged_in_players[ pid ] == source:
+            if self.logged_in_players[ pid ][0] == source:
                 
                 #remove him from the dict
                 del self.logged_in_players[ pid ]
@@ -205,10 +267,73 @@ class Sterner:
                 return
 
     
+    def getGameId(self):
+        self._game_id_counter += 1
+        return self._game_id_counter
+    
+    
+    
+#########################################################################################################
+#########################################################################################################
+#########################################################################################################
+#########################################################################################################
+class EngineHandlerThread( threading.Thread ):
+    
+    def __init__( self, new_game_queue, from_network, to_network, notify ):
+        threading.Thread.__init__(self)
+        
+        self.name = "EngineHadlerThread"
+        
+        self.new_game_queue = new_game_queue
+        self.from_network = from_network
+        self.to_network = to_network
+        self.notify = notify
 
-########################################################################################################
-########################################################################################################
-if __name__ == "__main__":
-    sterner = Sterner()
+        #main dict where we will hold engine threads k:game_id, v:engine thread
+        self.engine_threads = {}
+        
+        self.setDaemon(True)
+        self.stop = False
+        
+        pass
+    
+    
+    def run(self):
+        
+        while True:
 
-    sterner.start()
+            if self.stop:
+                self.stopAllThreads()
+                break
+
+            try:
+                msg = self.new_game_queue.pop()
+                
+                game_id = msg[0]
+                creator_id = msg[1]
+                map = msg[2]
+                budget = msg[3]
+                players = msg[4]
+                
+                #create new thread
+                tmp_thread = EngineThread( game_id, self.from_network, self.to_network, self.notify, False, map, budget, players )
+                tmp_thread.start()
+                
+                self.engine_threads[game_id] = tmp_thread
+ 
+                #TODO: 1: ovdje prvo provjerit jel se fakat startao gejm pa onda tek poslat poruku
+                self.to_network.putMsg(creator_id, (NEW_GAME_STARTED, game_id) )
+                
+            except IndexError:
+                pass
+                
+
+            
+            time.sleep(0.1)
+        
+        
+    def stopAllThreads(self):
+        for thr in self.engine_threads.values():
+            thr.stop = True
+    
+
