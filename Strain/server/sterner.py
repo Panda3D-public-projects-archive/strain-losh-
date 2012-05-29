@@ -209,6 +209,7 @@ class Sterner:
             print "user:", message[2]
             print "pass:", message[3]
             
+            """
             user_data = self.db_api.returnPlayer( message[2] )[0]
 
             print "user_data:",user_data
@@ -216,8 +217,12 @@ class Sterner:
                 #send error
                 self.network._sendMsg( (ERROR, "Wrong username/password"), source )
                 return
-                
-            player_id = user_data[0]
+            """
+            
+            a = { 'Red':17, 'Blue':18, 'krav':19, 'ogi':20, 'vjeko':21 }
+             
+            #player_id = user_data[0]
+            player_id = a[ message[2] ]
 
             #check if this player already logged in, if so disconnect him
             if player_id in self.logged_in_players:
