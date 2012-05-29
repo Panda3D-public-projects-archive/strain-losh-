@@ -215,7 +215,6 @@ class Net():
         if self.parent._message_in_process == False:
             msg = ClientMsg.readMsg()        
             if msg:
-                print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
                 self.handleMsg(msg)
                 
         t = time.time()

@@ -36,7 +36,7 @@ class Player:
 
 
     def addUseMsg(self, unit_id):
-        self._doMsg( (UNIT, unit_id) )
+        self._doMsg( (USE, unit_id) )
 
 
     def addTauntMsg(self, unit_id, actions):
