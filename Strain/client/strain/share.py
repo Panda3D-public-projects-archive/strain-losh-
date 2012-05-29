@@ -21,6 +21,7 @@ STERNER_LOGIN = 'login'         #(STERNER_ID, STERNER_LOGIN, username, password)
 LOGIN_SUCCESS = 'Welcome'       #sent by Sterner when u successfully log in
 TEST_GAME_ID = 66
 GET_MY_GAMES = 'get_my_games'
+MY_GAMES = 'my_games'
 START_NEW_GAME = 'start_new_game'
 GET_ALL_PLAYERS = 'get_players'
 NEW_GAME_STARTED = 'new_game_started'

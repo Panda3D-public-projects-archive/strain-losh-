@@ -260,7 +260,7 @@ class Sterner:
                 
                 
         elif message[1] == GET_MY_GAMES:
-            pass
+            self.network._sendMsg( (MY_GAMES, self.db_api.getMyGames( self.getIdFromConnection(source) )), source )
                 
                 
         elif message[1] == ENTER_GAME:

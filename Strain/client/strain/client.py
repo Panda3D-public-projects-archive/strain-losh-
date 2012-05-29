@@ -58,6 +58,8 @@ class Client(DirectObject):
         self.net = Net(self)
         self.net.startNet()
         
+        ClientMsg.getMyGames()
+        
         if type == "ContGame":
             ClientMsg.enterGame( game_id )
             taskMgr.doMethodLater(1, ClientMsg.forceFirstTurn, 'ForceTurn', extraArgs = [])   
