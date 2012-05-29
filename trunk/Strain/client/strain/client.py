@@ -36,7 +36,6 @@ class Client(DirectObject):
         self.player = player
         self.player_id = player_id
         self.game_id = game_id
-        ClientMsg.setGameId( game_id )
         self.type = type
         
         # Flags
@@ -69,7 +68,6 @@ class Client(DirectObject):
     def newGameStarted(self, game_id):
         print "aaaaaaaaaa", game_id
         ClientMsg.enterGame( game_id )
-        ClientMsg.setGameId(game_id)
         ClientMsg.forceFirstTurn()
             
         
