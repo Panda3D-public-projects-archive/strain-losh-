@@ -456,13 +456,12 @@ class Engine():
                 
         
     def checkAndSendLevelMsgs(self):
-        #TODO: krav: ovo popravit
         vis_walls = {}
         changes = {}
         
         for p in self.players:
             vis_walls[p.id] = visibleWalls( compileAllUnits( p.units ).values() , self.level)
-            print "player:", p.name, "walls:", vis_walls[p.id]
+            #print "player:", p.name, "walls:", vis_walls[p.id]
             
             
         for x in xrange( self.level.maxgridX ):
