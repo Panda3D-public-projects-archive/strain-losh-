@@ -75,33 +75,32 @@ class Net():
         #
         elif msg[0] == MOVE:
             self._message_in_process = True
+            # Animation manager sets _message_in_process to False when the animation is done
             self.parent.game_instance.render_manager.animation_manager.handleMove(msg[1])
         #========================================================================
         #
-        elif msg[0] == NEW_TURN:
-            return       
+        elif msg[0] == NEW_TURN:      
             self._message_in_process = True  
-            self.parent.level = pickle.loads(msg[1]['level']) 
-            self.parent.players = pickle.loads(msg[1]['players'])         
-            self.parent.turn_number = msg[1]['turn']
-            self.parent.turn_player = self.parent.getPlayerName(msg[1]['active_player_id'])
-            if not self.parent.sgm.comp_inited['level']:
-                self.parent.sgm.loadLevel(self.parent.level)
-            if not self.parent.sgm.comp_inited['units']:
-                self.parent.units = pickle.loads(msg[1]['units'])               
-                self.parent.sgm.loadUnits()
-            units = pickle.loads(msg[1]['units'])
-            self.parent.interface.refreshStatusBar()
-            for unit in units.itervalues():
-                self.parent.refreshUnit(unit)
-            self.parent.inactive_units = pickle.loads(msg[1]['dead_units'])
-            for unit_id in self.parent.units.iterkeys():
-                if self.parent.isThisMyUnit(unit_id):
-                    self.parent.interface.refreshUnitInfo(unit_id)
-            self.parent.deselectUnit()
-            self.parent.sgm.level_model.setInvisibleTilesInThread()
-            # play new turn animation, _message_in_process will be set to false after this
-            self.parent.handleNewTurn()
+            # Set important game instance parameters
+            self.parent.game_instance.turn_number = msg[1]['turn'] 
+            self.parent.game_instance.turn_player = msg[1]['active_player_id'] 
+            
+            # Update local copy of engine data
+            self.parent.game_instance.local_engine.level = pickle.loads(msg[1]['level']) 
+            self.parent.game_instance.local_engine.players = pickle.loads(msg[1]['players'])
+            self.parent.game_instance.local_engine.units = pickle.loads(msg[1]['units'])            
+            self.parent.game_instance.local_engine.inactive_units = pickle.loads(msg[1]['dead_units'])
+            
+            # Update interface
+            self.parent.game_instance.interface.refreshStatusBar()
+            for unit in self.parent.game_instance.local_engine.units.itervalues():
+                if unit['owner_id'] == self.parent.game_instance.player_id:
+                    self.parent.game_instance.interface.refreshUnitInfo(unit['id'])
+
+            self.parent.game_instance.deselectUnit()
+            #self.parent.sgm.level_model.setInvisibleTilesInThread()
+            # Animation manager sets _message_in_process to False when the animation is done
+            self.parent.game_instance.render_manager.animation_manager.handleNewTurn()
         #========================================================================
         #
         elif msg[0] == UNIT:
@@ -126,12 +125,13 @@ class Net():
         #
         elif msg[0] == SHOOT:
             self._message_in_process = True
-            # play shoot animation, _message_in_process will be set to false after this
-            self.parent.handleShoot(msg[1])       
+            # Animation manager sets _message_in_process to False when the animation is done
+            self.parent.game_instance.render_manager.animation_manager.handleShoot(msg[1])       
         #========================================================================
         #
         elif msg[0] == SPOT:
             self._message_in_process = True
+            # Animation manager sets _message_in_process to False when the animation is done
             self.parent.game_instance.render_manager.animation_manager.handleSpot(msg[1])  
             self.parent.game_instance.local_engine.level.putUnitDict(msg[1])  
             if self.parent.game_instance.player_id == self.parent.game_instance.turn_player and self.parent.game_instance.sel_unit_id != None:
@@ -141,8 +141,8 @@ class Net():
         #
         elif msg[0] == VANISH:
             self._message_in_process = True            
-            unit_id = msg[1]
-            self.parent.handleVanish(unit_id)
+            # Animation manager sets _message_in_process to False when the animation is done
+            self.parent.game_instance.render_manager.animation_manager.handleVanish(msg[1])
                 
         #========================================================================
         #
