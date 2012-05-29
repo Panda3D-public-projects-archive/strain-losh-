@@ -143,7 +143,7 @@ class Engine():
             #get a message if there is one
             msg = self.from_network.getMyMsgs( self.game_id )
             if msg:
-                print "-----", msg
+                #print "-----", msg
                 self.handleMsg( msg[0][1:], msg[0][0] )
 
         
