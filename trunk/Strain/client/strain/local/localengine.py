@@ -56,4 +56,12 @@ class LocalEngine():
         if self.units.has_key(unit_id):
             unit = self.units[unit_id]
         return Point2(unit['pos'][0], unit['pos'][1])  
+    
+    def getPlayerById(self, player_id):
+        player_name = 'x'
+        for player in self.players:
+            if player['id'] == player_id:
+                player_name = player['name']
+                break
+        return player_name
         

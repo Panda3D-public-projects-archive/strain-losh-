@@ -187,10 +187,10 @@ class AnimationManager():
                 weapon = action[3] # weapon id
                 damage_list = action[4] # list of all damaged/missed/bounced/killed units
                 if shooter_id >= 0:
-                    shooter_model = self.sgm.unit_np_dict[shooter_id]
-                    a = self.buildShootAnim(shooter_model, weapon)
-                    shooter_pos =  Point3(utils.TILE_SIZE*(self.units[shooter_id]['pos'][0] + 0.5), 
-                                          utils.TILE_SIZE*(self.units[shooter_id]['pos'][1] + 0.5),
+                    shooter_unit_renderer = self.parent.unit_renderer_dict[shooter_id]
+                    a = self.buildShootAnim(shooter_unit_renderer, weapon)
+                    shooter_pos =  Point3(utils.TILE_SIZE*(self.parent.parent.local_engine.units[shooter_id]['pos'][0] + 0.5), 
+                                          utils.TILE_SIZE*(self.parent.parent.local_engine.units[shooter_id]['pos'][1] + 0.5),
                                           utils.GROUND_LEVEL
                                           )
                     b = self.buildBulletAnim(shooter_pos, shoot_tile)
@@ -215,17 +215,17 @@ class AnimationManager():
                 shoot_tile = action[2] # (x,y) pos of targeted tile
                 weapon = action[3] # weapon id
                 damage_list = action[4] # list of all damaged/missed/bounced/killed units
-                shooter_model = self.sgm.unit_np_dict[shooter_id]
-                i = self.buildMeleeAnim(shooter_model, shoot_tile, weapon)
+                shooter_unit_renderer = self.parent.unit_renderer_dict[shooter_id]
+                i = self.buildMeleeAnim(shooter_unit_renderer, shoot_tile, weapon)
                 s.append(i)
                 i = self.buildDamageAnim(damage_list)
                 s.append(i)
             elif action_type == "rotate":
                 unit_id = action[1]
                 heading = action[2]
-                unit_model = self.sgm.unit_np_dict[unit_id]
-                start_h = utils.getHeadingAngle(self.units[unit_id]['heading'])
-                i, duration, pos, h = self.buildRotateAnim(unit_model, None, None, start_h, heading)
+                unit_renderer = self.parent.unit_renderer_dict[unit_id]
+                start_h = utils.getHeadingAngle(self.parent.parent.local_engine.units[unit_id]['heading'])
+                i, duration, pos, h = self.buildRotateAnim(unit_renderer, None, None, start_h, heading)
                 s.append(i)
             elif action_type == "overwatch":
                 action_list = action[1]
@@ -235,9 +235,9 @@ class AnimationManager():
         # Start our shoot sequence
         return s
     
-    def buildShootAnim(self, unit_model, weapon):
+    def buildShootAnim(self, unit_renderer, weapon):
         # Unit shooting animation
-        shoot_anim = Func(unit_model.fsm.request, 'Shoot')
+        shoot_anim = unit_renderer.model.actorInterval('shoot')
         return shoot_anim
     
     def buildBulletAnim(self, start_pos, target_tile):
@@ -251,9 +251,9 @@ class AnimationManager():
         start_node = NodePath("start_node")
         start_node.setPos(start_pos)
         time = round(start_node.getDistance(dest_node) / utils.BULLET_SPEED, 2)
-        bullet_sequence = Sequence(Func(self.sgm.setBullet, self.bullet),
+        bullet_sequence = Sequence(Func(self.bullet.reparentTo, render),
                                    self.bullet.posInterval(time, end_pos, start_pos),
-                                   Func(self.sgm.deleteBullet, self.bullet)
+                                   Func(self.bullet.removeNode)
                                    )
         return bullet_sequence
     
@@ -274,23 +274,23 @@ class AnimationManager():
         for action in damage_list:
             damage_type = action[0]
             target_unit_id = action[1]
-            target_unit = self.sgm.unit_np_dict[target_unit_id]
+            target_unit_renderer = self.parent.unit_renderer_dict[target_unit_id]
             t = TextNode('dmg')
             if damage_type == "bounce":
-                target_anim = Func(target_unit.fsm.request, 'GetHit') 
+                target_anim = target_unit_renderer.model.actorInterval('get_hit') 
                 dmg = 'bounce'
             elif damage_type == "miss":
-                target_anim = Func(target_unit.fsm.request, 'GetHit') 
+                target_anim = target_unit_renderer.model.actorInterval('get_hit') 
                 dmg = 'miss'                
             elif damage_type == "damage":
-                color_interval = Sequence(LerpColorScaleInterval(target_unit.model, 0.2, (10,10,10,1))
-                                         ,LerpColorScaleInterval(target_unit.model, 0.2, (1,1,1,1)))
-                target_anim = Sequence(Func(target_unit.fsm.request, 'GetHit') , color_interval)
+                color_interval = Sequence(LerpColorScaleInterval(target_unit_renderer.model, 0.2, (10,10,10,1))
+                                         ,LerpColorScaleInterval(target_unit_renderer.model, 0.2, (1,1,1,1)))
+                target_anim = Parallel(target_unit_renderer.model.actorInterval('get_hit'), color_interval)
                 dmg = str(action[2])
             elif damage_type == "kill":
-                color_interval = Sequence(LerpColorScaleInterval(target_unit.model, 0.2, (10,10,10,1))
-                                         ,LerpColorScaleInterval(target_unit.model, 0.2, (1,1,1,1)))                
-                target_anim = Parallel(Func(target_unit.fsm.request, 'Die') , color_interval)
+                color_interval = Sequence(LerpColorScaleInterval(target_unit_renderer.model, 0.2, (10,10,10,1))
+                                         ,LerpColorScaleInterval(target_unit_renderer.model, 0.2, (1,1,1,1)))                
+                target_anim = Parallel(target_unit_renderer.model.actorInterval('die')  , color_interval)
                 dmg = str(action[2])
             t.setText( "%s" % dmg)
             t.setTextColor(1, 0, 0, 1)
@@ -303,9 +303,9 @@ class AnimationManager():
             # textNodePath will be reparented to unitmodel, so set start and end pos relative to the unit
             start_pos = Point3(0, 0, 0.9)
             end_pos = start_pos + Point3(0, 0, 3)
-            damage_text_sequence = Sequence(Func(self.sgm.setDamageNode, textNodePath, target_unit.node),
+            damage_text_sequence = Sequence(Func(textNodePath.reparentTo, target_unit_renderer.node),
                                             textNodePath.posInterval(1, end_pos, start_pos),
-                                            Func(self.sgm.deleteDamageNode, textNodePath)
+                                            Func(textNodePath.removeNode)
                                             ) 
             damage_parallel = Parallel(damage_text_sequence, target_anim)       
         return damage_parallel
@@ -331,7 +331,8 @@ class AnimationManager():
         
     def handleNewTurn(self):
         text = TextNode('new turn node')
-        text.setText("TURN: "+self.turn_player)
+        player_name = self.parent.parent.local_engine.getPlayerById(self.parent.parent.turn_player)
+        text.setText("TURN: "+player_name)
         textnp = NodePath("textnp")
         textNodePath = textnp.attachNewNode(text)
         textNodePath.setColor(1, 0, 0)
@@ -341,7 +342,7 @@ class AnimationManager():
         s = Sequence(textNodePath.scaleInterval(.3, textNodePath.getScale()*20,blendType='easeIn'),
                      Wait(1.0),
                      textNodePath.scaleInterval(.3, textNodePath.getScale()*0.05,blendType='easeIn'),
-                     Func(self.sgm.deleteTurnNode, textNodePath),
+                     Func(textNodePath.removeNode),
                      Func(self.afterAnimHook)
                      )
         s.start()        
