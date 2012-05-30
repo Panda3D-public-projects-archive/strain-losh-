@@ -117,7 +117,7 @@ class ClientMsg:
                 if msg[0] == LOGIN_SUCCESS:
                     print "dobio welcome!!!\nid:", msg[1]
                     ClientMsg.player_id = int(msg[1])
-                    return 0
+                    return None
                 else:
                     #return error msg
                     return msg
