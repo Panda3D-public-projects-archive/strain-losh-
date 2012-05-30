@@ -70,7 +70,7 @@ class App():
         self.net_manager.startNet()
 
         base.accept('i', render.ls)
-
+        
         # Start with Login screen
         self.fsm.request('Login')
         

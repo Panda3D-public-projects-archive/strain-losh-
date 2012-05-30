@@ -34,7 +34,7 @@ class Movement(DirectObject.DirectObject):
     
         #taskMgr.add(self.rayupdate, 'rayupdate_task')
         taskMgr.add(self.pickerTask, 'picker_task')
-        taskMgr.add(self.positionTask, 'position_task')
+        taskMgr.add(self.positionTask, 'position_task', sort=2)
         
         self.color_scale_parallel = None
         
@@ -129,39 +129,6 @@ class Movement(DirectObject.DirectObject):
             self.hovered_compass_tile.setScale(0.05)
             self.color_scale_parallel.pause()
             self.hovered_compass_tile = None
-    
-    def showTargetInfo(self, unit_id):
-        unit_renderer = self.parent.render_manager.unit_renderer_dict[unit_id]
-        shooter = self.parent.local_engine.units[self.parent.sel_unit_id]
-        target = self.parent.local_engine.units[unit_id]    
-        hit, desc = toHit(shooter, target, self.parent.local_engine.level)
-        text = str(hit)  + '%\n' + str(desc)
-        if hit < 35:
-            bg = (1,0,0,0.7)
-            fg = (1,1,1,1)
-        elif hit >= 35 and hit < 75:
-            bg = (0.89, 0.82, 0.063, 0.7)
-            fg = (0,0,0,1)
-        elif hit >= 75:
-            bg = (0.153, 0.769, 0.07, 0.7)
-            fg = (0,0,0,1)
-        else:
-            bg = (1,0,0,0.7)
-            fg = (1,1,1,1)
-        self.target_info_node = aspect2d.attachNewNode('target_info')
-        OnscreenText(parent = self.target_info_node
-                          , text = text
-                          , align=TextNode.ACenter
-                          , scale=0.04
-                          , fg = fg
-                          , bg = bg
-                          , font = loader.loadFont(utils.GUI_FONT)
-                          , shadow = (0, 0, 0, 1))
-    
-    def clearTargetInfo(self, unit_id):
-        if self.target_info_node:
-            self.target_info_node.removeNode()
-            self.target_info_node = None
         
     def mouseLeftClick(self):
         if self.parent.interface.hovered_gui != None:
@@ -243,14 +210,6 @@ class Movement(DirectObject.DirectObject):
                 pos = Point3(utils.TILE_SIZE*(tile.getPythonTag('pos')[0]+0.5), utils.TILE_SIZE*(tile.getPythonTag('pos')[1]+0.5), utils.GROUND_LEVEL)
                 pos2d = utils.pointCoordIn2d(pos)
                 tile.setPos(pos2d)
-        
-        # Target info positioning
-        if base.mouseWatcherNode.hasMouse():
-            if self.target_info_node != None:
-                mpos = base.mouseWatcherNode.getMouse()
-                r2d = Point3(mpos.getX(), 0, mpos.getY())
-                a2d = aspect2d.getRelativePoint(render2d, r2d)
-                self.target_info_node.setPos(a2d + Point3(0, 0, 0.08))
         return task.cont
     
     def pickerTask(self, task):
