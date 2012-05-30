@@ -89,9 +89,10 @@ class DBProxyApi():
         lst = []
         for g in self.game_players:
             if int(g[2]) == int(player_id):
-                game = self.getGame(g[1])[0]
-                if int(game[5]):
-                    lst.append( game )
+                game = self.getGame(g[1])
+                if game:
+                    if int(game[0][5]):
+                        lst.append( game )
         return lst
     
     
@@ -105,6 +106,7 @@ class DBProxyApi():
     
     def getGame(self, game_id):
         for g in self.games:
+            
             if int(g[0]) == int(game_id):
                 return [g]
 
