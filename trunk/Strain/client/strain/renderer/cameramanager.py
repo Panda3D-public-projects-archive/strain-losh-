@@ -57,7 +57,7 @@ class CameraManager(DirectObject):
         
         self.keyMovementEnabled = True
         
-        self.camTask = taskMgr.add(self.update, 'camera_update_task') 
+        self.camTask = taskMgr.add(self.update, 'camera_update_task', sort=1) 
 
     def clamp(self, val, min_val, max_val):
         """If val > min_val and val < max_val returns val

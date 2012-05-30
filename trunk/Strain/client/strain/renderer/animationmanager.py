@@ -155,7 +155,7 @@ class AnimationManager():
     def buildSpotAnim(self, unit_model, pos, heading):
         return Sequence(Func(self.parent.showUnit, unit_model, pos, None)
                        ,Wait(0.2)
-                       #,Func(self.interface.setMarker, unit_model.id)
+                       ,Func(self.parent.unit_marker_renderer.setMarker, unit_model.id)
                        #,Func(self.interface.console.consoleOutput, 'Unit spotted!', utils.CONSOLE_SYSTEM_MESSAGE)
                        #,Func(self.interface.console.show)
                        )
