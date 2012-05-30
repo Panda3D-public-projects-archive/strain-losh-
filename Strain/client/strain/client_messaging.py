@@ -348,8 +348,8 @@ class ClientMsg:
 
     #-----------------------STERNER MESSAGES---------------------------------------
     @staticmethod
-    def getMyGames():
-        ClientMsg._sendMsg( (STERNER_ID, GET_MY_GAMES ), True )
+    def getAllFinishedGames():
+        ClientMsg._sendMsg( (STERNER_ID, ALL_FINISHED_GAMES ), True )
         
     @staticmethod
     def enterGame( game_id ):
@@ -360,8 +360,5 @@ class ClientMsg:
     def startNewGame( map, budget, players ):
         ClientMsg._sendMsg( (STERNER_ID, START_NEW_GAME, map, budget, players ), True )
         
-    @staticmethod
-    def getAllPlayers():
-        ClientMsg._sendMsg( (STERNER_ID, GET_ALL_PLAYERS ), True )
         
         
