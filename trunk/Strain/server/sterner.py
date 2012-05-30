@@ -223,8 +223,9 @@ class Sterner:
             self.network._sendMsg( (LOGIN_SUCCESS, player_id), source )
 
             #send all levels and all player_ids to client so he can create new games
-            self.network._sendMsg( (ALL_PLAYERS, self.db_api.getAllPlayers()), source)
-            self.network._sendMsg( (ALL_LEVELS, self.db_api.getAllLevels()), source)
+            self.network._sendMsg( (ALL_PLAYERS, self.db_api.getAllPlayers()), source )
+            self.network._sendMsg( (ALL_LEVELS, self.db_api.getAllLevels()), source )
+            self.network._sendMsg( (MY_ACTIVE_GAMES, self.db_api.getMyActiveGames( self.getIdFromConnection(source) )), source )
             return
 
                 
@@ -259,8 +260,8 @@ class Sterner:
             self.new_game_queue.append( (game_id, self.getIdFromConnection(source), level, budget, player_ids ) )
                 
                 
-        elif message[1] == GET_MY_GAMES:
-            self.network._sendMsg( (MY_GAMES, self.db_api.getMyGames( self.getIdFromConnection(source) )), source )
+        elif message[1] == ALL_FINISHED_GAMES:
+            self.network._sendMsg( (ALL_FINISHED_GAMES, self.db_api.getAllFinishedGames()), source )
                 
                 
         elif message[1] == ENTER_GAME:

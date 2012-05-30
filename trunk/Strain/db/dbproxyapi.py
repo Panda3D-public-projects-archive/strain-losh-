@@ -13,7 +13,7 @@ PLAYERS = "players.txt"
 PLAYERS_HEADER = "#id, email, name, pass"
 
 GAMES = "games.txt"
-GAMES_HEADER = "#id, map, budget, turn, finished"
+GAMES_HEADER = "#id, map, budget, turn, active_player_id, finished"
 
 GAME_PLAYERS = "game_players.txt"
 GAME_PLAYERS_HEADER = "#id, game_id, ply_id, team_id, order_num"
@@ -58,14 +58,14 @@ class DBProxyApi():
     def saveToFile(self, list, fname,header):
         f = open("./../db/" + fname, "w")
         f.write(header)
-        f.write('\n')
+        #f.write('\n')
         for a in list:
-            line = ""
+            line = "\n"
             for b in a:
                 line += str(b)
                 line += ','
             line = line[:-1]
-            line += '\n'
+            #line += '\n'
             #print line
             f.write( line )
         f.close()
@@ -85,15 +85,23 @@ class DBProxyApi():
         pass
     
     
-    def getMyGames(self, player_id):
+    def getMyActiveGames(self, player_id):
         lst = []
         for g in self.game_players:
             if int(g[2]) == int(player_id):
-                lst.append( self.getGame(g[1])[0] )
-        
-        print lst
+                game = self.getGame(g[1])[0]
+                if int(game[5]):
+                    lst.append( game )
         return lst
     
+    
+    def getAllFinishedGames(self):
+        lst = []
+        for game in self.games:
+            if int(game[5]):
+                lst.append(game)
+        return lst
+
     
     def getGame(self, game_id):
         for g in self.games:
@@ -119,9 +127,9 @@ class DBProxyApi():
         return ret_lst
     
     
-    def createGame(self, level_name, army_size):
+    def createGame(self, level_name, army_size, first_player_id):
         id = int(self.games[-1][0]) + 1
-        self.games.append( [id, level_name, army_size, 0] )
+        self.games.append( [id, level_name, army_size, 0, first_player_id, 0] )
         self.saveToFile(self.games, GAMES, GAMES_HEADER)
         return id
 
@@ -152,7 +160,7 @@ if __name__ == "__main__":
     #all_players = dbapi.getAllPlayers()
     #print [ x for x,y in all_players ]
     #dbapi.getMyGames( 17 ) 
-    
+    print dbapi.getAllFinishedGames()
     
     dbapi.close()
 #MAIN
