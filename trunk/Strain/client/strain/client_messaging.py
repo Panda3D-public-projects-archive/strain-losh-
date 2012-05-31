@@ -330,7 +330,7 @@ class ClientMsg:
         
     @staticmethod
     def endTurn():
-        ClientMsg._sendMsg((END_TURN,0))
+        ClientMsg._sendMsg( (END_TURN,0) )
         
     @staticmethod
     def ping():
@@ -343,7 +343,7 @@ class ClientMsg:
     @staticmethod
     def undefMsg2( value = 0 ):
         #ClientMsg._sendMsg( (UNDEFINED_MSG_2, value ) )
-        ClientMsg._sendMsg( (STERNER_ID, START_NEW_GAME, 'level2', 1000, ['Red', 'Blue'] ), True )
+        ClientMsg._sendMsg( (STERNER_ID, START_NEW_GAME, 'level2', 1000, [ 17, 18 ] ), True )
 
 
     #-----------------------STERNER MESSAGES---------------------------------------
@@ -360,5 +360,11 @@ class ClientMsg:
     def startNewGame( map, budget, players ):
         ClientMsg._sendMsg( (STERNER_ID, START_NEW_GAME, map, budget, players ), True )
         
-        
-        
+    @staticmethod
+    def acceptGame( game_id ):
+        ClientMsg._sendMsg( (STERNER_ID, ACCEPT_GAME, game_id ), True )
+
+    @staticmethod
+    def refreshGameLists():
+        ClientMsg._sendMsg( (STERNER_ID, REFRESH_MY_GAME_LISTS ), True )
+         

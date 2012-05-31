@@ -7,16 +7,17 @@ import random
 import sys
 import os
 import glob
-     
+import copy     
+
 
 PLAYERS = "players.txt"
-PLAYERS_HEADER = "#id, email, name, pass"
+PLAYERS_HEADER = "#0:id, 1:email, 2:name, 3:pass"
 
 GAMES = "games.txt"
-GAMES_HEADER = "#id, map, budget, turn, active_player_id, finished"
+GAMES_HEADER = "#0:id, 1:map, 2:budget, 3:turn, 4:active_player_id, 5:status (0=waiting for acceptance,1=in progress, 2=finished)"
 
 GAME_PLAYERS = "game_players.txt"
-GAME_PLAYERS_HEADER = "#id, game_id, ply_id, team_id, order_num"
+GAME_PLAYERS_HEADER = "#0:id, 1:game_id, 2:ply_id, 3:team_id, 4:order_num, 5:accepted"
 
 
 class DBProxyApi():
@@ -38,8 +39,18 @@ class DBProxyApi():
             line = line.strip()
             line = line.split(',')
             
-            #print line
-            lst.append(line)
+            #try to convert everything to int
+            conv_line = []
+            for entry in line:
+                conv_entry = entry
+                try:
+                    conv_entry = int( entry )
+                except:
+                    pass
+                    
+                conv_line.append( conv_entry )
+            
+            lst.append(conv_line)
             
         player_file.close()
         return lst
@@ -71,28 +82,80 @@ class DBProxyApi():
         f.close()
         
     
-    def deletePlayer(self, username):
-        pass
-    
-    
     def returnPlayer(self, username):
         for p in self.players:
             if p[2] == username:
-                return [p]
-    
-    
-    def returnLevel(self, name):
-        pass
+                return p
     
     
     def getMyActiveGames(self, player_id):
         lst = []
         for g in self.game_players:
-            if int(g[2]) == int(player_id):
+            if g[2] == player_id:
                 game = self.getGame(g[1])
                 if game:
-                    if int(game[0][5]):
+                    if game[5] == 1:
                         lst.append( game )
+        return lst
+
+    
+    
+    def getGamePlayer(self, game_id, player_id):
+        for p in self.game_players:
+            if p[1] == game_id and p[2] == player_id:
+                return p
+        return None
+    
+    
+    def updateGamePlayer(self, game_player):
+        for p in self.game_players:
+            if p[1] == game_player[1] and p[2] == game_player[2]:
+
+                for i in xrange( 0, len(game_player) ):
+                    print "staro:",p[i],"  novo:", game_player[i]
+                    p[i] = game_player[i]
+        self.saveToFile(self.game_players, GAME_PLAYERS, GAME_PLAYERS_HEADER)
+    
+    
+    def updateGame(self, game):
+        for g in self.games:
+            if g[0] == game[0]:
+                for i in xrange( 0, len(game) ):
+                    print "staro:",g[i],"  novo:", game[i]
+                    g[i] = game[i]
+        self.saveToFile(self.games, GAMES, GAMES_HEADER)
+    
+    
+    def getMyUnacceptedGames(self, player_id):
+        game_id_list = []
+        ret_lst = []
+        for p in self.game_players:
+            if p[2] == player_id and p[5] == 0:
+                game_id_list.append( p[1] )
+        for g in self.games:
+            if g[0] in game_id_list:
+                ret_lst.append(g)
+        return ret_lst
+    
+    
+    def getMyWaitingGames(self, player_id):
+        game_id_list = []
+        ret_lst = []
+        for p in self.game_players:
+            if p[2] == player_id and p[5] == 1:
+                game_id_list.append( p[1] )
+        for g in self.games:
+            if g[0] in game_id_list and g[5] == 0:
+                ret_lst.append(g)
+        return ret_lst
+    
+    
+    
+    def getGameAllPlayers( self, game_id ):
+        lst = []
+        for p in self.game_players:
+            if p[1] == game_id:
+                lst.append(p)
         return lst
     
     
@@ -106,9 +169,8 @@ class DBProxyApi():
     
     def getGame(self, game_id):
         for g in self.games:
-            
             if int(g[0]) == int(game_id):
-                return [g]
+                return g
 
     
     def getAllLevels(self):
@@ -136,19 +198,12 @@ class DBProxyApi():
         return id
 
         
-    def addPlayerToGame(self, game_id, player_id, team, order):
+    def addPlayerToGame(self, game_id, player_id, team, order, accepted):
         id = int(self.game_players[-1][0]) + 1
-        self.game_players.append( [id, game_id, player_id, team, order] )
+        self.game_players.append( [id, game_id, player_id, team, order, accepted] )
         self.saveToFile(self.game_players, GAME_PLAYERS, GAME_PLAYERS_HEADER)
 
-                
-    def returnPlayerInGame(self, game_id, player_name):
-        pass
-    
-    
-    def addMessage(self, game_id, player_name, message_type, message, turn_number):
-        pass
-    
+
     
 if __name__ == "__main__":
     dbapi = DBProxyApi()
@@ -162,9 +217,27 @@ if __name__ == "__main__":
     #all_players = dbapi.getAllPlayers()
     #print [ x for x,y in all_players ]
     #dbapi.getMyGames( 17 ) 
-    print dbapi.getAllFinishedGames()
+    #print dbapi.getAllFinishedGames()
+    
+    #g_p = copy.deepcopy(dbapi.getGamePlayer(100, 17))
+    #g_p[3] = 0
+    #g_p[4] = 0
+    #g_p[5] = 1
+    #dbapi.updateGamePlayer(g_p)
+    
+    #print dbapi.getGameAllPlayers( 100 )
+    
+    #g = copy.deepcopy(dbapi.getGame(101))
+    #g[1] = 'halls0'
+    #g[2] = 666
+    #dbapi.updateGame(g)
+    
+    #print dbapi.getMyUnacceptedGames( 17 )
+    
+    print dbapi.getMyWaitingGames( 111 )
     
     dbapi.close()
+    
 #MAIN
 #dbapi = DBApi()
 #print dbapi.returnPlayer('ogi')
