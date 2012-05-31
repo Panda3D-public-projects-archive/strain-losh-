@@ -58,7 +58,8 @@ class Net():
             self.parent.game_instance.local_engine.players = pickle.loads(msg[1]['players'])
             self.parent.game_instance.local_engine.units = pickle.loads(msg[1]['units'])
             self.parent.game_instance.local_engine.inactive_units = pickle.loads(msg[1]['dead_units'])
-            self.parent.game_instance.local_engine.refreshLevelUnitDict()            
+            # Update level dynamic lists for accurate calculation of walkable tiles
+            self.parent.game_instance.local_engine.refreshLevelUnitDict()          
             
             # Update renderers
             self.parent.game_instance.render_manager.refresh()
@@ -90,6 +91,8 @@ class Net():
             self.parent.game_instance.local_engine.players = pickle.loads(msg[1]['players'])
             self.parent.game_instance.local_engine.units = pickle.loads(msg[1]['units'])            
             self.parent.game_instance.local_engine.inactive_units = pickle.loads(msg[1]['dead_units'])
+            # Update level dynamic lists for accurate calculation of walkable tiles
+            self.parent.game_instance.local_engine.refreshLevelUnitDict()
             
             # Update interface
             self.parent.game_instance.interface.refreshStatusBar()
