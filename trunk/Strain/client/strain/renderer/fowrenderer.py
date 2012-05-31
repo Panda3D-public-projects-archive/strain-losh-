@@ -24,14 +24,14 @@ class FowRenderer():
             
         minb, maxb = self.parent_node.getTightBounds()
         dim = maxb-minb
+
         maxDim = max(dim[0],dim[1])
         scale = 1./maxDim
         center = (minb+maxb)*.5
         self.fowTextureStage = TextureStage('')
         self.parent_node.setTexGen(self.fowTextureStage, RenderAttrib.MWorldPosition)
-        self.parent_node.setTexScale(self.fowTextureStage, scale)
-        self.parent_node.setTexOffset(self.fowTextureStage, -.5-center[0]*scale, -.5-center[1]*scale)  
-        
+        self.parent_node.setTexScale(self.fowTextureStage, 1./dim[0], 1./dim[1])
+        #self.parent_node.setTexOffset(self.fowTextureStage, -.5-center[0]*scale, -.5-center[1]*scale)  
         
         cm = CardMaker('')
         cm.setFrame(-.8,-.2,0,.6)
