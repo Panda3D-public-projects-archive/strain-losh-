@@ -155,13 +155,15 @@ class AnimationManager():
     def buildSpotAnim(self, unit_model, pos, heading):
         return Sequence(Func(self.parent.showUnit, unit_model, pos, None)
                        ,Wait(0.2)
-                       ,Func(self.parent.unit_marker_renderer.setMarker, unit_model.id)
+                       ,Func(self.parent.unit_marker_renderer.setMarker, int(unit_model.id))
                        #,Func(self.interface.console.consoleOutput, 'Unit spotted!', utils.CONSOLE_SYSTEM_MESSAGE)
                        #,Func(self.interface.console.show)
                        )
     
     def buildDeleteAnim(self, unit_id):
-        return Sequence(Func(self.parent.hideUnit, unit_id), Wait(0.2))
+        return Sequence(Func(self.parent.hideUnit, unit_id), 
+                        Wait(0.2),
+                        Func(self.parent.unit_marker_renderer.clearMarker, unit_id))
     
     def buildDetachAnim(self, unit_id):
         return Sequence(Func(self.sgm.detachUnit, unit_id), Wait(0.2))

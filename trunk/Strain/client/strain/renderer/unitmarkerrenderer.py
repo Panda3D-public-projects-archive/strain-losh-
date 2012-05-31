@@ -104,12 +104,12 @@ class UnitMarkerRenderer():
         return task.cont
     
     def setMarker(self, unit_id):
-        if self.enemy_markers.has_key(str(unit_id)):
-            self.enemy_markers[str(unit_id)]['node'].reparentTo(aspect2d)
-            self.enemy_markers[str(unit_id)]['visible'] = True  
-            if self.parent.unit_renderer_dict.has_key(int(unit_id)): 
-                unit_renderer = self.parent.unit_renderer_dict[int(unit_id)] 
-                self.enemy_markers[str(unit_id)]['node'].setPos(self.calcMarkerPosition(unit_renderer))
+        if self.enemy_markers.has_key(unit_id):
+            self.enemy_markers[unit_id]['node'].reparentTo(aspect2d)
+            self.enemy_markers[unit_id]['visible'] = True  
+            if self.parent.unit_renderer_dict.has_key(unit_id): 
+                unit_renderer = self.parent.unit_renderer_dict[unit_id] 
+                self.enemy_markers[unit_id]['node'].setPos(self.calcMarkerPosition(unit_renderer))
         else:
             cm = CardMaker('')
             cm.setFrame(-0.05, 0.05, -0.05, 0.05)
@@ -117,13 +117,13 @@ class UnitMarkerRenderer():
             self.enemy_markers[unit_id]['node'] = aspect2d.attachNewNode(cm.generate())
             self.enemy_markers[unit_id]['node'].setTexture(loader.loadTexture('action_preview_arrow.png'))
             self.enemy_markers[unit_id]['node'].setTransparency(TransparencyAttrib.MAlpha)
-            self.enemy_markers[unit_id]['node'].setPos(self.calcMarkerPosition(self.parent.unit_renderer_dict[int(unit_id)]))            
+            self.enemy_markers[unit_id]['node'].setPos(self.calcMarkerPosition(self.parent.unit_renderer_dict[unit_id]))            
             self.enemy_markers[unit_id]['visible'] = True
             
     def clearMarker(self, unit_id):
-        if self.enemy_markers.has_key(str(unit_id)):
-            self.enemy_markers[str(unit_id)]['node'].detachNode()
-            self.enemy_markers[str(unit_id)]['visible'] = False    
+        if self.enemy_markers.has_key(unit_id):
+            self.enemy_markers[unit_id]['node'].detachNode()
+            self.enemy_markers[unit_id]['visible'] = False    
 
     def calcMarkerPosition(self, unit_renderer):
         p = utils.nodeCoordInRender2d(unit_renderer.model)
@@ -157,7 +157,7 @@ class UnitMarkerRenderer():
     def markEnemyUnits(self, task):
         for unit_id in self.enemy_markers:
             if self.enemy_markers[unit_id]['visible'] == True:
-                if self.parent.unit_renderer_dict.has_key(int(unit_id)): 
-                    unit_renderer = self.parent.unit_renderer_dict[int(unit_id)] 
+                if self.parent.unit_renderer_dict.has_key(unit_id): 
+                    unit_renderer = self.parent.unit_renderer_dict[unit_id] 
                     self.enemy_markers[unit_id]['node'].setPos(self.calcMarkerPosition(unit_renderer))
         return task.cont
