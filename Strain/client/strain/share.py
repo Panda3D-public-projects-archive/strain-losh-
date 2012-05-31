@@ -26,8 +26,11 @@ ENTER_GAME = 'enter_game'
 ALL_PLAYERS = 'all_players'
 ALL_LEVELS = 'all_levels'
 MY_ACTIVE_GAMES = 'my_active_games'
+MY_UNACCEPTED_GAMES = 'my_unnaccepted_games'
+MY_WAITING_GAMES = 'my_waiting_games'
 ALL_FINISHED_GAMES = 'all_finished_games'
-
+ACCEPT_GAME = 'accept_game'
+REFRESH_MY_GAME_LISTS = 'refresh_my_game_lists'
 
 
 #-----------------------engine messages----------------------

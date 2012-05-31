@@ -1,3 +1,4 @@
-#id, map, budget, turn, active_player_id, finished
+#0:id, 1:map, 2:budget, 3:turn, 4:active_player_id, 5:status (0=waiting for acceptance,1=in progress, 2=finished)
 100,level2,1000,0,17,1
-101,halls0,1500,0,111,0
+101,halls0,666,0,111,0
+102,level2,1000,0,17,0

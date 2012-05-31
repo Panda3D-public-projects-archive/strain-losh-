@@ -25,7 +25,7 @@ DB_SID = 'inv10dev'
 
 class DBApi():
     def __init__(self):
-        self.conn = Connection(user=DB_SCHEMA_OWNER, password=DB_SCHEMA_PASS, dsn=makedsn(DB_IP, DB_PORT, DB_SID))
+        self.conn = Connection(user=DB_SCHEMA_OWNER, password=DB_SCHEMA_PASS, dsn=makedsn(DB_IP, DB_PORT, DB_SID), threaded = True)
     
     def close(self):
         self.conn.close()
