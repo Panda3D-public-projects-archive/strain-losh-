@@ -36,7 +36,7 @@ class AnimationManager():
         
         pos = None
         heading = None
-        unit_model = None
+        unit_renderer = None
         
         s = Sequence()
         d = 0.0
@@ -82,7 +82,7 @@ class AnimationManager():
                 # If this is our move message, means we spotted an enemy, and he will not be moving
                 # If this is enemy move message, means we have spotted a moving enemy and we will set unit_model variable
                 if self.parent.parent.local_engine.isThisEnemyUnit(unit_id):
-                    unit_model = spotted_unit_renderer
+                    unit_renderer = spotted_unit_renderer
                     pos = Point3(utils.TILE_SIZE*(self.parent.parent.local_engine.units[spotted_unit['id']]['pos'][0] + 0.5), 
                                  utils.TILE_SIZE*(self.parent.parent.local_engine.units[spotted_unit['id']]['pos'][1] + 0.5),
                                  utils.GROUND_LEVEL
