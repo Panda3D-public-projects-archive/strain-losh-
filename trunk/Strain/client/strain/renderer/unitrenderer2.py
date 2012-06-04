@@ -81,8 +81,18 @@ class UnitRenderer:
     def loadModel(self, race, type, team=0):
         model = Actor('dw/space_marine_common')
         model.loadAnims(utils.anim_dict_dw2['marine'])
+        armour = model.find("**/power_armour_common")
+        bolter = model.find("**/bolter_common")
+        head = model.find("**/space_marine_head")
+        backpack = model.find("**/space_marine_backpack")
         tex = loader.loadTexture('power_armour_common_dif.tga')
-        model.setTexture(tex)
+        tex1 = loader.loadTexture('bolter_common_dif.tga')
+        tex2 = loader.loadTexture('space_marine_head_dif.tga')
+        tex3 = loader.loadTexture('space_marine_backpack_dif.tga')
+        armour.setTexture(tex)
+        bolter.setTexture(tex1)
+        head.setTexture(tex2)
+        backpack.setTexture(tex3)
         """
         if team == "1":
             tex = loader.loadTexture(utils.unit_type_dict[race][type] + ".png")

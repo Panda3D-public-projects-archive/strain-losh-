@@ -50,7 +50,7 @@ class CameraManager(DirectObject):
         self.anim_velocity = 15
         self.dist = base.camera.getDistance(self.node)
         self.distmax = 25
-        self.distmin = 5
+        self.distmin = 3
 
         self.setupKeys()
         self.isFollowing = False   
