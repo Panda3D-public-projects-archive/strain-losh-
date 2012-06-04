@@ -6,7 +6,8 @@
 
 # panda3D imports
 from direct.showbase import DirectObject
-from panda3d.core import NodePath, TextNode, Point3, Point2, Vec3
+from panda3d.core import NodePath, TextNode, Point3, Point2, Vec3, Vec4
+from panda3d.core import *
 from direct.gui.OnscreenText import OnscreenText
 from direct.interval.IntervalGlobal import Sequence, Parallel, LerpColorInterval, LerpScaleInterval#@UnresolvedImport
 
@@ -26,6 +27,7 @@ class Movement(DirectObject.DirectObject):
         
         self.mouse_node = aspect2d.attachNewNode('mouse_node')
         self.move_node = aspect2d.attachNewNode('move_node')
+        self.move_outline_node = NodePath('')
         self.move_np_list = []
         self.target_info_node = None
         
@@ -101,6 +103,90 @@ class Movement(DirectObject.DirectObject):
                 self.move_np_list.append(textNodePath)
         self.move_node.reparentTo(aspect2d)
         self.hovered_tile = None
+        self.drawMoveOutline(self.calcMoveOutline(move_dict, self.parent.local_engine.units[unit_id]['pos']))
+    
+    def calcMoveOutline(self, move_dict, pos):
+        outline = {}
+        for tile in move_dict:
+            dir = []
+            if not (tile[0]-1, tile[1]) in move_dict and (tile[0]-1, tile[1]) != pos:
+                dir.append('W')
+            if not (tile[0], tile[1]-1) in move_dict and (tile[0], tile[1]-1) != pos:
+                dir.append('S')
+            if not (tile[0]+1, tile[1]) in move_dict and (tile[0]+1, tile[1]) != pos:
+                dir.append('E')                
+            if not (tile[0], tile[1]+1) in move_dict and (tile[0], tile[1]+1) != pos:
+                dir.append('N')
+            if dir != []:
+                outline[tile] = dir
+        return outline
+    
+    def drawMoveOutline(self, outline):
+        self.move_outline_node.removeNode()
+        zpos = utils.GROUND_LEVEL + 0.01
+        off = 0.1
+        segs = LineSegs()
+        segs.setThickness(3)
+        segs.setColor(Vec4(0.686,1,0.992,1))
+        for tile in outline:
+            for dir in outline[tile]:
+                if dir == 'N':
+                    d1 = 0
+                    d2 = 0
+                    if (tile[0]+1, tile[1]) in outline and 'N' in outline[(tile[0]+1, tile[1])]:
+                        d2 = off
+                    elif (tile[0]+1, tile[1]+1) in outline:
+                        d2 = 2*off
+                    if (tile[0]-1, tile[1]) in outline and 'N' in outline[(tile[0]-1, tile[1])]:
+                        d1 = off
+                    elif (tile[0]-1, tile[1]+1) in outline:
+                        d1 = 2*off
+                    segs.moveTo(tile[0]+off-d1, tile[1]+1-off, zpos)
+                    segs.drawTo(tile[0]+1-off+d2, tile[1]+1-off, zpos)
+                elif dir == 'S':
+                    d1 = 0
+                    d2 = 0
+                    if (tile[0]+1, tile[1]) in outline and 'S' in outline[(tile[0]+1, tile[1])]:
+                        d2 = off
+                    elif (tile[0]+1, tile[1]-1) in outline:
+                        d2 = 2*off
+                    if (tile[0]-1, tile[1]) in outline and 'S' in outline[(tile[0]-1, tile[1])]:
+                        d1 = off
+                    elif (tile[0]-1, tile[1]-1) in outline:
+                        d1 = 2*off                  
+                    segs.moveTo(tile[0]+off-d1, tile[1]+off, zpos)
+                    segs.drawTo(tile[0]+1-off+d2, tile[1]+off, zpos)
+                elif dir == 'W':
+                    d1 = 0
+                    d2 = 0
+                    if (tile[0], tile[1]+1) in outline and 'W' in outline[(tile[0], tile[1]+1)]:
+                        d2 = off
+                    elif (tile[0]-1, tile[1]+1) in outline:
+                        d2 = 2*off
+                    if (tile[0], tile[1]-1) in outline and 'W' in outline[(tile[0], tile[1]-1)]:
+                        d1 = off                     
+                    elif (tile[0]-1, tile[1]-1) in outline:
+                        d1 = 2*off
+                    segs.moveTo(tile[0]+off, tile[1]+off-d1, zpos)
+                    segs.drawTo(tile[0]+off, tile[1]+1-off+d2, zpos)
+                elif dir == 'E':
+                    d1 = 0
+                    d2 = 0
+                    if (tile[0], tile[1]+1) in outline and 'E' in outline[(tile[0], tile[1]+1)]:
+                        d2 = off
+                    elif (tile[0]+1, tile[1]+1) in outline:
+                        d2 = 2*off
+                    if (tile[0], tile[1]-1) in outline and 'E' in outline[(tile[0], tile[1]-1)]:
+                        d1 = off                     
+                    elif (tile[0]+1, tile[1]-1) in outline:
+                        d1 = 2*off                   
+                    segs.moveTo(tile[0]+1-off, tile[1]+off-d1, zpos)
+                    segs.drawTo(tile[0]+1-off, tile[1]+1-off+d2, zpos)                                        
+        self.move_outline_node = render.attachNewNode(segs.create())
+        self.move_outline_node.setBin("fixed", 40)
+        #self.move_outline_node.setDepthTest(False)
+        #self.move_outline_node.setDepthWrite(False)
+        self.move_outline_node.setLightOff()
                 
     def deleteUnitAvailMove(self):
         self.move_node.detachNode() 

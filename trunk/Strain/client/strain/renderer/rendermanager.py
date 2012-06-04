@@ -47,6 +47,11 @@ class RenderManager():
         tile_dict = self.parent.local_engine.getInvisibleTiles()        
         self.fow_renderer.redraw(tile_dict)
     
+    def refreshEnemyUnitMarkers(self):
+        for unit_id in self.parent.local_engine.units:
+            if self.parent.local_engine.isThisEnemyUnit(unit_id):
+                self.unit_marker_renderer.refreshTargetInfo(unit_id)
+    
     def deleteUnit(self, unit_id):
         if self.unit_renderer_dict.has_key(unit_id):
             unit_renderer = self.unit_renderer_dict[unit_id]
