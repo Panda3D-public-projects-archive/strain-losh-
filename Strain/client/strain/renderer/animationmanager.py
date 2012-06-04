@@ -265,9 +265,9 @@ class AnimationManager():
         taskMgr.add(self.combat.drawBeam, 'beamtask')
         
 
-    def buildMeleeAnim(self, unit_model, target_tile, weapon):
+    def buildMeleeAnim(self, unit_renderer, target_tile, weapon):
         # Unit melee animation
-        melee_anim = Func(unit_model.fsm.request, 'Melee')
+        melee_anim = unit_renderer.model.actorInterval('melee')
         return melee_anim
     
     def buildDamageAnim(self, damage_list):
