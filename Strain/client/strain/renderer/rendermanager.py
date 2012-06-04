@@ -1,7 +1,7 @@
 from panda3d.core import *
 
 from strain.renderer.levelrenderer2 import LevelRenderer2
-from strain.renderer.unitrenderer import UnitRenderer
+from strain.renderer.unitrenderer2 import UnitRenderer
 from strain.renderer.gridrenderer import GridRenderer
 from strain.renderer.coordrenderer import CoordRenderer
 from strain.renderer.shadermanager import ShaderManager
