@@ -1,4 +1,4 @@
-#0:id, 1:map, 2:budget, 3:turn, 4:active_player_id, 5:status (0=waiting for acceptance,1=in progress, 2=finished)
-100,level2,1000,0,17,1
-101,halls0,666,0,111,0
-102,level2,1000,0,17,0
+#0:id, 1:map, 2:budget, 3:turn, 4:active_player_id, 5:status (0=waiting,1=in progress, 2=finished),
+# 6:date created, 7:date finished, 8:version, 9:public
+104,level2,1000,0,17,0,1338783017.61,0,0.1,1
+106,level2,1000,0,17,1,1338784699.55,0,0.1,1
