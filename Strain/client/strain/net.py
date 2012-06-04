@@ -118,7 +118,7 @@ class Net():
                 self.parent.game_instance.interface.processUnitData( unit['id'] )                  
                 self.parent.game_instance.interface.printUnitData( unit['id'] )
                 self.parent.game_instance.movement.calcUnitAvailMove( unit['id'] )
-                #self.parent.sgm.showVisibleEnemies(unit['id'])
+                self.parent.game_instance.render_manager.refreshEnemyUnitMarkers()
                 if unit['pos'][0] != old_x or unit['pos'][1] != old_y or unit['last_action']=='use':
                     self.parent.game_instance.render_manager.refreshFow()
                 #self.parent.sgm.playUnitStateAnim( unit['id'] )
