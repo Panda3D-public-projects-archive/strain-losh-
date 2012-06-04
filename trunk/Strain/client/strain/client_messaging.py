@@ -357,12 +357,16 @@ class ClientMsg:
         ClientMsg._sendMsg( (STERNER_ID, ENTER_GAME, game_id ), True )
         
     @staticmethod
-    def startNewGame( map, budget, players ):
-        ClientMsg._sendMsg( (STERNER_ID, START_NEW_GAME, map, budget, players ), True )
+    def startNewGame( map, budget, players, public_game ):
+        ClientMsg._sendMsg( (STERNER_ID, START_NEW_GAME, map, budget, players, public_game ), True )
         
     @staticmethod
     def acceptGame( game_id ):
         ClientMsg._sendMsg( (STERNER_ID, ACCEPT_GAME, game_id ), True )
+
+    @staticmethod
+    def declineGame( game_id ):
+        ClientMsg._sendMsg( (STERNER_ID, DECLINE_GAME, game_id ), True )
 
     @staticmethod
     def refreshGameLists():

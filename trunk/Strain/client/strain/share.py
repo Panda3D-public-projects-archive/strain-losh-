@@ -29,7 +29,9 @@ MY_ACTIVE_GAMES = 'my_active_games'
 MY_UNACCEPTED_GAMES = 'my_unnaccepted_games'
 MY_WAITING_GAMES = 'my_waiting_games'
 ALL_FINISHED_GAMES = 'all_finished_games'
+EMPTY_PUBLIC_GAMES = 'empty_public_games'
 ACCEPT_GAME = 'accept_game'
+DECLINE_GAME = 'decline_game'
 REFRESH_MY_GAME_LISTS = 'refresh_my_game_lists'
 
 
