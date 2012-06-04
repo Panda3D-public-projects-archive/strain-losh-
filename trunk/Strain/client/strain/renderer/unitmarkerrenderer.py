@@ -1,6 +1,7 @@
 from panda3d.core import *
 import strain.utils as utils
 from strain.share import toHit
+from direct.gui.OnscreenText import OnscreenText
 
 class UnitMarkerRenderer():
     def __init__(self, parent):
@@ -58,50 +59,26 @@ class UnitMarkerRenderer():
         if unit.isTargeted:
             #self.parent.clearOutlineShader(self.model)
             self.parent.parent.movement.clearTargetInfo(unit_id)
-            self.isTargeted = False               
-
-    def showTargetInfo(self, unit_id):
-        unit_renderer = self.parent.render_manager.unit_renderer_dict[unit_id]
-        shooter = self.parent.local_engine.units[self.parent.sel_unit_id]
-        target = self.parent.local_engine.units[unit_id]    
-        hit, desc = toHit(shooter, target, self.parent.local_engine.level)
-        text = str(hit)  + '%\n' + str(desc)
-        if hit < 35:
-            bg = (1,0,0,0.7)
-            fg = (1,1,1,1)
-        elif hit >= 35 and hit < 75:
-            bg = (0.89, 0.82, 0.063, 0.7)
-            fg = (0,0,0,1)
-        elif hit >= 75:
-            bg = (0.153, 0.769, 0.07, 0.7)
-            fg = (0,0,0,1)
-        else:
-            bg = (1,0,0,0.7)
-            fg = (1,1,1,1)
-        self.target_info_node = aspect2d.attachNewNode('target_info')
-        OnscreenText(parent = self.target_info_node
-                          , text = text
-                          , align=TextNode.ACenter
-                          , scale=0.04
-                          , fg = fg
-                          , bg = bg
-                          , font = loader.loadFont(utils.GUI_FONT)
-                          , shadow = (0, 0, 0, 1))
+            self.isTargeted = False
     
-    def clearTargetInfo(self, unit_id):
-        if self.target_info_node:
-            self.target_info_node.removeNode()
-            self.target_info_node = None
-            
-    def targetInfoPosTask(self, task):
-        # Target info positioning
-        if base.mouseWatcherNode.hasMouse():
-            if self.target_info_node != None:
-                mpos = base.mouseWatcherNode.getMouse()
-                r2d = Point3(mpos.getX(), 0, mpos.getY())
-                a2d = aspect2d.getRelativePoint(render2d, r2d)
-                self.target_info_node.setPos(a2d + Point3(0, 0, 0.08))
-        return task.cont
+    def refreshTargetInfo(self, unit_id):
+        if self.enemy_markers.has_key(unit_id):
+            if self.parent.parent.turn_player == self.parent.parent.player_id and self.parent.parent.sel_unit_id != None:
+                shooter = self.parent.parent.local_engine.units[self.parent.parent.sel_unit_id]
+                target = self.parent.parent.local_engine.units[unit_id]   
+                hit, desc = toHit(shooter, target, self.parent.parent.local_engine.level)
+                text = str(hit)  + '%\n' + str(desc)
+                bg = (1,0,0,0.7)
+                fg = (1,1,1,1)            
+                OnscreenText(parent = self.enemy_markers[unit_id]['info_node']
+                              , text = text
+                              , pos = (0.05, -0.05)
+                              , align=TextNode.ACenter
+                              , scale=0.04
+                              , fg = fg
+                              , bg = bg
+                              , font = loader.loadFont(utils.GUI_FONT)
+                              , shadow = (0, 0, 0, 1))
     
     def setMarker(self, unit_id):
         if self.enemy_markers.has_key(unit_id):
@@ -114,11 +91,30 @@ class UnitMarkerRenderer():
             cm = CardMaker('')
             cm.setFrame(-0.05, 0.05, -0.05, 0.05)
             self.enemy_markers[unit_id] = {}
-            self.enemy_markers[unit_id]['node'] = aspect2d.attachNewNode(cm.generate())
-            self.enemy_markers[unit_id]['node'].setTexture(loader.loadTexture('action_preview_arrow.png'))
-            self.enemy_markers[unit_id]['node'].setTransparency(TransparencyAttrib.MAlpha)
+            self.enemy_markers[unit_id]['node'] = aspect2d.attachNewNode('')
+            self.enemy_markers[unit_id]['marker_node'] = self.enemy_markers[unit_id]['node'].attachNewNode(cm.generate())
+            self.enemy_markers[unit_id]['info_node'] = self.enemy_markers[unit_id]['node'].attachNewNode('')
+            self.enemy_markers[unit_id]['marker_node'].setTexture(loader.loadTexture('action_preview_arrow.png'))
+            self.enemy_markers[unit_id]['marker_node'].setTransparency(TransparencyAttrib.MAlpha)
             self.enemy_markers[unit_id]['node'].setPos(self.calcMarkerPosition(self.parent.unit_renderer_dict[unit_id]))            
             self.enemy_markers[unit_id]['visible'] = True
+            
+            if self.parent.parent.turn_player == self.parent.parent.player_id and self.parent.parent.sel_unit_id != None:
+                shooter = self.parent.parent.local_engine.units[self.parent.parent.sel_unit_id]
+                target = self.parent.parent.local_engine.units[unit_id]   
+                hit, desc = toHit(shooter, target, self.parent.parent.local_engine.level)
+                text = str(hit)  + '%\n' + str(desc)
+                bg = (1,0,0,0.7)
+                fg = (1,1,1,1)            
+                OnscreenText(parent = self.enemy_markers[unit_id]['info_node']
+                              , text = text
+                              , pos = (0.05, -0.05)
+                              , align=TextNode.ACenter
+                              , scale=0.04
+                              , fg = fg
+                              , bg = bg
+                              , font = loader.loadFont(utils.GUI_FONT)
+                              , shadow = (0, 0, 0, 1))
             
     def clearMarker(self, unit_id):
         if self.enemy_markers.has_key(unit_id):

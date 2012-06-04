@@ -43,8 +43,12 @@ HEADING_SE        = 8
 TILE_SIZE = 1
 GROUND_LEVEL = 0.0
 MODEL_OFFSET = TILE_SIZE/2
-UNIT_SCALE = 0.4
 BULLET_SPEED = 15
+
+#############################################################################
+### LEGO MODEL DICTS AND PARAMS
+#############################################################################
+UNIT_SCALE = 0.4
 
 marine_anim_dict = {}
 marine_anim_dict['crouch'] = 'marine-crouch'
@@ -78,6 +82,28 @@ marine_unit_types['sergeant'] = 'marine_sergeant'
 
 unit_type_dict = {}
 unit_type_dict['marine'] = marine_unit_types
+
+#############################################################################
+### DoW2 MODEL DICTS AND PARAMS
+#############################################################################
+UNIT_SCALE = 0.2
+
+marine_anim_dict_dw2 = {}
+marine_anim_dict_dw2['crouch'] = 'dw/anims/idle_crouch01'
+marine_anim_dict_dw2['die'] = 'dw/anims/die_normal_b'
+marine_anim_dict_dw2['get_hit'] = 'dw/anims/idle_stand01'
+marine_anim_dict_dw2['idle'] = 'dw/anims/idle_stand01' 
+marine_anim_dict_dw2['melee'] = 'dw/anims/melee_attack01'
+marine_anim_dict_dw2['overwatch'] = 'dw/anims/aim_stand'
+marine_anim_dict_dw2['run'] = 'dw/anims/run'
+marine_anim_dict_dw2['shoot'] = 'dw/anims/fire_stand01'
+marine_anim_dict_dw2['taunt'] = 'dw/anims/grenade'
+marine_anim_dict_dw2['use'] = 'dw/anims/tech_active'
+marine_anim_dict_dw2['walk'] = 'dw/anims/run'
+
+anim_dict_dw2 = {}
+anim_dict_dw2['marine'] = marine_anim_dict_dw2
+
 
 #############################################################################
 # METHODS
