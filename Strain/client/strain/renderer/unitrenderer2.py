@@ -34,7 +34,7 @@ class UnitRenderer:
         self.model = self.loadModel(unit['name'][0:i], unit['name'][i+1:], self.team_id)           
         self.model.reparentTo(self.node)
         
-        scale = utils.UNIT_SCALE
+        scale = utils.DOW_UNIT_SCALE
         h = 180
         pos = Point3(int(unit['pos'][0]), int(unit['pos'][1]), 0)
         pos = self.calcWorldPos(pos)
