@@ -11,18 +11,23 @@ class ShaderManager():
         self.node.hprInterval(1,Vec3(360,0,0)).loop() 
         """
         self.parent = parent
-        #self.outline_shader = Shader.load('./data/shaders/facingRatio1.sha') 
+        self.facing_ratio_shader = Shader.load('./data/shaders/facingRatio1.sha') 
         self.outline_shader = Shader.load('./data/shaders/outline.sha')
         
-    def setOutlineShader(self, node, color=Vec4(1, 1, 1, 0), power=1.1):
-        facingRatioPower = power
-        envirLightColor = color        
+    def setOutlineShader(self, node):       
         node.setShader(self.outline_shader) 
-        node.setShaderInput('cam', base.camera) 
-        ###node.setShaderInput('light', self.light_input) 
-        #node.setShaderInput('envirLightColor', envirLightColor * facingRatioPower) 
+        node.setShaderInput('cam', base.camera)  
         node.setAntialias(AntialiasAttrib.MMultisample) 
         
-    def clearOutlineShader(self, node):
-        node.clearShader()        
+    def setFacingShader(self, node, color=Vec4(1, 1, 1, 0), power=1.1):
+        facingRatioPower = power
+        envirLightColor = color        
+        node.setShader(self.facing_ratio_shader) 
+        node.setShaderInput('cam', base.camera) 
+        ###node.setShaderInput('light', self.light_input) 
+        node.setShaderInput('envirLightColor', envirLightColor * facingRatioPower) 
+        node.setAntialias(AntialiasAttrib.MMultisample) 
+    
+    def clearShader(self, node):
+        node.clearShader()     
         
