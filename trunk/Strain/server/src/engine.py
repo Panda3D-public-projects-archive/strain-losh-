@@ -38,6 +38,9 @@ class EngineThread( Thread ):
 
         self.notify = notify
             
+            
+        self.last_active_time = time.time()
+            
         #to check if we need to load Engine from file/db..
         saved_engine = None 
         try:
@@ -58,10 +61,21 @@ class EngineThread( Thread ):
         
     def run(self):
 
+        
+        #+++++++++++++++++++++++++++++++++++++++++++++MAIN LOOP+++++++++++++++++++++++++++++++++++++++++++++
+        #+++++++++++++++++++++++++++++++++++++++++++++MAIN LOOP+++++++++++++++++++++++++++++++++++++++++++++
         while True:
-            self.engine.runOneTick()
+            
+            if self.engine.runOneTick():
+                self.last_active_time = time.time()
+                
+                
             if self.stop:
                 break
+            
+            time.sleep( 0.1 )
+        #+++++++++++++++++++++++++++++++++++++++++++++MAIN LOOP+++++++++++++++++++++++++++++++++++++++++++++
+        #+++++++++++++++++++++++++++++++++++++++++++++MAIN LOOP+++++++++++++++++++++++++++++++++++++++++++++
             
         tmp_msg = "++++++++++ " + self.name + " stopped ++++++++++"
         self.notify.info( tmp_msg )
@@ -133,23 +147,23 @@ class Engine():
         
 
     def runOneTick(self):
-        
-        #+++++++++++++++++++++++++++++++++++++++++++++MAIN LOOP+++++++++++++++++++++++++++++++++++++++++++++
-        #+++++++++++++++++++++++++++++++++++++++++++++MAIN LOOP+++++++++++++++++++++++++++++++++++++++++++++
-        while not self.stop:
+        """Returns 0 if idling, 1 otherwise"""
 
-            time.sleep( 0.1 )
-    
-            #get a message if there is one
-            msg = self.from_network.getMyMsgs( self.game_id )
-            if msg:
-                #print "-----", msg
-                self.handleMsg( msg[0][1:], msg[0][0] )
-
-        
-        #+++++++++++++++++++++++++++++++++++++++++++++MAIN LOOP+++++++++++++++++++++++++++++++++++++++++++++
-        #+++++++++++++++++++++++++++++++++++++++++++++MAIN LOOP+++++++++++++++++++++++++++++++++++++++++++++
-              
+        #get a message if there is one
+        msg = self.from_network.getMyMsgs( self.game_id )
+        if msg:
+            #print "-----", msg
+            self.handleMsg( msg[0][1:], msg[0][0] )
+            return 1
+        #1 slozit da vrati nes drugo kad engine zavrsi
+        #2 da se moze poslat enginu poruka preko parametara da se pauzira (pospremi u bazu)
+        """
+        fl = open("pickle","w")
+        print len( self.pickleSelf())
+        fl.write( self.pickleSelf() )
+        fl.close()
+        exit()
+        """
         return 0
 
 
@@ -1303,7 +1317,27 @@ class Engine():
 
 
     def pickleSelf(self):
+
+        #remove all transient objects        
+        notify = self.notify        
         self.notify = None
+
+        to_network = self.to_network
+        self.to_network = None
+
+        from_network = self.from_network
+        self.from_network = None
+
+        #pickle the engine
+        pickled_engine = pickle.dumps( self ) 
+
+        #restore all transient objects
+        self.notify = notify
+        self.to_network = to_network
+        self.from_network = from_network
+        
+        #return the pickled engine
+        return pickled_engine
 
 
     def sendDeploymentMsg( self, level, army_size, source ):
