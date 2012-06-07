@@ -118,9 +118,11 @@ class Sterner:
         
         self.notify.info( "Sterner started." )
     
+        #so we dont have different versions of games all at once
+        self.db_api.finishAllGamesExceptVersion( COMMUNICATION_PROTOCOL_VERSION )
         
         self.new_game_queue = collections.deque()
-        self.engine_handler = EngineHandlerThread( self.new_game_queue, self.from_network, self.to_network, self.notify )
+        self.engine_handler = EngineHandlerThread( self.new_game_queue, self.from_network, self.to_network, self.notify, self.db_api )
         self.engine_handler.start()
         
         
@@ -205,6 +207,7 @@ class Sterner:
     def handleSternerMsg(self, message, source):
         print "handleSternerMessage message:", message, "   source:", source
         
+        
         if message[0] == STERNER_LOGIN:
             user_data = self.db_api.returnPlayer( message[1] )
 
@@ -225,12 +228,7 @@ class Sterner:
             self.network._sendMsg( (LOGIN_SUCCESS, player_id), source )
 
             #send all levels and all player_ids to client so he can create new games
-            self.network._sendMsg( (ALL_PLAYERS, self.db_api.getAllPlayers()), source )
-            self.network._sendMsg( (ALL_LEVELS, self.db_api.getAllLevels()), source )
-            self.network._sendMsg( (MY_ACTIVE_GAMES, self.db_api.getMyActiveGames( player_id )), source )
-            self.network._sendMsg( (MY_UNACCEPTED_GAMES, self.db_api.getMyUnacceptedGames( player_id )), source )
-            self.network._sendMsg( (MY_WAITING_GAMES, self.db_api.getMyWaitingGames( player_id )), source )
-            self.network._sendMsg( (EMPTY_PUBLIC_GAMES, self.db_api.getAllEmptyPublicGames()), source )            
+            self.sendSternerData(source)            
             return
 
                 
@@ -240,7 +238,8 @@ class Sterner:
             budget = message[2]
             player_ids = message[3]
             public_game = message[4]
-            player_id = self.getIdFromConnection(source)
+            game_name = message[5]
+            player_id = self.getIdFromConnection(source)            
             
             #check if there are at least 2 players
             if len( player_ids ) < 2:
@@ -276,9 +275,16 @@ class Sterner:
                         return
                         
                     
+            #check game name
+            if not game_name:
+                if not public_game:
+                    game_name = 'Private game on ' + level 
+                else:
+                    game_name = 'Public game on ' + level
+                
 
             #create the game and all players in the database, set game creator accept status to 1                    
-            game_id = self.db_api.createGame(level, budget, player_id, time.time(), COMMUNICATION_PROTOCOL_VERSION, public_game )
+            game_id = self.db_api.createGame(level, budget, player_id, time.time(), COMMUNICATION_PROTOCOL_VERSION, public_game, game_name )
             for i in xrange(0, len(player_ids)):
                 if player_ids[i] == player_id:
                     self.db_api.addPlayerToGame(game_id, player_ids[i], i, i, 1)
@@ -302,12 +308,7 @@ class Sterner:
                 
                 
         elif message[0] == REFRESH_MY_GAME_LISTS:
-            self.network._sendMsg( (ALL_PLAYERS, self.db_api.getAllPlayers()), source )
-            self.network._sendMsg( (ALL_LEVELS, self.db_api.getAllLevels()), source )            
-            self.network._sendMsg( (MY_ACTIVE_GAMES, self.db_api.getMyActiveGames( player_id )), source )
-            self.network._sendMsg( (MY_UNACCEPTED_GAMES, self.db_api.getMyUnacceptedGames( player_id )), source )
-            self.network._sendMsg( (MY_WAITING_GAMES, self.db_api.getMyWaitingGames( player_id )), source )
-            self.network._sendMsg( (EMPTY_PUBLIC_GAMES, self.db_api.getAllEmptyPublicGames()), source )
+            self.sendSternerData(source)
             return
                 
                 
@@ -421,6 +422,18 @@ class Sterner:
         pass
                 
                 
+                
+    def sendSternerData(self, source):
+        self.network._sendMsg( (ALL_PLAYERS, self.db_api.getAllPlayers()), source )
+        self.network._sendMsg( (ALL_LEVELS, self.db_api.getAllLevels()), source )            
+        self.network._sendMsg( (MY_ACTIVE_GAMES, self.db_api.getMyActiveGames( player_id )), source )
+        self.network._sendMsg( (MY_UNACCEPTED_GAMES, self.db_api.getMyUnacceptedGames( player_id )), source )
+        self.network._sendMsg( (MY_WAITING_GAMES, self.db_api.getMyWaitingGames( player_id )), source )
+        self.network._sendMsg( (EMPTY_PUBLIC_GAMES, self.db_api.getAllEmptyPublicGames()), source )
+        self.network._sendMsg( (NEWS_FEED, self.db_api.getLast3News()), source )
+        
+                
+                
 
     def playerDisconnected(self, source):
 
@@ -444,7 +457,7 @@ class Sterner:
 #########################################################################################################
 class EngineHandlerThread( threading.Thread ):
     
-    def __init__( self, new_game_queue, from_network, to_network, notify ):
+    def __init__( self, new_game_queue, from_network, to_network, notify, db_api ):
         threading.Thread.__init__(self)
         
         self.name = "EngineHadlerThread"
@@ -453,6 +466,8 @@ class EngineHandlerThread( threading.Thread ):
         self.from_network = from_network
         self.to_network = to_network
         self.notify = notify
+
+        self.db_api = db_api
 
         #main dict where we will hold engine threads k:game_id, v:engine thread
         self.engine_threads = {}
@@ -464,6 +479,17 @@ class EngineHandlerThread( threading.Thread ):
     
     
     def run(self):
+        
+        
+        #first start EngineThread for each game that is active and not yet finished
+        for game in self.db_api.getAllActiveGames():
+            #create new thread
+            tmp_thread = EngineThread( game[0], self.from_network, self.to_network, self.notify )
+            tmp_thread.start()
+            
+            self.engine_threads[game[0]] = tmp_thread
+            
+        
         
         while True:
 
@@ -493,8 +519,20 @@ class EngineHandlerThread( threading.Thread ):
                 pass
                 
 
+            self.handleThreads()
+
             
             time.sleep(0.1)
+        
+        
+        
+    def handleThreads(self):
+        
+        
+        
+        
+        pass
+        
         
         
     def stopAllThreads(self):

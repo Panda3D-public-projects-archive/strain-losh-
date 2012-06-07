@@ -1,4 +1,6 @@
 #0:id, 1:map, 2:budget, 3:turn, 4:active_player_id, 5:status (0=waiting,1=in progress, 2=finished),
-# 6:date created, 7:date finished, 8:version, 9:public
-104,level2,1000,0,17,0,1338783017.61,0,0.1,1
-106,level2,1000,0,17,1,1338784699.55,0,0.1,1
+# 6:date created, 7:date finished, 8:version, 9:public, 10:name, 11:reserved, 10:pickled engine
+107,level2,1000,0,17,0,1338818049.86,0,0.1,1,public #1,0,0
+108,level2,1000,0,17,0,1339045860.48,0,0.1,1,game #1,0,0
+109,level2,1000,0,17,0,1339046283.86,0,0.1,1,game #1,0,0
+110,level2,1000,0,17,0,1339046283.95,0,0.1,1,Public game on level2,0,0

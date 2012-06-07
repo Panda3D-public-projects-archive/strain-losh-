@@ -357,8 +357,8 @@ class ClientMsg:
         ClientMsg._sendMsg( (STERNER_ID, ENTER_GAME, game_id ), True )
         
     @staticmethod
-    def startNewGame( map, budget, players, public_game ):
-        ClientMsg._sendMsg( (STERNER_ID, START_NEW_GAME, map, budget, players, public_game ), True )
+    def startNewGame( map, budget, players, public_game, game_name ):
+        ClientMsg._sendMsg( (STERNER_ID, START_NEW_GAME, map, budget, players, public_game, game_name ), True )
         
     @staticmethod
     def acceptGame( game_id ):

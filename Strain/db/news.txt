@@ -1,0 +1,4 @@
+#0:id, 1:date, 2:title, 3:text
+0,1339045860.48,First news ever!,Test text without commas!
+1,1339045861.48,Second news,This is not lorem ipsum....
+2,1339045862.48,Third news,Do not try this at home unless u got it from repository

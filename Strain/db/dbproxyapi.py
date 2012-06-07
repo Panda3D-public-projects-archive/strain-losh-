@@ -8,16 +8,21 @@ import sys
 import os
 import glob
 import copy     
+import time
 
 
 PLAYERS = "players.txt"
 PLAYERS_HEADER = "#0:id, 1:email, 2:name, 3:pass"
 
 GAMES = "games.txt"
-GAMES_HEADER = "#0:id, 1:map, 2:budget, 3:turn, 4:active_player_id, 5:status (0=waiting,1=in progress, 2=finished),\n# 6:date created, 7:date finished, 8:version, 9:public"
+GAMES_HEADER = "#0:id, 1:map, 2:budget, 3:turn, 4:active_player_id, 5:status (0=waiting,1=in progress, 2=finished),\n\
+# 6:date created, 7:date finished, 8:version, 9:public, 10:name, 11:reserved, 10:pickled engine"
 
 GAME_PLAYERS = "game_players.txt"
 GAME_PLAYERS_HEADER = "#0:id, 1:game_id, 2:ply_id, 3:team_id, 4:order_num, 5:accepted"
+
+NEWS = "news.txt"
+NEWS_HEADER = "#0:id, 1:date, 2:title, 3:text"
 
 
 class DBProxyApi():
@@ -27,6 +32,8 @@ class DBProxyApi():
         self.players = self.loadFile(PLAYERS)
         self.games = self.loadFile(GAMES)
         self.game_players = self.loadFile(GAME_PLAYERS)
+        self.news = self.loadFile(NEWS)
+        
         
         
     def loadFile(self, fname):
@@ -61,6 +68,10 @@ class DBProxyApi():
     
     def close(self):
         pass
+    
+    
+    def getLast3News(self):
+        return self.news[-3:]
     
     
     def createPlayer(self, email, username, password):
@@ -200,9 +211,9 @@ class DBProxyApi():
         return ret_lst
     
     
-    def createGame(self, level_name, army_size, first_player_id, create_time, version, public):
+    def createGame(self, level_name, army_size, first_player_id, create_time, version, public, game_name):
         id = self.games[-1][0] + 1
-        self.games.append( [id, level_name, army_size, 0, first_player_id, 0, create_time, 0, version, public] )
+        self.games.append( [id, level_name, army_size, 0, first_player_id, 0, create_time, 0, version, public, game_name, 0, 0] )
         self.saveToFile(self.games, GAMES, GAMES_HEADER)
         return id
 
@@ -224,6 +235,35 @@ class DBProxyApi():
                 self.game_players.remove(g_p)
         self.saveToFile(self.game_players, GAME_PLAYERS, GAME_PLAYERS_HEADER)
 
+
+    def finishAllGamesExceptVersion(self, ver):
+        for g in self.games:
+            #set finish status and timestamp to each game that is not this version
+            if g[5] != 2 and g[8] != ver:
+                self.finishGame(g[0])
+                
+                #set all game_players accepted = 1 in these games
+                for g_p in self.game_players:
+                    if g_p[1] == g[0]:
+                        g_p[5] = 1
+                
+        self.saveToFile(self.game_players, GAME_PLAYERS, GAME_PLAYERS_HEADER)
+        
+
+    def finishGame(self, game_id):
+        g = self.getGame(game_id)
+        g[5] = 2
+        g[7] = time.time()
+        #TODO: krav: napravit i to da se pobrisu potezi od svakog plejera posebno, kad se dodaju, al da ostane od obs replaj
+        self.saveToFile(self.games, GAMES, GAMES_HEADER)
+
+
+    def getAllActiveGames(self):
+        lst = []
+        for g in self.games:
+            if g[5] != 2:
+                lst.append(g)
+        return lst
 
     
 if __name__ == "__main__":
@@ -257,11 +297,16 @@ if __name__ == "__main__":
     #games = dbapi.getMyUnacceptedGames( 17 )
     #print [ g[0] for g in games  ]
     
-    dbapi.deleteGame( 105 )
+    #dbapi.deleteGame( 104 )
+    #dbapi.finishAllGamesExceptVersion( 0.1 )
     
     #print dbapi.getAllPublicGames()
     
     #print dbapi.getMyWaitingGames( 111 )
+    
+    print dbapi.getLast3News()
+    
+    print dbapi.news
     
     dbapi.close()
     

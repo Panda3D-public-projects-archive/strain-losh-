@@ -33,6 +33,7 @@ EMPTY_PUBLIC_GAMES = 'empty_public_games'
 ACCEPT_GAME = 'accept_game'
 DECLINE_GAME = 'decline_game'
 REFRESH_MY_GAME_LISTS = 'refresh_my_game_lists'
+NEWS_FEED = 'news_feed'
 
 
 #-----------------------engine messages----------------------
