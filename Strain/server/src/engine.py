@@ -18,15 +18,14 @@ from strain.share import *
 
 LEVELS_ROOT = "./data/levels/"
 
-engine_state_filename = "engine_state.txt"
-
+ENGINE_IDLE_MAX = 0 #in seconds, if it is 0 than it is infinite
 
 ######################################################################################################
 ######################################################################################################
 class EngineThread( Thread ):
     
     
-    def __init__( self, game_id, from_network, to_network, notify, default = True, level = None, budget = None, players = None ):
+    def __init__( self, game_id, from_network, to_network, notify, db_api ):
         Thread.__init__(self)
         
         self.name = ("EngineThread-" + str(game_id))
@@ -35,27 +34,29 @@ class EngineThread( Thread ):
         self.stop = False
 
         self.game_id = game_id
-
         self.notify = notify
-            
-            
+        self.db_api = db_api
+           
         self.last_active_time = time.time()
-            
-        #to check if we need to load Engine from file/db..
-        saved_engine = None 
-        try:
-            saved_engine = open( engine_state_filename, "r" )
-        except:
-            pass
         
-        if saved_engine:
-            self.engine = loadFromPickle( saved_engine, from_network, to_network, notify ) 
+        #check if we need to load Engine from db..
+        db_game = self.db_api.getGame( self.game_id )
+        
+        #if there is no such game in db, write an error and quit this thread
+        if not db_game:
+            self.notify.critical( "Sterner tried to start EngineThread with game_id=%d, but there is no suh entry in db!" %self.game_id )
+            return
+        
+        level = db_game[1]
+        budget = db_game[2]
+        #get players ids in a list
+        players = [ g_p[2] for g_p in self.db_api.getGameAllPlayers(db_game[0])]
+        
+        if db_game[12]:
+            self.engine = loadFromPickle( db_game[12], from_network, to_network, notify, db_api ) 
         else:
-            self.engine = Engine( game_id, from_network, to_network, notify )
-            if default:
-                self.engine.InitDefault()
-            else:
-                self.engine.Init( level, budget, players )
+            self.engine = Engine( game_id, from_network, to_network, notify, self.db_api )
+            self.engine.Init( level, budget, players )
 
 
         
@@ -66,9 +67,14 @@ class EngineThread( Thread ):
         #+++++++++++++++++++++++++++++++++++++++++++++MAIN LOOP+++++++++++++++++++++++++++++++++++++++++++++
         while True:
             
+                
             if self.engine.runOneTick():
                 self.last_active_time = time.time()
                 
+            if ENGINE_IDLE_MAX and time.time() - self.last_active_time >= ENGINE_IDLE_MAX:
+                print "++++++++++++++ pickling!!!!!!"
+                if self.engine.pickleSelf():
+                    break
                 
             if self.stop:
                 break
@@ -99,14 +105,16 @@ class Engine():
 
         
     #====================================init======================================0
-    def __init__(self, game_id, from_network, to_network, notify):
+    def __init__(self, game_id, from_network, to_network, notify, db_api):
         self.notify = notify
         self.notify.info("------------------------Engine Starting game_id:%d------------------------" %game_id)
 
         self.game_id = game_id
         self.from_network = from_network
         self.to_network = to_network
-
+        self.db_api = db_api
+        print "--------", self.db_api, db_api
+        
         self.stop = False
         self.level = None         
         self.players = []
@@ -157,13 +165,7 @@ class Engine():
             return 1
         #1 slozit da vrati nes drugo kad engine zavrsi
         #2 da se moze poslat enginu poruka preko parametara da se pauzira (pospremi u bazu)
-        """
-        fl = open("pickle","w")
-        print len( self.pickleSelf())
-        fl.write( self.pickleSelf() )
-        fl.close()
-        exit()
-        """
+        
         return 0
 
 
@@ -297,14 +299,6 @@ class Engine():
             else:
                 self.error("Not enough AP for overwatch.", source)
 
-            #a = pickle.dumps(self)
-            dump_file = open( engine_state_filename, "w" )
-            self.pickleSelf()
-            pickle.dump(self, dump_file )
-            print "pickled engine to:", engine_state_filename
-            exit()
-
-            
         elif param == SET_UP:
             if not unit.hasHeavyWeapon():
                 self.error( "The unit does not have any heavy weapons.", source )
@@ -1318,26 +1312,34 @@ class Engine():
 
     def pickleSelf(self):
 
-        #remove all transient objects        
-        notify = self.notify        
-        self.notify = None
-
-        to_network = self.to_network
-        self.to_network = None
-
-        from_network = self.from_network
-        self.from_network = None
-
-        #pickle the engine
-        pickled_engine = pickle.dumps( self ) 
-
-        #restore all transient objects
-        self.notify = notify
-        self.to_network = to_network
-        self.from_network = from_network
+        try:
+            #remove and save all transient objects        
+            notify = self.notify        
+            self.notify = None
+            to_network = self.to_network
+            self.to_network = None
+            from_network = self.from_network
+            self.from_network = None
+            db_api = self.db_api
+            self.db_api = None
+    
+            #pickle the engine
+            pickled_engine = pickle.dumps( self ) 
+    
+            #restore all transient objects
+            self.notify = notify
+            self.to_network = to_network
+            self.from_network = from_network
+            self.db_api = db_api
+            
+            #update game record in database
+            db_game = self.db_api.getGame( self.game_id )
+            db_game[12] = pickled_engine
+            self.db_api.updateGame( db_game )
+        except:
+            return 0
         
-        #return the pickled engine
-        return pickled_engine
+        return 1
 
 
     def sendDeploymentMsg( self, level, army_size, source ):
@@ -1364,19 +1366,17 @@ class Engine():
 
 
 #-----------------------------------------------------------------------
-def loadFromPickle( pickled_engine, from_network, to_network, notify ):
+def loadFromPickle( pickled_engine, from_network, to_network, notify, db_api ):
     
     #eng = pickle.loads(pickled_engine)
     eng = pickle.load(pickled_engine)
 
 
-    #now cleanup all things that are session related
-    #set the msg queues
+    #set transient variables
     eng.from_network = from_network
     eng.to_network = to_network
-    
-    #set logging
     eng.notify = notify
+    eng.db_api = db_api
     
     print "loaded from pickle"
     

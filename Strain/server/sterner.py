@@ -113,9 +113,6 @@ class Sterner:
         # K: player_id , V: [panda connection, active_game]
         self.logged_in_players = {}
         
-        self.test_thread = EngineThread( TEST_GAME_ID, self.from_network, self.to_network, self.notify )
-        self.test_thread.start()
-        
         self.notify.info( "Sterner started." )
     
         #so we dont have different versions of games all at once
@@ -168,14 +165,12 @@ class Sterner:
         
             
             if STERNER_TIME_LIMIT and time.time() - t > STERNER_TIME_LIMIT:
-                self.test_thread.stop = True
                 break
         #---------================--------main loop--------==================----------
         #---------================--------main loop--------==================----------
         #---------================--------main loop--------==================----------
         
         #shutdown everything we can
-        self.test_thread.stop = True        
         self.engine_handler.stop = True
         self.network.stopServer()
 
@@ -424,6 +419,7 @@ class Sterner:
                 
                 
     def sendSternerData(self, source):
+        player_id = self.getIdFromConnection(source)
         self.network._sendMsg( (ALL_PLAYERS, self.db_api.getAllPlayers()), source )
         self.network._sendMsg( (ALL_LEVELS, self.db_api.getAllLevels()), source )            
         self.network._sendMsg( (MY_ACTIVE_GAMES, self.db_api.getMyActiveGames( player_id )), source )
@@ -461,7 +457,7 @@ class EngineHandlerThread( threading.Thread ):
         threading.Thread.__init__(self)
         
         self.name = "EngineHadlerThread"
-        
+
         self.new_game_queue = new_game_queue
         self.from_network = from_network
         self.to_network = to_network
@@ -483,14 +479,16 @@ class EngineHandlerThread( threading.Thread ):
         
         #first start EngineThread for each game that is active and not yet finished
         for game in self.db_api.getAllActiveGames():
+
             #create new thread
-            tmp_thread = EngineThread( game[0], self.from_network, self.to_network, self.notify )
+            tmp_thread = EngineThread( game[0], self.from_network, self.to_network, self.notify, self.db_api )
             tmp_thread.start()
             
             self.engine_threads[game[0]] = tmp_thread
             
         
-        
+        ###############################################################################################
+        ###############################################################################################
         while True:
 
             if self.stop:
@@ -502,16 +500,13 @@ class EngineHandlerThread( threading.Thread ):
                 
                 game_id = msg[0]
                 creator_id = msg[1]
-                map = msg[2]
-                budget = msg[3]
-                players = msg[4]
                 
                 #create new thread
-                tmp_thread = EngineThread( game_id, self.from_network, self.to_network, self.notify, False, map, budget, players )
+                tmp_thread = EngineThread( game_id, self.from_network, self.to_network, self.notify, self.db_api )
                 tmp_thread.start()
                 
                 self.engine_threads[game_id] = tmp_thread
- 
+
                 #TODO: 1: ovdje prvo provjerit jel se fakat startao gejm pa onda tek poslat poruku
                 self.to_network.putMsg(creator_id, (NEW_GAME_STARTED, game_id) )
                 
@@ -523,16 +518,22 @@ class EngineHandlerThread( threading.Thread ):
 
             
             time.sleep(0.1)
+        ###############################################################################################
+        ###############################################################################################
         
         
         
     def handleThreads(self):
         
+        #see if some thread is over, if so than add it to delete list
+        del_list = []
+        for t in self.engine_threads:
+            if not self.engine_threads[t].isAlive():
+                del_list.append( t )
         
-        
-        
-        pass
-        
+        #remove all thread entries from delete list
+        for d in del_list:        
+            del self.engine_threads[d]
         
         
     def stopAllThreads(self):

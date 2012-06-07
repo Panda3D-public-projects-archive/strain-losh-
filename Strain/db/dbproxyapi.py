@@ -16,7 +16,7 @@ PLAYERS_HEADER = "#0:id, 1:email, 2:name, 3:pass"
 
 GAMES = "games.txt"
 GAMES_HEADER = "#0:id, 1:map, 2:budget, 3:turn, 4:active_player_id, 5:status (0=waiting,1=in progress, 2=finished),\n\
-# 6:date created, 7:date finished, 8:version, 9:public, 10:name, 11:reserved, 10:pickled engine"
+# 6:date created, 7:date finished, 8:version, 9:public, 10:name, 11:reserved, 12:pickled engine"
 
 GAME_PLAYERS = "game_players.txt"
 GAME_PLAYERS_HEADER = "#0:id, 1:game_id, 2:ply_id, 3:team_id, 4:order_num, 5:accepted"

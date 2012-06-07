@@ -107,7 +107,7 @@ class AppFSM(FSM.FSM):
         
     def enterNewGame(self):
         ClientMsg.startNewGame('level2', 1000, [17, 0], 1, "game #1")
-        ClientMsg.startNewGame('level2', 1000, [17, 0], 1, '')
+        #ClientMsg.startNewGame('level2', 1000, [17, 0], 1, '')
         #self.parent.gametype = GameType(self.parent)
     
     def exitNewGame(self):
@@ -116,7 +116,7 @@ class AppFSM(FSM.FSM):
         
     def enterContinueGame(self):
         from strain.gameinstance import GameInstance
-        self.parent.game_instance = GameInstance(self.parent, 'Continue')
+        self.parent.game_instance = GameInstance(self.parent, 'Continue', 107)
     
     def exitContinueGame(self):
         #TODO: ogs: kod za brisanje i deinicijalizaciju GameInstance
