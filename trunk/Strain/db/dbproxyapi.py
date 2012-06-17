@@ -205,7 +205,6 @@ class DBProxyApi():
     def getAllPlayers(self):
         ret_lst = []
         for p in self.players:
-            print p
             ret_lst.append( [ p[0], p[2] ] )
             
         return ret_lst
@@ -304,9 +303,9 @@ if __name__ == "__main__":
     
     #print dbapi.getMyWaitingGames( 111 )
     
-    print dbapi.getLast3News()
+    #print dbapi.getLast3News()
     
-    print dbapi.news
+    #print dbapi.news
     
     dbapi.close()
     
