@@ -24,12 +24,12 @@ class GameInstance():
         self.turn_player = 0
         # Flag to check if animation is in process
         self._anim_in_process = False
+
+        ClientMsg.setGameId(game_id)        
         
         if event == 'New':
-            ClientMsg.enterGame(game_id)
             self.fsm.request('NewGame')
         elif event == 'Continue':
-            ClientMsg.enterGame(game_id)
             self.fsm.request('ContinueGame')
         
     def deselectUnit(self):
