@@ -115,7 +115,7 @@ class ClientMsg:
             msg = ClientMsg.readMsg()
             if msg:
                 if msg[0] == LOGIN_SUCCESS:
-                    print "dobio welcome!!!\nid:", msg[1]
+                    print "dobio welcome!!!"
                     ClientMsg.player_id = int(msg[1])
                     return None
                 else:
@@ -142,6 +142,11 @@ class ClientMsg:
         return ClientMsg.game_id
                          
                  
+    @staticmethod         
+    def setGameId( game_id ):
+        ClientMsg.game_id = game_id
+
+                         
     @staticmethod   
     def loggedIn():
         return ClientMsg.player_id
@@ -276,6 +281,18 @@ class ClientMsg:
         ClientMsg.cWriter.send(datagram, ClientMsg.myConnection)
         ClientMsg.log.debug("Client posted a message: %s", msg)
 
+
+    @staticmethod
+    def _debugSendMsg(msg):        
+        if not ClientMsg.myConnection:
+            return
+                  
+        print "DEBUG SEND MESSAGE:", msg
+        datagram = NetDatagram()        
+        datagram.addString(pickle.dumps(msg, pickle.HIGHEST_PROTOCOL))   
+        ClientMsg.cWriter.send(datagram, ClientMsg.myConnection)
+        ClientMsg.log.debug("Client posted a message: %s", msg)
+
     
     @staticmethod
     def getEngineState():
@@ -350,12 +367,7 @@ class ClientMsg:
     @staticmethod
     def getAllFinishedGames():
         ClientMsg._sendMsg( (STERNER_ID, ALL_FINISHED_GAMES ), True )
-        
-    @staticmethod
-    def enterGame( game_id ):
-        ClientMsg.game_id = game_id
-        ClientMsg._sendMsg( (STERNER_ID, ENTER_GAME, game_id ), True )
-        
+                
     @staticmethod
     def startNewGame( map, budget, players, public_game, game_name ):
         ClientMsg._sendMsg( (STERNER_ID, START_NEW_GAME, map, budget, players, public_game, game_name ), True )
