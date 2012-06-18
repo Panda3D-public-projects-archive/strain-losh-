@@ -318,7 +318,7 @@ class Sterner:
             game_id = message[1]
             player_id = self.getIdFromConnection(source)
 
-            game = self.db_api.getGame(game_id)
+            game = self.db_api.getGame(game_id, filter=True)
 
             #if there is no such game            
             if not game:
