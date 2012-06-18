@@ -109,10 +109,15 @@ class DBProxyApi():
                 game = self.getGame(g[1])
                 if game:
                     if game[5] == 1:
-                        lst.append( game )
+                        lst.append( self.filterGameParams(game) )
         return lst
 
-    
+    def filterGameParams(self, game):
+        #we dont need stuff like pickled engine when sending game lists to clients so filter them out
+        tmp_game = []
+        for i in xrange(0,11):
+            tmp_game.append( game[i] )
+        return tmp_game
     
     def getGamePlayer(self, game_id, player_id):
         for p in self.game_players:
@@ -146,7 +151,7 @@ class DBProxyApi():
                 game_id_list.append( p[1] )
         for g in self.games:
             if g[0] in game_id_list:
-                ret_lst.append(g)
+                ret_lst.append( self.filterGameParams(g) )
         return ret_lst
     
     
@@ -158,7 +163,7 @@ class DBProxyApi():
                 game_id_list.append( p[1] )
         for g in self.games:
             if g[0] in game_id_list and g[5] == 0:
-                ret_lst.append(g)
+                ret_lst.append( self.filterGameParams(g) )
         return ret_lst
     
     
@@ -175,7 +180,7 @@ class DBProxyApi():
         lst = []
         for game in self.games:
             if game[5]:
-                lst.append(game)
+                lst.append( self.filterGameParams(game) )
         return lst
 
 
@@ -183,14 +188,17 @@ class DBProxyApi():
         lst = []
         for game in self.games:
             if game[9] and game[5] == 0:
-                lst.append(game)
+                lst.append( self.filterGameParams(game) )
         return lst
 
     
-    def getGame(self, game_id):
+    def getGame(self, game_id, filter = False):
         for g in self.games:
             if g[0] == game_id:
-                return g
+                if filter:
+                    return self.filterGameParams(g)
+                else:
+                    return g
 
     
     def getAllLevels(self):
@@ -261,7 +269,7 @@ class DBProxyApi():
         lst = []
         for g in self.games:
             if g[5] != 2:
-                lst.append(g)
+                lst.append( self.filterGameParams(g) )
         return lst
 
     
@@ -269,7 +277,8 @@ if __name__ == "__main__":
     dbapi = DBProxyApi()
     #dbapi.createPlayer("emailv@@@vvv", "ihaaa", "po")
     #print dbapi.returnPlayer('ogi')
-    #print dbapi.getGame(100)
+    print dbapi.getGame(107)
+    print "filter:", dbapi.filterGameParams(dbapi.getGame(107))
     #game_id = dbapi.createGame("test", 1000)
     #dbapi.addPlayerToGame(game_id, dbapi.returnPlayer('Red')[0], 0, 0)
     #dbapi.addPlayerToGame(game_id, dbapi.returnPlayer('ogi')[0], 1, 1)
