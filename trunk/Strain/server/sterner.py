@@ -142,7 +142,10 @@ class Sterner:
         #dequeue for sending messages for engines and EngineHandlerThread, if msg[0] == STERNER_ID, than it is for handler
         self.msgs4engines = collections.deque()
         
-        self.engine_handler = EngineHandlerThread( self.msgs4engines, self.to_network, self.notify, self.db_api )
+        #dequeue in which EngineHandlerThread puts messages for Sterner
+        self.fromHandler = collections.deque()
+        
+        self.engine_handler = EngineHandlerThread( self.fromHandler, self.msgs4engines, self.to_network, self.notify, self.db_api )
         self.engine_handler.start()
         
         
@@ -188,6 +191,15 @@ class Sterner:
                 pass
             
             
+            #check for messages from Handler
+            try:
+                while True:
+                    msg = self.fromHandler.popleft()
+                    self.handleHandlerMessage( msg )
+            except IndexError:
+                pass
+            
+            
             #behave nicely with cpu            
             time.sleep(0.1) 
         
@@ -204,6 +216,18 @@ class Sterner:
 
         time.sleep(3)
         
+        
+        
+    def handleHandlerMessage(self, msg):
+        
+        if msg[0] == NEW_GAME_STARTED:
+            player_id = msg[1]
+            source = self.logged_in_players[ player_id ]
+            #we don't know if it was a public game or private game so refresh both lists
+            self.network._sendMsg( (MY_WAITING_GAMES, self.db_api.getMyWaitingGames( player_id )), source )
+            self.network._sendMsg( (EMPTY_PUBLIC_GAMES, self.db_api.getAllEmptyPublicGames()), source )
+            
+            
 
     
     def getIdFromConnection(self, connection):
@@ -447,11 +471,12 @@ class Sterner:
 #########################################################################################################
 class EngineHandlerThread( threading.Thread ):
     
-    def __init__( self, msgs4engines, to_network, notify, db_api ):
+    def __init__( self, from_handler, msgs4engines, to_network, notify, db_api ):
         threading.Thread.__init__(self)
         
         self.name = "EngineHandlerThread"
 
+        self.to_sterner = from_handler
         self.msgs4engines = msgs4engines
         self.to_network = to_network
         self.notify = notify
@@ -544,6 +569,7 @@ class EngineHandlerThread( threading.Thread ):
                 #there is no active thread for this game, try to resume one from db
                 if self.startNewEngineThread(game_id):
                     self.to_network.append( (creator_id, (NEW_GAME_STARTED, game_id) ) )
+                    self.to_sterner.append( (NEW_GAME_STARTED, creator_id) )
             
             
         
