@@ -50,7 +50,7 @@ class ClientMsg:
     #set to id when we are logged into the main server, otherwise 0
     player_id = 0
     
-    log = None
+    notify = None
 
     #for saving a reference to the connection thread
     connection_thread = None
@@ -61,30 +61,6 @@ class ClientMsg:
     game_id = 0
 
 
-    @staticmethod
-    def connect():
-        ClientMsg.log.info( "Trying to connect to server: %s:%s", ClientMsg.ip_address, ClientMsg.port )
-                
-        # how long until we give up trying to reach the server?
-        timeout_in_miliseconds = 2000  # 2 seconds
-        ClientMsg.myConnection = ClientMsg.cManager.openTCPClientConnection(ClientMsg.ip_address, ClientMsg.port, timeout_in_miliseconds)
-        
-        if ClientMsg.myConnection:
-            ClientMsg.myConnection.setNoDelay(1)
-            
-            #try handshaking
-            if not ClientMsg.handshake():
-                ClientMsg.disconnect()
-                ClientMsg.log.error( "Did not pass handshake.")
-                return False
-            
-            ClientMsg.cReader.addConnection(ClientMsg.myConnection)
-            
-            ClientMsg.log.info( "Connected to server: %s", ClientMsg.myConnection.getAddress() )
-            return True
-            
-        return False
-            
             
     @staticmethod
     def setupAddress( ip_address, port ):
@@ -94,54 +70,34 @@ class ClientMsg:
             
     @staticmethod
     def login( username, password ):
-        #TODO: krav: vise verbose errori
+        ClientMsg.notify.info( "Trying to connect to server: %s:%s", ClientMsg.ip_address, ClientMsg.port )
+                
+        # how long until we give up trying to reach the server?
+        timeout_in_miliseconds = 2000  # 2 seconds
+        ClientMsg.myConnection = ClientMsg.cManager.openTCPClientConnection(ClientMsg.ip_address, ClientMsg.port, timeout_in_miliseconds)
         
-        #if we are already logged in, just return
-        if ClientMsg.player_id:
-            return "Already logged in."
-        
-        #if we are not yet connected, try once more
         if not ClientMsg.myConnection:
-            if not ClientMsg.connect():
-                return "Cannot connect to server."
+            return "Could not connect to server."
+
         
-        #if not password:
-        #    password = None
+        #try handshaking and logging in
+        err_msg = ClientMsg.handshakeAndLogin( username, password ) 
+        if err_msg:
+            ClientMsg.disconnect()
+            ClientMsg.notify.error( err_msg )
+            return err_msg
         
-        #try to log in
-        ClientMsg._sendMsg( (STERNER_ID, STERNER_LOGIN, username, password), True )
-        t1 = time.time()
-        while True:
-            msg = ClientMsg.readMsg()
-            if msg:
-                if msg[0] == LOGIN_SUCCESS:
-                    print "dobio welcome!!!"
-                    ClientMsg.player_id = int(msg[1])
-                    return None
-                else:
-                    #return error msg
-                    return msg
-            
-            #wait for max of 3 seconds
-            if time.time() - t1 > 3:
-                return "Could not log in... timed out."
+        #set no delay        
+        ClientMsg.myConnection.setNoDelay(1)
         
-            time.sleep(0.01)
+        #some panda stuff
+        ClientMsg.cReader.addConnection(ClientMsg.myConnection)
+
+        #ok we connected to server        
+        ClientMsg.notify.info( "Connected to server: %s", ClientMsg.myConnection.getAddress() )
+        
             
             
-            
-    @staticmethod
-    def serverUp():
-        if ClientMsg.myConnection:
-            return True
-        return False
-                 
-                    
-    @staticmethod         
-    def getGameId():
-        return ClientMsg.game_id
-                         
-                 
     @staticmethod         
     def setGameId( game_id ):
         ClientMsg.game_id = game_id
@@ -161,74 +117,74 @@ class ClientMsg:
         ClientMsg.myConnection = None
         ClientMsg.player_id = 0
             
+        #TODO: net: ovdje se zna kad se klijent diskonektao tu treba reagirat nekak na to
+        print "Disconnecting"
             
             
     @staticmethod
-    def handshake():
+    def handshakeAndLogin( username, password ):
+        #get socket and set it to non blocking
         s = ClientMsg.myConnection.getSocket()
+        s.SetNonBlocking()
         
-        s.SendData('LOSH?')        
-        if ClientMsg.getData(s, 2) != 'LOSH!':
-            return False
+        s.SendData('LOSH?')
+        msg = ClientMsg.getData(s, 2)
+        if not msg:
+            return "Server not responsive."
+        if msg != 'LOSH!':
+            return msg
 
         s.SendData('Sterner?')
-        if ClientMsg.getData(s, 2) != 'Regix!':
-            return False
+        msg = ClientMsg.getData(s, 2) 
+        if not msg:
+            return "Server not responsive."
+        if msg != 'Regix!':
+            return msg
 
-        tmp_msg = COMMUNICATION_PROTOCOL_STRING + ':' + str(COMMUNICATION_PROTOCOL_VERSION)
-        s.SendData( tmp_msg )
-
-        if ClientMsg.getData(s, 2) != HANDSHAKE_SUCCESS:
-            return False
-
-        return True
-
-            
-    @staticmethod
-    def threadFunction():
+        version_msg = COMMUNICATION_PROTOCOL_STRING + ':' + str(COMMUNICATION_PROTOCOL_VERSION)
+        s.SendData( version_msg )
+        msg = ClientMsg.getData(s, 2)
+        if not msg:
+            return "Server not responsive."
+        if msg != HANDSHAKE_SUCCESS:
+            return msg
         
-        while True:
-                    
-            #if we already tried RETRY_ATTEMPTS times, don't even bother
-            if ClientMsg.num_failed_attempts >= RETRY_ATTEMPTS:
-                ClientMsg.log.error("Failed to connect %d times, giving up.", ClientMsg.num_failed_attempts)
-                return False
+        #handshake went ok, send username/pass
+        s.SendData( pickle.dumps( (STERNER_LOGIN, username, password) ) )
+        
+        #now we expect LOGIN_SUCCESS and our player_id
+        msg = ClientMsg.getData(s, 2)
+        if not msg:
+            return "Server not responsive."        
+        try:
+            split_msg = msg.split(":")
             
-            if ClientMsg.connect():
-                ClientMsg.num_failed_attempts = 0
-                return True
+            #if this is NOT a LOGIN_SUCCESS message it is an error message, return it
+            if split_msg[0] != LOGIN_SUCCESS:
+                return msg
+            
+            #finally log in successful
             else:
-                ClientMsg.num_failed_attempts += 1                
-
-            time.sleep(1)
-        
+                ClientMsg.player_id = int(split_msg[1])
+                return None
             
+        except:
+            ClientMsg.notify.error( "Server sent a wrong message:%s", msg )
+            return "Server sent a wrong message:" + msg
+            
+
             
     @staticmethod
     def handleConnection():
         """Return True if connection is ok, returns False if there is no connection yet."""
         
-        #if we are not connected
+        #if we are not connected just return False
         if not ClientMsg.myConnection:
-
-            #if we already tried RETRY_ATTEMPTS times, don't even bother
-            if ClientMsg.num_failed_attempts >= RETRY_ATTEMPTS:
-                return 
-            
-            #if there is an active connecting thread do nothing 
-            if ClientMsg.connection_thread and ClientMsg.connection_thread.isAlive():
-                return
-            #if not, start one
-            else:
-                ClientMsg.connection_thread = threading.Thread(target=ClientMsg.threadFunction )
-                ClientMsg.connection_thread.setName( 'Connection_thread')
-                ClientMsg.connection_thread.start()
-                return
-            
+            return False
        
-        #check the connection, if there is none, disconnect everything and return false
+        #check the if socket is alive, if not, disconnect everything and return false
         if not ClientMsg.myConnection.getSocket().Active():
-            ClientMsg.log.error( "Lost connection to server: %s", ClientMsg.ip_address )
+            ClientMsg.notify.error( "Lost connection to server: %s", ClientMsg.ip_address )
             ClientMsg.disconnect()
             return False
 
@@ -261,7 +217,7 @@ class ClientMsg:
             if ClientMsg.cReader.getData(datagram):
                 dgi = PyDatagramIterator(datagram)                
                 msg = pickle.loads(dgi.getString())                
-                ClientMsg.log.info("Client received a message:%s", msg)
+                ClientMsg.notify.info("Client received a message:%s", msg)
                           
                 return msg
                                             
@@ -279,7 +235,7 @@ class ClientMsg:
         datagram = NetDatagram()        
         datagram.addString(pickle.dumps(msg, pickle.HIGHEST_PROTOCOL))   
         ClientMsg.cWriter.send(datagram, ClientMsg.myConnection)
-        ClientMsg.log.debug("Client posted a message: %s", msg)
+        ClientMsg.notify.debug("Client posted a message: %s", msg)
 
 
     @staticmethod
@@ -291,7 +247,7 @@ class ClientMsg:
         datagram = NetDatagram()        
         datagram.addString(pickle.dumps(msg, pickle.HIGHEST_PROTOCOL))   
         ClientMsg.cWriter.send(datagram, ClientMsg.myConnection)
-        ClientMsg.log.debug("Client posted a message: %s", msg)
+        ClientMsg.notify.debug("Client posted a message: %s", msg)
 
     
     @staticmethod

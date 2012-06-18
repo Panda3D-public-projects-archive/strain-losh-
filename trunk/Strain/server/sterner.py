@@ -15,9 +15,15 @@ from server_messaging import *
 from util import *
 from engine import EngineThread
 from dbproxyapi import DBProxyApi as DBApi
+import traceback
 
 
-STERNER_TIME_LIMIT = 0
+STERNER_TIME_LIMIT = 0 #seconds, if it is 0 than it is infinite
+
+#messages from clients that do no go through to engines, their lifespan
+MESSAGE_TIMEOUT = 10 #seconds
+
+ENGINE_IDLE_MAX = 0 #in seconds, if it is 0 than it is infinite
 
 
 class LockedDict:
@@ -25,12 +31,14 @@ class LockedDict:
     def __init__(self):
         self.lock = threading.Lock()
         
+        # K-game id, V- ( msg, timestamp )
         self.msg_dict = {}
         
         
 
     def getMyMsgs(self, id ):
-        msg = []
+        msg_list = []
+        tmp_msgs = []
 
         #try to acquire lock
         if not self.lock.acquire( False ):
@@ -45,48 +53,61 @@ class LockedDict:
             if not self.msg_dict[id]:
                 return None
     
-            #if there is a msg, get first and delete it from
-            msg = self.msg_dict[id][0]
-            self.msg_dict[id] = self.msg_dict[id][1:] 
-            
+            #if there are msgs, get them first and delete them from dict
+            tmp_msgs = self.msg_dict[id]
+
+            del self.msg_dict[id]
+
+            #release lock
         finally:
             self.lock.release()
 
-        return ( msg, id )
+        #go through message_list and remove timestamps
+        for msg in tmp_msgs:
+            msg_list.append(msg[0])
+
+
+        return msg_list
 
     
     
     def putMsg(self, id, msg):
         #try to acquire lock
         if not self.lock.acquire( False ):
-            return None
+            return False
             
         try:            
             #if there are no msgs for this id create new list
             if id not in self.msg_dict:
-                self.msg_dict[id] = [msg]
-            else:
-                #if there are msgs, append these msg
-                self.msg_dict[id].append( msg )
+                self.msg_dict[id] = []
+                
+            #append this msg
+            self.msg_dict[id].append( (msg, time.time()) )
         finally:
             self.lock.release()
 
+        return True
 
 
-    def getAllMsgsDict(self):
-        all_msgs = {}
-        
+    
+    def purgeOldMessages(self):
         #try to acquire lock
         if not self.lock.acquire( False ):
-            return None
-        try:            
-            all_msgs = self.msg_dict
-            self.msg_dict = {}
+            return
+        try:
+            #go through all message lists  
+            for k in self.msg_dict.keys():
+                msg_lst = self.msg_dict[k]
+                #go through all messages in a message list
+                for msg in msg_lst[:]:
+                    #if this is old message, remove it
+                    if time.time() - msg[1] >= MESSAGE_TIMEOUT:
+                        msg_lst.remove( msg )
+                    if not msg_lst:
+                        del self.msg_dict[k]
+                
         finally:
             self.lock.release()
-    
-        return all_msgs
-    
 
 ###################################################################################    
 ###################################################################################    
@@ -98,19 +119,16 @@ class Sterner:
     def __init__(self):
         self.notify = Notify( 'Sterner.log' )
         
-        self.network = Network( self, self.notify )
-        self.network.startServer()
-        
+        #database api
         self.db_api = DBApi()
         
+        #start network server
+        self.network = Network( self, self.notify, self.db_api )
+        self.network.startServer()
         
-        #LockedDict for distributing messages from network to Engine threads
-        self.from_network = LockedDict()
-        #LockedDict for sending msgs to network
-        self.to_network = LockedDict()
         
         #dict to save logged in players 
-        # K: player_id , V: [panda connection, active_game]
+        # K: player_id , V: panda connection
         self.logged_in_players = {}
         
         self.notify.info( "Sterner started." )
@@ -118,52 +136,62 @@ class Sterner:
         #so we dont have different versions of games all at once
         self.db_api.finishAllGamesExceptVersion( COMMUNICATION_PROTOCOL_VERSION )
         
-        self.new_game_queue = collections.deque()
-        self.engine_handler = EngineHandlerThread( self.new_game_queue, self.from_network, self.to_network, self.notify, self.db_api )
+        #dequeue for sending msgs to network... format:(player_id, (msg))
+        self.to_network = collections.deque()
+        
+        #dequeue for sending messages for engines and EngineHandlerThread, if msg[0] == STERNER_ID, than it is for handler
+        self.msgs4engines = collections.deque()
+        
+        self.engine_handler = EngineHandlerThread( self.msgs4engines, self.to_network, self.notify, self.db_api )
         self.engine_handler.start()
         
         
-        
-
     
     def start( self ):
         
+        #for time limit - debug option if we want to stop sterner automatically after some time
         t = time.time()
+        
         #-----------================------main loop---------=====================---------
         #-----------================------main loop---------=====================---------
         #-----------================------main loop---------=====================---------
         while True:
         
+            #needs to be called every tick to handle connections
             self.network.handleConnections()
         
             #get msg from network
             tmp_msg = self.network.readMsg()
+            
             if tmp_msg:
                 #print "sterner dobio:",tmp_msg
-                msg, source = tmp_msg
-                
-                #chek if this messge is for sterner or not
-                if msg[0] == STERNER_ID:
-                    self.handleSternerMsg( msg[1:], source )
-                else:
-                    self.putMsgOnQueue( msg[0], msg[1:] )
-            
-            
-            #put msgs on network            
-            all_msgs = self.to_network.getAllMsgsDict()
-            if all_msgs:
-                for player_id in all_msgs:
-                    for msg in all_msgs[player_id]:
-                        try:
-                            self.network._sendMsg( msg, self.logged_in_players[ int(player_id) ][0] )
-                        except:
-                            #print "trazim: %s... svi: %s" % (player_id, str(self.logged_in_players))
-                            pass
+                try:
+                    msg, source = tmp_msg
 
+                    #check if this message is for sterner or not
+                    if msg[0] == STERNER_ID:
+                        self.handleSternerMsg( msg[1:], source )
+                    else:
+                        self.msgs4engines.append( msg )
+                except:
+                    self.notify.error("Error with message:%s\ninfo:%s", str(tmp_msg), traceback.format_exc() )
             
+            
+            #check to_network for messages, and if there are any send them to players
+            try:
+                while True:
+                    src, msg = self.to_network.popleft() 
+                    self.network._sendMsg( msg, self.logged_in_players[ src ] )
+            #IndexError if there is nothing to pop
+            #KeyError if engine is sending messages to disconnected/unknown players, we just ignore this
+            except (IndexError, KeyError):
+                pass
+            
+            
+            #behave nicely with cpu            
             time.sleep(0.1) 
         
-            
+            #if we set the option for sterner auto shutdown, check the time period
             if STERNER_TIME_LIMIT and time.time() - t > STERNER_TIME_LIMIT:
                 break
         #---------================--------main loop--------==================----------
@@ -176,59 +204,19 @@ class Sterner:
 
         time.sleep(3)
         
-    
-    def putMsgOnQueue(self, game_id, msg):
-        
-        #put this message in queue only if there are active games with this id
-        for tmp_value in self.logged_in_players.values():
-            try:
-                if tmp_value[1] == game_id:
-                    self.from_network.putMsg(game_id, msg)
-                    return
-            except:
-                pass
-            
-        print "nisam naso:", game_id, "  msg:", msg
-    
+
     
     def getIdFromConnection(self, connection):
         for player_id in self.logged_in_players:
-            if self.logged_in_players[player_id][0] == connection:
+            if self.logged_in_players[player_id] == connection:
                 return player_id
         return None
     
     
     
     def handleSternerMsg(self, message, source):
-        print "handleSternerMessage message:", message, "   source:", source
         
-        
-        if message[0] == STERNER_LOGIN:
-            user_data = self.db_api.returnPlayer( message[1] )
-
-            if user_data[3] != message[2]:            
-                self.network._sendMsg( (ERROR, "Wrong username/password"), source )
-                return
-            
-            player_id = user_data[0]
-            
-            #check if this player already logged in, if so disconnect him
-            if player_id in self.logged_in_players:
-                self.network.disconnect(self.logged_in_players[player_id][0])
-
-            #remember this new player, if this player had some previous connection, in logged_in_players, this will overwrite it                
-            self.logged_in_players[ player_id ] = [source]
-            
-            #send LOGIN_SUCCESS to client
-            self.network._sendMsg( (LOGIN_SUCCESS, player_id), source )
-
-            #send all levels and all player_ids to client so he can create new games
-            self.sendSternerData(source)            
-            return
-
-                
-        elif message[0] == START_NEW_GAME:
-            print "+++++new game:", message
+        if message[0] == START_NEW_GAME:
             level = message[1]
             budget = message[2]
             player_ids = message[3]
@@ -286,14 +274,8 @@ class Sterner:
                 else:
                     self.db_api.addPlayerToGame(game_id, player_ids[i], i, i, 0)
             
-            #set acceptance status of creator to accepted
-            game_player = self.db_api.getGamePlayer(game_id, player_id)
-            game_player[5] = 1
-            self.db_api.updateGamePlayer(game_player)
-            
-            
-            #TODO: 0: prvo stavit sve u bazu ako se tred ne digne da moze kasnije sve procitat iz baze
-            self.new_game_queue.append( (game_id, self.getIdFromConnection(source), level, budget, player_ids ) )
+
+            self.msgs4engines.append( (STERNER_ID, START_NEW_GAME, game_id, player_id ) )
             return
                 
                 
@@ -307,11 +289,6 @@ class Sterner:
             return
                 
                 
-        elif message[0] == MY_UNACCEPTED_GAMES:
-            player_id = self.getIdFromConnection(source)
-            self.network._sendMsg( (MY_UNACCEPTED_GAMES, self.db_api.getMyUnacceptedGames( player_id )), source )
-            return
-                
                 
         elif message[0] == DECLINE_GAME:
             game_id = message[1]
@@ -321,7 +298,7 @@ class Sterner:
 
             #if there is no such game            
             if not game:
-                self.network._sendMsg( (ERROR, "Wrong game id"), source )
+                self.network._sendMsg( (ERROR, "No such game."), source )
                 return
 
             #if this is a public game, you cant decline that
@@ -340,7 +317,10 @@ class Sterner:
                 self.network._sendMsg( (ERROR, "You cannot decline, you are not even part of this game!"), source )
                 return
                 
+            #ok so delete the game
             self.db_api.deleteGame(game_id)
+            
+            #refresh his unaccepted games list
             self.network._sendMsg( (MY_UNACCEPTED_GAMES, self.db_api.getMyUnacceptedGames( player_id )), source )
             
             
@@ -349,8 +329,14 @@ class Sterner:
             game_id = message[1]
             player_id = self.getIdFromConnection(source)
 
-            #check if this game already started or is finished            
             game = self.db_api.getGame(game_id)
+            
+            #if there is no such game            
+            if not game:
+                self.network._sendMsg( (ERROR, "No such game."), source )
+                return
+
+            #check if this game already started or is finished            
             if game[5] == 1:
                 self.network._sendMsg( (ERROR, "Game already started"), source )
                 return
@@ -370,6 +356,7 @@ class Sterner:
                 #find first empty slot, set this players id in its stead
                 game_player = self.db_api.getGamePlayer(game_id, 0)
                 game_player[2] = player_id
+                #we update game_player later
 
             #if this is a private game
             else:
@@ -378,34 +365,33 @@ class Sterner:
                 if game_player[5] == 1:
                     self.network._sendMsg( (ERROR, "Already accepted this game"), source )
                     return
-                
             
-            
-            #update this player's acceptance
+            #update this player's acceptance, for both cases (public/private game)
             game_player[5] = 1
             self.db_api.updateGamePlayer( game_player )
             
-            #we can accept this game
+            #we accepted this game
             self.network._sendMsg( (ACCEPT_GAME, game_id), source )
+            
+            #refresh unaccepted games list
+            self.network._sendMsg( (MY_UNACCEPTED_GAMES, self.db_api.getMyUnacceptedGames( player_id )), source )
 
             #try to see if this is the last player accepting and if so start the game            
             #if at least 1 player did not accept, return
             for player in self.db_api.getGameAllPlayers( game_id ):
                 if player[5] == 0:
+                    #refresh waiting games list
+                    self.network._sendMsg( (MY_WAITING_GAMES, self.db_api.getMyWaitingGames( player_id )), source )                    
                     return 
             
             #ok all players accepted, start this game
             game[5] = 1
             self.db_api.updateGame(game)
+            
+            #refresh active games 
+            self.network._sendMsg( (MY_ACTIVE_GAMES, self.db_api.getMyActiveGames( player_id )), source )            
             return
                 
-                
-        elif message[0] == ENTER_GAME:
-            player_id = self.getIdFromConnection(source)
-            self.logged_in_players[player_id] = self.logged_in_players[player_id][:1] 
-            self.logged_in_players[player_id].append( message[1] )
-            return
-
 
         elif message[0] == PING:
             self.network._sendMsg( (PONG, time.time()), source )
@@ -430,19 +416,27 @@ class Sterner:
         
                 
                 
+    def playerConnected(self, player_id, source):
+        #if this player already has a connection, disconnect him
+        if player_id in self.logged_in_players:
+            self.network.disconnect( self.logged_in_players[player_id] )
+
+        #remember this player-connection
+        self.logged_in_players[player_id] = source
+
+        #send this new player everything he needs
+        self.sendSternerData(source)
+
 
     def playerDisconnected(self, source):
-
         #go through all logged in players
-        for pid in self.logged_in_players:
+        for pid in self.logged_in_players.keys():
             
             #if we find the one with this connection
-            if self.logged_in_players[ pid ][0] == source:
+            if self.logged_in_players[ pid ] == source:
                 
                 #remove him from the dict
                 del self.logged_in_players[ pid ]
-                
-                #TODO: 0: remove all his messages from network queues
                 return
 
     
@@ -453,38 +447,32 @@ class Sterner:
 #########################################################################################################
 class EngineHandlerThread( threading.Thread ):
     
-    def __init__( self, new_game_queue, from_network, to_network, notify, db_api ):
+    def __init__( self, msgs4engines, to_network, notify, db_api ):
         threading.Thread.__init__(self)
         
-        self.name = "EngineHadlerThread"
+        self.name = "EngineHandlerThread"
 
-        self.new_game_queue = new_game_queue
-        self.from_network = from_network
+        self.msgs4engines = msgs4engines
         self.to_network = to_network
         self.notify = notify
-
         self.db_api = db_api
 
-        #main dict where we will hold engine threads k:game_id, v:engine thread
+        #LockedDict for distributing messages to Engine threads
+        self.from_network = LockedDict()
+
+        #main dict where we will hold engine threads k:game_id, v:EngineThread
         self.engine_threads = {}
         
         self.setDaemon(True)
         self.stop = False
         
-        pass
     
     
     def run(self):
         
-        
         #first start EngineThread for each game that is active and not yet finished
         for game in self.db_api.getAllActiveGames():
-
-            #create new thread
-            tmp_thread = EngineThread( game[0], self.from_network, self.to_network, self.notify, self.db_api )
-            tmp_thread.start()
-            
-            self.engine_threads[game[0]] = tmp_thread
+            self.startNewEngineThread(game[0])
             
         
         ###############################################################################################
@@ -495,45 +483,118 @@ class EngineHandlerThread( threading.Thread ):
                 self.stopAllThreads()
                 break
 
+            #tmp list for messages
+            msg_list = []
+            
+            #get everything from msgs4engines in msg_list
             try:
-                msg = self.new_game_queue.pop()
-                
-                game_id = msg[0]
-                creator_id = msg[1]
-                
-                #create new thread
-                tmp_thread = EngineThread( game_id, self.from_network, self.to_network, self.notify, self.db_api )
-                tmp_thread.start()
-                
-                self.engine_threads[game_id] = tmp_thread
-
-                #TODO: 1: ovdje prvo provjerit jel se fakat startao gejm pa onda tek poslat poruku
-                self.to_network.putMsg(creator_id, (NEW_GAME_STARTED, game_id) )
-                
+                while True:
+                    tmp_msg = self.msgs4engines.popleft()
+                    msg_list.append(tmp_msg)
             except IndexError:
                 pass
                 
+            #now go through all the messages we got 
+            for msg in msg_list:
 
+                try:
+                    #if this is a message from sterner
+                    if msg[0] == STERNER_ID:
+                        self.sternerMsg(msg[1:])
+    
+                    #this is a message for engines
+                    else:
+                        
+                        #check if thread with this id is alive, if not ignore this message
+                        if self.checkGameExists(msg[0]):
+                            #try to put it in from_network
+                            if not self.from_network.putMsg( msg[0], msg[1:] ):
+                                #if we couldn't, put it back in msgs4engines for later                        
+                                self.msgs4engines.append( msg )
+
+                except:
+                    self.notify.error("EgineHandlerThread - exception when handling this message:%s\ninfo:%s", str(msg), traceback.format_exc() )
+
+
+            #handle Threads
             self.handleThreads()
 
-            
+            #do housekeeping on from_network()
+            self.from_network.purgeOldMessages()
+
+
+            #be nice
             time.sleep(0.1)
         ###############################################################################################
         ###############################################################################################
         
         
         
+    def sternerMsg(self, msg):
+        
+        if msg[0] == START_NEW_GAME:
+            game_id = msg[1]
+            creator_id = msg[2]
+            
+            #first check if this EngineThread is running and if so log an error 
+            if game_id in self.engine_threads:
+                self.notify.error("Trying to start a game in progress! game_id:%s", str(game_id))
+                return
+            else:
+                #there is no active thread for this game, try to resume one from db
+                if self.startNewEngineThread(game_id):
+                    self.to_network.append( (creator_id, (NEW_GAME_STARTED, game_id) ) )
+            
+            
+        
+    def checkGameExists(self, game_id):
+        #first check if there is an active engine thread with this game_id
+        if game_id in self.engine_threads:
+            return True
+
+        #than check database if we need to resume an engine thread
+        for game in self.db_api.getAllActiveGames():
+            if game_id == game[0]:
+                #resume this game
+                return self.startNewEngineThread(game_id)
+        
+        self.notify.error("Couldn't find game:%s in active games!",str(game_id))
+        return False
+        
+        
+    def startNewEngineThread(self, game_id):
+        tmp_thread = EngineThread( game_id, self.from_network, self.to_network, self.notify, self.db_api )
+        tmp_thread.start()
+        #give it time to init
+        time.sleep(0.1)
+        if tmp_thread.isAlive():
+            self.engine_threads[game_id] = tmp_thread
+            return True
+
+        self.notify.error("Couldn't start a new thread with game id:%s", str(game_id))
+
+        #who knows what happened, try to kill it by brute force
+        try:
+            tmp_thread.__stop()
+            tmp_thread.stop = False
+        except:
+            pass
+
+        return False
+        
+        
     def handleThreads(self):
+        for t in self.engine_threads.keys():
+            thrd = self.engine_threads[t]
+            #see if any thread is dead, if so than delete if from dict
+            if not thrd.isAlive():
+                del self.engine_threads[t]
         
-        #see if some thread is over, if so than add it to delete list
-        del_list = []
-        for t in self.engine_threads:
-            if not self.engine_threads[t].isAlive():
-                del_list.append( t )
+            #if this thread has been idle too long, suspend it and delete it from active list        
+            if ENGINE_IDLE_MAX and time.time() - thrd.last_active_time > ENGINE_IDLE_MAX:
+                thrd.suspend = True 
+                del self.engine_threads[t]
         
-        #remove all thread entries from delete list
-        for d in del_list:        
-            del self.engine_threads[d]
         
         
     def stopAllThreads(self):
