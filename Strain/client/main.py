@@ -19,7 +19,7 @@ from strain.browser import Browser
 #from strain.client import Client
 from strain.gametype import GameType
 from strain.client_messaging import ClientMsg
-from strain.net import Net, handleConnection
+from strain.net import Net
 
 #############################################################################
 # GLOBALS
@@ -60,11 +60,8 @@ class App():
         server_ip = ConfigVariableString("server-ip", "127.0.0.1").getValue()
         server_port = ConfigVariableInt("server-port", "56005").getValue()         
         ClientMsg.setupAddress(server_ip, server_port)
-        ClientMsg.log = self.logger
+        ClientMsg.notify = self.logger
 
-        # Start network handling task
-        taskMgr.add( handleConnection, "handle_net_task" ) 
-        
         # Initialize network communicator
         self.net_manager = Net(self)
         self.net_manager.startNet()

@@ -31,7 +31,7 @@ class Net():
            
     def startNet(self):
         # Create main network messaging task
-        taskMgr.add(self.msgTask, "msg_task") 
+        taskMgr.add(self.netTask, "net_task") 
 
     def handleMsg(self, msg):
         """Handles incoming messages."""
@@ -198,8 +198,13 @@ class Net():
             self._message_in_process = False
     
     
-    def msgTask(self, task):
-        """Task that listens for messages on client queue."""
+    def netTask(self, task):
+        """Task that handles connection and listens for messages on client queue."""
+        
+        #check if everything is ok with connection
+        if not ClientMsg.handleConnection():
+            return task.cont
+        
         if self._message_in_process == False:
             msg = ClientMsg.readMsg()        
             if msg:
@@ -213,12 +218,3 @@ class Net():
         return task.cont
 
 
-#------------------------END OF NET CLASS---------------------------------------------
-
-
-def handleConnection(task):
-    # Needs to be called every frame, this takes care of connection
-    ClientMsg.handleConnection()
-    
-    return task.cont
-    

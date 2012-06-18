@@ -18,7 +18,6 @@ from strain.share import *
 
 LEVELS_ROOT = "./data/levels/"
 
-ENGINE_IDLE_MAX = 0 #in seconds, if it is 0 than it is infinite
 
 ######################################################################################################
 ######################################################################################################
@@ -32,6 +31,9 @@ class EngineThread( Thread ):
             
         self.setDaemon(True)
         self.stop = False
+
+        #this will be set by thread handler if we need to suspend this game for some reason
+        self.suspend = False
 
         self.game_id = game_id
         self.notify = notify
@@ -53,7 +55,11 @@ class EngineThread( Thread ):
         players = [ g_p[2] for g_p in self.db_api.getGameAllPlayers(db_game[0])]
         
         if db_game[12]:
-            self.engine = loadFromPickle( db_game[12], from_network, to_network, notify, db_api ) 
+            #TODO: DEBUG
+            #self.engine = loadFromPickle( db_game[12], from_network, to_network, notify, db_api )
+            f = open("pickle","r")
+            self.engine = loadFromPickle( f, from_network, to_network, notify, db_api )
+             
         else:
             self.engine = Engine( game_id, from_network, to_network, notify, self.db_api )
             self.engine.Init( level, budget, players )
@@ -67,15 +73,19 @@ class EngineThread( Thread ):
         #+++++++++++++++++++++++++++++++++++++++++++++MAIN LOOP+++++++++++++++++++++++++++++++++++++++++++++
         while True:
             
-                
-            if self.engine.runOneTick():
-                self.last_active_time = time.time()
-                
-            if ENGINE_IDLE_MAX and time.time() - self.last_active_time >= ENGINE_IDLE_MAX:
-                print "++++++++++++++ pickling!!!!!!"
+            #check if thread handler told us to suspend                
+            if self.suspend:
+                print "++++++++++++++ pickling!!!!!! debug braking"
+                #break
                 if self.engine.pickleSelf():
                     break
+
+            #run one tick                
+            if self.engine.runOneTick():
+                self.last_active_time = time.time()
+
                 
+            #if we need to stop immediately than do so
             if self.stop:
                 break
             
@@ -113,7 +123,6 @@ class Engine():
         self.from_network = from_network
         self.to_network = to_network
         self.db_api = db_api
-        print "--------", self.db_api, db_api
         
         self.stop = False
         self.level = None         
@@ -157,15 +166,14 @@ class Engine():
     def runOneTick(self):
         """Returns 0 if idling, 1 otherwise"""
 
-        #get a message if there is one
-        msg = self.from_network.getMyMsgs( self.game_id )
-        if msg:
-            #print "-----", msg
-            self.handleMsg( msg[0][1:], msg[0][0] )
+        #get messages if there are any
+        msg_list = self.from_network.getMyMsgs( self.game_id )
+        if msg_list:
+            for msg in msg_list:
+                print "engine dobio:", msg
+                self.handleMsg( msg[1:], msg[0] )
             return 1
-        #1 slozit da vrati nes drugo kad engine zavrsi
-        #2 da se moze poslat enginu poruka preko parametara da se pauzira (pospremi u bazu)
-        
+
         return 0
 
 
@@ -745,6 +753,7 @@ class Engine():
         
         
     def validatePlayer(self, source):
+        print "---active player:",self.active_player
         if self.active_player.id == source:
             return self.active_player
         
@@ -1332,10 +1341,14 @@ class Engine():
             self.from_network = from_network
             self.db_api = db_api
             
+            #TODO: DEBUG
             #update game record in database
-            db_game = self.db_api.getGame( self.game_id )
-            db_game[12] = pickled_engine
-            self.db_api.updateGame( db_game )
+            #db_game = self.db_api.getGame( self.game_id )
+            #db_game[12] = pickled_engine
+            #self.db_api.updateGame( db_game )
+            f = open( "pickle","w")
+            f.write( pickled_engine )
+            f.close
         except:
             return 0
         
@@ -1348,12 +1361,12 @@ class Engine():
         deploy_dict['level'] = util.compileLevel( level )
         deploy_dict['army_size'] = army_size
         
-        self.to_network.putMsg( source, ( DEPLOYMENT, deploy_dict ) )
+        self.to_network.append( (source, ( DEPLOYMENT, deploy_dict )) )
         
     
     
     def pong( self, source ):
-        self.to_network.putMsg( source, (PONG, time.time()) )
+        self.to_network.append( (source, (PONG, time.time())) )
         
 
     def error(self, msg, source = None):
@@ -1362,12 +1375,12 @@ class Engine():
                 p.addErrorMsg( msg )
             return
         
-        self.to_network.putMsg( source, (ERROR, msg) )
+        self.to_network.append( (source, (ERROR, msg)) )
 
 
 #-----------------------------------------------------------------------
 def loadFromPickle( pickled_engine, from_network, to_network, notify, db_api ):
-    
+    #TODO: DEBUG
     #eng = pickle.loads(pickled_engine)
     eng = pickle.load(pickled_engine)
 

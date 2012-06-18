@@ -17,7 +17,7 @@ TCP_PORT = 80808
 
 #-----------------------sterner messages----------------------
 STERNER_ID = 0                  #Sterner's id, as opposed to game id
-STERNER_LOGIN = 'login'         #(STERNER_ID, STERNER_LOGIN, username, password)
+STERNER_LOGIN = 'login'         #(STERNER_LOGIN, username, password)
 LOGIN_SUCCESS = 'Welcome'       #sent by Sterner when u successfully log in
 TEST_GAME_ID = 66
 START_NEW_GAME = 'start_new_game'
