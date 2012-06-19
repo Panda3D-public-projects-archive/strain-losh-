@@ -1,40 +1,48 @@
 # Prerequisites:  cx_oracle
 from cx_Oracle import *
+import datetime
+import glob
+import os
+import copy 
 
-
+"""
 DB_SCHEMA_OWNER = 'krav'
 DB_SCHEMA_PASS = 'goon666'
 DB_IP = '127.0.0.1'
 DB_PORT = '1521'
 DB_SID = 'XE'
-
 """
+
 DB_SCHEMA_OWNER = 'straindb'
 DB_SCHEMA_PASS = 'straindb'
-DB_IP = '178.79.164.4'
+DB_IP = 'localhost'#'178.79.164.4'
 DB_PORT = '1521'
 DB_SID = 'XE'
-"""
-"""
-DB_SCHEMA_OWNER = 'ognjenk'
-DB_SCHEMA_PASS = 'ogs'
-DB_IP = 'zg-invplusdb'
-DB_PORT = '1521'
-DB_SID = 'inv10dev'
-"""
+
 
 class DBApi():
+    
     def __init__(self):
         self.conn = Connection(user=DB_SCHEMA_OWNER, password=DB_SCHEMA_PASS, dsn=makedsn(DB_IP, DB_PORT, DB_SID), threaded = True)
-    
+        
     def close(self):
         self.conn.close()
+    
+    def getLast3News(self):
+        cur = self.conn.cursor()
+        cur.execute('SELECT ID, NEWS_DATE, TITLE, TEXT FROM ' \
+                    '(SELECT ID, NEWS_DATE, TITLE, TEXT, ROWNUM FROM STR_NEWS ORDER BY ID DESC)' \
+                    ' WHERE ROWNUM <= 3'
+                    )
+        row = cur.fetchall()
+        cur.close()
+        return row   
     
     def createPlayer(self, email, username, password):
         cur = self.conn.cursor()
         id = cur.var(NUMBER)        
         try:
-            cur.execute('INSERT INTO STR_PLAYER(ID, EMAIL, USERNAME, PASSWORD) ' \
+            cur.execute('INSERT INTO STR_PLAYER(ID, EMAIL, NAME, PASS) ' \
                         'VALUES (str_ply_seq.nextval,:email,:username,:password) ' \
                         'RETURNING ID INTO :id',
                         {'email' : email,
@@ -51,113 +59,32 @@ class DBApi():
             print "Row inserted..."
         finally:
             cur.close()
-        return id.getvalue()        
-    
-    def deletePlayer(self, username):
-        cur = self.conn.cursor()
-        cur.execute('DELETE FROM STR_PLAYER ' \
-                    'WHERE username = :username',
-                    {'username' : username
-                    }
-                   )
-        cur.close()
-        self.conn.commit()
-    
+        return id.getvalue() 
+            
     def returnPlayer(self, username):
         cur = self.conn.cursor()
-        cur.execute("SELECT ID, EMAIL, USERNAME, PASSWORD FROM STR_PLAYER WHERE username = :username", {'username':username})
+        cur.execute('SELECT ID, EMAIL, NAME, PASS FROM STR_PLAYER WHERE name = :username', {'username':username})
         row = cur.fetchall()
         cur.close()
         return row
     
-    def returnLevel(self, name):
-        cur = self.conn.cursor()
-        select = "SELECT ID, NAME, DESCRIPTION, MAP FROM STR_LEVEL " \
-                 "WHERE NAME = :name"
-        return_rows = []
-        try:
-            cur.execute(select, {'name':name})
-            for row in cur:
-                id = row[0]
-                name = row[1]
-                description = row[2]
-                map = row[3].read()
-                return_rows.append((id, name, description, map))
-        except DatabaseError, exception:
-            error, = exception
-            print "Oracle error: ", error.message
-        else:
-            print "Data processed."
-        finally:
-            # Housekeeping...
-            cur.close()
-        return return_rows
-    
-    def createGame(self, level_name, army_size):
-        level_row = self.returnLevel(level_name)
+    def createGame(self, level_name, army_size, first_player_id, create_time, version, public, game_name):
         cur = self.conn.cursor()
         id = cur.var(NUMBER)
-        cur.execute('INSERT INTO STR_GAME(ID, LVL_ID, ARMY_SIZE, TURN_NUMBER) ' \
-                    'VALUES (str_gam_seq.nextval,:lvl_id, :army_size, 0) ' \
-                    'RETURNING ID INTO :id',
-                    {'lvl_id' : level_row[0][0],
-                     'army_size' : army_size,
-                     'id' : id
-                    }
-                   )
-        cur.close()
-        self.conn.commit()
-        self.addPlayerToGame(id.getvalue(), 'REPLAY', 0, 0)
-        return id.getvalue()
-        
-    def addPlayerToGame(self, game_id, player_name, team, order):
-        player_id = self.returnPlayer(player_name)[0][0]
-        cur = self.conn.cursor()
-        id = cur.var(NUMBER)        
-        cur.execute('INSERT INTO STR_GAME_PLAYERS(ID, GAM_ID, PLY_ID, TEAM_ID, ORDER_NUM) ' \
-                    'VALUES (str_gpl_seq.nextval,:gam_id, :ply_id, :team_id, :order_num) ' \
-                    'RETURNING ID INTO :id',
-                    {'gam_id' : game_id,
-                     'ply_id' : player_id,
-                     'team_id' : team,
-                     'order_num' : order,
-                     'id' : id
-                    }
-                   )
-        cur.close()
-        self.conn.commit()
-        return id.getvalue()        
-                
-    def returnPlayerInGame(self, game_id, player_name):
-        cur = self.conn.cursor()
-        cur.execute('SELECT GPL.ID, GPL.GAM_ID, GPL.PLY_ID, GPL.TEAM_ID, ' \
-                    'GPL.ORDER_NUM, GPL.VICTORY_POINTS ' \
-                    'FROM STR_GAME_PLAYERS GPL, STR_PLAYER PLY ' \
-                    'WHERE GPL.PLY_ID = PLY.ID AND PLY.username = :username AND GPL.GAM_ID = :gam_id', 
-                    {'username' : player_name,
-                     'gam_id' : game_id
-                    }
-                   )
-        row = cur.fetchall()
-        cur.close()
-        return row
-        
-    def addMessage(self, game_id, player_name, message_type, message, turn_number):
-        cur = self.conn.cursor()
-        id = cur.var(NUMBER)
-        game_player_id = self.returnPlayerInGame(game_id, player_name)[0][0]
-        cur.setinputsizes(message=CLOB)
         try:
-            cur.execute('INSERT INTO STR_GPL_MESSAGE(ID, GPL_ID, MESSAGE_ID, MESSAGE, TURN_NUMBER) ' \
-                        'VALUES (str_gpm_seq.nextval,:gpl_id, :message_id, :message, :turn_number)' \
+            cur.execute('INSERT INTO STR_GAME(ID, MAP, BUDGET, TURN, ACTIVE_PLAYER_ID, STATUS, DATE_CREATED, VERSION, PUBLIC_GAME, GAME_NAME, RESERVED) ' \
+                        'VALUES (str_gam_seq.nextval,:level_name, :army_size, 0, :first_ply_id, 0, :create_time, :version, :public_game, :game_name, 0) ' \
                         'RETURNING ID INTO :id',
-                        {'gpl_id' : game_player_id,
-                         'message_id' : message_type,
-                         'message' : message,
-                         'turn_number' : turn_number,
+                        {'level_name' : level_name,
+                         'army_size' : army_size,
+                         'first_ply_id' : first_player_id,
+                         'create_time' : create_time,
+                         'version' : version,
+                         'public_game' : public,
+                         'game_name' : game_name,
                          'id' : id
-                        }
-                       )
+                         }
+                        )
             self.conn.commit()
         except DatabaseError, exception:
             error, = exception
@@ -166,16 +93,298 @@ class DBApi():
             print "Row inserted..."
         finally:
             cur.close()
+        return id.getvalue()
+    
+    def addPlayerToGame(self, game_id, player_id, team, order, accepted):
+        cur = self.conn.cursor()
+        id = cur.var(NUMBER)
+        try:
+            cur.execute('INSERT INTO STR_GAME_PLAYER(ID, GAM_ID, PLY_ID, TEAM_ID, ORDER_NUM, ACCEPTED) ' \
+                        'VALUES (str_gpl_seq.nextval,:game_id, :player_id, :team, :order_num, :accepted) ' \
+                        'RETURNING ID INTO :id',
+                        {'game_id' : game_id,
+                         'player_id' : player_id,
+                         'team' : team,
+                         'order_num' : order,
+                         'accepted' : accepted,
+                         'id' : id
+                         }
+                        )
+            self.conn.commit()
+        except DatabaseError, exception:
+            error, = exception
+            print "Oracle error: ", error.message
+        else:
+            print "Row inserted..."
+        finally:
+            cur.close()
+        return id.getvalue()
+   
+    def getMyGames(self, player_id, status, accepted):
+        cur = self.conn.cursor()
+        cur.execute('SELECT GAM_ID, GAM_MAP, GAM_BUDGET, GAM_TURN, GAM_ACTIVE_PLAYER_ID, GAM_STATUS, GAM_DATE_CREATED, GAM_DATE_FINISHED, '\
+                    'GAM_VERSION, GAM_PUBLIC_GAME, GAM_GAME_NAME, GAM_RESERVED '
+                    'FROM STR_V_GAME_PLAYERS '\
+                    'WHERE PLY_ID = :player_id AND GAM_STATUS = :status AND GPL_ACCEPTED = :accepted',
+                    {'player_id' : player_id,
+                     'status' : status,
+                     'accepted' : accepted
+                     }
+                    )
+        row = cur.fetchall()
+        cur.close()
+        return row        
+   
+    def getMyUnacceptedGames(self, player_id):
+        return self.getMyGames(player_id, 0, 0)
+    
+    def getMyWaitingGames(self, player_id):
+        return self.getMyGames(player_id, 0, 1)
+    
+    def getMyActiveGames(self, player_id):
+        return self.getMyGames(player_id, 1, 1)
+    
+    def getGamePlayer(self, game_id, player_id):
+        cur = self.conn.cursor()
+        cur.execute('SELECT ID, GAM_ID, PLY_ID, TEAM_ID, ORDER_NUM, ACCEPTED '\
+                    'FROM STR_GAME_PLAYER '\
+                    'WHERE PLY_ID = :player_id AND GAM_ID = :game_id',
+                    {'player_id' : player_id,
+                     'game_id' : game_id
+                     }
+                    )
+        row = cur.fetchall()
+        cur.close()
+        return row
+    
+    def getGameAllPlayers(self, game_id):
+        cur = self.conn.cursor()
+        cur.execute('SELECT ID, GAM_ID, PLY_ID, TEAM_ID, ORDER_NUM, ACCEPTED '\
+                    'FROM STR_GAME_PLAYER '\
+                    'WHERE GAM_ID = :game_id',
+                    {'game_id' : game_id
+                     }
+                    )
+        row = cur.fetchall()
+        cur.close()
+        return row  
+    
+    def getAllPlayers(self):
+        cur = self.conn.cursor()
+        cur.execute('SELECT ID, NAME FROM STR_PLAYER ')
+        row = cur.fetchall()
+        cur.close()
+        return row
+    
+    def getAllLevels(self):
+        path = os.getcwd() + './../server/data/levels/*.txt'
+        lst = []
+        for infile in glob.glob( path ):
+            infile = infile.split('\\')[-1]
+            lst.append( infile.split(".")[0] )
+        return lst    
+
+    def getAllActiveGames(self):
+        cur = self.conn.cursor()
+        cur.execute('SELECT ID, MAP, BUDGET, TURN, ACTIVE_PLAYER_ID, STATUS, DATE_CREATED, DATE_FINISHED, VERSION, PUBLIC_GAME, GAME_NAME, RESERVED '\
+                    'FROM STR_GAME WHERE STATUS != 2'
+                    )
+        row = cur.fetchall()
+        cur.close()
+        return row 
+    
+    def getAllFinishedGames(self):
+        cur = self.conn.cursor()
+        cur.execute('SELECT ID, MAP, BUDGET, TURN, ACTIVE_PLAYER_ID, STATUS, DATE_CREATED, DATE_FINISHED, VERSION, PUBLIC_GAME, GAME_NAME, RESERVED '\
+                    'FROM STR_GAME WHERE STATUS = 1'
+                    )
+        row = cur.fetchall()
+        cur.close()
+        return row 
+    
+    def getAllEmptyPublicGames(self):
+        cur = self.conn.cursor()
+        cur.execute('SELECT ID, MAP, BUDGET, TURN, ACTIVE_PLAYER_ID, STATUS, DATE_CREATED, DATE_FINISHED, VERSION, PUBLIC_GAME, GAME_NAME, RESERVED '\
+                    'FROM STR_GAME WHERE PUBLIC_GAME = 1 AND STATUS = 0'
+                    )
+        row = cur.fetchall()
+        cur.close()
+        return row
+    
+    def getGame(self, game_id, filter = False):
+        if filter:
+            sel = 'SELECT ID, MAP, BUDGET, TURN, ACTIVE_PLAYER_ID, STATUS, DATE_CREATED, DATE_FINISHED, VERSION, PUBLIC_GAME, GAME_NAME, RESERVED, PICKLED_ENGINE '\
+                  'FROM STR_GAME WHERE ID = :game_id'
+        else:
+            sel = 'SELECT ID, MAP, BUDGET, TURN, ACTIVE_PLAYER_ID, STATUS, DATE_CREATED, DATE_FINISHED, VERSION, PUBLIC_GAME, GAME_NAME, RESERVED '\
+                  'FROM STR_GAME WHERE ID = :game_id'
+
+        cur = self.conn.cursor()
+        cur.execute(sel,
+                    {'game_id' : game_id
+                     }
+                    )
+        row = cur.fetchall()
+        cur.close()
+        return row  
+    
+    def deleteGame(self, game_id):
+        cur = self.conn.cursor()
+        try:
+            cur.execute('DELETE FROM STR_GAME_PLAYER ' \
+                        'WHERE GAM_ID = :game_id',
+                        {'game_id' : game_id,
+                         }
+                        )
+            cur.execute('DELETE FROM STR_GAME ' \
+                        'WHERE ID = :game_id',
+                        {'game_id' : game_id,
+                         }
+                        )            
+            self.conn.commit()
+        except DatabaseError, exception:
+            error, = exception
+            print "Oracle error: ", error.message
+        else:
+            print "Row deleted..."
+        finally:
+            cur.close()
             
+    def finishGame(self, game_id):
+        #TODO: ogs: ovo ne provjerava da li je game vec u statusu = 2 i uvijek radi UPDATE
+        cur = self.conn.cursor()
+        id = cur.var(NUMBER)
+        try:
+            cur.execute('UPDATE STR_GAME SET STATUS = 2, DATE_FINISHED = :finish_time WHERE ID = :game_id',
+                        {'finish_time' : datetime.datetime.now(),
+                         'game_id' : game_id
+                         }
+                        )
+            self.conn.commit()
+        except DatabaseError, exception:
+            error, = exception
+            print "Oracle error: ", error.message
+        else:
+            print "Row updated..."
+        finally:
+            cur.close()
+        return id.getvalue()
+        #TODO: krav: napravit i to da se pobrisu potezi od svakog plejera posebno, kad se dodaju, al da ostane od obs replaj            
+
+    def playerAcceptGame(self, game_id, player_id):
+        cur = self.conn.cursor()
+        id = cur.var(NUMBER)
+        try:
+            cur.execute('UPDATE STR_GAME_PLAYER SET ACCEPTED = 1 WHERE GAM_ID = :game_id',
+                        {'game_id' : game_id
+                         }
+                        )
+            self.conn.commit()
+        except DatabaseError, exception:
+            error, = exception
+            print "Oracle error: ", error.message
+        else:
+            print "Row updated..."
+        finally:
+            cur.close()
         return id.getvalue()        
-        
-#MAIN
-dbapi = DBApi()
-print dbapi.returnPlayer('ogi')
-#dbapi.addMessage(6, 'ogi', 1, 'asd', 1)
-#dbapi.createPlayer('ogi@loshdev', 'ogi', 'ogi')
-#dbapi.createPlayer('krav@loshdev', 'krav', 'krav')
-#dbapi.createPlayer('vjeko@loshdev', 'vjeko', 'vjeko')
-#id = dbapi.createGame('base2', 1000)
-#dbapi.addPlayerToGame(int(id), 'ogi', 1, 1)
-#dbapi.addPlayerToGame(int(id), 'krav', 2, 1)
+    
+    def finishAllGamesExceptVersion(self, ver):
+        for g in self.getAllActiveGames():
+            #set finish status and timestamp to each game that is not this version
+            if g[5] != 2 and g[8] != ver:
+                self.finishGame(g[0])
+                
+                #set all game_players accepted = 1 in these games
+                for g_p in self.getGameAllPlayers(g[0]):
+                    self.playerAcceptGame(g[0], g_p[0])
+    
+    def updateGamePlayer(self, game_player):
+        cur = self.conn.cursor()
+        id = cur.var(NUMBER)
+        try:
+            cur.execute('UPDATE STR_GAME_PLAYER SET TEAM_ID = :team_id, ORDER_NUM = :order_num, ACCEPTED = :accepted WHERE GAM_ID = :gam_id AND PLY_ID = :ply_id',
+                        {'team_id' : game_player[3],
+                         'order_num' : game_player[4],
+                         'accepted' : game_player[5],
+                         'gam_id' : game_player[1],
+                         'ply_id' : game_player[2]
+                         }
+                        )
+            self.conn.commit()
+        except DatabaseError, exception:
+            error, = exception
+            print "Oracle error: ", error.message
+        else:
+            print "Row updated..."
+        finally:
+            cur.close()
+        return id.getvalue()  
+    """
+    def updateGame(self, game):
+        cur = self.conn.cursor()
+        id = cur.var(NUMBER)
+        try:
+            cur.execute('UPDATE STR_GAME SET MAP = :map, BUDGET = :budget, TURN = :turn, ACTIVE_PLAYER_ID = :act_ply_id, STATUS = status
+             WHERE GAM_ID = :gam_id AND PLY_ID = :ply_id',
+                        {'team_id' : game_player[3],
+                         'order_num' : game_player[4],
+                         'accepted' : game_player[5],
+                         'gam_id' : game_player[1],
+                         'ply_id' : game_player[2]
+                         }
+                        )
+            self.conn.commit()
+        except DatabaseError, exception:
+            error, = exception
+            print "Oracle error: ", error.message
+        else:
+            print "Row updated..."
+        finally:
+            cur.close()
+        return id.getvalue()  
+            
+        for g in self.games:
+            if g[0] == game[0]:
+                for i in xrange( 0, len(game) ):
+                    g[i] = game[i]
+        self.saveToFile(self.games, GAMES, GAMES_HEADER)
+    """
+    
+if __name__ == "__main__":
+    dbapi = DBApi()
+    #player_id = dbapi.createPlayer('vjeks@goon.666', 'vjeks', 'goon666')
+    #print dbapi.returnPlayer('ogi')
+    
+    #game_id = dbapi.createGame('base2', 1000, dbapi.returnPlayer('ogi')[0][0], datetime.datetime.now(), '0.1', 1, 'Game_Name_01')
+    #print game_id
+    
+    #game_player_id = dbapi.addPlayerToGame(21, dbapi.returnPlayer('ogi')[0][0], 0, 0, 1)
+    #print game_player_id
+
+    #game_player_id = dbapi.addPlayerToGame(21, dbapi.returnPlayer('krav')[0][0], 1, 1, 1)
+    #print game_player_id
+    
+    #dbapi.deleteGame(2)
+    
+    #dbapi.finishGame(21)
+    #dbapi.finishAllGamesExceptVersion('0.2')
+
+    #g_p = dbapi.getGamePlayer(21, 4)[0]
+    #g_newp = (g_p[0], g_p[1], g_p[2], 0, 0, 1)
+    #dbapi.updateGamePlayer(g_newp)
+
+    print dbapi.getLast3News()
+    print dbapi.getMyUnacceptedGames(dbapi.returnPlayer('ogi')[0][0])
+    print dbapi.getMyActiveGames(dbapi.returnPlayer('ogi')[0][0])
+    print dbapi.getMyWaitingGames(dbapi.returnPlayer('ogi')[0][0])
+    print dbapi.getGamePlayer(21, dbapi.returnPlayer('ogi')[0][0])
+    print dbapi.getGameAllPlayers(21)
+    print dbapi.getAllPlayers()
+    print dbapi.getAllLevels()
+    print dbapi.getAllActiveGames()
+    print dbapi.getAllFinishedGames()
+    print dbapi.getAllEmptyPublicGames()
+    print dbapi.getGame(21, True)
+    
+    dbapi.close()
