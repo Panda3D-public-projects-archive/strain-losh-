@@ -86,7 +86,7 @@ unit_type_dict['marine'] = marine_unit_types
 #############################################################################
 ### DoW2 MODEL DICTS AND PARAMS
 #############################################################################
-DOW_UNIT_SCALE = 0.3
+DOW_UNIT_SCALE = 0.15
 
 marine_anim_dict_dw2 = {}
 marine_anim_dict_dw2['crouch'] = 'dw/anims/idle_crouch01'

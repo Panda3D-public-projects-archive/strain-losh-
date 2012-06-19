@@ -1,6 +1,6 @@
 from panda3d.core import *
 
-from strain.renderer.levelrenderer2 import LevelRenderer2
+from strain.renderer.levelrenderer import LevelRenderer
 from strain.renderer.unitrenderer2 import UnitRenderer
 from strain.renderer.gridrenderer import GridRenderer
 from strain.renderer.coordrenderer import CoordRenderer
@@ -15,7 +15,7 @@ class RenderManager():
         self.parent = parent
         self.node = render.attachNewNode('RenderManagerNode')
         
-        self.level_renderer = LevelRenderer2(self, self.node)
+        self.level_renderer = LevelRenderer(self, self.node)
         self.grid_renderer = GridRenderer(self, self.node)
         base.accept('g', self.grid_renderer.toggle)
         self.coord_renderer = CoordRenderer(self, self.node)
