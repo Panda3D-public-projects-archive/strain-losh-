@@ -15,7 +15,7 @@ DB_SID = 'XE'
 
 DB_SCHEMA_OWNER = 'straindb'
 DB_SCHEMA_PASS = 'straindb'
-DB_IP = 'localhost'#'178.79.164.4'
+DB_IP = '178.79.164.4'
 DB_PORT = '1521'
 DB_SID = 'XE'
 
@@ -320,18 +320,24 @@ class DBApi():
         finally:
             cur.close()
         return id.getvalue()  
-    """
+    
     def updateGame(self, game):
         cur = self.conn.cursor()
         id = cur.var(NUMBER)
         try:
-            cur.execute('UPDATE STR_GAME SET MAP = :map, BUDGET = :budget, TURN = :turn, ACTIVE_PLAYER_ID = :act_ply_id, STATUS = status
-             WHERE GAM_ID = :gam_id AND PLY_ID = :ply_id',
-                        {'team_id' : game_player[3],
-                         'order_num' : game_player[4],
-                         'accepted' : game_player[5],
-                         'gam_id' : game_player[1],
-                         'ply_id' : game_player[2]
+            cur.execute('UPDATE STR_GAME SET MAP = :map, BUDGET = :budget, TURN = :turn, ACTIVE_PLAYER_ID = :act_ply_id, STATUS = status,' \
+                        'VERSION = :version, PUBLIC_GAME = :public_game, GAME_NAME = :game_name, RESERVED = :reserved ' \
+                        ' WHERE GAM_ID = :game_id',
+                        {'map' : game[1],
+                         'budget' : game[2],
+                         'turn' : game[3],
+                         'act_ply_id' : game[4],
+                         'status' : game[5],
+                         'version' : game[8],
+                         'public_game' : game[9],
+                         'game_name' : game[10],
+                         'reserved' : game[11],
+                         'game_id' : game[0]
                          }
                         )
             self.conn.commit()
@@ -342,14 +348,7 @@ class DBApi():
             print "Row updated..."
         finally:
             cur.close()
-        return id.getvalue()  
-            
-        for g in self.games:
-            if g[0] == game[0]:
-                for i in xrange( 0, len(game) ):
-                    g[i] = game[i]
-        self.saveToFile(self.games, GAMES, GAMES_HEADER)
-    """
+        return id.getvalue()
     
 if __name__ == "__main__":
     dbapi = DBApi()
