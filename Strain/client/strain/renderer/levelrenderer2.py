@@ -1,6 +1,6 @@
 from panda3d.core import *
 
-class LevelRenderer2():
+class LevelRenderer():
     def __init__(self, parent, parent_node):
         self.parent = parent
         self.parent_node = parent_node
