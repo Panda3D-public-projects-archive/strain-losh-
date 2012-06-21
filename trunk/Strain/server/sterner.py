@@ -11,10 +11,12 @@ import engine
 import threading
 import sys
 import time
+import datetime
 from server_messaging import *
 from util import *
 from engine import EngineThread
-from dbproxyapi import DBProxyApi as DBApi
+#from dbproxyapi import DBProxyApi as DBApi
+from dbapi import DBApi
 import traceback
 
 
@@ -291,7 +293,7 @@ class Sterner:
                 
 
             #create the game and all players in the database, set game creator accept status to 1                    
-            game_id = self.db_api.createGame(level, budget, player_id, time.time(), COMMUNICATION_PROTOCOL_VERSION, public_game, game_name )
+            game_id = self.db_api.createGame(level, budget, player_id, datetime.datetime.now(), COMMUNICATION_PROTOCOL_VERSION, public_game, game_name )
             for i in xrange(0, len(player_ids)):
                 if player_ids[i] == player_id:
                     self.db_api.addPlayerToGame(game_id, player_ids[i], i, i, 1)
@@ -568,7 +570,9 @@ class EngineHandlerThread( threading.Thread ):
             else:
                 #there is no active thread for this game, try to resume one from db
                 if self.startNewEngineThread(game_id):
+                    #send msg to client that new game created ok
                     self.to_network.append( (creator_id, (NEW_GAME_STARTED, game_id) ) )
+                    #send msg to sterner that we created a new game
                     self.to_sterner.append( (NEW_GAME_STARTED, creator_id) )
             
             
