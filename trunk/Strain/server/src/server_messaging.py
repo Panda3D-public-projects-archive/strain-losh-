@@ -143,7 +143,7 @@ class Network:
         try:
             msg = msg.split(':')
             if msg[0] == COMMUNICATION_PROTOCOL_STRING:
-                ver = float(msg[1])
+                ver = msg[1]
                 if ver != COMMUNICATION_PROTOCOL_VERSION:
                     s.SendData( "Wrong version!" )
                     raise Exception("Client with wrong version trying to connect from:" + str( connection.getAddress() ))
