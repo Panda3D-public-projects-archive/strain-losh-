@@ -8,7 +8,7 @@ import time
 from xml.dom import minidom
 
 #-------------------------------------NETWORK----------------------------------------
-COMMUNICATION_PROTOCOL_VERSION = 0.1
+COMMUNICATION_PROTOCOL_VERSION = '0.1'
 COMMUNICATION_PROTOCOL_STRING = 'comm_version'
 HANDSHAKE_SUCCESS = 'Everything is fine' 
 
