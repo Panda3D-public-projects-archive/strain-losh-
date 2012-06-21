@@ -299,7 +299,7 @@ class DBApi():
         for g in self.getAllActiveGames():
             print "ver:",float(g[8]), "---", ver
             #set finish status and timestamp to each game that is not this version
-            if g[5] != 2 and float(g[8]) != ver:
+            if g[5] != 2 and g[8] != ver:
                 self.finishGame(g[0])
                 
                 #set all game_players accepted = 1 in these games
@@ -362,7 +362,7 @@ if __name__ == "__main__":
     #player_id = dbapi.createPlayer('red@sterner.666', 'Blue', 'Blue')
     #print dbapi.returnPlayer('ogi')
     
-    #game_id = dbapi.createGame('base2', 1000, dbapi.returnPlayer('ogi')[0], datetime.datetime.now(), '0.1', 1, 'Game_Name_01')
+    #game_id = dbapi.createGame('base2', 1000, dbapi.returnPlayer('ogi')[0], datetime.datetime.now(), '0.2', 1, 'Game_Name_03')
     #print game_id
     
     #game_player_id = dbapi.addPlayerToGame(21, dbapi.returnPlayer('ogi')[0][0], 0, 0, 1)
@@ -375,7 +375,7 @@ if __name__ == "__main__":
     #    dbapi.deleteGame(i)
     
     #dbapi.finishGame(21)
-    #dbapi.finishAllGamesExceptVersion('0.2')
+    #dbapi.finishAllGamesExceptVersion('0.1')
 
     #g_p = dbapi.getGamePlayer(21, 4)[0]
     #g_newp = (g_p[0], g_p[1], g_p[2], 0, 0, 1)
