@@ -69,7 +69,7 @@ class LoginScreen():
 
     def loginButRedPressed(self):
         username = 'Red'
-        login_error = ClientMsg.login(username, '') 
+        login_error = ClientMsg.login(username, username) 
         if not login_error:
             self.parent.player_id = ClientMsg.loggedIn()
         else:
@@ -82,7 +82,7 @@ class LoginScreen():
         
     def loginButBluePressed(self):
         username = 'Blue'
-        login_error = ClientMsg.login(username, '') 
+        login_error = ClientMsg.login(username, username) 
         if not login_error:
             self.parent.player_id = ClientMsg.loggedIn()
         else:
