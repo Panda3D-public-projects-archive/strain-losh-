@@ -66,6 +66,8 @@ class DBApi():
         cur.execute('SELECT ID, EMAIL, NAME, PASS FROM STR_PLAYER WHERE name = :username', {'username':username})
         row = cur.fetchall()
         cur.close()
+        if row:
+            return row[0]
         return row
     
     def createGame(self, level_name, army_size, first_player_id, create_time, version, public, game_name):
@@ -93,7 +95,7 @@ class DBApi():
             print "Row inserted..."
         finally:
             cur.close()
-        return id.getvalue()
+        return int(id.getvalue())
     
     def addPlayerToGame(self, game_id, player_id, team, order, accepted):
         cur = self.conn.cursor()
@@ -155,6 +157,8 @@ class DBApi():
                     )
         row = cur.fetchall()
         cur.close()
+        if row:
+            return row[0]
         return row
     
     def getGameAllPlayers(self, game_id):
@@ -213,10 +217,10 @@ class DBApi():
     
     def getGame(self, game_id, filter = False):
         if filter:
-            sel = 'SELECT ID, MAP, BUDGET, TURN, ACTIVE_PLAYER_ID, STATUS, DATE_CREATED, DATE_FINISHED, VERSION, PUBLIC_GAME, GAME_NAME, RESERVED, PICKLED_ENGINE '\
+            sel = 'SELECT ID, MAP, BUDGET, TURN, ACTIVE_PLAYER_ID, STATUS, DATE_CREATED, DATE_FINISHED, VERSION, PUBLIC_GAME, GAME_NAME, RESERVED '\
                   'FROM STR_GAME WHERE ID = :game_id'
         else:
-            sel = 'SELECT ID, MAP, BUDGET, TURN, ACTIVE_PLAYER_ID, STATUS, DATE_CREATED, DATE_FINISHED, VERSION, PUBLIC_GAME, GAME_NAME, RESERVED '\
+            sel = 'SELECT ID, MAP, BUDGET, TURN, ACTIVE_PLAYER_ID, STATUS, DATE_CREATED, DATE_FINISHED, VERSION, PUBLIC_GAME, GAME_NAME, RESERVED, PICKLED_ENGINE '\
                   'FROM STR_GAME WHERE ID = :game_id'
 
         cur = self.conn.cursor()
@@ -226,6 +230,8 @@ class DBApi():
                     )
         row = cur.fetchall()
         cur.close()
+        if row:
+            return row[0]
         return row  
     
     def deleteGame(self, game_id):
@@ -291,8 +297,9 @@ class DBApi():
     
     def finishAllGamesExceptVersion(self, ver):
         for g in self.getAllActiveGames():
+            print "ver:",float(g[8]), "---", ver
             #set finish status and timestamp to each game that is not this version
-            if g[5] != 2 and g[8] != ver:
+            if g[5] != 2 and float(g[8]) != ver:
                 self.finishGame(g[0])
                 
                 #set all game_players accepted = 1 in these games
@@ -352,10 +359,10 @@ class DBApi():
     
 if __name__ == "__main__":
     dbapi = DBApi()
-    #player_id = dbapi.createPlayer('vjeks@goon.666', 'vjeks', 'goon666')
+    #player_id = dbapi.createPlayer('red@sterner.666', 'Blue', 'Blue')
     #print dbapi.returnPlayer('ogi')
     
-    #game_id = dbapi.createGame('base2', 1000, dbapi.returnPlayer('ogi')[0][0], datetime.datetime.now(), '0.1', 1, 'Game_Name_01')
+    #game_id = dbapi.createGame('base2', 1000, dbapi.returnPlayer('ogi')[0], datetime.datetime.now(), '0.1', 1, 'Game_Name_01')
     #print game_id
     
     #game_player_id = dbapi.addPlayerToGame(21, dbapi.returnPlayer('ogi')[0][0], 0, 0, 1)
@@ -364,7 +371,8 @@ if __name__ == "__main__":
     #game_player_id = dbapi.addPlayerToGame(21, dbapi.returnPlayer('krav')[0][0], 1, 1, 1)
     #print game_player_id
     
-    #dbapi.deleteGame(2)
+    #for i in xrange(40,60):
+    #    dbapi.deleteGame(i)
     
     #dbapi.finishGame(21)
     #dbapi.finishAllGamesExceptVersion('0.2')
@@ -373,17 +381,17 @@ if __name__ == "__main__":
     #g_newp = (g_p[0], g_p[1], g_p[2], 0, 0, 1)
     #dbapi.updateGamePlayer(g_newp)
 
-    print dbapi.getLast3News()
-    print dbapi.getMyUnacceptedGames(dbapi.returnPlayer('ogi')[0][0])
-    print dbapi.getMyActiveGames(dbapi.returnPlayer('ogi')[0][0])
-    print dbapi.getMyWaitingGames(dbapi.returnPlayer('ogi')[0][0])
-    print dbapi.getGamePlayer(21, dbapi.returnPlayer('ogi')[0][0])
-    print dbapi.getGameAllPlayers(21)
+    #print dbapi.getLast3News()
+    #print dbapi.getMyUnacceptedGames(dbapi.returnPlayer('ogi')[0][0])
+    #print dbapi.getMyActiveGames(dbapi.returnPlayer('ogi')[0][0])
+    #print dbapi.getMyWaitingGames(dbapi.returnPlayer('ogi')[0][0])
+    #print dbapi.getGamePlayer(21, dbapi.returnPlayer('ogi')[0][0])
+    #print dbapi.getGameAllPlayers(21)
     print dbapi.getAllPlayers()
-    print dbapi.getAllLevels()
-    print dbapi.getAllActiveGames()
-    print dbapi.getAllFinishedGames()
-    print dbapi.getAllEmptyPublicGames()
-    print dbapi.getGame(21, True)
+    #print dbapi.getAllLevels()
+    #print dbapi.getAllActiveGames()
+    #print dbapi.getAllFinishedGames()
+    #print dbapi.getAllEmptyPublicGames()
+    #print dbapi.getGame(21, True)
     
     dbapi.close()
