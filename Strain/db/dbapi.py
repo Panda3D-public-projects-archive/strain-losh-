@@ -15,7 +15,7 @@ DB_SID = 'XE'
 
 DB_SCHEMA_OWNER = 'straindb'
 DB_SCHEMA_PASS = 'straindb'
-DB_IP = '178.79.164.4'
+DB_IP = 'localhost'#'178.79.164.4'
 DB_PORT = '1521'
 DB_SID = 'XE'
 
@@ -331,19 +331,21 @@ class DBApi():
     def updateGame(self, game):
         cur = self.conn.cursor()
         id = cur.var(NUMBER)
+        cur.setinputsizes(pickled_engine=CLOB)
         try:
-            cur.execute('UPDATE STR_GAME SET MAP = :map, BUDGET = :budget, TURN = :turn, ACTIVE_PLAYER_ID = :act_ply_id, STATUS = status,' \
-                        'VERSION = :version, PUBLIC_GAME = :public_game, GAME_NAME = :game_name, RESERVED = :reserved ' \
-                        ' WHERE GAM_ID = :game_id',
+            cur.execute('UPDATE STR_GAME SET MAP = :map, BUDGET = :budget, TURN = :turn, ACTIVE_PLAYER_ID = :act_ply_id, STATUS = :status,' \
+                        'VERSION = :version_num, PUBLIC_GAME = :public_game, GAME_NAME = :game_name, RESERVED = :reserved, PICKLED_ENGINE = :pickled_engine ' \
+                        ' WHERE ID = :game_id',
                         {'map' : game[1],
                          'budget' : game[2],
                          'turn' : game[3],
                          'act_ply_id' : game[4],
                          'status' : game[5],
-                         'version' : game[8],
+                         'version_num' : game[8],
                          'public_game' : game[9],
                          'game_name' : game[10],
                          'reserved' : game[11],
+                         'pickled_engine' : game[12],
                          'game_id' : game[0]
                          }
                         )
@@ -356,6 +358,28 @@ class DBApi():
         finally:
             cur.close()
         return id.getvalue()
+    
+    def setPickledEngine(self, game_id, pickled_engine):
+        cur = self.conn.cursor()
+        id = cur.var(NUMBER)
+        cur.setinputsizes(pickled_engine=CLOB)
+        try:
+            cur.execute('UPDATE STR_GAME SET PICKLED_ENGINE = :pickled_engine ' \
+                        ' WHERE ID = :game_id',
+                        {'pickled_engine' : pickled_engine,
+                         'game_id' : game_id
+                         }
+                        )
+            self.conn.commit()
+        except DatabaseError, exception:
+            error, = exception
+            print "Oracle error: ", error.message
+        else:
+            print "Pickled engine updated..."
+        finally:
+            cur.close()
+        return id.getvalue()
+    
     
 if __name__ == "__main__":
     dbapi = DBApi()
@@ -387,11 +411,16 @@ if __name__ == "__main__":
     #print dbapi.getMyWaitingGames(dbapi.returnPlayer('ogi')[0][0])
     #print dbapi.getGamePlayer(21, dbapi.returnPlayer('ogi')[0][0])
     #print dbapi.getGameAllPlayers(21)
-    print dbapi.getAllPlayers()
+    #print dbapi.getAllPlayers()
     #print dbapi.getAllLevels()
     #print dbapi.getAllActiveGames()
     #print dbapi.getAllFinishedGames()
     #print dbapi.getAllEmptyPublicGames()
     #print dbapi.getGame(21, True)
+    
+    #gm = dbapi.getGame(101, False)
+    #dbapi.updateGame(gm)
+    
+    dbapi.setPickledEngine(101, 'asd')
     
     dbapi.close()
