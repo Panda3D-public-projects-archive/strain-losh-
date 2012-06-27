@@ -15,7 +15,7 @@ DB_SID = 'XE'
 
 DB_SCHEMA_OWNER = 'straindb'
 DB_SCHEMA_PASS = 'straindb'
-DB_IP = 'localhost'#'178.79.164.4'
+DB_IP = '178.79.164.4'
 DB_PORT = '1521'
 DB_SID = 'XE'
 
@@ -397,6 +397,7 @@ if __name__ == "__main__":
     
     #for i in xrange(40,60):
     #    dbapi.deleteGame(i)
+    #dbapi.deleteGame(101)
     
     #dbapi.finishGame(21)
     #dbapi.finishAllGamesExceptVersion('0.1')
@@ -421,6 +422,6 @@ if __name__ == "__main__":
     #gm = dbapi.getGame(101, False)
     #dbapi.updateGame(gm)
     
-    dbapi.setPickledEngine(101, 'asd')
+    #dbapi.setPickledEngine(101, 'asd')
     
     dbapi.close()
