@@ -55,11 +55,7 @@ class EngineThread( Thread ):
         players = [ g_p[2] for g_p in self.db_api.getGameAllPlayers(db_game[0])]
         
         if db_game[12]:
-            #TODO: DEBUG
-            #self.engine = loadFromPickle( db_game[12], from_network, to_network, notify, db_api )
-            f = open("pickle","r")
-            self.engine = loadFromPickle( f, from_network, to_network, notify, db_api )
-             
+            self.engine = loadFromPickle( str(db_game[12]), from_network, to_network, notify, db_api )
         else:
             self.engine = Engine( game_id, from_network, to_network, notify, self.db_api )
             self.engine.Init( level, budget, players )
@@ -75,8 +71,7 @@ class EngineThread( Thread ):
             
             #check if thread handler told us to suspend                
             if self.suspend:
-                print "++++++++++++++ pickling!!!!!! debug braking"
-                #break
+                print "++++++++++++++ pickling!!!!!!"
                 if self.engine.pickleSelf():
                     break
 
@@ -753,7 +748,6 @@ class Engine():
         
         
     def validatePlayer(self, source):
-        print "---active player:",self.active_player
         if self.active_player.id == source:
             return self.active_player
         
@@ -1341,15 +1335,10 @@ class Engine():
             self.from_network = from_network
             self.db_api = db_api
             
-            #TODO: DEBUG
-            #update game record in database
-            #db_game = self.db_api.getGame( self.game_id )
-            #db_game[12] = pickled_engine
-            #self.db_api.updateGame( db_game )
-            f = open( "pickle","w")
-            f.write( pickled_engine )
-            f.close
+            #update game record in database with pickled state
+            self.db_api.setPickledEngine( self.game_id, pickled_engine )
         except:
+            print sys.exc_info()
             return 0
         
         return 1
@@ -1380,10 +1369,8 @@ class Engine():
 
 #-----------------------------------------------------------------------
 def loadFromPickle( pickled_engine, from_network, to_network, notify, db_api ):
-    #TODO: DEBUG
-    #eng = pickle.loads(pickled_engine)
-    eng = pickle.load(pickled_engine)
-
+    #unpickle the engine state
+    eng = pickle.loads(pickled_engine)
 
     #set transient variables
     eng.from_network = from_network
