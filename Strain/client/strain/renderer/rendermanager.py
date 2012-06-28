@@ -1,6 +1,6 @@
 from panda3d.core import *
 
-from strain.renderer.levelrenderer import LevelRenderer
+from strain.renderer.levelrenderer2 import LevelRenderer
 from strain.renderer.unitrenderer2 import UnitRenderer
 from strain.renderer.gridrenderer import GridRenderer
 from strain.renderer.coordrenderer import CoordRenderer
@@ -42,7 +42,9 @@ class RenderManager():
             unit_renderer = UnitRenderer(self, self.node)
             unit_renderer.loadForGameEngine(unit)
             self.unit_renderer_dict[unit['id']] = unit_renderer
-            
+        
+        self.level_renderer.node.setShaderAuto()
+        
     def refreshFow(self):
         tile_dict = self.parent.local_engine.getInvisibleTiles()        
         self.fow_renderer.redraw(tile_dict)

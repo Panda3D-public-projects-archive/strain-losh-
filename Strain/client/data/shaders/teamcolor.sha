@@ -1,0 +1,22 @@
+//Cg 
+
+void vshader(float4 vtx_position : POSITION, 
+             float2 vtx_texcoord0 : TEXCOORD0, 
+             uniform float4x4 mat_modelproj, 
+             out float2 l_texcoord0 : TEXCOORD0, 
+             out float4 l_position : POSITION)
+{
+	l_position = mul(mat_modelproj, vtx_position);
+	l_texcoord0 = vtx_texcoord0;
+}
+
+void fshader(in float2 l_texcoord0: TEXCOORD0, 
+			 sampler2D tex_0 : TEXUNIT0,
+	         out float4 o_color : COLOR)
+{
+	// Compute the final color
+	float4 tex_color = tex2D(tex_0, l_texcoord0);
+	float4 team_color = float4(1, 0, 0, 0);
+	o_color = lerp(team_color, tex_color, 0.5);
+	o_color = tex_color; 
+}

@@ -13,8 +13,9 @@ class ShaderManager():
         self.parent = parent
         self.facing_ratio_shader = Shader.load('./data/shaders/facingRatio1.sha') 
         self.outline_shader = Shader.load('./data/shaders/outline.sha')
+        self.teamcolor_shader = Shader.load('./data/shaders/teamcolor.sha')
         
-    def setOutlineShader(self, node):       
+    def setOutlineShader(self, node):
         node.setShader(self.outline_shader) 
         node.setShaderInput('cam', base.camera)  
         node.setAntialias(AntialiasAttrib.MMultisample) 
@@ -27,6 +28,11 @@ class ShaderManager():
         ###node.setShaderInput('light', self.light_input) 
         node.setShaderInput('envirLightColor', envirLightColor * facingRatioPower) 
         node.setAntialias(AntialiasAttrib.MMultisample) 
+    
+    def setTeamcolorShader(self, node):
+        return
+        node.setShader(self.teamcolor_shader)
+        node.setAntialias(AntialiasAttrib.MMultisample)
     
     def clearShader(self, node):
         node.clearShader()     
