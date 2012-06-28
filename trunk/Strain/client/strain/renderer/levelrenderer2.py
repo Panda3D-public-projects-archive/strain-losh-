@@ -15,31 +15,25 @@ class LevelRenderer():
         self.maxX = x
         self.maxY = y        
         
-        #self.floor_tile_tex = loader.loadTexture("LowPolyPlane_diffuse.png")
-        self.tex1 = loader.loadTexture("tile1.png")
-        self.tex2 = loader.loadTexture("tile2.png")
-        self.tex3 = loader.loadTexture("tile3.png")
-        self.tex_fs = loader.loadTexture("rnbw.png")
-        self.ts_fs = TextureStage('ts_fs')
+        self.floor_tex_C = loader.loadTexture("floortile_C.png")
+        self.floor_tex_N = loader.loadTexture("floortile_N.png")
         
-        self.tex1.setMagfilter(Texture.FTLinearMipmapLinear)
-        self.tex1.setMinfilter(Texture.FTLinearMipmapLinear)
-        self.tex2.setMagfilter(Texture.FTLinearMipmapLinear)
-        self.tex2.setMinfilter(Texture.FTLinearMipmapLinear)
-        self.tex3.setMagfilter(Texture.FTLinearMipmapLinear)
-        self.tex3.setMinfilter(Texture.FTLinearMipmapLinear)
+        self.floor_tex_C.setMagfilter(Texture.FTLinearMipmapLinear)
+        self.floor_tex_C.setMinfilter(Texture.FTLinearMipmapLinear)
+        self.floor_tex_N.setMagfilter(Texture.FTLinearMipmapLinear)
+        self.floor_tex_N.setMinfilter(Texture.FTLinearMipmapLinear)        
         
-        #self.floor_tile_tex.setMagfilter(Texture.FTLinearMipmapLinear)
-        #self.floor_tile_tex.setMinfilter(Texture.FTLinearMipmapLinear)        
-        
-        ts = TextureStage('ts')
+        self.texstage_normal = TextureStage('TextureStage_Normal')
+        self.texstage_normal.setMode(TextureStage.MNormal)
+                
         for x in xrange(0, self.maxX):
             for y in xrange(0, self.maxY):
                 if self.level.getHeight( (x, y) ) == 0:
-                    model = loader.loadModel('flattile')
+                    model = loader.loadModel('floortile')
                     model.setScale(tile_size)
                     model.setPos(x*tile_size, y*tile_size, zpos)
-                    #model.setTexture(self.floor_tile_tex)
+                    #model.setTexture(self.floor_tex_C)
+                    model.setTexture(self.texstage_normal, self.floor_tex_N)
                 elif self.level.getHeight( (x, y) ) == 1:                    
                     model = loader.loadModel('halfcube')
                     model.setScale(tile_size)
@@ -47,18 +41,18 @@ class LevelRenderer():
                     model = loader.loadModel('halfcube')
                     model.setScale(tile_size)
                     model.setPos(x*tile_size, y*tile_size, zpos)
-                    model.setTexture(ts, self.tex1) 
+                    #model.setTexture(ts, self.tex1) 
                 else:
                     for i in xrange(0, self.level.getHeight( (x, y) )):
                         if i == 0:
-                            model = loader.loadModel('flattile')
+                            model = loader.loadModel('floortile')
                             model.setScale(tile_size)
                             model.setPos(x*tile_size, y*tile_size, zpos)
                         else:
                             model = loader.loadModel('cube')
                             model.setScale(tile_size)
                             model.setPos(x*tile_size, y*tile_size, (i-1)*tile_size+zpos)
-                            model.setTexture(ts, self.tex2)
+                            #model.setTexture(ts, self.tex2)
                 model.reparentTo(self.node)
         
         #Calculate and place walls between tiles
@@ -120,7 +114,7 @@ class LevelRenderer():
                         model.setScale(tile_size)
                         model.setPos(my_x*tile_size, my_y*tile_size, zpos)
                         model.setH(h)                            
-                        model.setTexture(self.ts_fs, self.tex_fs)
+                        #model.setTexture(self.ts_fs, self.tex_fs)
                         model.setTransparency(TransparencyAttrib.MAlpha)
                     model.reparentTo(self.node)
         #taskMgr.add(self.texTask,'texTask')
