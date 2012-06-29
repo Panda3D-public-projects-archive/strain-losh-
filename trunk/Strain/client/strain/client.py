@@ -64,7 +64,7 @@ class Client(DirectObject):
             ClientMsg.enterGame( game_id )
             taskMgr.doMethodLater(1, ClientMsg.forceFirstTurn, 'ForceTurn', extraArgs = [])   
         elif type == 'NewGame':
-            ClientMsg.startNewGame('level2', 1000, [17, 19])
+            ClientMsg.startNewGame('base2', 1000, [17, 19])
             
             
     def newGameStarted(self, game_id):
