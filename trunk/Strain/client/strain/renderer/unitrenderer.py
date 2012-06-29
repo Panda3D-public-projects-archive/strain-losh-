@@ -34,7 +34,7 @@ class UnitRenderer:
         self.model = self.loadModel(unit['name'][0:i], unit['name'][i+1:], self.team_id)           
         self.model.reparentTo(self.node)
         
-        scale = utils.UNIT_SCALE
+        scale = utils.DOW_UNIT_SCALE
         h = 180
         pos = Point3(int(unit['pos'][0]), int(unit['pos'][1]), 0)
         pos = self.calcWorldPos(pos)
@@ -55,12 +55,6 @@ class UnitRenderer:
         self.setHeading(unit['heading'])
         
         self.target_unit = None
-        
-        """
-        self.tex_circle1 = loader.loadTexture('circle.png')
-        self.tex_circle2 = loader.loadTexture('circle2.png')
-        self.tex_target = loader.loadTexture('target.png')
-        """
         self.tex_selected = loader.loadTexture('selected.png')
         
         cm = CardMaker('cm') 
@@ -85,8 +79,21 @@ class UnitRenderer:
         self.node_2d = aspect2d.attachNewNode('node_2d')
     
     def loadModel(self, race, type, team=0):
-        model = Actor(utils.unit_type_dict[race][type])
-        model.loadAnims(utils.anim_dict[race])
+        model = Actor('dw/space_marine_common')
+        model.loadAnims(utils.anim_dict_dw2['marine'])
+        armour = model.find("**/power_armour_common")
+        bolter = model.find("**/bolter_common")
+        head = model.find("**/space_marine_head")
+        backpack = model.find("**/space_marine_backpack")
+        tex = loader.loadTexture('power_armour_common_dif.tga')
+        tex1 = loader.loadTexture('bolter_common_dif.tga')
+        tex2 = loader.loadTexture('space_marine_head_dif.tga')
+        tex3 = loader.loadTexture('space_marine_backpack_dif.tga')
+        armour.setTexture(tex)
+        bolter.setTexture(tex1)
+        head.setTexture(tex2)
+        backpack.setTexture(tex3)
+        """
         if team == "1":
             tex = loader.loadTexture(utils.unit_type_dict[race][type] + ".png")
         elif team == "2":
@@ -94,14 +101,9 @@ class UnitRenderer:
         else:
             tex = loader.loadTexture(utils.unit_type_dict[race][type] + ".png")
         model.setTexture(tex)
+        """
         return model 
         
-    
-            
-
-    
-
-            
     def setEnemyVisible(self):
         if not self.isEnemyVisible:
             self.marker.clearTexture()
