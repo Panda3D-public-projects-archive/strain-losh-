@@ -16,7 +16,6 @@ from panda3d.rocket import *
 # strain related imports
 from strain.loginscreen import LoginScreen
 from strain.browser import Browser
-#from strain.client import Client
 from strain.gametype import GameType
 from strain.client_messaging import ClientMsg
 from strain.net import Net
