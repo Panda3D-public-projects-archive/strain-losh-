@@ -14,7 +14,8 @@ import util
 from strain.share import *
 import traceback
 
-
+#max message size je 65k (0xffff) if we want to send a larger message, we need something else
+#a level has cca 7k
 
 
 class Network:
