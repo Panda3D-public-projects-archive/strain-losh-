@@ -103,7 +103,7 @@ class AppFSM(FSM.FSM):
         del self.parent.browser
         
     def enterNewGame(self):
-        ClientMsg.startNewGame('level2', 1000, [ClientMsg.loggedIn(), 1], 0, "game #1")
+        ClientMsg.startNewGame('base2', 1000, [ClientMsg.loggedIn(), 1], 0, "game #1")
         #ClientMsg.startNewGame('level2', 1000, [ClientMsg.loggedIn(), 0], 1, '')
         #self.parent.gametype = GameType(self.parent)
     
