@@ -316,7 +316,7 @@ class ClientMsg:
     @staticmethod
     def undefMsg2( value = 0 ):
         #ClientMsg._sendMsg( (UNDEFINED_MSG_2, value ) )
-        ClientMsg._sendMsg( (STERNER_ID, START_NEW_GAME, 'level2', 1000, [ 17, 18 ] ), True )
+        ClientMsg._sendMsg( (STERNER_ID, START_NEW_GAME, 'base2', 1000, [ 17, 18 ] ), True )
 
 
     #-----------------------STERNER MESSAGES---------------------------------------
