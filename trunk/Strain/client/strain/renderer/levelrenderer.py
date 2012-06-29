@@ -4,13 +4,13 @@ class LevelRenderer():
     def __init__(self, parent, parent_node):
         self.parent = parent
         self.parent_node = parent_node
-        self.node = None
-    
-    def redraw(self, level, x, y, tile_size, zpos):
-        if self.node != None:
-            self.node.removeNode()
         self.node = self.parent_node.attachNewNode('LevelRendererNode')
         
+        # Create nodepath collections to hold wall and floor nodes
+        self.nodecoll_floor = NodePathCollection()
+        self.nodecoll_wall = NodePathCollection()
+    
+    def create(self, level, x, y, tile_size, zpos):        
         self.level = level
         self.maxX = x
         self.maxY = y        
@@ -29,31 +29,16 @@ class LevelRenderer():
         for x in xrange(0, self.maxX):
             for y in xrange(0, self.maxY):
                 if self.level.getHeight( (x, y) ) == 0:
-                    model = loader.loadModel('floortile')
-                    model.setScale(tile_size)
-                    model.setPos(x*tile_size, y*tile_size, zpos)
-                    #model.setTexture(self.floor_tex_C)
-                    model.setTexture(self.texstage_normal, self.floor_tex_N)
+                    self.nodecoll_floor.append(self.loadModel('FLOOR1', x, y, tile_size, zpos))
                 elif self.level.getHeight( (x, y) ) == 1:                    
-                    model = loader.loadModel('halfcube')
-                    model.setScale(tile_size)
-                    model.setPos(x*tile_size, y*tile_size, 0)
-                    model = loader.loadModel('halfcube')
-                    model.setScale(tile_size)
-                    model.setPos(x*tile_size, y*tile_size, zpos)
-                    #model.setTexture(ts, self.tex1) 
+                    self.nodecoll_floor.append(self.loadModel('FLOOR1', x, y, tile_size, zpos))
+                    self.nodecoll_floor.append(self.loadModel('CUBE1', x, y, tile_size, zpos))
                 else:
                     for i in xrange(0, self.level.getHeight( (x, y) )):
                         if i == 0:
-                            model = loader.loadModel('floortile')
-                            model.setScale(tile_size)
-                            model.setPos(x*tile_size, y*tile_size, zpos)
+                            self.nodecoll_floor.append(self.loadModel('FLOOR1', x, y, tile_size, zpos))
                         else:
-                            model = loader.loadModel('cube')
-                            model.setScale(tile_size)
-                            model.setPos(x*tile_size, y*tile_size, (i-1)*tile_size+zpos)
-                            #model.setTexture(ts, self.tex2)
-                model.reparentTo(self.node)
+                            self.nodecoll_floor.append(self.loadModel('CUBE2', x, y, tile_size, zpos, i))
         
         #Calculate and place walls between tiles
         for x, val in enumerate(self.level._grid):
@@ -65,63 +50,52 @@ class LevelRenderer():
                         continue
                     my_x= tile2_x
                     my_y=tile2_y
-                    if val2.name == "Wall1":
-                        model = loader.loadModel("wall")
-                        model.setScale(tile_size)
-                        model.setPos(my_x*tile_size, my_y*tile_size, zpos)
-                        model.setH(h)                 
-                    elif val2.name == "Wall2":
-                        model = loader.loadModel("wall2")
-                        model.setScale(tile_size)
-                        model.setPos(my_x*tile_size, my_y*tile_size, zpos)
-                        model.setH(h)
-                        model.setColor(0,1,0,1)
-                    elif val2.name == "HalfWall":
-                        model = loader.loadModel("wall2")
-                        model.setScale(tile_size)
-                        model.flattenLight()
-                        model.setPos(my_x*tile_size, my_y*tile_size, zpos)
-                        model.setH(h)
-                        model.setColor(0,0,0,1)
-                        model.setScale(1,1,0.4)
-                    elif val2.name == "Ruin":
-                        model = loader.loadModel("wall2")
-                        model.setScale(tile_size)
-                        model.setPos(my_x*tile_size, my_y*tile_size, zpos)
-                        model.setH(h)
-                        model.setColor(0.5,0.8,1,0.6)
-                        model.setTransparency(TransparencyAttrib.MAlpha)
-                        model.reparentTo(self.node_forcewall_usable)
-                        #s = Sequence(LerpColorInterval(model, 1, (0.13,0.56,0.78,0.6)),
-                        #            LerpColorInterval(model, 1, (0.5,0.8,1,0.6)),
-                        #            )  
-                        #s.loop()  
-                    elif val2.name == "ClosedDoor":
-                        model = loader.loadModel("door")
-                        model.setScale(tile_size)
-                        model.setPos(my_x*tile_size, my_y*tile_size, zpos)
-                        model.setH(h)
-                        model.setColor(1,0.0,0,0.0)
-                    elif val2.name == "OpenedDoor":
-                        model = loader.loadModel("door")
-                        model.setScale(tile_size)
-                        model.setPos(my_x*tile_size, my_y*tile_size, zpos)
-                        model.setH(h)
-                        model.setScale(0.2,1,1)
-                        model.setColor(0.7,0.2,0.2,0.0)
-                    elif val2.name == "ForceField":
-                        model = loader.loadModel("wall_fs")
-                        model.setScale(tile_size)
-                        model.setPos(my_x*tile_size, my_y*tile_size, zpos)
-                        model.setH(h)                            
-                        #model.setTexture(self.ts_fs, self.tex_fs)
-                        model.setTransparency(TransparencyAttrib.MAlpha)
-                    model.reparentTo(self.node)
-        #taskMgr.add(self.texTask,'texTask')
+                    self.nodecoll_wall.append(self.loadWallModel(val2.name, my_x, my_y, h, tile_size, zpos)) 
+        self.nodecoll_floor.reparentTo(self.node)
+        self.nodecoll_wall.reparentTo(self.node)
         self.redrawLights()
-        #self.node.clearModelNodes()
-        #self.node.flattenStrong()
+        self.node.clearModelNodes()
+        self.node.flattenStrong()
     
+    def loadModel(self, type, x, y, tile_size, zpos, i=None):
+        if type == 'FLOOR1':
+            model = loader.loadModel('floortile')
+            model.setScale(tile_size)
+            model.setPos(x*tile_size, y*tile_size, zpos)
+            model.setTexture(self.floor_tex_C)
+            #model.setTexture(self.texstage_normal, self.floor_tex_N)
+        elif type == 'CUBE1':
+            model = loader.loadModel('halfcube')
+            model.setScale(tile_size)
+            model.setPos(x*tile_size, y*tile_size, zpos)
+        elif type == 'CUBE2':    
+            model = loader.loadModel('cube')
+            model.setScale(tile_size)
+            model.setPos(x*tile_size, y*tile_size, (i-1)*tile_size+zpos)
+        return model
+    
+    def loadWallModel(self, type, x, y, h, tile_size, zpos):
+        if type == 'Wall1' or type == 'Wall2' or type == 'HalfWall' or type == 'Ruin':
+            model = loader.loadModel("wall")
+            model.setScale(tile_size)
+            model.setPos(x*tile_size, y*tile_size, zpos)
+            model.setH(h)
+        elif type == 'OpenedDoor' or type == 'ClosedDoor':
+            model = loader.loadModel("door")
+            model.setScale(tile_size)
+            model.setPos(x*tile_size, y*tile_size, zpos)
+            model.setH(h)
+            model.setScale(0.2,1,1)
+            model.setColor(0.7,0.2,0.2,0.0)
+        elif type == 'ForceField':
+            model = loader.loadModel("wall_fs")
+            model.setScale(tile_size)
+            model.setPos(x*tile_size, y*tile_size, zpos)
+            model.setH(h)                            
+            #model.setTexture(self.ts_fs, self.tex_fs)
+            model.setTransparency(TransparencyAttrib.MAlpha)
+        return model
+
     def getWallPosition(self, x, y):
         if (x%2==0 and y%2!=0):
             pos_x = x/2
