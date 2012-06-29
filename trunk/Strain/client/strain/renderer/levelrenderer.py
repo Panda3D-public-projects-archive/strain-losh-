@@ -6,6 +6,8 @@ class LevelRenderer():
         self.parent_node = parent_node
         self.node = self.parent_node.attachNewNode('LevelRendererNode')
         
+        self.forcewall_tex_offset = 0
+        
         # Create nodepath collections to hold wall and floor nodes
         self.nodecoll_floor = NodePathCollection()
         self.nodecoll_wall = NodePathCollection()
@@ -18,13 +20,18 @@ class LevelRenderer():
         self.floor_tex_C = loader.loadTexture("floortile_C.png")
         self.floor_tex_N = loader.loadTexture("floortile_N.png")
         
+        self.forcewall_tex_C = loader.loadTexture("rnbw.png")
+        
         self.floor_tex_C.setMagfilter(Texture.FTLinearMipmapLinear)
         self.floor_tex_C.setMinfilter(Texture.FTLinearMipmapLinear)
         self.floor_tex_N.setMagfilter(Texture.FTLinearMipmapLinear)
         self.floor_tex_N.setMinfilter(Texture.FTLinearMipmapLinear)        
+        self.forcewall_tex_C.setMagfilter(Texture.FTLinearMipmapLinear)
+        self.forcewall_tex_C.setMinfilter(Texture.FTLinearMipmapLinear)        
         
         self.texstage_normal = TextureStage('TextureStage_Normal')
         self.texstage_normal.setMode(TextureStage.MNormal)
+        self.texstage_forcewall = TextureStage('TextureStage_ForceWall')        
                 
         for x in xrange(0, self.maxX):
             for y in xrange(0, self.maxY):
@@ -51,11 +58,15 @@ class LevelRenderer():
                     my_x= tile2_x
                     my_y=tile2_y
                     self.nodecoll_wall.append(self.loadWallModel(val2.name, my_x, my_y, h, tile_size, zpos)) 
+        
+        # Reparent all the models to main Level node
         self.nodecoll_floor.reparentTo(self.node)
         self.nodecoll_wall.reparentTo(self.node)
         self.redrawLights()
         self.node.clearModelNodes()
         self.node.flattenStrong()
+        
+        taskMgr.add(self.forcewallTask, 'ForceWall_offset_Task')
     
     def loadModel(self, type, x, y, tile_size, zpos, i=None):
         if type == 'FLOOR1':
@@ -92,7 +103,7 @@ class LevelRenderer():
             model.setScale(tile_size)
             model.setPos(x*tile_size, y*tile_size, zpos)
             model.setH(h)                            
-            #model.setTexture(self.ts_fs, self.tex_fs)
+            model.setTexture(self.texstage_forcewall, self.forcewall_tex_C)
             model.setTransparency(TransparencyAttrib.MAlpha)
         return model
 
@@ -126,12 +137,12 @@ class LevelRenderer():
         self.alnp = self.node.attachNewNode(alight)
         self.node.setLight(self.alnp)
     
-    def texTask(self, task):
+    def forcewallTask(self, task):
         dt = globalClock.getDt()
-        self.tex_offset += dt * 0.5
-        self.node.setTexOffset(self.level_mesh.ts_fs, 0, self.tex_offset)
+        self.forcewall_tex_offset += dt * 0.5
+        self.node.setTexOffset(self.texstage_forcewall, 0, self.forcewall_tex_offset)
         return task.cont
     
     def cleanup(self):
-        #taskMgr.remove('texTask')
+        taskMgr.remove('ForceWall_offset_Task')
         self.node.removeNode()
