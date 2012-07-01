@@ -290,6 +290,7 @@ class DBApi():
                      }
                     )
         row = cur.fetchall()
+        row = [(r[0], r[1], r[2].read(), r[3]) for r in row]
         cur.close()
         return row
     
@@ -301,6 +302,7 @@ class DBApi():
                      }
                     )
         row = cur.fetchall()
+        row = [(r[0], r[1], r[2].read(), r[3]) for r in row]
         cur.close()
         return row    
     
@@ -496,4 +498,5 @@ if __name__ == "__main__":
     
     #dbapi.addGamePlayerEvent(121,22, 'asd')
     print dbapi.getGamePlayerEvents(121, 22)
+    print dbapi.getGameEvents(121)
     dbapi.close()
