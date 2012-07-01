@@ -282,6 +282,28 @@ class DBApi():
             return row[0]
         return row  
     
+    def getGamePlayerEvents(self, game_id, player_id):
+        cur = self.conn.cursor()
+        cur.execute('SELECT ID, GPL_ID, EVENT, EVENT_DATE '\
+                    'FROM STR_GPL_EVENT WHERE GPL_ID = :gpl_id',
+                    {'gpl_id' : self.getGamePlayer(game_id, player_id)[0]
+                     }
+                    )
+        row = cur.fetchall()
+        cur.close()
+        return row
+    
+    def getGameEvents(self, game_id):
+        cur = self.conn.cursor()
+        cur.execute('SELECT ID, GAM_ID, EVENT, EVENT_DATE '\
+                    'FROM STR_GAME_EVENT WHERE GAM_ID = :gam_id',
+                    {'gam_id' : game_id
+                     }
+                    )
+        row = cur.fetchall()
+        cur.close()
+        return row    
+    
     def deleteGame(self, game_id):
         cur = self.conn.cursor()
         try:
@@ -473,4 +495,5 @@ if __name__ == "__main__":
     #dbapi.setPickledEngine(101, 'asd')
     
     #dbapi.addGamePlayerEvent(121,22, 'asd')
+    print dbapi.getGamePlayerEvents(121, 22)
     dbapi.close()
