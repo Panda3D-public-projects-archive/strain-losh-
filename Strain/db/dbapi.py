@@ -121,6 +121,54 @@ class DBApi():
         finally:
             cur.close()
         return id.getvalue()
+    
+    def addGamePlayerEvent(self, game_id, player_id, event):
+        cur = self.conn.cursor()
+        id = cur.var(NUMBER)
+        cur.setinputsizes(event=CLOB)
+        try:
+            cur.execute('INSERT INTO STR_GPL_EVENT(ID, GPL_ID, EVENT, EVENT_DATE) ' \
+                        'VALUES (str_get_seq.nextval,:gpl_id, :event, :event_date) ' \
+                        'RETURNING ID INTO :id',
+                        {'gpl_id' : self.getGamePlayer(game_id, player_id)[0],
+                         'event' : event,
+                         'event_date' : datetime.datetime.now(),
+                         'id' : id
+                         }
+                        )
+            self.conn.commit()
+        except DatabaseError, exception:
+            error, = exception
+            print "Oracle error: ", error.message
+        else:
+            print "Row inserted..."
+        finally:
+            cur.close()
+        return id.getvalue()
+    
+    def addGameEvent(self, game_id, event):
+        cur = self.conn.cursor()
+        id = cur.var(NUMBER)
+        cur.setinputsizes(event=CLOB)
+        try:
+            cur.execute('INSERT INTO STR_GAME_EVENT(ID, GAM_ID, EVENT, EVENT_DATE) ' \
+                        'VALUES (str_gat_seq.nextval,:gam_id, :event, :event_date) ' \
+                        'RETURNING ID INTO :id',
+                        {'gam_id' : game_id,
+                         'event' : event,
+                         'event_date' : datetime.datetime.now(),
+                         'id' : id
+                         }
+                        )
+            self.conn.commit()
+        except DatabaseError, exception:
+            error, = exception
+            print "Oracle error: ", error.message
+        else:
+            print "Row inserted..."
+        finally:
+            cur.close()
+        return id.getvalue()    
    
     def getMyGames(self, player_id, status, accepted):
         cur = self.conn.cursor()
@@ -424,4 +472,5 @@ if __name__ == "__main__":
     
     #dbapi.setPickledEngine(101, 'asd')
     
+    #dbapi.addGamePlayerEvent(121,22, 'asd')
     dbapi.close()
