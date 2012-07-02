@@ -1,16 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <weaponList>
-	<weapon name="Harsh Language"	range="5"	Str="1"	ap_cost="1"		shots="1"	special="--CENSORED--"/>
-	<weapon name="Defaulter" 		range="24" 	Str="5"	ap_cost="1"		shots="1"/>
-	<weapon name="Heavy Defaulter" 	range="36" 	Str="5"	ap_cost="1"		shots="1"	/><!-- special="set_up"-->	
-	<weapon name="Default Pistol"	range="12" 	Str="3"	ap_cost="0.5"	shots="1"/>
-	<weapon name="Plasma Pistol"	range="12" 	Str="5"	ap_cost="1"		shots="1"	special="plasma"/>
+	<weapon id="0" name="Harsh Language"	range="5"	Str="1"	ap_cost="1"		shots="1"	special="--CENSORED--"/>
+	<weapon id="1" name="Defaulter" 		range="24" 	Str="5"	ap_cost="1"		shots="1"/>
+	<weapon id="2" name="Heavy Defaulter" 	range="36" 	Str="5"	ap_cost="1"		shots="1"	/><!-- special="set_up"-->	
+	<weapon id="3" name="Default Pistol"	range="12" 	Str="3"	ap_cost="0.5"	shots="1"/>
+	<weapon id="4" name="Plasma Pistol"		range="12" 	Str="5"	ap_cost="1"		shots="1"	special="plasma"/>
+	<weapon id="4" name="Silenced Pistol"	range="12" 	Str="3"	ap_cost="1"		shots="1"	special="silenced"/>
 	
-	<weapon name="Karate"						Str="3"	ap_cost="1"		shots="1"/>
-	<weapon name="Doctors Bag"					Str="3"	ap_cost="1"		shots="1"/>
-	<weapon name="Chain Sword" 					Str="6"	ap_cost="1"		shots="1"	parry="1"/>
-	<weapon name="Power Axe" 					Str="7"	ap_cost="2"		shots="1"	special="power"/>
+	<weapon id="5" name="Karate"						Str="3"	ap_cost="1"		shots="1"/>
+	<weapon id="6" name="Doctors Bag"					Str="3"	ap_cost="1"		shots="1"/>
+	<weapon id="7" name="Chain Sword" 					Str="6"	ap_cost="1"		shots="1"	parry="1"/>
+	<weapon id="8" name="Power Axe" 					Str="7"	ap_cost="2"		shots="1"	special="power"/>
 		
 	
 	
