@@ -10,30 +10,6 @@ import socket
 RETRY_ATTEMPTS = 3
 
 
-class Msg:
-    def __init__(self, in_type, value=None):
-        self.type = in_type
-        self.values = value
-
-    def __repr__(self):
-        if self.type == Msg.ENGINE_STATE:
-            return "type:ENGINE_STATE"
-        elif self.type == Msg.MOVE:
-            return "type:MOVE, value:%s" % str(self.values)
-        elif self.type == Msg.NEW_TURN:
-            return "type:NEW_TURN, value:%s" % str(self.values)
-        elif self.type == Msg.ERROR:
-            return "type:ERROR, value:%s" % str(self.values)
-        elif self.type == Msg.LEVEL:
-            return "type:LEVEL"
-        elif self.type == Msg.END_TURN:
-            return "type:END_TURN, value:%s" % str(self.values)
-        elif self.type == Msg.UNIT:
-            return "type:UNIT"  
-        
-        return "type:%d  value:%s" % (self.type, str(self.values))
- 
-    
     
 class ClientMsg:
     
