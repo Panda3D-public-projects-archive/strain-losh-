@@ -44,12 +44,12 @@ class EventHandler():
                 self.engine.to_network.append( (p.id, e)  )
         
     
-        
+        """        
         for p in self.engine.players:
             print "name:",p.name
             for e in self.events[p.id]:
                 print e
-
+        """
 
         #clear all lists and dicts
         for p in self.engine.players:
