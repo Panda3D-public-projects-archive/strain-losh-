@@ -14,6 +14,8 @@ from util import compileEnemyUnit, compileUnit, compileState, compileAllUnits
 import copy
 from util import OBSERVER_ID
 from strain.share import *
+import eventHandler
+from eventHandler import EventHandler
 
 
 LEVELS_ROOT = "./data/levels/"
@@ -128,27 +130,22 @@ class Engine():
         #K-player.id V-grid that player with that id saw last
         self._grid_player = {}
         
+        #we will put events that happened as a reaction to an action by player here
+        #than we will parse them and send messages to different players accordingly
+        self.events = []
+        
         
         self.turn = 0
         self.active_player = None
 
         self.army_size = 1000
 
-        self.observer = Player( OBSERVER_ID, 'observer', None, self )
-        self.observer.defeated = True
+        self.event_handler = EventHandler( self )
         
         print "Engine started"
 
 
-        
-
-    def InitDefault(self):
-        level_filename = "LevelBlockout.txt"
-        self.level = Level( LEVELS_ROOT + level_filename )
-        self.notify.info("Loaded level:%s", level_filename )
-
-        self.loadArmyList()
-        
+  
 
     def Init(self, level, budget, players):
         level_filename = level + ".txt"
@@ -182,11 +179,11 @@ class Engine():
         elif( msg[0] == MOVE ):            
             self.moveUnit( msg[1]['unit_id'], msg[1]['new_position'], msg[1]['orientation'], source )
             
-        elif( msg[0] == LEVEL ):                
-            self.sendLevel( util.compileLevel( self.level ), source )
+        #elif( msg[0] == LEVEL ):                
+        #    self.sendLevel( util.compileLevel( self.level ), source )
                         
-        elif( msg[0] == ENGINE_STATE ):                
-            self.sendState( util.compileState( self, self.findPlayer( source ) ), source )
+        #elif( msg[0] == ENGINE_STATE ):                
+        #    self.sendState( util.compileState( self, self.findPlayer( source ) ), source )
             
         elif( msg[0] == ARMY_LIST ):                
             self.handleArmyListMsg( msg[1], source )
@@ -214,7 +211,7 @@ class Engine():
                         
         elif( msg[0] == PING ):
             #print "ping: %2.2fms" % ((time.time() - msg[1]) * 1000)
-            self.pong( source )            
+            self.pong( source, msg[1] )            
                         
         elif( msg[0] == UNDEFINED_MSG_1 ):
             self.error("Engine is shutting down")
@@ -229,8 +226,11 @@ class Engine():
                         
         else:
             self.notify.error( "Unknown message Type: %s", msg )
-        
+            return
  
+        self.event_handler.sendSession()
+            
+        
  
     def handleArmyListMsg(self, army_list, source ):
         
@@ -277,6 +277,8 @@ class Engine():
 
         player.deployed = True
         self.error( "Deployment ok.", source)
+        
+        self.event_handler.addEvent( (DEPLOYMENT, player, 1) )
  
         #if at least 1 more player needs to deploy, than wait for him
         for plyr in self.players:
@@ -329,8 +331,7 @@ class Engine():
                     
             if self.use( unit ):
                 unit.use()
-                player.addUseMsg( unit.id )
-                self.observer.addUseMsg( unit.id )
+                self.event_handler( (USE, unit) )
             else:
                 return
                     
@@ -343,65 +344,26 @@ class Engine():
             self.taunt( unit )
 
                     
-        player.addUnitMsg( compileUnit(unit) )
-        self.observer.addUnitMsg( compileUnit(unit) )
-        
-        self.checkAndSendLevelMsgs()
-        self.updateVisibilityAndSendVanishAndSpotMessages()
+        self.event_handler.addEvent( (UNIT, unit) )
+        self.checkLevel()
+        self.updateVisibility()
         
         
     def taunt(self, unit):
-        
-        res_overwatch = self.checkForAndDoOverwatch( unit )
-        
-        unit_ids_involved = { unit.id:0 }
-        
-        if res_overwatch:
-           
-            #check visibility for each player                              
-            for p in self.players:  
-                if p == unit.owner:
-                    unit.owner.addTauntMsg( unit.id, res_overwatch )
-                    self.observer.addTauntMsg( unit.id, res_overwatch )
-                    continue
-                       
-                tmp_shoot_msg = self.parseShootMsgForPlayer( res_overwatch, p )
-                p.addTauntMsg( unit.id, (tmp_shoot_msg) )         
 
-            unit_ids_involved.update( self.findUnitsInvolved( res_overwatch ) )
-                        
-        #there was no overwatch
-        else:
-            
-            for p in self.players:
-                if p == unit.owner:            
-                    unit.owner.addTauntMsg( unit.id,  None )
-                    self.observer.addTauntMsg( unit.id, None )
-                    continue
-                
-                if unit in p.visible_enemies:
-                    p.addTauntMsg( unit.id, None )
+        self.event_handler.addEvent( (TAUNT, unit) )
         
-        
-        self.sendUNITMsgsAndRemoveDeadUnits( unit_ids_involved )
+        self.checkForAndDoOverwatch( unit )           
+                                
+        self.removeDeadUnits()
         
         
         
     def chat(self, msg, source, to_allies):
         sender = self.findPlayer( source )
         
-        for p in self.players:
-            if p == sender:
-                continue
-            if to_allies:
-                if p.team == sender.team:
-                    p.addChatMsg( msg, sender.name )
-            else:                    
-                p.addChatMsg( msg, sender.name )
+        self.event_handler( (CHAT, sender, msg, to_allies) )      
             
-        if not to_allies:
-            self.observer.addChatMsg( msg, sender.name )
-                
                 
     def loadArmyList(self):
         
@@ -445,6 +407,8 @@ class Engine():
             self.players.append( player )
     
         xmldoc.unlink()
+
+        self.event_handler.initPlayers()
         
         self.notify.info( "Army lists loaded OK" )
 
@@ -458,7 +422,6 @@ class Engine():
         
         if self.checkVictoryConditions():
             self.error( "Game over, engine stopping" )
-            self.observer.saveMsgs()
             time.sleep(3)
             self.stop = True
             return
@@ -466,22 +429,26 @@ class Engine():
         self.beginTurn()
                 
         
-    def checkAndSendLevelMsgs(self):
+    def checkLevel(self):
         vis_walls = {}
         changes = {}
-        
+
+        #calculate visible walls for every player and store it in vis_walls dict        
         for p in self.players:
             vis_walls[p.id] = visibleWalls( compileAllUnits( p.units ).values() , self.level)
             #print "player:", p.name, "walls:", vis_walls[p.id]
             
             
+        #go through all walls in level
         for x in xrange( self.level.maxgridX ):
             for y in xrange( self.level.maxgridY ):
                 if not self.level._grid[x][y]:
                     continue
 
+                #go through all players and check if this wall can be seen (if it is in vis_walls)
                 for p in self.players:
-                    #TODO: krav: brijem da ova provjera ne radi bas tocno, treba provjerit
+                    
+                    #if there is a change from what this player last saw, note it 
                     if (x,y) in vis_walls[p.id]:
                         if self.level._grid[x][y] != self._grid_player[p.id][x][y]:
                             self._grid_player[p.id][x][y] = self.level._grid[x][y]
@@ -489,7 +456,8 @@ class Engine():
                             
                             
         for p in changes.values():
-            p.addLevelMsg( util.compileLevelWithDifferentGrid(self.level, self._grid_player[p.id]))
+            self.event_handler.addEvent( (LEVEL, p) )
+
         
         
         
@@ -501,7 +469,7 @@ class Engine():
             if p.defeated:
                 continue
             if not p.units:
-                p.addErrorMsg( 'U have no more units... hahahhhah' )
+                self.event_handler.addEvent( (INFO, p, 'U have no more units... hahahhhah') )
                 self.error( p.name + ' was defeated!!!' )
                 p.defeated = True
                 
@@ -531,10 +499,8 @@ class Engine():
         #draw!?
         if not winner and not winning_team:
             for p in self.players:
-                p.addErrorMsg( 'a draw.... pathetic...' )
+                self.event_handler.addEvent( (INFO, p, 'a draw.... pathetic...') )
                 return True
-                if p == self.players[-1]:
-                    self.observer.addErrorMsg( 'a draw.... pathetic...' )
 
         #send derogatory messages to losers
         for p in self.players:
@@ -542,22 +508,20 @@ class Engine():
             #a team won
             if winning_team:            
                 if p.team == winning_team:
-                    p.addErrorMsg( 'YOU WIN!!!' )
+                    self.event_handler.addEvent( (INFO, p, 'YOU WIN!!!') )
                 else:
-                    p.addErrorMsg( 'team ' + winning_team + ' WINS! ...and you lose!' )
+                    self.event_handler.addEvent( (INFO, p, 'team ' + winning_team + ' WINS! ...and you lose!') )
             #just one player won
             else:
                 if p == winner:
-                    p.addErrorMsg( 'YOU WIN!!!' )
+                    self.event_handler.addEvent( (INFO, p, 'YOU WIN!!!') )
                 else:
-                    p.addErrorMsg( 'player ' + winner.name + ' WINS! ...and you lose!' )
+                    self.event_handler.addEvent( (INFO, p, 'player ' + winner.name + ' WINS! ...and you lose!') )
 
         if winning_team:
             print "winning team:", winning_team
-            self.observer.addErrorMsg( "winning team:" + str(winning_team) )
         else:
             print "winner:", winner.name
-            self.observer.addErrorMsg( "winner:" + winner.name )
         return True
 
 
@@ -582,25 +546,17 @@ class Engine():
             if unit.owner == self.active_player:            
                 unit.newTurn( self.turn )
                 
-        for p in self.players:
-            #delete all previous msgs (like vanish and spot)
-            p.msg_lst = []
-            p.addEngineStateMsg( util.compileState(self, p) )
-            p.addNewTurnMsg( util.compileNewTurn(self, p) )        
+        #send ENGINE_STATE to all players
+        self.event_handler.addEvent( (ENGINE_STATE,) )
+        
+        #send NEW_TURN to all players
+        self.event_handler.addEvent( (NEW_TURN,) )
+        
                                      
         #check visibility
-        self.updateVisibilityAndSendVanishAndSpotMessages()
+        self.updateVisibility()
                                      
-        #ok so we have all units for this game initialized, add them all to observer's list
-        #so obs can see them all when adding engine_state and new_turn messages
-        for u in self.units.values():
-            self.observer.units.append( u )
-                                     
-                                     
-        self.observer.addEngineStateMsg( util.compileState(self, self.observer) )
-        self.observer.addNewTurnMsg( util.compileNewTurn(self, self.observer) )        
-
-        self.checkAndSendLevelMsgs()
+        self.checkLevel()
         
 
     def findNextPlayer(self):
@@ -640,17 +596,15 @@ class Engine():
         print "turn:", self.turn, "\tplayer:", self.active_player.name
 
         #check visibility
-        self.updateVisibilityAndSendVanishAndSpotMessages()
+        self.updateVisibility()
         
         #go through all units of active player and reset them
         for unit in self.active_player.units:               
             unit.newTurn( self.turn )
 
-        #send new turn messages       
-        for p in self.players:
-            p.addNewTurnMsg( util.compileNewTurn(self, p) )
+        #send NEW_TURN to all players
+        self.event_handler.addEvent( (NEW_TURN,) )
         
-        self.observer.addNewTurnMsg( util.compileNewTurn(self, p) )
         
 
     def getLOS(self, beholder, target ):
@@ -772,29 +726,12 @@ class Engine():
                 self.error( msg, source )            
                 return 
         
-        #list that we will send to owning player        
-        my_actions = []
-        
-        #this is for parsing overwatch msgs
-        res_overwatch = None
-        
-        #dict where we will fill out actions for other players that they see
-        actions_for_others = {}
-        #fill it up with empty lists
-        for p in self.players:
-            if p == owner:
-                continue
-            actions_for_others[p] = []                                    
-                                    
         #special case if we just need to rotate the unit
         if unit.pos == new_position:
             
             #see if we actually need to rotate the unit
             if unit.rotate( new_heading ):
-                my_actions.append( (ROTATE, new_heading) )
-                for p in self.players:
-                    if unit in p.visible_enemies:
-                        actions_for_others[p].append( (ROTATE, new_heading) )
+                self.event_handler.addEvent( (ROTATE, unit, new_heading ) )
             #if not, than do nothing
             else:
                 return
@@ -811,154 +748,52 @@ class Engine():
             #everything checks out, do the actual moving
             for tile, ap_remaining in path:
                 
+                #do low level moving of unit
                 self.level.removeUnit( unit )
                 unit.rotate( tile )                
                 unit.move( tile, ap_remaining )
                 self.level.putUnit( unit )            
                                     
-                my_actions.append( (MOVE, tile ) )              
-                                
-                #check vision for enemy 
-                for p in self.players:
-                    if unit in p.visible_enemies: 
-                        actions_for_others[p].append( (MOVE, tile ) )
-                 
-                self.checkEnemyVision( unit, actions_for_others )
+                #add event that unit moved
+                self.event_handler.addEvent( (MOVE, unit, tile) )
                 
-                res_spot = self.didISpotAnyone( unit )
-                res_overwatch = self.checkForAndDoOverwatch( unit ) 
-                if res_spot or res_overwatch:
-                    if res_spot:
-                        my_actions.extend( res_spot )
-                    if res_overwatch:
-                        my_actions.extend( res_overwatch )
+                #check enemies vision to this unit
+                self.checkEnemyVision(unit)
+                
+                #check if this unit spotted any new enemy
+                spot = self.didISpotAnyoneNew( unit )
+                
+                #check for overwatch
+                res_overwatch = self.checkForAndDoOverwatch( unit )
+                
+                #if there was a spotting or overwatch, stop movement 
+                if spot or res_overwatch:
                     break
 
                 
                 #if this is the last tile than apply last orientation change
                 if( tile == path[-1][0] ):
                     if unit.rotate( new_heading ):
-                        my_actions.append( ( ROTATE, new_heading) )
-                    
-                    for p in self.players:
-                        if unit in p.visible_enemies: 
-                            actions_for_others[p].append( (ROTATE, new_heading) )
-
-
-        #so we know which units to update with UNIT msgs            
-        unit_ids_involved = { unit.id:0 }
-
-
-        #check visibility for each player                    
-        if res_overwatch:          
-            for p in self.players:  
-                if p == owner:
-                    continue
-                
-                for ov_msg in res_overwatch:       
-                    tmp_shoot_msg = self.parseShootMsgForPlayer( ov_msg[1], p )         
-                    actions_for_others[p].append( ('overwatch', tmp_shoot_msg) )
-                            
+                        self.event_handler.addEvent( (ROTATE, unit, new_heading ) )
+        #---------------------------------------------------------------------------
                                         
-            unit_ids_involved.update( self.findUnitsInvolved( res_overwatch ) )
-            
-            
-        #send everything to owner of moving unit
-        owner.addMoveMsg( unit.id, my_actions )
-        self.observer.addMoveMsg( unit.id, my_actions )
-        
-        #send stuff that other players need to see
-        for plyr in actions_for_others:
-            if actions_for_others[plyr]:
-                plyr.addMoveMsg( unit.id, actions_for_others[plyr] )
-
         #check to see if unit can use at this new location
         self.checkUnitCanUse( unit )
+        
+        #refresh this unit's data
+        self.event_handler.addEvent( (UNIT, unit) )
 
-        self.sendUNITMsgsAndRemoveDeadUnits( unit_ids_involved )
-        self.checkAndSendLevelMsgs()
-            
-        
-        
-    def sendUNITMsgsAndRemoveDeadUnits(self, unit_ids_involved ):
-        #send UNIT msgs
-        for tmp_unit_id in unit_ids_involved:
-            tmp_unit = self.units[tmp_unit_id] 
-            for p in self.players:
-                if tmp_unit.owner == p or tmp_unit.owner.team == p.team:
-                    p.addUnitMsg( util.compileUnit(tmp_unit) )                                        
-                else:
-                    if tmp_unit in p.visible_enemies:
-                        p.addUnitMsg( util.compileEnemyUnit(tmp_unit) )
-                        
-            self.observer.addUnitMsg( util.compileUnit(tmp_unit) )                     
-        
         self.removeDeadUnits()
-
+        self.checkLevel()
             
-    def checkForAndDoOverwatch(self, unit):
-        ret_actions = []
-        
-        for p in self.players:
-            if p == unit.owner:
-                continue
-            
-            for enemy in p.units:  
-                to_hit, msg = toHit( util.compileUnit(enemy), util.compileUnit(unit), self.level) #@UnusedVariable
-                if to_hit:
-                    if enemy.overwatch and enemy.inFront( unit.pos ) and enemy.alive:
-                        res = enemy.doOverwatch( unit, to_hit )
-                        if res:
-                            ret_actions.append( ('overwatch', res ) )
-                        if not unit.alive:
-                            break
         
         
-        return ret_actions
-    
-    
-    def parseShootMsgForPlayer(self, shoot_msg, player): 
-        #example message = [(ROTATE, 0, 3), (SHOOT, 0, (4, 7), u'Bolt Pistol', [('bounce', 6)])]
-        tmp_shoot_msg = copy.deepcopy(shoot_msg)
-        for m in tmp_shoot_msg[:]:
-            if m[0] == ROTATE:
-                tmp_unit_id = m[1]
-                tmp_unit = self.units[tmp_unit_id]
-                #if we dont see this unit, remove the rotate msg                    
-                if tmp_unit.owner != player and tmp_unit not in player.visible_enemies:
-                    tmp_shoot_msg.remove( m )
-
-            elif m[0] == SHOOT or m[0] == 'melee':
-                sht, tmp_unit_id, pos, wpn, lst = m
-                tmp_unit = self.units[tmp_unit_id] 
-                #if we dont see the shooter, remove him and his position
-                if player != tmp_unit.owner and tmp_unit not in player.visible_enemies:
-                    tmp_unit_id = -1
-                    pos = None
-                #go through list of targets and if we dont see the target, remove it from the list
-                for effect in lst[:]:
-                    tmp_target_id = effect[1]
-                    trgt = self.units[tmp_target_id]
-                    if trgt.owner != player and trgt not in player.visible_enemies:
-                        lst.remove( effect )
-                        
-                i = tmp_shoot_msg.index(m)
-                tmp_shoot_msg.pop( i )
-                new = (sht, tmp_unit_id, pos, wpn, lst)
-                tmp_shoot_msg.insert( i, new )
-                
-                #p.addShootMsg( tmp_shoot_msg )
-                #actions_for_others[p].append( ('overwatch', tmp_shoot_msg) )
-    
-        return tmp_shoot_msg
-    
-    
-    
-    def checkEnemyVision(self, unit, actions_for_others ):
-            
+    def checkEnemyVision(self, unit ):
+        """Iterates over all players and checks and updates their visible_enemies list, also adds SPOT and VANISH events if needed"""
+        
         #go through all enemy players, if we see this unit we need to spot or vanish someone
         for p in self.players:
-            if p == unit.owner:
+            if p == unit.owner or p.team == unit.owner.team:
                 continue
             
             seen = 0
@@ -971,42 +806,56 @@ class Engine():
             if seen:
                 if unit not in p.visible_enemies:
                     p.visible_enemies.append( unit )
-                    actions_for_others[ p ].append( ( SPOT, compileEnemyUnit(unit) ) )
+                    self.event_handler.addEvent( (SPOT, p, unit) )
             else:
                 if unit in p.visible_enemies:
                     p.visible_enemies.remove( unit )
-                    actions_for_others[ p ].append( ( VANISH, unit.id ) )
+                    self.event_handler.addEvent( (VANISH, p, unit) )
                 
     
-    
-    def didISpotAnyone(self, unit ):
-        spotted = self.checkMyVision( unit )        
-        ret_actions = []        
         
-        if spotted:
-            for enemy in spotted:
-                unit.owner.visible_enemies.append( enemy )
-                ret_actions.append( ( SPOT, util.compileEnemyUnit(enemy)) )
-                        
-        return ret_actions
-    
-    
-    def checkMyVision(self, unit):
-        
-        #we moved this unit, so we need visibility to every enemy unit, and stop movement if this unit
-        #sees anything or if an enemy unit on overwatch sees this unit
-        spotted = []
 
+            
+    def checkForAndDoOverwatch(self, unit):
+        overwatch = False
+        
+        for p in self.players:
+            if p == unit.owner or p.team == unit.owner.team:
+                continue
+            
+            for enemy in p.units:  
+                to_hit, msg = toHit( util.compileUnit(enemy), util.compileUnit(unit), self.level) #@UnusedVariable
+                if to_hit:
+                    if enemy.overwatch and enemy.inFront( unit.pos ) and enemy.alive:
+                        if enemy.doOverwatch( unit, to_hit ):
+                            overwatch = True
+                        #if unit died, return
+                        if not unit.alive:
+                            break
+        
+        return overwatch
+    
+    
+    
+    
+    def didISpotAnyoneNew(self, unit ):
+        """Return True is a new enemy is spotted, False otherwise."""
+        spotted = False
+        owner = unit.owner
+           
         for player in self.players:
-            if player == unit.owner or player.team == unit.owner.team:
+            if player == owner or player.team == owner.team:
                 continue        
         
             for enemy in player.units:
-                if enemy not in unit.owner.visible_enemies and self.getLOS( unit, enemy ):
-                    spotted.append( enemy )
-                            
+                if enemy not in owner.visible_enemies and self.getLOS( unit, enemy ):
+                    owner.visible_enemies.append( enemy )
+                    self.event_handler.addEvent( (SPOT, owner, enemy) )
+                    spotted = True
+                        
         return spotted
-            
+    
+    
 
     def handleShoot(self, shooter_id, target_id, source ):
         
@@ -1025,8 +874,8 @@ class Engine():
 
         target = self.units[target_id]
 
-        #check to see if the owner is trying to shoot his own units
-        if target.owner == owner:
+        #check to see if the owner is trying to shoot his own or his allies units
+        if target.owner == owner or target.owner.team == owner.team:
             self.notify.critical( "Client:%s\ttried to shoot his own unit." % source.getAddress() )
             self.error( "You cannot shoot you own units.", source )
             return
@@ -1039,69 +888,24 @@ class Engine():
                  
         
         if shooter.hasHeavyWeapon() and not shooter.set_up:
-            if distanceTupple(shooter.pos, target.pos) > 2:
+            if distanceTupple(shooter.pos, target.pos) >= 2:
                 self.error( "Need to set up heavy weapon before shooting.", source )
                 return
         
         #---------------- main shoot event ------------------------
-        shoot_msg = shooter.shoot( target, to_hit )
-         
         #if nothing happened, just return
-        if not shoot_msg:
+        if not shooter.shoot( target, to_hit ):
             return
-                
-                
-        res = self.checkForAndDoOverwatch( shooter )
-        if res:
-            shoot_msg.extend( res )
-                
-                            
-                
-        #check visibility for each player
-        for p in self.players:
-
-            #if this player is the one doing the shooting send him everything
-            if shooter.owner == p:
-                p.addShootMsg( shoot_msg )
-                self.observer.addShootMsg( shoot_msg )
-                continue
-                
-            tmp_shoot_msg = self.parseShootMsgForPlayer( shoot_msg, p )
-            p.addShootMsg( tmp_shoot_msg )
-
-        #find all units involved in shooting: shooter and (multiple) targets, and update them
-        unit_ids_involved = { shooter.id:0, target.id:0 } 
-        unit_ids_involved.update( self.findUnitsInvolved( shoot_msg ) )                  
-        self.sendUNITMsgsAndRemoveDeadUnits( unit_ids_involved )        
-                
-        self.updateVisibilityAndSendVanishAndSpotMessages()
-        self.checkAndSendLevelMsgs()
-            
-            
-    def findUnitsInvolved(self, shoot_msg ):
-        unit_ids_involved = {}
         
-        for cmd in shoot_msg:
-            if cmd[0] == SHOOT: 
-                unit_ids_involved[ cmd[1] ] = 0
-                for trgt in cmd[4]:
-                    unit_ids_involved[ trgt[1] ] = 0
-            elif cmd[0] == ROTATE:
-                unit_ids_involved[ cmd[1] ] = 0
-            elif cmd[0] == 'overwatch': 
-                for cmd2 in cmd[1]:
-                    if cmd2[0] == ROTATE:
-                        unit_ids_involved[ cmd2[1] ] = 0
-                    elif cmd2[0] == SHOOT:
-                        unit_ids_involved[ cmd2[1] ] = 0
-                        for trgt in cmd2[4]:
-                            unit_ids_involved[ trgt[1] ] = 0
-            
-        return unit_ids_involved
+        self.checkForAndDoOverwatch( shooter )
+                
+        self.removeDeadUnits()        
+                
+        self.updateVisibility()
+        self.checkLevel()
         
         
-        
-    def updateVisibilityAndSendVanishAndSpotMessages(self):
+    def updateVisibility(self):
         
         #remove enemies that we don't see anymore, and send vanish messages
         for p in self.players:
@@ -1117,7 +921,7 @@ class Engine():
                 
                 #if there is an enemy that vanished, send a message to player and remove it from visible list 
                 if enemy not in tmp_enemy_list:
-                    p.addMsg( (VANISH, enemy.id) )
+                    self.event_handler.addEvent( (VANISH, p, enemy) )
                     p.visible_enemies.remove( enemy )
                     
         
@@ -1130,7 +934,8 @@ class Engine():
                 for myunit in p.units:
                     if enemy not in p.visible_enemies and self.getLOS( myunit, enemy ):
                         p.visible_enemies.append( enemy )
-                        p.addMsg( ( SPOT, util.compileEnemyUnit(enemy)) )
+                        self.event_handler.addEvent( (SPOT, p, enemy) )
+
         
         
     def removeDeadUnits(self):
@@ -1155,6 +960,8 @@ class Engine():
                     p.detected_enemies.remove( unit )
                 
             self.dead_units[ unit.id ] = unit
+            
+            self.event_handler.addEvent( (UNIT, unit) )
             
 
     def findPlayer( self, source ):
@@ -1354,8 +1161,8 @@ class Engine():
         
     
     
-    def pong( self, source ):
-        self.to_network.append( (source, (PONG, time.time())) )
+    def pong( self, source, t ):
+        self.to_network.append( (source, (PONG, t)) )
         
 
     def error(self, msg, source = None):

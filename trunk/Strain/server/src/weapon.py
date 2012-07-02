@@ -6,12 +6,13 @@ from strain.share import *
 
 
 SPECIAL_SET_UP = "set_up"
-
+SPECIAL_SILENCED = "silenced"
     
 class Weapon():
 
     def __init__(self):
         self.owner = None
+        self.id = None
         self.name = None
         self.range = None
         self.str = None
@@ -23,19 +24,25 @@ class Weapon():
         self.shots = None
     
     
-    def fire(self, target, to_hit ):
-        ret_list = []
+    def fire(self, target, to_hit):
+        
+        #ranged weapon
+        if self.range:
+            tmp_event = (SHOOT, self.owner, target.pos, self)
+        #melee weapon
+        else:
+            tmp_event = (MELEE, self.owner, target.pos, self)
 
+
+        res_list = []
         for i in xrange(self.shots): #@UnusedVariable                            
-            if util.d100() <= to_hit: 
-                ret_list.append( self.hitTarget( target ) )
+            if util.d100() <= to_hit:
+                res_list.append( self.hitTarget( target ) ) 
             else: 
-                ret_list.append( ('miss', target.id) )
-            #TODO: krav: bez ovog dole se mozda brejka klijent, bumo vidli ako se ikad desi :)
-            #if not target.alive:
-            #    break
+                res_list.append( ('miss', target) ) 
     
-        return ret_list
+        tmp_event += (res_list,)
+        return tmp_event
     
     
     def hitTarget(self, target):
@@ -57,6 +64,7 @@ def loadWeapon( name, owner = None ):
         wpn = Weapon()            
         if owner:
             wpn.owner = owner
+        wpn.id = p.attributes['id'].value 
         wpn.name = p.attributes['name'].value 
         wpn.str = int(p.attributes['Str'].value)
         try:wpn.range = int(p.attributes['range'].value)

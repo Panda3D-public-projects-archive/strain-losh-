@@ -24,7 +24,7 @@ STERNER_TIME_LIMIT = 0 #seconds, if it is 0 than it is infinite
 #messages from clients that do no go through to engines, their lifespan
 MESSAGE_TIMEOUT = 10 #seconds
 
-ENGINE_IDLE_MAX = 5 #in seconds, if it is 0 than it is infinite
+ENGINE_IDLE_MAX = 0 #in seconds, if it is 0 than it is infinite
 
 
 class LockedDict:
@@ -418,8 +418,9 @@ class Sterner:
             return
                 
 
-        elif message[0] == PING:
-            self.network._sendMsg( (PONG, time.time()), source )
+        elif message[1] == PING:
+            print "ping:", message
+            self.network._sendMsg( (PONG, message[2] ), source )
             return
 
         else:

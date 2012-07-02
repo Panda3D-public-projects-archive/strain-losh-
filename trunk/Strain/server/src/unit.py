@@ -68,79 +68,87 @@ class Unit():
         return False
         
 
-    def melee(self, target):
-        ret_lst = []
+    def melee(self, target, to_hit, overwatch = False):
         
         #set up heavy weapons cannot do melee
         if self.hasHeavyWeapon() and self.set_up:
-                return None 
+                return False 
             
         if self.ap < self.melee_weapon.ap_cost:
-            return None
+            return False
         
         #TODO: krav: melee bi trebao obojici trosit ap, i da bude contest of skill - dakle bilo ko moze dobit
         self.ap -= self.melee_weapon.ap_cost
         
-        base = 90
-        
+        """
+        to_hit = 90
         #charge
         if self.last_action == 'move':
-            base += 10        
-        
+            to_hit += 10
+        #if enemy has a better weapon skill
+        to_hit += (self.ws - target.ws) * 10
+        """
+                
         #face opponent 
         if self.rotate( target.pos ):
-            ret_lst.append( ( ROTATE, self.id, self.heading) )
+            self.engine.event_handler.addEvent( (ROTATE, self, self.heading) )
             
-        #rotate opponent to us, always
+        #rotate opponent to us
         if target.rotate( self.pos ):
-            ret_lst.append( ( ROTATE, target.id, target.heading) )
+            self.engine.event_handler.addEvent( (ROTATE, target, target.heading) )
          
-        
-        base += (self.ws - target.ws) * 10
-        
-        wpn = self.melee_weapon
-        
         self.last_action = 'melee'
-        
-        #roll to hit
-        if util.d100() > base:
-            ret_lst.append( ('melee', self.id, target.pos, wpn.name, [('miss', target.id)] ) )
-        else:
-            ret_lst.append( ('melee', self.id, target.pos, wpn.name, [wpn.hitTarget( target )]) )
             
-        return ret_lst
+        #get event from weapon
+        tmp_event = self.melee_weapon.fire(target, to_hit)
+        if overwatch:
+            tmp_event = (OVERWATCH,) + tmp_event
+            
+        #send event to handler
+        self.engine.event_handler.addEvent( tmp_event )
+
+        return True
+
 
         
     def shoot(self, target, to_hit, overwatch = False):
-                
+        #if we cant hit the target abort
         if not to_hit:
-            return None
+            return False
         
         distance = distanceTupple(self.pos, target.pos)
         
-        #check melee
+        #if in melee range, do melee
         if distance < 2:
-            return self.melee( target )
+            return self.melee( target, to_hit, overwatch )
         
-        #check if we have a heavy weapon and if we are set up
+        #check if we have a heavy weapon and we are not set up, return
         if self.hasHeavyWeapon() and not self.set_up:
-            return None
+            return False
             
         #check if there is enough ap to fire
         if self.ap < self.ranged_weapon.ap_cost:
-            return None
+            return False
         self.ap -= self.ranged_weapon.ap_cost
                         
         #check to see if we need to rotate unit before shooting, but if we are on overwatch, we cant rotate
-        ret = [] 
+        #we already checked if target is in front, if this is overwatch
         if not overwatch:
             if self.rotate( target.pos ):
-                ret.append( ( ROTATE, self.id, self.heading) ) 
-                        
+                self.engine.event_handler.addEvent( (ROTATE, self, self.heading) )
+
+        #ok everything checks out, we can do the actual shooting                        
         self.last_action = 'shoot'
         
-        ret.append( (SHOOT, self.id, target.pos, self.ranged_weapon.name, self.ranged_weapon.fire( target, to_hit ) ) )
-        return ret
+        #get event from weapon
+        tmp_event = self.ranged_weapon.fire( target, to_hit )
+        if overwatch:
+            tmp_event = (OVERWATCH,) + tmp_event
+            
+        #add event to handler
+        self.engine.event_handler.addEvent( tmp_event )
+        
+        return True
 
 
     def setOverwatch(self):
@@ -163,12 +171,12 @@ class Unit():
         if dmg_received:
             self.hp -= dmg_received
         else:
-            return ('bounce', self.id)
+            return ('bounce', self)
                 
         if self.hp <= 0:
             self.die( weapon )
-            return ('kill', self.id, dmg_received )
-        return ('damage',self.id, dmg_received)
+            return ('kill', self, dmg_received )
+        return ('damage', self, dmg_received)
 
 
     def die(self, weapon ):
