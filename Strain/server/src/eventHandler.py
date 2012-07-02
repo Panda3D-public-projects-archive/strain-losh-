@@ -40,22 +40,17 @@ class EventHandler():
         
         #send events to logged in clients
         for p in self.engine.players:
-            for e in self.events[p.id]:
-                self.engine.to_network.append( (p.id, e)  )
-        
+            self.engine.to_network.append( (p.id, self.events[p.id]) )
     
-        """        
-        for p in self.engine.players:
-            print "name:",p.name
-            for e in self.events[p.id]:
-                print e
-        """
 
-        #clear all lists and dicts
+        for p in self.engine.players:
+            print "name:",p.name, self.events[p.id]
+
+
+        #clear all lists
         for p in self.engine.players:
             self.events[p.id] = []
             
-        self.units_changed = {}
         
         
     
@@ -70,6 +65,7 @@ class EventHandler():
                 elif unit in p.visible_enemies:
                     self.events[p.id].append( (UNIT, compileEnemyUnit(unit)) )
                     
+        self.units_changed = {}
             
             
     def addEvent(self, event):
