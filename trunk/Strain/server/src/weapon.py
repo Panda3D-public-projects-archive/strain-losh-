@@ -39,7 +39,7 @@ class Weapon():
             if util.d100() <= to_hit:
                 res_list.append( self.hitTarget( target ) ) 
             else: 
-                res_list.append( ('miss', target) ) 
+                res_list.append( (MISS, target.id) ) 
     
         tmp_event += (res_list,)
         return tmp_event
