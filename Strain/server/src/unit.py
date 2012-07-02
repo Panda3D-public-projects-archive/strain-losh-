@@ -171,12 +171,12 @@ class Unit():
         if dmg_received:
             self.hp -= dmg_received
         else:
-            return ('bounce', self)
+            return (BOUNCE, self.id)
                 
         if self.hp <= 0:
             self.die( weapon )
-            return ('kill', self, dmg_received )
-        return ('damage', self, dmg_received)
+            return (KILL, self.id, dmg_received )
+        return (DAMAGE, self.id, dmg_received)
 
 
     def die(self, weapon ):

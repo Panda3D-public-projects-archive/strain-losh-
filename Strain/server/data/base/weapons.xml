@@ -6,7 +6,7 @@
 	<weapon id="2" name="Heavy Defaulter" 	range="36" 	Str="5"	ap_cost="1"		shots="1"	/><!-- special="set_up"-->	
 	<weapon id="3" name="Default Pistol"	range="12" 	Str="3"	ap_cost="0.5"	shots="1"/>
 	<weapon id="4" name="Plasma Pistol"		range="12" 	Str="5"	ap_cost="1"		shots="1"	special="plasma"/>
-	<weapon id="4" name="Silenced Pistol"	range="12" 	Str="3"	ap_cost="1"		shots="1"	special="silenced"/>
+	<weapon id="4" name="Silenced Supercovert"	range="12" 	Str="3"	ap_cost="1"		shots="1"	special="silenced"/>
 	
 	<weapon id="5" name="Karate"						Str="3"	ap_cost="1"		shots="1"/>
 	<weapon id="6" name="Doctors Bag"					Str="3"	ap_cost="1"		shots="1"/>
