@@ -369,7 +369,6 @@ class DBApi():
     
     def finishAllGamesExceptVersion(self, ver):
         for g in self.getAllActiveGames():
-            print "ver:",float(g[8]), "---", ver
             #set finish status and timestamp to each game that is not this version
             if g[5] != 2 and g[8] != ver:
                 self.finishGame(g[0])
@@ -469,7 +468,7 @@ if __name__ == "__main__":
     
     #for i in xrange(40,60):
     #    dbapi.deleteGame(i)
-    #dbapi.deleteGame(101)
+    #dbapi.deleteGame(143)
     
     #dbapi.finishGame(21)
     #dbapi.finishAllGamesExceptVersion('0.1')
@@ -491,7 +490,10 @@ if __name__ == "__main__":
     #print dbapi.getAllEmptyPublicGames()
     #print dbapi.getGame(21, True)
     
-    #gm = dbapi.getGame(101, False)
+    #gm = dbapi.getGame(143, False)
+    #gm = list(gm)
+    #gm[12] = None
+    #gm = tuple(gm)
     #dbapi.updateGame(gm)
     
     #dbapi.setPickledEngine(101, 'asd')
@@ -500,3 +502,4 @@ if __name__ == "__main__":
     print dbapi.getGamePlayerEvents(121, 22)
     print dbapi.getGameEvents(121)
     dbapi.close()
+    
