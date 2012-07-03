@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <Walls>
-	<wall name="Wall1"		blockMove="1"	blockVision="2"	blockBullets="1"	destroysTo="Ruin"/>
-	<wall name="Wall2"		blockMove="1"	blockVision="2"	blockBullets="1"	destroysTo="Ruin"/>
-	<wall name="HalfWall"	blockMove="1"	blockVision="1"	blockBullets="1"	destroysTo="Ruin"/>
-	<wall name="Ruin"		blockMove="0"	blockVision="0"	blockBullets="0"	/>
-	<wall name="ClosedDoor"	blockMove="1"	blockVision="2"	blockBullets="1"	destroysTo="Ruin"	usesTo="OpenedDoor"/>
-	<wall name="OpenedDoor"	blockMove="0"	blockVision="0"	blockBullets="0"	destroysTo="Ruin"	usesTo="ClosedDoor"/>
-	<wall name="ForceField"	blockMove="1"	blockVision="0" blockBullets="1"	/>
+	<wall id="1"	name="Wall1"		blockMove="1"	blockVision="2"	blockBullets="1"	destroysTo="Ruin"/>
+	<wall id="2"	name="Wall2"		blockMove="1"	blockVision="2"	blockBullets="1"	destroysTo="Ruin"/>
+	<wall id="3"	name="HalfWall"	blockMove="1"	blockVision="1"	blockBullets="1"	destroysTo="Ruin"/>
+	<wall id="4"	name="Ruin"		blockMove="0"	blockVision="0"	blockBullets="0"	/>
+	<wall id="5"	name="ClosedDoor"	blockMove="1"	blockVision="2"	blockBullets="1"	destroysTo="Ruin"	usesTo="OpenedDoor"/>
+	<wall id="6"	name="OpenedDoor"	blockMove="0"	blockVision="0"	blockBullets="0"	destroysTo="Ruin"	usesTo="ClosedDoor"/>
+	<wall id="7"	name="ForceField"	blockMove="1"	blockVision="0" blockBullets="1"	/>
 </Walls>

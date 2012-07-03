@@ -36,6 +36,7 @@ NEWS_FEED = 'news_feed'
 
 
 #-----------------------engine messages----------------------
+ENTER_GAME = 'enter_game'       #values - player id
 MOVE = 'move'                   #values - list of actions ('move',tile) ('rotate',tile) ('overwatch',overwatchresult) ('detected',enemy)
 NEW_TURN = 'new_turn'           #value - turn number
 ENGINE_SHUTDOWN = 'shutdown'    #no values
@@ -1193,6 +1194,7 @@ class Level:
 class Wall:
     
     def __init__(self):
+        self.id = None
         self.name = None
         self.blockMove = False
         self.blockVision = False
@@ -1218,6 +1220,7 @@ def loadWalls():
     
     for p in xmldoc.getElementsByTagName( 'wall' ):                
         wpn = Wall()            
+        wpn.id = int( p.attributes['id'].value )
         wpn.name = p.attributes['name'].value
         wpn.blockMove = int( p.attributes['blockMove'].value )
         wpn.blockVision = int( p.attributes['blockVision'].value ) 

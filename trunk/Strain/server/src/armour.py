@@ -7,6 +7,7 @@ import weapon
 class Armour():
 
     def __init__(self):
+        self.id = None
         self.name = None
         self.front = None
         self.side = None
@@ -38,6 +39,7 @@ def loadArmour( name ):
             continue
         
         armr = Armour()            
+        armr.id = int( p.attributes['id'].value )            
         armr.name = p.attributes['name'].value            
         armr.front = int( p.attributes['front'].value )
         armr.side = int( p.attributes['sides_back'].value )

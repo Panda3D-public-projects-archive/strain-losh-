@@ -25,6 +25,7 @@ class Unit():
     
     def __init__( self, name, engine ):        
         self.id = -1
+        self.db_id = None
         self.owner = None
         self.owner_id = None
         self.engine = engine
@@ -44,9 +45,6 @@ class Unit():
         self.hp, self.default_hp = 0, 0
                 
         self.can_use = False
-                
-        self.move_dict = []
-        self.shoot_dict = []
                 
         self.ws = -1
         
@@ -292,6 +290,7 @@ def loadUnit( name, engine ):
             continue
         
         unit = Unit( p.attributes['name'].value, engine )            
+        unit.db_id = int( p.attributes['id'].value )
         unit.default_hp = int( p.attributes['hp'].value )
         unit.ws = int( p.attributes['ws'].value )
 

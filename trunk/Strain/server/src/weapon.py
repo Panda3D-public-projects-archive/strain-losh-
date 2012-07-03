@@ -64,7 +64,7 @@ def loadWeapon( name, owner = None ):
         wpn = Weapon()            
         if owner:
             wpn.owner = owner
-        wpn.id = p.attributes['id'].value 
+        wpn.id = int( p.attributes['id'].value ) 
         wpn.name = p.attributes['name'].value 
         wpn.str = int(p.attributes['Str'].value)
         try:wpn.range = int(p.attributes['range'].value)
