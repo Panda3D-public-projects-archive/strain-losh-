@@ -112,8 +112,8 @@ class AppFSM(FSM.FSM):
         
     def enterContinueGame(self):
         from strain.gameinstance import GameInstance
-        self.parent.game_instance = GameInstance(self.parent, 'Continue', 121)
-        #self.parent.game_instance = GameInstance(self.parent, 'Continue', 143)
+        self.parent.game_instance = GameInstance(self.parent, 'Continue', 161)
+        
     
     def exitContinueGame(self):
         #TODO: ogs: kod za brisanje i deinicijalizaciju GameInstance

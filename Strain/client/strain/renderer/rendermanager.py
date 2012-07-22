@@ -47,7 +47,7 @@ class RenderManager():
         
     def refreshFow(self):
         tile_dict = self.parent.local_engine.getInvisibleTiles()        
-        self.fow_renderer.redraw(tile_dict)
+        #self.fow_renderer.redraw(tile_dict)
     
     def refreshEnemyUnitMarkers(self):
         for unit_id in self.parent.local_engine.units:
