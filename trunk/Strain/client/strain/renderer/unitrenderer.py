@@ -78,6 +78,35 @@ class UnitRenderer:
         
         self.node_2d = aspect2d.attachNewNode('node_2d')
     
+    def loadForTester(self, id, team_id, name, x, y, heading):
+        self.id = str(id)
+        self.team_id = str(team_id)
+        self.node = self.parent_node.attachNewNode("UnitRendererNode_"+self.id)
+        
+        i = string.index(name, '_')
+        self.model = self.loadModel(name[0:i], name[i+1:], self.team_id)           
+        self.model.reparentTo(self.node)
+        
+        scale = utils.DOW_UNIT_SCALE
+        h = 180
+        pos = Point3(x, y, 0)
+        pos = self.calcWorldPos(pos)
+        
+        # Bake in rotation transform because model is created facing towards screen (h=180)
+        self.model.setScale(scale)
+        self.model.setH(h)
+        self.model.flattenLight() 
+        self.node.setPos(pos)
+        self.model.setAntialias(AntialiasAttrib.MMultisample)
+
+        self.node.setTag("type", "unit")
+        self.node.setTag("id", str(self.id))
+        self.node.setTag("team", str(self.team_id))
+
+        # If unit model is not rendered for portrait, set its heading as received from server
+        self.setHeading(heading)
+        self.node_2d = aspect2d.attachNewNode('node_2d')
+    
     def loadModel(self, race, type, team=0):
         model = Actor('dw/space_marine_common')
         model.loadAnims(utils.anim_dict_dw2['marine'])

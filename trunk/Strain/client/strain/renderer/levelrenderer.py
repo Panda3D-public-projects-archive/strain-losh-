@@ -1,31 +1,34 @@
 from panda3d.core import *
+import random
 
 class LevelRenderer():
     def __init__(self, parent, parent_node):
         self.parent = parent
         self.parent_node = parent_node
         self.node = self.parent_node.attachNewNode('LevelRendererNode')
+        self.node_floor = self.node.attachNewNode('LevelRendererFloorNode')
+        self.node_wall = self.node.attachNewNode('LevelRendererWallNode')        
+        self.temp_node_floor = self.node_floor.attachNewNode('LevelRendererTempFloorNode')
+        self.temp_node_wall = self.node_wall.attachNewNode('LevelRendererTempWallNode')
+        self.ghost_node_floor = NodePath('LevelRendererGhostFloorNode')
+        self.ghost_node_wall = NodePath('LevelRendererGhostWallNode')
         
         self.forcewall_tex_offset = 0
-        
-        # Create nodepath collections to hold wall and floor nodes
-        self.nodecoll_floor = NodePathCollection()
-        self.nodecoll_wall = NodePathCollection()
     
     def create(self, level, x, y, tile_size, zpos):        
         self.level = level
         self.maxX = x
         self.maxY = y        
         
-        self.floor_tex_C = loader.loadTexture("floortile_C.png")
-        self.floor_tex_N = loader.loadTexture("floortile_N.png")
+        self.floor_tex_C = loader.loadTexture("tile3.png")
+        #self.floor_tex_N = loader.loadTexture("floortile_N.png")
         
         self.forcewall_tex_C = loader.loadTexture("rnbw.png")
         
         self.floor_tex_C.setMagfilter(Texture.FTLinearMipmapLinear)
         self.floor_tex_C.setMinfilter(Texture.FTLinearMipmapLinear)
-        self.floor_tex_N.setMagfilter(Texture.FTLinearMipmapLinear)
-        self.floor_tex_N.setMinfilter(Texture.FTLinearMipmapLinear)        
+        #self.floor_tex_N.setMagfilter(Texture.FTLinearMipmapLinear)
+        #self.floor_tex_N.setMinfilter(Texture.FTLinearMipmapLinear)        
         self.forcewall_tex_C.setMagfilter(Texture.FTLinearMipmapLinear)
         self.forcewall_tex_C.setMinfilter(Texture.FTLinearMipmapLinear)        
         
@@ -36,16 +39,24 @@ class LevelRenderer():
         for x in xrange(0, self.maxX):
             for y in xrange(0, self.maxY):
                 if self.level.getHeight( (x, y) ) == 0:
-                    self.nodecoll_floor.append(self.loadModel('FLOOR1', x, y, tile_size, zpos))
+                    model = self.loadModel('FLOOR1', x, y, tile_size, zpos)
+                    model.reparentTo(self.ghost_node_floor)
+                    model.setTag("pos", str(x)+"_"+str(y))
                 elif self.level.getHeight( (x, y) ) == 1:                    
-                    self.nodecoll_floor.append(self.loadModel('FLOOR1', x, y, tile_size, zpos))
-                    self.nodecoll_floor.append(self.loadModel('CUBE1', x, y, tile_size, zpos))
+                    model = self.loadModel('FLOOR1', x, y, tile_size, zpos)
+                    model.reparentTo(self.ghost_node_floor)
+                    model.setTag("pos", str(x)+"_"+str(y))
+                    model = self.loadModel('CUBE1', x, y, tile_size, zpos)
+                    model.reparentTo(self.ghost_node_floor)                   
                 else:
                     for i in xrange(0, self.level.getHeight( (x, y) )):
                         if i == 0:
-                            self.nodecoll_floor.append(self.loadModel('FLOOR1', x, y, tile_size, zpos))
+                            model = self.loadModel('FLOOR1', x, y, tile_size, zpos)
+                            model.reparentTo(self.ghost_node_floor)
+                            model.setTag("pos", str(x)+"_"+str(y))                            
                         else:
-                            self.nodecoll_floor.append(self.loadModel('CUBE2', x, y, tile_size, zpos, i))
+                            model = self.loadModel('CUBE2', x, y, tile_size, zpos, i)
+                            model.reparentTo(self.ghost_node_floor)
         
         #Calculate and place walls between tiles
         for x, val in enumerate(self.level._grid):
@@ -57,16 +68,53 @@ class LevelRenderer():
                         continue
                     my_x= tile2_x
                     my_y=tile2_y
-                    self.nodecoll_wall.append(self.loadWallModel(val2.name, my_x, my_y, h, tile_size, zpos)) 
+                    model = self.loadWallModel(val2.name, my_x, my_y, h, tile_size, zpos)
+                    model.reparentTo(self.ghost_node_wall)
+                    model.setTag("pos", str(my_x)+"_"+str(my_y)+"_"+str(h))  
         
         # Reparent all the models to main Level node
-        self.nodecoll_floor.reparentTo(self.node)
-        self.nodecoll_wall.reparentTo(self.node)
         self.redrawLights()
-        self.node.clearModelNodes()
-        self.node.flattenStrong()
+        self.switchNodes()
+        self.flattenNodes()
         
+        # Add level task
         taskMgr.add(self.forcewallTask, 'ForceWall_offset_Task')
+    
+    def switchNodes(self):
+        self.temp_node_floor.removeNode()
+        self.temp_node_wall.removeNode() 
+        self.temp_node_floor = self.ghost_node_floor.copyTo(self.node_floor)
+        self.temp_node_wall = self.ghost_node_wall.copyTo(self.node_wall)
+    
+    def updateLevelLos(self, tile_dict, wall_dict):
+        for invisible_tile in tile_dict:
+            x = str(invisible_tile[0])
+            y = str(invisible_tile[1])
+            if tile_dict[invisible_tile] == 0:
+                n = self.temp_node_floor.find("**/=pos="+x+"_"+y)                   
+                n.setColorScale(0.3,0.3,0.3,1)
+            else:                  
+                n = self.temp_node_floor.find("**/=pos="+x+"_"+y)                   
+                n.setColorScale(1,1,1,1)
+        for child in self.temp_node_wall.getChildren():
+            child.setColorScale(0.3,0.3,0.3,1)
+        for wall in wall_dict:
+            x,y,h = self.getWallPosition(wall[0], wall[1])
+            x = str(x)
+            y = str(y)
+            h = str(h)
+            n = self.temp_node_wall.find("**/=pos="+x+"_"+y+"_"+h)                   
+            n.setColorScale(1,1,1,1)           
+       
+    def flattenNodes(self):        
+        for child in self.temp_node_floor.getChildren():
+            child.clearTag('pos') 
+        for child in self.temp_node_wall.getChildren():
+            child.clearTag('pos')        
+        self.temp_node_floor.clearModelNodes()
+        self.temp_node_floor.flattenStrong()
+        self.temp_node_wall.clearModelNodes()
+        self.temp_node_wall.flattenStrong() 
     
     def loadModel(self, type, x, y, tile_size, zpos, i=None):
         if type == 'FLOOR1':

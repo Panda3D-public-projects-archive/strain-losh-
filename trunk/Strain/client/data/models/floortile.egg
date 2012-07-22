@@ -3,10 +3,7 @@
 <Comment> {
   "egg-trans -tbnall -o 'C:\floortile.egg' 'C:\floortile.egg'"
 }
-<Material> Tile {
-  <Scalar> diffr { 1 }
-  <Scalar> diffg { 1 }
-  <Scalar> diffb { 1 }
+<Material> Tile {  
   <Scalar> emitr { 0 }
   <Scalar> emitg { 0 }
   <Scalar> emitb { 0 }
