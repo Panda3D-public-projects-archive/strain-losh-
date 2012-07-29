@@ -7,7 +7,6 @@ from strain.renderer.coordrenderer import CoordRenderer
 from strain.renderer.shadermanager import ShaderManager
 from strain.renderer.unitmarkerrenderer import UnitMarkerRenderer
 from strain.renderer.animationmanager import AnimationManager
-from strain.renderer.fowrenderer import FowRenderer
 from strain.utils import TILE_SIZE, GROUND_LEVEL
 
 class RenderManager():    
@@ -20,8 +19,6 @@ class RenderManager():
         base.accept('g', self.grid_renderer.toggle)
         self.coord_renderer = CoordRenderer(self, self.node)
         base.accept('h', self.coord_renderer.toggle)
-        #self.fow_renderer = FowRenderer(self)
-        #base.accept('f', self.fow_renderer.toggle)
         self.unit_marker_renderer = UnitMarkerRenderer(self)
         self.shader_manager = ShaderManager(self)
         self.animation_manager = AnimationManager(self)
@@ -33,7 +30,6 @@ class RenderManager():
         self.level_renderer.create(self.parent.local_engine.level, self.parent.local_engine.level.maxX, self.parent.local_engine.level.maxY, TILE_SIZE, GROUND_LEVEL)
         self.grid_renderer.redraw(self.parent.local_engine.level.maxX, self.parent.local_engine.level.maxY, TILE_SIZE, GROUND_LEVEL)
         self.coord_renderer.redraw(self.parent.local_engine.level.maxX, self.parent.local_engine.level.maxY, TILE_SIZE, GROUND_LEVEL)
-        #self.fow_renderer.initializeTexture(self.level_renderer.node, self.parent.local_engine.level.maxX, self.parent.local_engine.level.maxY)
         for unit_renderer in self.unit_renderer_dict.itervalues():
             unit_renderer.node.removeNode()
             del unit_renderer
@@ -44,10 +40,6 @@ class RenderManager():
             self.unit_renderer_dict[unit['id']] = unit_renderer
         
         self.level_renderer.node.setShaderAuto()
-        
-    def refreshFow(self):
-        tile_dict = self.parent.local_engine.getInvisibleTiles()        
-        #self.fow_renderer.redraw(tile_dict)
     
     def refreshEnemyUnitMarkers(self):
         for unit_id in self.parent.local_engine.units:
