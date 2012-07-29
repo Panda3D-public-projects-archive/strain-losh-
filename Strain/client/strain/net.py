@@ -58,7 +58,9 @@ class Net():
         elif msg_list[0] == NEWS_FEED:
             None 
         elif msg_list[0] == NEW_GAME_STARTED:
-            None           
+            None    
+        elif msg_list[0] == PONG:
+            None       
         else:
             if msg_list[0][0] == ENGINE_STATE:
                 msg = msg_list[0]
