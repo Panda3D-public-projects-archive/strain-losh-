@@ -37,6 +37,7 @@ NEWS_FEED = 'news_feed'
 
 #-----------------------engine messages----------------------
 ENTER_GAME = 'enter_game'       #values - player id
+ANIMATION = 'animation'         #so client knows if this is an animation message
 MOVE = 'move'                   #values - list of actions ('move',tile) ('rotate',tile) ('overwatch',overwatchresult) ('detected',enemy)
 NEW_TURN = 'new_turn'           #value - turn number
 ENGINE_SHUTDOWN = 'shutdown'    #no values

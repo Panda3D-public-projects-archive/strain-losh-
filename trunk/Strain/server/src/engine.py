@@ -1150,28 +1150,13 @@ class Engine():
         
         return 1
 
-
-    def sendDeploymentMsg( self, level, army_size, source ):
-        deploy_dict = {}
-        
-        deploy_dict['level'] = util.compileLevel( level )
-        deploy_dict['army_size'] = army_size
-        
-        self.to_network.append( (source, ( DEPLOYMENT, deploy_dict )) )
-        
-    
     
     def pong( self, source, t ):
-        self.to_network.append( (source, (PONG, t)) )
+        self.event_handler.addEvent( (PONG, source, t) )
         
 
-    def error(self, msg, source = None):
-        if not source:
-            for p in self.players:
-                p.addErrorMsg( msg )
-            return
-        
-        self.to_network.append( (source, (ERROR, msg)) )
+    def error(self, msg, source):
+        self.event_handler.addEvent( (ERROR, source, msg) )        
 
 
 #-----------------------------------------------------------------------
