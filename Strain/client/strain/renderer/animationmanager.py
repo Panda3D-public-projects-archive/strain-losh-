@@ -108,17 +108,17 @@ class AnimationManager():
             elif msg[0] == SPOT:
                 self._message_in_process = True
                 # Animation manager sets _message_in_process to False when the animation is done
-                self.parent.game_instance.render_manager.animation_manager.handleSpot(msg[1])  
-                self.parent.game_instance.local_engine.level.putUnitDict(msg[1])  
-                if self.parent.game_instance.player_id == self.parent.game_instance.turn_player and self.parent.game_instance.sel_unit_id != None:
-                    self.parent.game_instance.movement.calcUnitAvailMove( self.parent.game_instance.sel_unit_id )
+                self.handleSpot(msg[1])  
+                self.parent.parent.local_engine.level.putUnitDict(msg[1])  
+                if self.parent.parent.player_id == self.parent.parent.turn_player and self.parent.parent.sel_unit_id != None:
+                    self.parent.parent.movement.calcUnitAvailMove( self.parent.parent.sel_unit_id )
                     #self.parent.sgm.showVisibleEnemies( self.parent.sel_unit_id )
             #========================================================================
             #
             elif msg[0] == VANISH:
                 self._message_in_process = True            
                 # Animation manager sets _message_in_process to False when the animation is done
-                self.parent.game_instance.render_manager.animation_manager.handleVanish(msg[1])
+                self.handleVanish(msg[1])
                     
             #========================================================================
             #
@@ -357,15 +357,16 @@ class AnimationManager():
     def buildSpotAnim(self, unit_model, pos, heading):
         return Sequence(Func(self.parent.showUnit, unit_model, pos, None)
                        ,Wait(0.2)
-                       ,Func(self.parent.unit_marker_renderer.setMarker, int(unit_model.id))
+                       #,Func(self.parent.unit_marker_renderer.setMarker, int(unit_model.id))
                        #,Func(self.interface.console.consoleOutput, 'Unit spotted!', utils.CONSOLE_SYSTEM_MESSAGE)
                        #,Func(self.interface.console.show)
                        )
     
     def buildDeleteAnim(self, unit_id):
         return Sequence(Func(self.parent.hideUnit, unit_id), 
-                        Wait(0.2),
-                        Func(self.parent.unit_marker_renderer.clearMarker, unit_id))
+                        Wait(0.2)
+                        #Func(self.parent.unit_marker_renderer.clearMarker, unit_id)
+                        )
     
     def buildDetachAnim(self, unit_id):
         return Sequence(Func(self.sgm.detachUnit, unit_id), Wait(0.2))
@@ -516,7 +517,7 @@ class AnimationManager():
     
     def handleVanish(self, unit_id):
         i = self.buildDeleteAnim(unit_id)
-        s = Sequence(i, Func(self.afterAnimHook))
+        s = Sequence(i)
         s.start()
         
     def handleSpot(self, unit):
@@ -530,7 +531,7 @@ class AnimationManager():
                      )
         heading = utils.getHeadingAngle(self.parent.parent.local_engine.units[unit['id']]['heading'])
         i = self.buildSpotAnim(spotted_unit_model, pos, heading)
-        s = Sequence(i, Func(self.afterAnimHook))
+        s = Sequence(i)
         s.start()        
         
     def handleNewTurn(self):
