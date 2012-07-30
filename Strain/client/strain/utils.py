@@ -48,7 +48,7 @@ BULLET_SPEED = 15
 #############################################################################
 ### LEGO MODEL DICTS AND PARAMS
 #############################################################################
-UNIT_SCALE = 0.4
+UNIT_SCALE = 0.6
 
 marine_anim_dict = {}
 marine_anim_dict['crouch'] = 'marine-crouch'
@@ -86,7 +86,7 @@ unit_type_dict['marine'] = marine_unit_types
 #############################################################################
 ### DoW2 MODEL DICTS AND PARAMS
 #############################################################################
-DOW_UNIT_SCALE = 0.15
+DOW_UNIT_SCALE = 0.21
 
 marine_anim_dict_dw2 = {}
 marine_anim_dict_dw2['crouch'] = 'dw/anims/idle_crouch01'

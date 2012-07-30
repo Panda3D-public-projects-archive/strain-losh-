@@ -11,8 +11,10 @@ class LevelRenderer():
         self.temp_node_floor = self.node_floor.attachNewNode('LevelRendererTempFloorNode')
         self.temp_node_wall = self.node_wall.attachNewNode('LevelRendererTempWallNode')
         self.ghost_node_wall = NodePath('LevelRendererGhostWallNode')
+        self.node_door = self.node.attachNewNode('LevelRendererDoorNode')   
         
         self.wall_dict = {}
+        self.door_dict = {}
         
         self.forcewall_tex_offset = 0
     
@@ -67,8 +69,12 @@ class LevelRenderer():
                     my_x= tile2_x
                     my_y=tile2_y
                     model = self.loadWallModel(val2.name, my_x, my_y, h, tile_size, zpos)
-                    self.wall_dict[(my_x, my_y, h)] = model
-                    model.reparentTo(self.ghost_node_wall)
+                    if val2.name == 'ClosedDoor' or val2.name == 'OpenedDoor':
+                        self.door_dict[(my_x, my_y, h)] = model
+                        model.reparentTo(self.node_door)
+                    else:
+                        self.wall_dict[(my_x, my_y, h)] = model
+                        model.reparentTo(self.ghost_node_wall)
         
         # Reparent all the models to main Level node
         self.redrawLights()
@@ -89,7 +95,7 @@ class LevelRenderer():
     
     def initializeFowTexture(self, node):
         self.fow_node = node
-        self.fow_coef = 16 
+        self.fow_coef = 16
         
         self.fowImage = PNMImage(self.maxX*self.fow_coef, self.maxY*self.fow_coef)
         self.fowImage.fill(.4)
@@ -126,6 +132,9 @@ class LevelRenderer():
         for child in self.ghost_node_wall.getChildren():
             child.setColorScale(0.3, 0.3, 0.3, 1.0)
         
+        for child in self.node_door.getChildren():
+            child.setColorScale(0.3, 0.3, 0.3, 1.0)
+        
         # Paint floor FoW
         for invisible_tile in tile_dict:
             if tile_dict[invisible_tile] != 0:                  
@@ -134,8 +143,12 @@ class LevelRenderer():
         # Paint wall FoW
         for wall in wall_dict:
             x,y,h = self.getWallPosition(wall[0], wall[1])
-            n = self.wall_dict[(x, y, h)]                
-            n.setColorScale(1,1,1,1) 
+            if self.wall_dict.has_key((x, y, h)):
+                n = self.wall_dict[(x, y, h)]                
+                n.setColorScale(1,1,1,1) 
+            elif self.door_dict.has_key((x, y, h)):
+                n = self.door_dict[(x, y, h)]                
+                n.setColorScale(1,1,1,1)
         self.fowTexture.load(self.fowImage)          
        
     def flattenNodes(self):
@@ -161,17 +174,29 @@ class LevelRenderer():
     
     def loadWallModel(self, type, x, y, h, tile_size, zpos):
         if type == 'Wall1' or type == 'Wall2' or type == 'HalfWall' or type == 'Ruin':
-            model = loader.loadModel("wall")
+            model = loader.loadModel("WallA")
             model.setScale(tile_size)
             model.setPos(x*tile_size, y*tile_size, zpos)
             model.setH(h)
-        elif type == 'OpenedDoor' or type == 'ClosedDoor':
-            model = loader.loadModel("door")
+        elif type == 'ClosedDoor':
+            model = loader.loadModel("DoorA")
             model.setScale(tile_size)
             model.setPos(x*tile_size, y*tile_size, zpos)
             model.setH(h)
-            model.setScale(0.2,1,1)
-            model.setColor(0.7,0.2,0.2,0.0)
+            frame = model.find("**/Frame*")
+            frame.setColor(1, 0, 0, 0)
+            door = model.find("**/Door*")
+            door.setColor(0.7,0.2,0.2,0.0)
+        elif type == 'OpenedDoor':
+            model = loader.loadModel("DoorA")
+            model.setScale(tile_size)
+            model.setPos(x*tile_size, y*tile_size, zpos)
+            model.setH(h)
+            frame = model.find("**/Frame*")
+            frame.setColor(1, 0, 0, 0)
+            door = model.find("**/Door*")
+            door.setColor(0.7,0.2,0.2,0.0) 
+            door.setPos(0, 0, -0.72)           
         elif type == 'ForceField':
             model = loader.loadModel("wall_fs")
             model.setScale(tile_size)
@@ -201,9 +226,9 @@ class LevelRenderer():
         #shade = ShadeModelAttrib.make(ShadeModelAttrib.MSmooth)
         #render.setAttrib(shade)
         dlight1 = DirectionalLight("dlight1")
-        dlight1.setColor(VBase4(0.4, 0.4, 0.4, 1.0))
+        dlight1.setColor(VBase4(0.7, 0.7, 0.7, 1.0))
         self.dlnp1 = self.node.attachNewNode(dlight1)
-        self.dlnp1.setHpr(0, -80, 0)
+        self.dlnp1.setHpr(0, -50, 0)
         self.node.setLight(self.dlnp1)
 
         alight = AmbientLight("alight")
