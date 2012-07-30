@@ -331,7 +331,7 @@ class Engine():
                     
             if self.use( unit ):
                 unit.use()
-                self.event_handler( (USE, unit) )
+                self.event_handler.addEvent( (USE, unit) )
             else:
                 return
                     
@@ -362,7 +362,7 @@ class Engine():
     def chat(self, msg, source, to_allies):
         sender = self.findPlayer( source )
         
-        self.event_handler( (CHAT, sender, msg, to_allies) )      
+        self.event_handler.addEvent( (CHAT, sender, msg, to_allies) )      
             
                 
     def loadArmyList(self):
