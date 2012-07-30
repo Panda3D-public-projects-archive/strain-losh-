@@ -1152,7 +1152,8 @@ class Engine():
 
     
     def pong( self, source, t ):
-        self.event_handler.addEvent( (PONG, source, t) )
+        plyr = self.findPlayer(source)
+        self.event_handler.addEvent( (PONG, plyr, t) )
         
 
     def error(self, msg, source):
