@@ -1157,7 +1157,8 @@ class Engine():
         
 
     def error(self, msg, source):
-        self.event_handler.addEvent( (ERROR, source, msg) )        
+        plyr = self.findPlayer(source)
+        self.event_handler.addEvent( (ERROR, plyr, msg) )        
 
 
 #-----------------------------------------------------------------------
