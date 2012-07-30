@@ -36,6 +36,11 @@ class EventHandler():
         #update all units that changed this session
         self.addUnitEvents()
         
+        #put header so client knows these are animation messages
+        for p in self.engine.players:
+            print self.events[p.id].insert(0, ANIMATION)
+        
+        
         #add events to db
         
         #send events to logged in clients
@@ -51,6 +56,10 @@ class EventHandler():
         for p in self.engine.players:
             self.events[p.id] = []
             
+    
+    def sendImmediately(self, player_list, msg):
+        for p in player_list:
+            self.engine.to_network.append( (p.id, msg) )
         
         
     
@@ -128,53 +137,57 @@ class EventHandler():
         elif event[0] == SHOOT:
             self.parseShootEvent(event)
 
+            
+        elif event[0] == LEVEL:
+            player = event[1]
+            self.events[player.id].append( (LEVEL, compileLevelWithDifferentGrid(self.engine.level, self.engine._grid_player[player.id]) ) )
+
+            
 
         elif event[0] == DEPLOYMENT:
             player = event[1]
             status = event[2]
             #send to all players
-            for p in self.engine.players:
-                self.events[p.id].append( (DEPLOYMENT, player.id, status) )
-            
+            self.sendImmediately(self.engine.players, (DEPLOYMENT, player.id, status) )
             
         elif event[0] == ENGINE_STATE:
-            for p in self.engine.players:
-                self.events[p.id].append( (ENGINE_STATE, compileState(self.engine, p)) )
-            
+            self.sendImmediately(self.engine.players, (ENGINE_STATE, compileState(self.engine, p)) )
             
         elif event[0] == NEW_TURN:
-            for p in self.engine.players:
-                self.events[p.id].append( (NEW_TURN, compileNewTurn(self.engine, p)) )
-            
-            
-        elif event[0] == LEVEL:
-            player = event[1]
-            self.events[player.id].append( (LEVEL, compileLevelWithDifferentGrid(self.engine.level, self.engine._grid_player[player.id]) ) )
+            self.sendImmediately(self.engine.players, (NEW_TURN, compileNewTurn(self.engine, p)))
             
             
         elif event[0] == INFO:
             player = event[1]
             message = event[2]
-            self.events[player.id].append( (INFO, message) )
+            self.sendImmediately( [player], (INFO, message) )
             
-            
-            
-            
+        elif event[0] == ERROR:
+            player = event[1]
+            message = event[2]
+            self.sendImmediately( [player], (ERROR, message) )
+
+        elif event[0] == PONG:
+            player = event[1]
+            message = event[2]
+            self.sendImmediately( [player], (PONG, message) )
+
+
         elif event[0] == CHAT:
             sender = event[1]
             message = event[2]
             to_allies = event[3]
             
-            for p in self.players:
-                if p == sender:
-                    continue
-                if to_allies:
-                    if p.team == sender.team:
-                        self.events[p.id].append( (CHAT, message, sender.name) )
-                else:                    
-                    self.events[p.id].append( (CHAT, message, sender.name) )
+            tmp_plyr_lst = self.engine.players[:]
+            tmp_plyr_lst.remove( sender )
+            
+            if to_allies:
+                for p in tmp_plyr_lst[:]:
+                    if p.team != sender.team:
+                        tmp_plyr_lst.remove( p )
             
             
+            self.sendImmediately( tmp_plyr_lst, (CHAT, message, sender.name) )
 
 
 
