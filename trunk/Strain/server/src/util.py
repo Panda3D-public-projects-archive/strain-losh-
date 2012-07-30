@@ -170,8 +170,6 @@ def compileEnemyUnit(unit):
     del ret['last_action']
     del ret['hp']
     del ret['ap']
-    del ret['move_dict']
-    del ret['shoot_dict']
     
     return ret
 
