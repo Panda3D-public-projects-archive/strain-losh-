@@ -24,30 +24,77 @@ class AnimationManager():
         self.parent.parent.parent.net_manager._message_in_process = False
     
     def createSequence(self, msg_list):
+        seq = Sequence()
+        unit_pos_dict = {}
         for msg in msg_list:
             #========================================================================
             #
             if msg[0] == MOVE:
                 self._message_in_process = True
                 # Animation manager sets _message_in_process to False when the animation is done
-                self.addMoveAnim(msg)
+                unit_id = msg[1]
+                tile = msg[2]
+                unit_model = self.parent.unit_renderer_dict[unit_id]
+                if unit_pos_dict.has_key(unit_id):
+                    start_pos = unit_pos_dict[unit_id][0]
+                    start_head = unit_pos_dict[unit_id][1]
+                else:
+                    start_pos = unit_model.model.getPos(render)
+                    start_head = unit_model.model.getH(render)
+                end_pos = Point3(utils.TILE_SIZE*(tile[0] + 0.5), utils.TILE_SIZE*(tile[1] + 0.5), utils.GROUND_LEVEL)
+                dummy_start = NodePath("dummy_start")
+                dummy_end = NodePath("dummy_end")
+                dummy_start.setPos(start_pos)
+                dummy_end.setPos(end_pos)
+                dummy_start.lookAt(dummy_end)
+                end_head = dummy_start.getH(render)
+            
+                interval_heading = unit_model.model.quatInterval(0.2, hpr=Point3(end_head, 0, 0), startHpr=Point3(start_head, 0, 0))
+                interval_movement = unit_model.node.posInterval(0.5, end_pos, startPos=start_pos)
+                parallel_move = Parallel(interval_movement, interval_heading)
+                unit_pos_dict[unit_id] = (end_pos, end_head)
+                seq.append(parallel_move)
+            elif msg[0] == ROTATE:
+                self._message_in_process = True
+                # Animation manager sets _message_in_process to False when the animation is done
+                unit_id = msg[1]
+                tile = msg[2]
+                unit_model = self.parent.unit_renderer_dict[unit_id]
+                if unit_pos_dict.has_key(unit_id):
+                    start_pos = unit_pos_dict[unit_id][0]
+                    start_head = unit_pos_dict[unit_id][1]
+                else:
+                    start_pos = unit_model.model.getPos(render)
+                    start_head = unit_model.model.getH(render)
+                end_pos = Point3(utils.TILE_SIZE*(tile[0] + 0.5), utils.TILE_SIZE*(tile[1] + 0.5), utils.GROUND_LEVEL)
+                                    
+                dummy_start = NodePath("dummy_start")
+                dummy_end = NodePath("dummy_end")
+                dummy_start.setPos(start_pos)
+                dummy_end.setPos(end_pos)
+                dummy_start.lookAt(dummy_end)
+                end_head = dummy_start.getH(render)
+            
+                interval_heading = unit_model.model.quatInterval(0.2, hpr=Point3(end_head, 0, 0), startHpr=Point3(start_head, 0, 0))
+                unit_pos_dict[unit_id] = (start_pos, end_head)
+                seq.append(interval_heading)
             #========================================================================
             #
             elif msg[0] == UNIT:
                 self._message_in_process = True            
                 unit = msg[1]
-                old_x = self.parent.game_instance.local_engine.units[unit['id']]['pos'][0]
-                old_y = self.parent.game_instance.local_engine.units[unit['id']]['pos'][1]
-                self.parent.game_instance.local_engine.refreshUnit(unit)
-                if self.parent.game_instance.local_engine.isThisMyUnit(unit['id']):
-                    self.parent.game_instance.interface.refreshUnitInfo(unit['id'])          
-                if self.parent.game_instance.sel_unit_id == unit['id']:
-                    self.parent.game_instance.interface.processUnitData( unit['id'] )                  
-                    self.parent.game_instance.interface.printUnitData( unit['id'] )
-                    self.parent.game_instance.movement.calcUnitAvailMove( unit['id'] )
-                    self.parent.game_instance.render_manager.refreshEnemyUnitMarkers()
-                    if unit['pos'][0] != old_x or unit['pos'][1] != old_y or unit['last_action']=='use':
-                        self.parent.game_instance.render_manager.refreshFow()
+                old_x = self.parent.parent.local_engine.units[unit['id']]['pos'][0]
+                old_y = self.parent.parent.local_engine.units[unit['id']]['pos'][1]
+                self.parent.parent.local_engine.refreshUnit(unit)
+                if self.parent.parent.local_engine.isThisMyUnit(unit['id']):
+                    self.parent.parent.interface.refreshUnitInfo(unit['id'])          
+                if self.parent.parent.sel_unit_id == unit['id']:
+                    self.parent.parent.interface.processUnitData( unit['id'] )                  
+                    self.parent.parent.interface.printUnitData( unit['id'] )
+                    self.parent.parent.movement.calcUnitAvailMove( unit['id'] )
+                    self.parent.parent.render_manager.refreshEnemyUnitMarkers()
+                    #if unit['pos'][0] != old_x or unit['pos'][1] != old_y or unit['last_action']=='use':
+                    #    self.parent.parent.render_manager.refreshFow()
                     #self.parent.sgm.playUnitStateAnim( unit['id'] )
                 self._message_in_process = False
             #========================================================================
@@ -55,7 +102,7 @@ class AnimationManager():
             elif msg[0] == SHOOT:
                 self._message_in_process = True
                 # Animation manager sets _message_in_process to False when the animation is done
-                self.parent.game_instance.render_manager.animation_manager.handleShoot(msg[1])       
+                self.parent.parent.render_manager.animation_manager.handleShoot(msg[1])       
             #========================================================================
             #
             elif msg[0] == SPOT:
@@ -92,21 +139,21 @@ class AnimationManager():
             #========================================================================
             #
             elif msg[0] == LEVEL:
-                self.parent.game_instance.local_engine.old_level = self.parent.game_instance.local_engine.level
+                self.parent.parent.local_engine.old_level = self.parent.parent.local_engine.level
                 level = msg[1]
-                for unit in self.parent.game_instance.local_engine.units.itervalues():
+                for unit in self.parent.parent.local_engine.units.itervalues():
                     level.putUnitDict(unit)
-                self.parent.game_instance.local_engine.level = level
+                self.parent.parent.local_engine.level = level
                 # if our enemy opens doors, we need to update visibility
                 # enemy's visibility gets updated when he gets UNIT message
-                if self.parent.game_instance.player_id == self.parent.game_instance.turn_player and self.parent.game_instance.sel_unit_id != None:
-                    self.parent.game_instance.movement.calcUnitAvailMove( self.parent.game_instance.sel_unit_id )
+                if self.parent.parent.player_id == self.parent.parent.turn_player and self.parent.parent.sel_unit_id != None:
+                    self.parent.parent.movement.calcUnitAvailMove( self.parent.parent.sel_unit_id )
                     #self.parent.sgm.showVisibleEnemies( self.parent.sel_unit_id )
-                self.parent.game_instance.render_manager.refreshFow()
+                #self.parent.parent.render_manager.refreshFow()
             #========================================================================
             #
             elif msg[0] == USE:
-                self.parent.game_instance.render_manager.unit_renderer_dict[msg[1]].model.play('use')    
+                self.parent.unit_renderer_dict[msg[1]].model.play('use')    
             #========================================================================
             #
             elif msg[0] == TAUNT:
@@ -124,12 +171,7 @@ class AnimationManager():
                 self.log.error("Unknown message Type: %s", msg[0])
                 self._message_in_process = False
                     
-            self.parent.game_instance.render_manager.animation_manager.finishEventSequence()
-    
-    def initEventSequence(self):
-        self._anim_in_process = True
-        self.event_sequence = Sequence()
-        self.last_unit_status = (None, None)
+        seq.start()
         
     def addMoveAnim(self, msg):
         unit_id = msg[1]
@@ -154,10 +196,7 @@ class AnimationManager():
         parallel_move = Parallel(interval_movement, interval_heading)
         self.last_unit_status = (end_pos, end_h)
         self.event_sequence.append(parallel_move)
-        
-    def finishEventSequence(self):
-        self.event_sequence.append(Func(self.setAnimProcessFalse))
-        self.event_sequence.start()
+    
     
     def setAnimProcessFalse(self):
         self._anim_in_process = False

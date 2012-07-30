@@ -86,5 +86,5 @@ class Tester(DirectObject.DirectObject):
         self.level_renderer.switchNodes()
         self.level_renderer.flattenNodes()
 
-tester = Tester(level_name='../server/data/levels/base2.txt')
+tester = Tester(level_name='../server/data/levels/level2.txt')
 run()
