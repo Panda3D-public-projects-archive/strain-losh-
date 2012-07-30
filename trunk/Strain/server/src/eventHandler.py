@@ -151,10 +151,12 @@ class EventHandler():
             self.sendImmediately(self.engine.players, (DEPLOYMENT, player.id, status) )
             
         elif event[0] == ENGINE_STATE:
-            self.sendImmediately(self.engine.players, (ENGINE_STATE, compileState(self.engine, p)) )
+            for p in self.engine.players:
+                self.sendImmediately( [p], (ENGINE_STATE, compileState(self.engine, p)) )
             
         elif event[0] == NEW_TURN:
-            self.sendImmediately(self.engine.players, (NEW_TURN, compileNewTurn(self.engine, p)))
+            for p in self.engine.players:
+                self.sendImmediately( [p], (NEW_TURN, compileNewTurn(self.engine, p)))
             
             
         elif event[0] == INFO:
