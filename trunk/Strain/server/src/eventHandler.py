@@ -38,7 +38,8 @@ class EventHandler():
         
         #put header so client knows these are animation messages
         for p in self.engine.players:
-            print self.events[p.id].insert(0, ANIMATION)
+            if self.events[p.id]:
+                self.events[p.id].insert(0, ANIMATION)
         
         
         #add events to db
