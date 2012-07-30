@@ -254,6 +254,7 @@ class Network:
             else:
                 self.broadcastMsg(msg)
         except:
+            print "source:", source, "msg:", msg 
             self.notify.critical("Could not send message to clients, reason : %s", sys.exc_info()[1])
             return
         
