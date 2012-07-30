@@ -18,6 +18,8 @@ from unit import Unit
 loadPrcFile("./config/config.prc")
 ground_level = 0
 tile_size = 1.
+base.setFrameRateMeter(True)
+
 
 class Tester(DirectObject.DirectObject):
     def __init__(self, level_name):
@@ -31,11 +33,12 @@ class Tester(DirectObject.DirectObject):
         self.id_counter = 1
         
         self.plane = Plane(Vec3(0, 0, 1), Point3(0, 0, ground_level))
-        base.accept('mouse2', self.toggleUnit)
+        base.accept('mouse1', self.toggleUnit)
         base.accept('o', render.analyze)
         base.accept('i', render.ls)
-        base.accept('x', self.level_renderer.switchNodes)
         base.accept('c', self.displayLos)
+        
+        self.displayLos()
 
     def toggleUnit(self):
         if base.mouseWatcherNode.hasMouse():
@@ -65,7 +68,6 @@ class Tester(DirectObject.DirectObject):
                     unit_dict = {}
                     unit_dict['pos'] = (int(pos3d.x), int(pos3d.y))
                     self.units.append(unit_dict)
-        print self.units
 
     def getInvisibleTiles(self):
         t = time.clock()
@@ -80,8 +82,8 @@ class Tester(DirectObject.DirectObject):
         return l
         
     def displayLos(self):
-        self.level_renderer.switchNodes()
         self.level_renderer.updateLevelLos(self.getInvisibleTiles(), self.getInvisibleWalls())
+        self.level_renderer.switchNodes()
         self.level_renderer.flattenNodes()
 
 tester = Tester(level_name='../server/data/levels/base2.txt')
