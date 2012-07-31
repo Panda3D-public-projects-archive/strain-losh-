@@ -24,9 +24,11 @@ class RenderManager():
         self.animation_manager = AnimationManager(self)
         
         self.unit_renderer_dict = {}
+        
                 
     def refresh(self):
         """Refresh everything from local copy of server data."""
+        self.level_renderer.cleanup()
         self.level_renderer.create(self.parent.local_engine.level, self.parent.local_engine.level.maxX, self.parent.local_engine.level.maxY, TILE_SIZE, GROUND_LEVEL)
         self.grid_renderer.redraw(self.parent.local_engine.level.maxX, self.parent.local_engine.level.maxY, TILE_SIZE, GROUND_LEVEL)
         self.coord_renderer.redraw(self.parent.local_engine.level.maxX, self.parent.local_engine.level.maxY, TILE_SIZE, GROUND_LEVEL)
