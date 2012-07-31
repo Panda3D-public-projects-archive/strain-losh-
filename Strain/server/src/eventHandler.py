@@ -37,21 +37,18 @@ class EventHandler():
         self.addUnitEvents()
         
         #put header so client knows these are animation messages
-        for p in self.engine.players:
-            if self.events[p.id]:
-                self.events[p.id].insert(0, ANIMATION)
+        for p_id in self.events:
+            if self.events[p_id]: 
+                self.events[p_id].insert(0, ANIMATION)
         
         
         #add events to db
         
         #send events to logged in clients
-        for p in self.engine.players:
-            self.engine.to_network.append( (p.id, self.events[p.id]) )
+        for p_id in self.events:
+            if self.events[p_id]:
+                self.engine.to_network.append( (p_id, self.events[p_id]) )
     
-
-        for p in self.engine.players:
-            print "name:",p.name, self.events[p.id]
-
 
         #clear all lists
         for p in self.engine.players:
@@ -152,8 +149,8 @@ class EventHandler():
             self.sendImmediately(self.engine.players, (DEPLOYMENT, player.id, status) )
             
         elif event[0] == ENGINE_STATE:
-            for p in self.engine.players:
-                self.sendImmediately( [p], (ENGINE_STATE, compileState(self.engine, p)) )
+            player = event[1]
+            self.sendImmediately( [player], (ENGINE_STATE, compileState(self.engine, player)) )
             
         elif event[0] == NEW_TURN:
             for p in self.engine.players:

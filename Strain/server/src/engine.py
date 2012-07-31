@@ -547,7 +547,8 @@ class Engine():
                 unit.newTurn( self.turn )
                 
         #send ENGINE_STATE to all players
-        self.event_handler.addEvent( (ENGINE_STATE,) )
+        for p in self.players:
+            self.event_handler.addEvent( (ENGINE_STATE, p) )
         
         #send NEW_TURN to all players
         self.event_handler.addEvent( (NEW_TURN,) )
