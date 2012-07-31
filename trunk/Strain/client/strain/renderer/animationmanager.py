@@ -29,7 +29,7 @@ class AnimationManager():
         for msg in msg_list:
             #========================================================================
             #
-            if msg[0] == MOVE:
+            if msg[0] == MOVE or msg[0] == ROTATE:
                 self._message_in_process = True
                 # Animation manager sets _message_in_process to False when the animation is done
                 unit_id = msg[1]
@@ -50,34 +50,15 @@ class AnimationManager():
                 end_head = dummy_start.getH(render)
             
                 interval_heading = unit_model.model.quatInterval(0.2, hpr=Point3(end_head, 0, 0), startHpr=Point3(start_head, 0, 0))
-                interval_movement = unit_model.node.posInterval(0.5, end_pos, startPos=start_pos)
-                parallel_move = Parallel(interval_movement, interval_heading)
-                unit_pos_dict[unit_id] = (end_pos, end_head)
-                seq.append(parallel_move)
-            elif msg[0] == ROTATE:
-                self._message_in_process = True
-                # Animation manager sets _message_in_process to False when the animation is done
-                unit_id = msg[1]
-                tile = msg[2]
-                unit_model = self.parent.unit_renderer_dict[unit_id]
-                if unit_pos_dict.has_key(unit_id):
-                    start_pos = unit_pos_dict[unit_id][0]
-                    start_head = unit_pos_dict[unit_id][1]
+                if msg[0] == MOVE:
+                    interval_movement = unit_model.node.posInterval(0.5, end_pos, startPos=start_pos)
+                    anim = Parallel(interval_movement, interval_heading)
+                    unit_pos_dict[unit_id] = (end_pos, end_head)
                 else:
-                    start_pos = unit_model.model.getPos(render)
-                    start_head = unit_model.model.getH(render)
-                end_pos = Point3(utils.TILE_SIZE*(tile[0] + 0.5), utils.TILE_SIZE*(tile[1] + 0.5), utils.GROUND_LEVEL)
-                                    
-                dummy_start = NodePath("dummy_start")
-                dummy_end = NodePath("dummy_end")
-                dummy_start.setPos(start_pos)
-                dummy_end.setPos(end_pos)
-                dummy_start.lookAt(dummy_end)
-                end_head = dummy_start.getH(render)
-            
-                interval_heading = unit_model.model.quatInterval(0.2, hpr=Point3(end_head, 0, 0), startHpr=Point3(start_head, 0, 0))
-                unit_pos_dict[unit_id] = (start_pos, end_head)
-                seq.append(interval_heading)
+                    anim = interval_heading
+                    unit_pos_dict[unit_id] = (start_pos, end_head)
+                
+                seq.append(anim)
             #========================================================================
             #
             elif msg[0] == UNIT:
@@ -172,30 +153,6 @@ class AnimationManager():
                 self._message_in_process = False
                     
         seq.start()
-        
-    def addMoveAnim(self, msg):
-        unit_id = msg[1]
-        tile = msg[2]
-        unit_model = self.parent.unit_renderer_dict[unit_id]
-        start_pos = self.last_unit_status[0]
-        start_h = self.last_unit_status[1]
-        if start_pos == None:
-            start_pos = unit_model.model.getPos(render)
-        if start_h == None:
-            start_h = unit_model.model.getH(render)
-        end_pos = Point3(utils.TILE_SIZE*(tile[0] + 0.5), utils.TILE_SIZE*(tile[1] + 0.5), utils.GROUND_LEVEL)
-        dummy_start = NodePath("dummy_start")
-        dummy_end = NodePath("dummy_end")
-        dummy_start.setPos(start_pos)
-        dummy_end.setPos(end_pos)
-        dummy_start.lookAt(dummy_end)
-        end_h = dummy_start.getH(render)
-        
-        interval_heading = unit_model.model.quatInterval(0.2, hpr=Point3(end_h, 0, 0), startHpr=Point3(start_h, 0, 0))
-        interval_movement = unit_model.node.posInterval(0.5, end_pos, startPos=start_pos)
-        parallel_move = Parallel(interval_movement, interval_heading)
-        self.last_unit_status = (end_pos, end_h)
-        self.event_sequence.append(parallel_move)
     
     
     def setAnimProcessFalse(self):

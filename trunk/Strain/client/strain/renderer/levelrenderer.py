@@ -4,21 +4,24 @@ import random
 class LevelRenderer():
     def __init__(self, parent, parent_node):
         self.parent = parent
-        self.parent_node = parent_node
+        self.parent_node = parent_node  
+        
+        self.wall_dict = {}
+        self.door_dict = {}
+        
+        self.forcewall_tex_offset = 0
+        
+        self._initialized = 0
+    
+    def create(self, level, x, y, tile_size, zpos):
         self.node = self.parent_node.attachNewNode('LevelRendererNode')
         self.node_floor = self.node.attachNewNode('LevelRendererFloorNode')
         self.node_wall = self.node.attachNewNode('LevelRendererWallNode')        
         self.temp_node_floor = self.node_floor.attachNewNode('LevelRendererTempFloorNode')
         self.temp_node_wall = self.node_wall.attachNewNode('LevelRendererTempWallNode')
         self.ghost_node_wall = NodePath('LevelRendererGhostWallNode')
-        self.node_door = self.node.attachNewNode('LevelRendererDoorNode')   
-        
-        self.wall_dict = {}
-        self.door_dict = {}
-        
-        self.forcewall_tex_offset = 0
-    
-    def create(self, level, x, y, tile_size, zpos):        
+        self.node_door = self.node.attachNewNode('LevelRendererDoorNode') 
+                        
         self.level = level
         self.maxX = x
         self.maxY = y        
@@ -88,6 +91,8 @@ class LevelRenderer():
         
         # Initialize fow texture       
         self.initializeFowTexture(self.temp_node_floor)
+        
+        self._initialized = 1
     
     def switchNodes(self):
         self.temp_node_wall.removeNode() 
@@ -243,5 +248,12 @@ class LevelRenderer():
         return task.cont
     
     def cleanup(self):
-        taskMgr.remove('ForceWall_offset_Task')
-        self.node.removeNode()
+        if self._initialized == 1:
+            taskMgr.remove('ForceWall_offset_Task')
+            self.node.setLightOff(self.alnp)
+            self.node.setLightOff(self.dlnp1)
+            self.node.removeNode()
+            self._initialized = 0
+        
+    def __del__(self):
+        print("Level deleted!")
