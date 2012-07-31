@@ -28,10 +28,10 @@ class Weapon():
         
         #ranged weapon
         if self.range:
-            tmp_event = (SHOOT, self.owner, target.pos, self)
+            tmp_event = (SHOOT, self.owner.id, target.pos, self.id)
         #melee weapon
         else:
-            tmp_event = (MELEE, self.owner, target.pos, self)
+            tmp_event = (MELEE, self.owner.id, target.pos, self.id)
 
 
         res_list = []

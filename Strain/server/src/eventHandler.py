@@ -213,8 +213,8 @@ class EventHandler():
     def parseShootEventForPlayer(self, shoot_event, player): 
         tmp_shoot_event = copy.deepcopy(shoot_event)
 
-        shoot, shooter, target_pos, wpn, res_list = tmp_shoot_event
-        shooter_id = shooter.id
+        shoot, shooter_id, target_pos, wpn_id, res_list = tmp_shoot_event
+        shooter = self.engine.units[shooter_id]
         
         self.units_changed[shooter] = 1
         
@@ -222,19 +222,19 @@ class EventHandler():
         if not self.playerKnowsAbout(player, shooter):
             shooter_id = -1
             target_pos = None
-            if wpn.special == SPECIAL_SILENCED:
-                return None
             #TODO: krav: hearing range here
             
         #go through list of targets and if we dont see the target, remove it from the list
         for effect in res_list[:]:
-            target = effect[1]
+            target_id = effect[1]
+            target = self.engine.units[target_id]
+            
             self.units_changed[target] = 1
             
             if not self.playerKnowsAbout(player, target):
                     res_list.remove( effect )
                 
-        return (shoot, shooter_id, target_pos, wpn.id, res_list)
+        return (shoot, shooter_id, target_pos, wpn_id, res_list)
     
     
     

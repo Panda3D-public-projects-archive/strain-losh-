@@ -8,7 +8,7 @@
 	</player>
 
 	<player name="Blue" team = "2" id="0">
-		<unit x="3" y="10" type="marine_sergeant"/>
+		<unit x="3" y="4" type="marine_sergeant"/>
 		<unit x="2" y="10" type="marine_standard"/> 	 	
 	</player>
 <!-- 
