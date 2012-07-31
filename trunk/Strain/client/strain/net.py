@@ -65,29 +65,30 @@ class Net():
             # Msg received is now a session - a list of events which we need to parse one by one        
             self.parent.game_instance.render_manager.animation_manager.createSequence(msg[1:])               
         elif msg[0] == ENGINE_STATE:
-                self._message_in_process = True      
-                # Set important game instance parameters
-                self.parent.game_instance.turn_number = msg[1]['turn'] 
-                self.parent.game_instance.turn_player = msg[1]['active_player_id']                       
-                # Update local copy of engine data
-                self.parent.game_instance.local_engine.level = pickle.loads(msg[1]['level'])
-                self.parent.game_instance.local_engine.players = pickle.loads(msg[1]['players'])
-                self.parent.game_instance.local_engine.units = pickle.loads(msg[1]['units'])
-                self.parent.game_instance.local_engine.inactive_units = pickle.loads(msg[1]['dead_units'])
-                # Update level dynamic lists for accurate calculation of walkable tiles
-                self.parent.game_instance.local_engine.refreshLevelUnitDict()          
+            self._message_in_process = True      
+            # Set important game instance parameters
+            self.parent.game_instance.turn_number = msg[1]['turn'] 
+            self.parent.game_instance.turn_player = msg[1]['active_player_id']                       
+            # Update local copy of engine data
+            self.parent.game_instance.local_engine.level = pickle.loads(msg[1]['level'])
+            self.parent.game_instance.local_engine.players = pickle.loads(msg[1]['players'])
+            self.parent.game_instance.local_engine.units = pickle.loads(msg[1]['units'])
+            self.parent.game_instance.local_engine.inactive_units = pickle.loads(msg[1]['dead_units'])
+            # Update level dynamic lists for accurate calculation of walkable tiles
+            self.parent.game_instance.local_engine.refreshLevelUnitDict()          
+            
+            # Update renderers
+            self.parent.game_instance.render_manager.refresh()
+            
+            # Update interface
+            self.parent.game_instance.interface.refreshStatusBar()
+            for unit in self.parent.game_instance.local_engine.units.itervalues():
+                if unit['owner_id'] == self.parent.game_instance.player_id:
+                    self.parent.game_instance.interface.refreshUnitInfo(unit['id']) 
+            #self.parent.sgm.level_model.setInvisibleTilesInThread()              
+
+            self._message_in_process = False
                 
-                # Update renderers
-                self.parent.game_instance.render_manager.refresh()
-                
-                # Update interface
-                self.parent.game_instance.interface.refreshStatusBar()
-                for unit in self.parent.game_instance.local_engine.units.itervalues():
-                    if unit['owner_id'] == self.parent.game_instance.player_id:
-                        self.parent.game_instance.interface.refreshUnitInfo(unit['id']) 
-                #self.parent.sgm.level_model.setInvisibleTilesInThread()              
-    
-                self._message_in_process = False
         elif msg[0] == NEW_TURN:                  
             self._message_in_process = True
             # Set important game instance parameters
@@ -112,6 +113,7 @@ class Net():
             #self.parent.sgm.level_model.setInvisibleTilesInThread()
             # Animation manager sets _message_in_process to False when the animation is done
             self.parent.game_instance.render_manager.animation_manager.handleNewTurn()
+            self._message_in_process = False
         else:
             None
     
