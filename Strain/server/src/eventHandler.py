@@ -65,6 +65,7 @@ class EventHandler():
         
         for unit in self.units_changed:
             for p in self.engine.players:
+                
                 #sendToOwnerAndAllies
                 if p == unit.owner or p.team == unit.owner.team:
                     self.events[p.id].append( (UNIT, compileUnit(unit)) )
@@ -204,9 +205,9 @@ class EventHandler():
             tmp_event = self.parseShootEventForPlayer(event, p)
             if event:
                 if overwatch:
-                    self.events[p.id] = (OVERWATCH,) + tmp_event
+                    self.events[p.id].append( (OVERWATCH,) + tmp_event )
                 else:
-                    self.events[p.id] = tmp_event
+                    self.events[p.id].append( tmp_event )
 
 
 
