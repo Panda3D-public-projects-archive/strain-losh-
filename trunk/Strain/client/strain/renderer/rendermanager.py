@@ -7,6 +7,7 @@ from strain.renderer.coordrenderer import CoordRenderer
 from strain.renderer.shadermanager import ShaderManager
 from strain.renderer.unitmarkerrenderer import UnitMarkerRenderer
 from strain.renderer.animationmanager import AnimationManager
+from strain.share import *
 from strain.utils import TILE_SIZE, GROUND_LEVEL
 
 class RenderManager():    
@@ -43,6 +44,11 @@ class RenderManager():
         
         self.level_renderer.node.setShaderAuto()
     
+    def refreshFow(self):
+        self.level_renderer.updateLevelLos(self.parent.local_engine.getInvisibleTiles(), self.parent.local_engine.getInvisibleWalls())
+        self.level_renderer.switchNodes()
+        self.level_renderer.flattenNodes()
+    
     def refreshEnemyUnitMarkers(self):
         for unit_id in self.parent.local_engine.units:
             if self.parent.local_engine.isThisEnemyUnit(unit_id):
@@ -78,6 +84,7 @@ class RenderManager():
         
     def detachUnit(self, unit_id):
         unit_renderer = self.unit_renderer_dict[unit_id] 
-        unit_renderer.node.detachNode()        
+        unit_renderer.node.detachNode()     
         
+
         

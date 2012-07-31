@@ -13,18 +13,13 @@ class AnimationManager():
     
     def beforeAnimHook(self):
         self._anim_in_process = True
-        self.parent.parent.movement.deleteUnitAvailMove()
-        #self.sgm.hideVisibleEnemies()
-        #for u in self.sgm.unit_np_dict.itervalues():
-        #    u.clearTargeted()
-        #self.movement.hovered_unit_id = None
     
     def afterAnimHook(self):     
         self._anim_in_process = False
-        self.parent.parent.parent.net_manager._message_in_process = False
     
     def createSequence(self, msg_list):
-        seq = Sequence()
+        animation = Sequence()
+        animation.append(Func(self.beforeAnimHook))
         unit_pos_dict = {}
         for msg in msg_list:
             #========================================================================
@@ -58,11 +53,10 @@ class AnimationManager():
                     anim = interval_heading
                     unit_pos_dict[unit_id] = (start_pos, end_head)
                 
-                seq.append(anim)
+                animation.append(anim)
             #========================================================================
             #
-            elif msg[0] == UNIT:
-                self._message_in_process = True            
+            elif msg[0] == UNIT:          
                 unit = msg[1]
                 old_x = self.parent.parent.local_engine.units[unit['id']]['pos'][0]
                 old_y = self.parent.parent.local_engine.units[unit['id']]['pos'][1]
@@ -74,10 +68,9 @@ class AnimationManager():
                     self.parent.parent.interface.printUnitData( unit['id'] )
                     self.parent.parent.movement.calcUnitAvailMove( unit['id'] )
                     self.parent.parent.render_manager.refreshEnemyUnitMarkers()
-                    #if unit['pos'][0] != old_x or unit['pos'][1] != old_y or unit['last_action']=='use':
-                    #    self.parent.parent.render_manager.refreshFow()
+                    if unit['pos'][0] != old_x or unit['pos'][1] != old_y or unit['last_action']=='use':
+                        animation.append(Func(self.parent.parent.render_manager.refreshFow))
                     #self.parent.sgm.playUnitStateAnim( unit['id'] )
-                self._message_in_process = False
             #========================================================================
             #
             elif msg[0] == SHOOT:
@@ -100,15 +93,6 @@ class AnimationManager():
                 self._message_in_process = True            
                 # Animation manager sets _message_in_process to False when the animation is done
                 self.handleVanish(msg[1])
-                    
-            #========================================================================
-            #
-            elif msg[0] == ERROR:
-                return
-                self._message_in_process = True            
-                self.parent.interface.console.consoleOutput(str(msg[1]), utils.CONSOLE_SYSTEM_ERROR)
-                self.parent.interface.console.show()
-                self._message_in_process = False
             #========================================================================
             #
             elif msg[0] == CHAT:
@@ -151,8 +135,9 @@ class AnimationManager():
                 self._message_in_process = True
                 self.log.error("Unknown message Type: %s", msg[0])
                 self._message_in_process = False
-                    
-        seq.start()
+        
+        animation.append(Func(self.afterAnimHook))            
+        animation.start()
     
     
     def setAnimProcessFalse(self):
