@@ -123,9 +123,8 @@ class Network:
 
     
     def handshake( self, connection ):
-        #get socket and set it to non blocking
-        s = connection.getSocket()
-        s.SetNonBlocking()
+
+        s = connection.getSocket()        
         
         if self.getData(s, 3) != 'LOSH?':
             s.SendData("Wrong server!")
