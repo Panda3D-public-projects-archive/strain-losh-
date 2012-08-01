@@ -103,6 +103,12 @@ class ClientMsg:
         s = ClientMsg.myConnection.getSocket()
         s.SetNonBlocking()
         
+        ClientMsg.myConnection.setMaxSegment( 50000 )
+        ClientMsg.myConnection.setRecvBufferSize( 50000 )
+        ClientMsg.myConnection.setSendBufferSize( 50000 )
+        ClientMsg.myConnection.setKeepAlive( 1 )
+        
+        
         s.SendData('LOSH?')
         msg = ClientMsg.getData(s, 2)
         if not msg:
