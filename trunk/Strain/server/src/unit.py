@@ -5,7 +5,8 @@ import armour
 import math
 import engine
 from server_messaging import *
-from strain.share import *
+from share import *
+from utils import *
 
 #TODO: ovo je kopirano u interface.py
 HEADING_NONE      = 0
@@ -89,11 +90,11 @@ class Unit():
                 
         #face opponent 
         if self.rotate( target.pos ):
-            self.engine.event_handler.addEvent( (ROTATE, self, self.heading) )
+            self.engine.event_handler.addEvent( (ROTATE, self, getHeadingTile(self.heading) ) )
             
         #rotate opponent to us
         if target.rotate( self.pos ):
-            self.engine.event_handler.addEvent( (ROTATE, target, target.heading) )
+            self.engine.event_handler.addEvent( (ROTATE, target, getHeadingTile(target.heading) ) )
          
         self.last_action = 'melee'
             
