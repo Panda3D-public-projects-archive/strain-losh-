@@ -227,7 +227,8 @@ class Engine():
                         
         elif( msg[0] == PING ):
             #print "ping: %2.2fms" % ((time.time() - msg[1]) * 1000)
-            self.pong( source, msg[1] )            
+            self.pong( source, msg[1] )      
+            return      
                         
         elif( msg[0] == UNDEFINED_MSG_1 ):
             self.error("Engine is shutting down")
