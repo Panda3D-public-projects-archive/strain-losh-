@@ -134,7 +134,7 @@ class Unit():
         #we already checked if target is in front, if this is overwatch
         if not overwatch:
             if self.rotate( target.pos ):
-                self.engine.event_handler.addEvent( (ROTATE, self, self.heading) )
+                self.engine.event_handler.addEvent( (ROTATE, self, getHeadingTile(self.heading) ) )
 
         #ok everything checks out, we can do the actual shooting                        
         self.last_action = 'shoot'
