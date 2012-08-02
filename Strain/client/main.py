@@ -112,7 +112,7 @@ class AppFSM(FSM.FSM):
         
     def enterContinueGame(self):
         from strain.gameinstance import GameInstance
-        self.parent.game_instance = GameInstance(self.parent, 'Continue', 241)
+        self.parent.game_instance = GameInstance(self.parent, 'Continue', 243)
         
     
     def exitContinueGame(self):
