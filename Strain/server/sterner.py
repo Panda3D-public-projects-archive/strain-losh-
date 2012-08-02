@@ -327,11 +327,11 @@ class Sterner:
                 
         elif message[0] == ENTER_GAME:
             game_id = message[1]
-            print "stavio unutra"
+
             player_id = self.getIdFromConnection(connection)
             self.logged_in_players[player_id] = (connection, game_id)
             
-            self.msgs4engines.append( (game_id, ENTER_GAME) )
+            self.msgs4engines.append( (game_id, player_id, ENTER_GAME, game_id) )
             return
                 
                 
