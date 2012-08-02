@@ -169,11 +169,13 @@ class Engine():
     def playerEntered(self, source):
         
         #player has entered this game, send him all his messages from db
-        msgs = self.db_api.getGamePlayerEvents( self.game_id, source)
+        #msgs = self.db_api.getGamePlayerEvents( self.game_id, source)
         
-        for m in msgs:
-            print "MSG:",pickle.loads(m[2])
-            self.to_network.append( (source, pickle.loads(m[2])) )
+        #for m in msgs:
+        #    print "MSG:",pickle.loads(m[2])
+        #    self.to_network.append( (source, pickle.loads(m[2])) )
+        msg = (ENGINE_STATE, compileState(self.engine, p))
+        self.engine.to_network.append( (source, msg) )
         
         pass
 
