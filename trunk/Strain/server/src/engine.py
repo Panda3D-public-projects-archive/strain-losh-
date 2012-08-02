@@ -320,6 +320,7 @@ class Engine():
                 unit.overwatch = not unit.overwatch
             else:
                 self.error("Not enough AP for overwatch.", source)
+                return
 
         elif param == SET_UP:
             if not unit.hasHeavyWeapon():
