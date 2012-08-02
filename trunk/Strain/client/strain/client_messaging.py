@@ -294,7 +294,7 @@ class ClientMsg:
     @staticmethod
     def enterGame( game_id ):
         ClientMsg.game_id = game_id
-        ClientMsg._sendMsg( (ENTER_GAME, game_id), True )
+        ClientMsg._sendMsg( (STERNER_ID, ENTER_GAME, game_id), True )
         
         
     @staticmethod
