@@ -174,8 +174,8 @@ class Engine():
         #for m in msgs:
         #    print "MSG:",pickle.loads(m[2])
         #    self.to_network.append( (source, pickle.loads(m[2])) )
-        msg = (ENGINE_STATE, compileState(self.engine, p))
-        self.engine.to_network.append( (source, msg) )
+        msg = (ENGINE_STATE, compileState(self, self.findPlayer(source)))
+        self.to_network.append( (source, msg) )
         
         pass
 
