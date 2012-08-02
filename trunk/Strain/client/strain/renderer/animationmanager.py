@@ -69,7 +69,7 @@ class AnimationManager():
                     self.parent.parent.interface.processUnitData( unit['id'] )                  
                     self.parent.parent.interface.printUnitData( unit['id'] )
                     self.parent.parent.movement.calcUnitAvailMove( unit['id'] )
-                    self.parent.parent.render_manager.refreshEnemyUnitMarkers()
+                    #self.parent.parent.render_manager.refreshEnemyUnitMarkers()
                     if unit['pos'][0] != old_x or unit['pos'][1] != old_y or unit['last_action']=='use':
                         animation.append(Func(self.parent.parent.render_manager.refreshFow))
                     #self.parent.sgm.playUnitStateAnim( unit['id'] )
@@ -109,14 +109,14 @@ class AnimationManager():
                 unit = msg[1]
                 self.parent.parent.local_engine.units[unit['id']] = unit
                 # This is the first time we see this unit, fill out starting variables for move and rotate actions
-                spotted_unit_model = self.parent.loadUnit(unit['id'])
+                spotted_unit_model = self.parent.loadUnit(unit['id'], False)
         
                 pos = Point3(utils.TILE_SIZE*(self.parent.parent.local_engine.units[unit['id']]['pos'][0] + 0.5), 
                              utils.TILE_SIZE*(self.parent.parent.local_engine.units[unit['id']]['pos'][1] + 0.5),
                              utils.GROUND_LEVEL
                              )
                 heading = utils.getHeadingAngle(self.parent.parent.local_engine.units[unit['id']]['heading'])
-                animation.append(Func(self.parent.showUnit, spotted_unit_model, pos, heading))
+                animation.append(Func(self.parent.showUnit, spotted_unit_model, pos, None))
 
                 self.parent.parent.local_engine.level.putUnitDict(msg[1])  
                 if self.parent.parent.player_id == self.parent.parent.turn_player and self.parent.parent.sel_unit_id != None:

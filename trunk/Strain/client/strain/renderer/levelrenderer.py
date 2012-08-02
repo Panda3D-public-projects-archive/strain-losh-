@@ -205,7 +205,7 @@ class LevelRenderer():
             frame.setColor(1, 0, 0, 0)
             door = model.find("**/Door*")
             door.setColor(0.7,0.2,0.2,0.0) 
-            door.setPos(model, 0, 0, -0.72)           
+            door.setPos(model, 0.5, 0, -0.72)           
         elif type == 'ForceField':
             model = loader.loadModel("wall_fs")
             model.setScale(tile_size)

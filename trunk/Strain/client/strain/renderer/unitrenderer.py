@@ -12,9 +12,12 @@ class UnitRenderer:
         self.parent_node = parent_node
         self.node = None
         
-    def loadForGameEngine(self, unit):
+    def loadForGameEngine(self, unit, show_now=True):
         self.id = str(unit['id'])
-        self.node = self.parent_node.attachNewNode("UnitRendererNode_"+self.id)
+        
+        self.node = NodePath("UnitRendererNode_"+self.id)
+        if show_now:
+            self.node.reparentTo(self.parent_node)
 
         #TODO: ogs: maknuti kad se rijesi bug sa playerima i njihovim timovima
         self.team_id = "2"
