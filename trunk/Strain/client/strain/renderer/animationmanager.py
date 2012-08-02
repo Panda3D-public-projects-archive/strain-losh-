@@ -149,11 +149,17 @@ class AnimationManager():
                             if val2.name != self.parent.parent.local_engine.level._grid[x][y].name:
                                 x,y,h = self.parent.level_renderer.getWallPosition(x, y)
                                 model = self.parent.level_renderer.door_dict[(x,y,h)]
-                                door = model.find("**/Door*")                                
+                                door = model.find("**/Door*")  
                                 if val2.name == 'ClosedDoor':
-                                    animation.append(door.posInterval(1, Vec3(0.5,0,-0.72)))
+                                    if (x,y) in self.parent.parent.local_engine.visible_walls:
+                                        animation.append(Func(door.setPos, Vec3(0.5,0,-0.72)))
+                                    else:
+                                        animation.append(door.posInterval(1, Vec3(0.5,0,-0.72)))
                                 elif val2.name == 'OpenedDoor':
-                                    animation.append(door.posInterval(1, Vec3(0.5,0,0)))
+                                    if (x,y) in self.parent.parent.local_engine.visible_walls:
+                                        animation.append(Func(door.setPos, Vec3(0.5,0,0)))
+                                    else:                                    
+                                        animation.append(door.posInterval(1, Vec3(0.5,0,0)))
             #========================================================================
             #
             elif msg[0] == USE:
