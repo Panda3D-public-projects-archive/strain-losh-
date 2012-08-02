@@ -8,5 +8,6 @@
 <path>/Strain/client</path>
 <path>/Strain/server/src</path>
 <path>/Strain/db</path>
+<path>/Strain/client/strain</path>
 </pydev_pathproperty>
 </pydev_project>
