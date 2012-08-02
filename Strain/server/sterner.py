@@ -223,7 +223,11 @@ class Sterner:
         
         if msg[0] == NEW_GAME_STARTED:
             player_id = msg[1]
-            source = self.logged_in_players[ player_id ]
+            #try to find logged in player, if we cannot, just return
+            try:
+                source = self.logged_in_players[ player_id ]
+            except KeyError:
+                return
             #we don't know if it was a public game or private game so refresh both lists
             self.network._sendMsg( (MY_WAITING_GAMES, self.db_api.getMyWaitingGames( player_id )), source )
             self.network._sendMsg( (EMPTY_PUBLIC_GAMES, self.db_api.getAllEmptyPublicGames()), source )
