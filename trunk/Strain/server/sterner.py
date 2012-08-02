@@ -4,6 +4,7 @@ Created on 16 May 2012
 @author: krav
 '''
 import sys
+from share import NEW_GAME_STARTED
 sys.path.append('./../client')
 sys.path.append('./src')
 sys.path.append('./../db')
@@ -223,11 +224,16 @@ class Sterner:
         
         if msg[0] == NEW_GAME_STARTED:
             player_id = msg[1]
+            game_id = msg[2]
             #try to find logged in player, if we cannot, just return
             try:
                 source = self.logged_in_players[ player_id ]
             except KeyError:
+                print "NJUIŠT! PRIŠT!"
                 return
+            #send message thet a new game has started
+            self.network._sendMsg( (NEW_GAME_STARTED, game_id), source )
+            
             #we don't know if it was a public game or private game so refresh both lists
             self.network._sendMsg( (MY_WAITING_GAMES, self.db_api.getMyWaitingGames( player_id )), source )
             self.network._sendMsg( (EMPTY_PUBLIC_GAMES, self.db_api.getAllEmptyPublicGames()), source )
@@ -579,7 +585,7 @@ class EngineHandlerThread( threading.Thread ):
                     #send msg to client that new game created ok
                     self.to_network.append( (creator_id, (NEW_GAME_STARTED, game_id) ) )
                     #send msg to sterner that we created a new game
-                    self.to_sterner.append( (NEW_GAME_STARTED, creator_id) )
+                    self.to_sterner.append( (NEW_GAME_STARTED, creator_id, game_id) )
             
             
         
