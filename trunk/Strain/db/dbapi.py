@@ -285,7 +285,7 @@ class DBApi():
     def getGamePlayerEvents(self, game_id, player_id):
         cur = self.conn.cursor()
         cur.execute('SELECT ID, GPL_ID, EVENT, EVENT_DATE '\
-                    'FROM STR_GPL_EVENT WHERE GPL_ID = :gpl_id',
+                    'FROM STR_GPL_EVENT WHERE GPL_ID = :gpl_id ORDER BY EVENT_DATE',
                     {'gpl_id' : self.getGamePlayer(game_id, player_id)[0]
                      }
                     )
@@ -297,7 +297,7 @@ class DBApi():
     def getGameEvents(self, game_id):
         cur = self.conn.cursor()
         cur.execute('SELECT ID, GAM_ID, EVENT, EVENT_DATE '\
-                    'FROM STR_GAME_EVENT WHERE GAM_ID = :gam_id',
+                    'FROM STR_GAME_EVENT WHERE GAM_ID = :gam_id ORDER BY EVENT_DATE',
                     {'gam_id' : game_id
                      }
                     )
@@ -452,6 +452,23 @@ class DBApi():
         return id.getvalue()
     
     
+    
+    
+    def deleteCustom(self):
+        cur = self.conn.cursor()
+        try:
+            cur.execute('DELETE FROM STR_GPL_EVENT' )
+            cur.execute('DELETE FROM STR_GAME_EVENT')            
+            self.conn.commit()
+        except DatabaseError, exception:
+            error, = exception
+            print "Oracle error: ", error.message
+        else:
+            print "Row deleted..."
+        finally:
+            cur.close()    
+    
+    
 if __name__ == "__main__":
     dbapi = DBApi()
     #player_id = dbapi.createPlayer('red@sterner.666', 'Blue', 'Blue')
@@ -468,7 +485,7 @@ if __name__ == "__main__":
     
     #for i in xrange(40,60):
     #    dbapi.deleteGame(i)
-    #dbapi.deleteGame(143)
+    #dbapi.deleteGame(181)
     
     #dbapi.finishGame(21)
     #dbapi.finishAllGamesExceptVersion('0.1')
@@ -499,7 +516,8 @@ if __name__ == "__main__":
     #dbapi.setPickledEngine(101, 'asd')
     
     #dbapi.addGamePlayerEvent(121,22, 'asd')
-    print dbapi.getGamePlayerEvents(121, 22)
-    print dbapi.getGameEvents(121)
+    #print dbapi.getGamePlayerEvents(161, 22)
+    #print dbapi.getGameEvents(161)
+    #dbapi.deleteCustom()
     dbapi.close()
     
