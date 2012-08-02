@@ -102,7 +102,7 @@ class AppFSM(FSM.FSM):
         del self.parent.browser
         
     def enterNewGame(self):
-        ClientMsg.startNewGame('base2', 1000, [ClientMsg.loggedIn(), 1], 0, "game #1")
+        ClientMsg.startNewGame('base2', 1000, [ClientMsg.loggedIn(), 0], 0, "game #1")
         #ClientMsg.startNewGame('level2', 1000, [ClientMsg.loggedIn(), 0], 1, '')
         #self.parent.gametype = GameType(self.parent)
     
@@ -112,7 +112,7 @@ class AppFSM(FSM.FSM):
         
     def enterContinueGame(self):
         from strain.gameinstance import GameInstance
-        self.parent.game_instance = GameInstance(self.parent, 'Continue', 161)
+        self.parent.game_instance = GameInstance(self.parent, 'Continue', 241)
         
     
     def exitContinueGame(self):
