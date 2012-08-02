@@ -499,8 +499,10 @@ class EngineHandlerThread( threading.Thread ):
         
         #first start EngineThread for each game that is active and not yet finished
         for game in self.db_api.getAllActiveGames():
-            self.startNewEngineThread(game[0])
-            
+            try:
+                self.startNewEngineThread(game[0])
+            except:
+                self.notify.error("EgineHandlerThread - error when trying to start a game:%s\ninfo:%s", str(game[0]), traceback.format_exc() )
         
         ###############################################################################################
         ###############################################################################################

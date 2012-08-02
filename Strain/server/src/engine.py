@@ -48,7 +48,7 @@ class EngineThread( Thread ):
         
         #if there is no such game in db, write an error and quit this thread
         if not db_game:
-            self.notify.critical( "Sterner tried to start EngineThread with game_id=%d, but there is no suh entry in db!" %self.game_id )
+            self.notify.critical( "Sterner tried to start EngineThread with game_id=%d, but there is no such entry in db!" %self.game_id )
             return
         
         level = db_game[1]
@@ -130,10 +130,6 @@ class Engine():
         #K-player.id V-grid that player with that id saw last
         self._grid_player = {}
         
-        #we will put events that happened as a reaction to an action by player here
-        #than we will parse them and send messages to different players accordingly
-        self.events = []
-        
         
         self.turn = 0
         self.active_player = None
@@ -153,6 +149,7 @@ class Engine():
         self.notify.info("Loaded level:%s", level_filename )
 
         self.loadArmyList()
+        self.firstTurn()
         
 
     def runOneTick(self):
@@ -169,12 +166,29 @@ class Engine():
         return 0
 
 
+    def playerEntered(self, source):
+        
+        #player has entered this game, send him all his messages from db
+        msgs = self.db_api.getGamePlayerEvents( self.game_id, source)
+        
+        for m in msgs:
+            print "MSG:",pickle.loads(m[2])
+            self.to_network.append( (source, pickle.loads(m[2])) )
+        
+        pass
+
+
+
     def handleMsg(self, msg, source):
         """This method is the main method for handling incoming messages to the Engine"""     
  
         if( msg[0] == ENGINE_SHUTDOWN ):
             self.error("Engine is shutting down")
             self.stop = True
+            
+        elif( msg[0] == ENTER_GAME ):
+            self.playerEntered( source )            
+            return
             
         elif( msg[0] == MOVE ):            
             self.moveUnit( msg[1]['unit_id'], msg[1]['new_position'], msg[1]['orientation'], source )
@@ -229,7 +243,7 @@ class Engine():
             return
  
         self.event_handler.sendSession()
-            
+        self.pickleSelf()    
         
  
     def handleArmyListMsg(self, army_list, source ):
@@ -547,8 +561,7 @@ class Engine():
                 unit.newTurn( self.turn )
                 
         #send ENGINE_STATE to all players
-        for p in self.players:
-            self.event_handler.addEvent( (ENGINE_STATE, p) )
+        self.event_handler.addEvent( (ENGINE_STATE, ) )
         
         #send NEW_TURN to all players
         self.event_handler.addEvent( (NEW_TURN,) )
@@ -558,6 +571,11 @@ class Engine():
         self.updateVisibility()
                                      
         self.checkLevel()
+        
+        self.event_handler.sendSession()
+
+        self.pickleSelf()
+        
         
 
     def findNextPlayer(self):
@@ -605,8 +623,7 @@ class Engine():
 
         #send NEW_TURN to all players
         self.event_handler.addEvent( (NEW_TURN,) )
-        
-        
+
 
     def getLOS(self, beholder, target ):
         return getLOSOnLevel( beholder.__dict__, target.__dict__, self.level )     

@@ -54,12 +54,7 @@ class Notify():
 
 
 def compileNewTurn(engine, player):
-    dic = compileState(engine, player)
-    
-    if player.id != OBSERVER_ID:
-        del dic['level']    
-        dic['level'] = pickle.dumps(compileLevelWithDifferentGrid(engine.level, engine._grid_player[player.id]))
-    
+    dic = compileState(engine, player)    
     return dic
 
 
@@ -78,7 +73,7 @@ def compileState(engine, player):
     
         
     dic[ 'units' ] = pickle.dumps( units )
-    dic[ 'level' ] = pickle.dumps( compileLevel( engine.level ) )        
+    dic[ 'level' ] = pickle.dumps( compileLevelWithDifferentGrid( engine.level, engine._grid_player[player.id] ) )        
     dic[ 'turn' ] = engine.turn
     dic[ 'active_player_id' ] = engine.active_player.id
     dic[ 'players' ] = pickle.dumps( compilePlayers( engine.players, player ) )
@@ -94,14 +89,40 @@ def compileState(engine, player):
     return dic
 
 
-def compilePlayers(players, active_player):
+
+def compileObserverNewTurn(engine):
+    dic = compileObserverState(engine)    
+    return dic
+
+
+def compileObserverState(engine):        
+    dic = {}
+    units = {}
+
+    #compile all my units
+    for unt in engine.units.values():
+        units[unt.id] = compileUnit(unt)   
+        
+    dic[ 'units' ] = pickle.dumps( units )
+    dic[ 'level' ] = pickle.dumps( compileLevel( engine.level ) )        
+    dic[ 'turn' ] = engine.turn
+    dic[ 'active_player_id' ] = engine.active_player.id
+    dic[ 'players' ] = pickle.dumps( compilePlayers( engine.players ) )
+    
+    tmp_dead_units = {}
+    
+    for u in engine.dead_units.itervalues():
+        tmp_dead_units[ u.id ] = compileUnit( u )
+         
+    dic[ 'dead_units' ] = pickle.dumps( tmp_dead_units )
+    
+    return dic
+
+
+def compilePlayers(players, active_player = None):
     ret = []
     
     for p in players:
-        
-        #observer
-        if p.id == OBSERVER_ID:
-            continue
         
         if p == active_player:
             plyr = compileTarget(p, ['units', 'connection', 'msg_lst', 'parent'] )

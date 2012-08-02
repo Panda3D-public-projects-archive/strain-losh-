@@ -19,6 +19,9 @@ class EventHandler():
         #for remembering events for different players during this session
         self.events = {}
             
+        #observer events
+        self.observer_events = []
+            
         #units that have been modified while creating this event session
         self.units_changed = {}
     
@@ -29,7 +32,9 @@ class EventHandler():
         for p in self.engine.players:
             self.events[p.id] = []
     
-    
+        self.observer_events = []
+        
+        
     
     def sendSession(self):
 
@@ -40,9 +45,17 @@ class EventHandler():
         for p_id in self.events:
             if self.events[p_id]: 
                 self.events[p_id].insert(0, ANIMATION)
+        if self.observer_events:
+            self.observer_events.insert(0, ANIMATION)
         
         
         #add events to db
+        for p_id in self.events:
+            if self.events[p_id]:
+                self.engine.db_api.addGamePlayerEvent( self.engine.game_id, p_id, pickle.dumps(self.events[p_id])  ) 
+        if self.observer_events:
+            self.engine.db_api.addGameEvent( self.engine.game_id, pickle.dumps(self.observer_events)  )
+        
         
         #send events to logged in clients
         for p_id in self.events:
@@ -53,10 +66,19 @@ class EventHandler():
         #clear all lists
         for p in self.engine.players:
             self.events[p.id] = []
-            
+        self.observer_events = []
+        
+        
     
-    def sendImmediately(self, player_list, msg):
+    def sendImmediately(self, player_list, msg, write2DB = True ):
+        if write2DB:
+            self.engine.db_api.addGameEvent( self.engine.game_id, pickle.dumps(msg) )
+            
         for p in player_list:
+            #add msg to db
+            if write2DB:
+                self.engine.db_api.addGamePlayerEvent( self.engine.game_id, p.id, pickle.dumps(msg) )
+            #send msg to player
             self.engine.to_network.append( (p.id, msg) )
         
         
@@ -64,6 +86,8 @@ class EventHandler():
     def addUnitEvents(self):
         
         for unit in self.units_changed:
+            self.observer_events.append( (UNIT, compileUnit(unit)) )
+            
             for p in self.engine.players:
                 
                 #sendToOwnerAndAllies
@@ -140,7 +164,7 @@ class EventHandler():
         elif event[0] == LEVEL:
             player = event[1]
             self.events[player.id].append( (LEVEL, compileLevelWithDifferentGrid(self.engine.level, self.engine._grid_player[player.id]) ) )
-
+            self.observer_events.append( (LEVEL, compileLevel(self.engine.level)) )
             
 
         elif event[0] == DEPLOYMENT:
@@ -148,16 +172,33 @@ class EventHandler():
             status = event[2]
             #send to all players
             self.sendImmediately(self.engine.players, (DEPLOYMENT, player.id, status) )
+
+
+
             
         elif event[0] == ENGINE_STATE:
-            player = event[1]
-            self.sendImmediately( [player], (ENGINE_STATE, compileState(self.engine, player)) )
+            self.engine.db_api.addGameEvent( self.engine.game_id, pickle.dumps( (ENGINE_STATE, compileObserverState(self.engine)) ) )
+            
+            for p in self.engine.players:
+                msg = (ENGINE_STATE, compileState(self.engine, p))
+                #add msg to db
+                self.engine.db_api.addGamePlayerEvent( self.engine.game_id, p.id, pickle.dumps(msg) )
+                #send msg to player
+                self.engine.to_network.append( (p.id, msg) )
             
         elif event[0] == NEW_TURN:
+            self.engine.db_api.addGameEvent( self.engine.game_id, pickle.dumps( (NEW_TURN, compileObserverNewTurn(self.engine)) ) )
+            
             for p in self.engine.players:
-                self.sendImmediately( [p], (NEW_TURN, compileNewTurn(self.engine, p)))
+                msg = (NEW_TURN, compileNewTurn(self.engine, p))
+                #add msg to db
+                self.engine.db_api.addGamePlayerEvent( self.engine.game_id, p.id, pickle.dumps(msg) )
+                #send msg to player
+                self.engine.to_network.append( (p.id, msg) )
             
             
+
+        
         elif event[0] == INFO:
             player = event[1]
             message = event[2]
@@ -171,7 +212,7 @@ class EventHandler():
         elif event[0] == PONG:
             player = event[1]
             message = event[2]
-            self.sendImmediately( [player], (PONG, message) )
+            self.sendImmediately( [player], (PONG, message), False )
 
 
         elif event[0] == CHAT:
@@ -193,6 +234,9 @@ class EventHandler():
 
 
     def sendToPlayersThatKnowThisUnit(self, unit, msg ):
+        
+        self.observer_events.append( msg )
+        
         for p in self.engine.players:                
             if self.playerKnowsAbout(p, unit):
                 self.events[p.id].append( msg )
@@ -201,6 +245,13 @@ class EventHandler():
 
     def parseShootEvent(self, event, overwatch = False):
         #example event = (SHOOT/MELEE, Unit, (4, 7), Weapon, [('bounce', Unit)])
+        
+        if overwatch:
+            self.observer_events.append( (OVERWATCH,) + event )
+        else:
+            self.observer_events.append( event )
+            
+        
         for p in self.engine.players:
             tmp_event = self.parseShootEventForPlayer(event, p)
             if event:

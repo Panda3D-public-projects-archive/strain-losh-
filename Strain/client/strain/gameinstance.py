@@ -25,12 +25,12 @@ class GameInstance():
         # Flag to check if animation is in process
         self._anim_in_process = False
 
-        ClientMsg.setGameId(game_id)        
+        #ClientMsg.setGameId(game_id)        
         
         if event == 'New':
             self.fsm.request('NewGame')
         elif event == 'Continue':
-            self.fsm.request('ContinueGame')
+            self.fsm.request('ContinueGame', game_id)
         
     def deselectUnit(self):
         self.movement.deleteUnitAvailMove()
@@ -128,7 +128,8 @@ class GameInstanceFSM(FSM.FSM):
         from strain.movement import Movement
         self.parent.movement = Movement(self.parent)
         
-        ClientMsg.forceFirstTurn()
+        #ClientMsg.forceFirstTurn()
+        ClientMsg.enterGame()
         
     def exitNewGame(self):
         None
@@ -143,7 +144,7 @@ class GameInstanceFSM(FSM.FSM):
     def exitDeploy(self):
         None
     
-    def enterContinueGame(self):
+    def enterContinueGame(self, game_id):
         from strain.renderer.cameramanager import CameraManager
         self.parent.camera_manager = CameraManager(self.parent)
         
@@ -157,7 +158,8 @@ class GameInstanceFSM(FSM.FSM):
         self.parent.movement = Movement(self.parent)
         
         #TODO: ogs: maknuti jednom kad profunkcionira veza s bazom
-        ClientMsg.forceFirstTurn()
+        #ClientMsg.forceFirstTurn()
+        ClientMsg.enterGame( game_id )
         #taskMgr.doMethodLater(1, ClientMsg.forceFirstTurn, 'ForceTurn', extraArgs = [])
         
     def exitContinueGame(self):

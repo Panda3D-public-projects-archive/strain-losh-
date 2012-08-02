@@ -74,11 +74,6 @@ class ClientMsg:
         
             
             
-    @staticmethod         
-    def setGameId( game_id ):
-        ClientMsg.game_id = game_id
-
-                         
     @staticmethod   
     def loggedIn():
         return ClientMsg.player_id
@@ -283,6 +278,11 @@ class ClientMsg:
     @staticmethod
     def ping():
         ClientMsg._sendMsg( (PING, time.time()) )
+        
+    @staticmethod
+    def enterGame( game_id ):
+        ClientMsg.game_id = game_id
+        ClientMsg._sendMsg( (ENTER_GAME, time.time()) )
         
     @staticmethod
     def undefMsg1( value = 0 ):
