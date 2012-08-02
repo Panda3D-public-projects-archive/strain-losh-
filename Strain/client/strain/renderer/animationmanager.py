@@ -106,6 +106,7 @@ class AnimationManager():
             #========================================================================
             #
             elif msg[0] == SPOT:
+                unit = msg[1]
                 self.parent.parent.local_engine.units[unit['id']] = unit
                 # This is the first time we see this unit, fill out starting variables for move and rotate actions
                 spotted_unit_model = self.parent.loadUnit(unit['id'])
@@ -115,7 +116,7 @@ class AnimationManager():
                              utils.GROUND_LEVEL
                              )
                 heading = utils.getHeadingAngle(self.parent.parent.local_engine.units[unit['id']]['heading'])
-                animation.append(Func(self.parent.showUnit, unit_model, pos, None))
+                animation.append(Func(self.parent.showUnit, spotted_unit_model, pos, heading))
 
                 self.parent.parent.local_engine.level.putUnitDict(msg[1])  
                 if self.parent.parent.player_id == self.parent.parent.turn_player and self.parent.parent.sel_unit_id != None:
