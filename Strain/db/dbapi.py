@@ -232,8 +232,8 @@ class DBApi():
         path = os.getcwd() + './../server/data/levels/*.txt'
         lst = []
         for infile in glob.glob( path ):
-            infile = infile.split('\\')[-1]
-            lst.append( infile.split(".")[0] )
+            h,t = os.path.split(infile)
+            lst.append( t.split(".")[0] )
         return lst    
 
     def getAllActiveGames(self):
