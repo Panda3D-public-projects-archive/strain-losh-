@@ -91,6 +91,8 @@ class LevelRenderer():
         
         # Initialize fow texture       
         self.initializeFowTexture(self.temp_node_floor)
+        for child in self.ghost_node_wall.getChildren():
+            child.setColorScale(0.3, 0.3, 0.3, 1.0)
         
         self._initialized = 1
     
@@ -146,6 +148,7 @@ class LevelRenderer():
                 self.fowPainter.drawRectangle(invisible_tile[0]*self.fow_coef, (self.maxY-1-invisible_tile[1])*self.fow_coef, (invisible_tile[0]+1)*self.fow_coef-1, (self.maxY-invisible_tile[1])*self.fow_coef-1)                                                                                                                              
 
         # Paint wall FoW
+        
         for wall in wall_dict:
             x,y,h = self.getWallPosition(wall[0], wall[1])
             if self.wall_dict.has_key((x, y, h)):
@@ -154,6 +157,7 @@ class LevelRenderer():
             elif self.door_dict.has_key((x, y, h)):
                 n = self.door_dict[(x, y, h)]                
                 n.setColorScale(1,1,1,1)
+        
         self.fowTexture.load(self.fowImage)          
        
     def flattenNodes(self):
@@ -201,7 +205,7 @@ class LevelRenderer():
             frame.setColor(1, 0, 0, 0)
             door = model.find("**/Door*")
             door.setColor(0.7,0.2,0.2,0.0) 
-            door.setPos(0, 0, -0.72)           
+            door.setPos(model, 0, 0, -0.72)           
         elif type == 'ForceField':
             model = loader.loadModel("wall_fs")
             model.setScale(tile_size)
@@ -252,7 +256,10 @@ class LevelRenderer():
             taskMgr.remove('ForceWall_offset_Task')
             self.node.setLightOff(self.alnp)
             self.node.setLightOff(self.dlnp1)
+            self.ghost_node_wall.removeNode()
             self.node.removeNode()
+            self.door_dict = {}
+            self.wall_dict = {}
             self._initialized = 0
         
     def __del__(self):
