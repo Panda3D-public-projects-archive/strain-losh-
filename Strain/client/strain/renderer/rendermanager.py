@@ -61,10 +61,10 @@ class RenderManager():
             self.unit_renderer_dict.pop(unit_id)
             del unit_renderer
             
-    def loadUnit(self, unit_id):
+    def loadUnit(self, unit_id, show_now=True):
         unit = self.parent.local_engine.units[unit_id]
         unit_renderer = UnitRenderer(self, self.node)
-        unit_renderer.loadForGameEngine(unit)
+        unit_renderer.loadForGameEngine(unit, show_now)
         self.unit_renderer_dict[unit['id']]= unit_renderer
         return unit_renderer
         
