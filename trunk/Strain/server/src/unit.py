@@ -90,11 +90,11 @@ class Unit():
                 
         #face opponent 
         if self.rotate( target.pos ):
-            self.engine.event_handler.addEvent( (ROTATE, self, getHeadingTile(self.heading) ) )
+            self.engine.event_handler.addEvent( (ROTATE, self, getHeadingTile(self.heading, self.pos) ) )
             
         #rotate opponent to us
         if target.rotate( self.pos ):
-            self.engine.event_handler.addEvent( (ROTATE, target, getHeadingTile(target.heading) ) )
+            self.engine.event_handler.addEvent( (ROTATE, target, getHeadingTile(target.heading, self.pos) ) )
          
         self.last_action = 'melee'
             
@@ -134,7 +134,7 @@ class Unit():
         #we already checked if target is in front, if this is overwatch
         if not overwatch:
             if self.rotate( target.pos ):
-                self.engine.event_handler.addEvent( (ROTATE, self, getHeadingTile(self.heading) ) )
+                self.engine.event_handler.addEvent( (ROTATE, self, getHeadingTile(self.heading, self.pos) ) )
 
         #ok everything checks out, we can do the actual shooting                        
         self.last_action = 'shoot'
