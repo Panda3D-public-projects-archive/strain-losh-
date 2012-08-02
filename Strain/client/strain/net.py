@@ -115,6 +115,17 @@ class Net():
             # Animation manager sets _message_in_process to False when the animation is done
             self.parent.game_instance.render_manager.animation_manager.handleNewTurn()
             self._message_in_process = False
+        #========================================================================
+        #
+        elif msg[0] == CHAT:         
+            sender_name = msg[2]
+            self.parent.game_instance.interface.console.consoleOutput( sender_name + ":" + str(msg[1]), utils.CONSOLE_SYSTEM_MESSAGE)
+            self.parent.game_instance.interface.console.show()     
+        #========================================================================
+        #                   
+        elif msg[0] == ERROR:
+            self.parent.game_instance.interface.console.consoleOutput( "ERROR:" + str(msg[1]), utils.CONSOLE_SYSTEM_ERROR)
+            self.parent.game_instance.interface.console.show() 
         else:
             None
     

@@ -126,13 +126,7 @@ class AnimationManager():
             elif msg[0] == VANISH:
                 self._message_in_process = True            
                 # Animation manager sets _message_in_process to False when the animation is done
-                self.handleVanish(msg[1])
-            #========================================================================
-            #
-            elif msg[0] == CHAT:         
-                sender_name = msg[2]
-                self.parent.interface.console.consoleOutput( sender_name + ":" + str(msg[1]), utils.CONSOLE_SYSTEM_MESSAGE)
-                self.parent.interface.console.show()           
+                self.handleVanish(msg[1])                       
             #========================================================================
             #
             elif msg[0] == LEVEL:

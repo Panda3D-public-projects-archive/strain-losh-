@@ -110,10 +110,10 @@ class GuiConsole(DirectObject.DirectObject):
         self.toggleConsole()
         
     def focusInCallback(self):
-        self.parent.parent.camera.disableKeyMovement()
+        self.parent.parent.camera_manager.disableKeyMovement()
 
     def focusOutCallback(self):
-        self.parent.parent.camera.enableKeyMovement()
+        self.parent.parent.camera_manager.enableKeyMovement()
     
     def show(self):
         if self.consoleFrame.isHidden():
