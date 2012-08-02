@@ -7,6 +7,7 @@ class LocalEngine():
     def __init__(self, parent):
         self.parent = parent
         self.level = None
+        self.visible_walls = []
     
     def refreshUnit(self, unit):
         if unit['alive'] == False:
@@ -85,7 +86,7 @@ class LocalEngine():
             if self.isThisMyUnit(u):
                 a.append(self.units[u])
         t = time.clock()
-        l = visibleWalls(a, self.level)
+        self.visible_walls = visibleWalls(a, self.level)
         print "walls timer:::", (time.clock()-t)*1000
-        return l     
+        return self.visible_walls     
         
