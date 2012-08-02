@@ -1,15 +1,17 @@
 from panda3d.core import *
 from direct.interval.IntervalGlobal import Sequence, Parallel, Func, Wait, LerpColorScaleInterval#@UnresolvedImport
 from direct.showbase.DirectObject import DirectObject
-import strain.utils as utils
-from strain.share import *
+import utils as utils
+from share import *
 
 
 class AnimationManager():
     def __init__(self, parent):
         self.parent = parent
         self._anim_in_process = False
-        self.event_sequence = Sequence()
+        
+        self.bullet = loader.loadModel("sphere")
+        self.bullet.setScale(0.05)
     
     def beforeAnimHook(self):
         self._anim_in_process = True
@@ -25,8 +27,6 @@ class AnimationManager():
             #========================================================================
             #
             if msg[0] == MOVE or msg[0] == ROTATE:
-                self._message_in_process = True
-                # Animation manager sets _message_in_process to False when the animation is done
                 unit_id = msg[1]
                 tile = msg[2]
                 unit_model = self.parent.unit_renderer_dict[unit_id]
@@ -74,9 +74,36 @@ class AnimationManager():
             #========================================================================
             #
             elif msg[0] == SHOOT:
-                self._message_in_process = True
-                # Animation manager sets _message_in_process to False when the animation is done
-                self.parent.parent.render_manager.animation_manager.handleShoot(msg[1])       
+                shooter_id = msg[1] # unit_id of the shooter
+                shoot_tile = msg[2] # (x,y) pos of targeted tile
+                weapon = msg[3] # weapon id
+                damage_list = msg[4] # list of all damaged/missed/bounced/killed units
+                # shooter_id can be negative if we don't see the shooter
+                if shooter_id >= 0:
+                    shooter_unit_renderer = self.parent.unit_renderer_dict[shooter_id]
+                    a = shooter_unit_renderer.model.actorInterval('shoot')
+                    shooter_pos =  Point3(utils.TILE_SIZE*(self.parent.parent.local_engine.units[shooter_id]['pos'][0] + 0.5), 
+                                          utils.TILE_SIZE*(self.parent.parent.local_engine.units[shooter_id]['pos'][1] + 0.5),
+                                          utils.GROUND_LEVEL
+                                          )
+                    # We create the bullet and its animation
+                    start_pos = Point3(shooter_pos.getX(), shooter_pos.getY(), 0.9)
+                    end_pos = Point3(utils.TILE_SIZE*(shoot_tile[0] + 0.5), utils.TILE_SIZE*(shoot_tile[1] + 0.5), 0.9)
+                    dest_node = NodePath("dest_node")
+                    dest_node.setPos(end_pos)
+                    start_node = NodePath("start_node")
+                    start_node.setPos(start_pos)
+                    time = round(start_node.getDistance(dest_node) / utils.BULLET_SPEED, 2)
+                    bullet_sequence = Sequence(Func(self.bullet.reparentTo, render),
+                                               self.bullet.posInterval(time, end_pos, start_pos),
+                                               Func(self.bullet.removeNode)
+                                               )
+
+                    #i = self.buildDamageAnim(damage_list)
+                    #bi = Sequence(b, i)
+                    #s.append(Parallel(a, bi)) 
+                    animation.append(a)
+                    animation.append(bullet_sequence)      
             #========================================================================
             #
             elif msg[0] == SPOT:
@@ -113,8 +140,21 @@ class AnimationManager():
                 # enemy's visibility gets updated when he gets UNIT message
                 if self.parent.parent.player_id == self.parent.parent.turn_player and self.parent.parent.sel_unit_id != None:
                     self.parent.parent.movement.calcUnitAvailMove( self.parent.parent.sel_unit_id )
-                    #self.parent.sgm.showVisibleEnemies( self.parent.sel_unit_id )
-                #self.parent.parent.render_manager.refreshFow()
+
+                # Create animations based on level changes (opened doors etc)    
+                print self.parent.parent.local_engine.level._grid
+                for x, val in enumerate(self.parent.parent.local_engine.old_level._grid):
+                    for y, val2 in enumerate(val):
+                        if val2 != None and self.parent.parent.local_engine.level._grid[x][y] != None:
+                            if val2.name != self.parent.parent.local_engine.level._grid[x][y].name:
+                                x,y,h = self.parent.level_renderer.getWallPosition(x, y)
+                                print self.parent.level_renderer.door_dict
+                                model = self.parent.level_renderer.door_dict[(x,y,h)]
+                                door = model.find("**/Door*")                                
+                                if val2.name == 'ClosedDoor':
+                                    animation.append(door.posInterval(1, Vec3(0.5,0,-0.72)))
+                                elif val2.name == 'OpenedDoor':
+                                    animation.append(door.posInterval(1, Vec3(0.5,0,0)))
             #========================================================================
             #
             elif msg[0] == USE:
@@ -315,12 +355,7 @@ class AnimationManager():
     
     def buildOverwatchAnim(self, action_list):
         i = self.buildShoot(action_list)
-        return i
-    
-    def handleShoot(self, action_list):
-        shoot = self.buildShoot(action_list)
-        s = Sequence(Func(self.beforeAnimHook), Wait(0.2), shoot, Func(self.afterAnimHook))
-        s.start()        
+        return i       
     
     def buildShoot(self, action_list):
         s = Sequence()
@@ -382,10 +417,6 @@ class AnimationManager():
         # Start our shoot sequence
         return s
     
-    def buildShootAnim(self, unit_renderer, weapon):
-        # Unit shooting animation
-        shoot_anim = unit_renderer.model.actorInterval('shoot')
-        return shoot_anim
     
     def buildBulletAnim(self, start_pos, target_tile):
         # We create the bullet and its animation
