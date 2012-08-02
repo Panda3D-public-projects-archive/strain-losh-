@@ -279,10 +279,6 @@ class ClientMsg:
     def ping():
         ClientMsg._sendMsg( (PING, time.time()) )
         
-    @staticmethod
-    def enterGame( game_id ):
-        ClientMsg.game_id = game_id
-        ClientMsg._sendMsg( (ENTER_GAME, time.time()) )
         
     @staticmethod
     def undefMsg1( value = 0 ):
@@ -295,6 +291,12 @@ class ClientMsg:
 
 
     #-----------------------STERNER MESSAGES---------------------------------------
+    @staticmethod
+    def enterGame( game_id ):
+        ClientMsg.game_id = game_id
+        ClientMsg._sendMsg( (STERNER_ID, ENTER_GAME) )
+        
+        
     @staticmethod
     def getAllFinishedGames():
         ClientMsg._sendMsg( (STERNER_ID, ALL_FINISHED_GAMES ), True )

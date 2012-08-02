@@ -60,7 +60,7 @@ class EventHandler():
         #send events to logged in clients
         for p_id in self.events:
             if self.events[p_id]:
-                self.engine.to_network.append( (p_id, self.events[p_id]) )
+                self.engine.to_network.append( (p_id, self.engine.game_id, self.events[p_id]) )
     
 
         #clear all lists
@@ -79,7 +79,7 @@ class EventHandler():
             if write2DB:
                 self.engine.db_api.addGamePlayerEvent( self.engine.game_id, p.id, pickle.dumps(msg) )
             #send msg to player
-            self.engine.to_network.append( (p.id, msg) )
+            self.engine.to_network.append( (p.id, self.engine.game_id, msg) )
         
         
     
@@ -184,7 +184,7 @@ class EventHandler():
                 #add msg to db
                 self.engine.db_api.addGamePlayerEvent( self.engine.game_id, p.id, pickle.dumps(msg) )
                 #send msg to player
-                self.engine.to_network.append( (p.id, msg) )
+                self.engine.to_network.append( (p.id, self.engine.game_id, msg) )
             
         elif event[0] == NEW_TURN:
             self.engine.db_api.addGameEvent( self.engine.game_id, pickle.dumps( (NEW_TURN, compileObserverNewTurn(self.engine)) ) )
@@ -194,7 +194,7 @@ class EventHandler():
                 #add msg to db
                 self.engine.db_api.addGamePlayerEvent( self.engine.game_id, p.id, pickle.dumps(msg) )
                 #send msg to player
-                self.engine.to_network.append( (p.id, msg) )
+                self.engine.to_network.append( (p.id, self.engine.game_id, msg) )
             
             
 

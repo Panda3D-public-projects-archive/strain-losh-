@@ -4,7 +4,7 @@ Created on 16 May 2012
 @author: krav
 '''
 import sys
-from share import NEW_GAME_STARTED
+from share import *
 sys.path.append('./../client')
 sys.path.append('./src')
 sys.path.append('./../db')
@@ -185,8 +185,10 @@ class Sterner:
             #check to_network for messages, and if there are any send them to players
             try:
                 while True:
-                    src, msg = self.to_network.popleft() 
-                    self.network._sendMsg( msg, self.logged_in_players[ src ] )
+                    player_id, game_id, msg = self.to_network.popleft() 
+                    conn, in_game_id = self.logged_in_players[player_id]
+                    if conn and game_id == in_game_id:
+                        self.network._sendMsg( msg, conn )
             #IndexError if there is nothing to pop
             #KeyError if engine is sending messages to disconnected/unknown players, we just ignore this
             except (IndexError, KeyError):
@@ -226,30 +228,34 @@ class Sterner:
             player_id = msg[1]
             game_id = msg[2]
             #try to find logged in player, if we cannot, just return
-            try:
-                source = self.logged_in_players[ player_id ]
-            except KeyError:
-                print "NJUIŠT! PRIŠT!"
+            source = self.getConnectionFromId(player_id)
+
+            if not source:
+                print "NIST PRIST"
                 return
-            #send message thet a new game has started
-            self.network._sendMsg( (NEW_GAME_STARTED, game_id), source )
             
             #we don't know if it was a public game or private game so refresh both lists
             self.network._sendMsg( (MY_WAITING_GAMES, self.db_api.getMyWaitingGames( player_id )), source )
             self.network._sendMsg( (EMPTY_PUBLIC_GAMES, self.db_api.getAllEmptyPublicGames()), source )
             
             
+    #K-player_id - V:(connection, game_id)
+    def getConnectionFromId(self, player_id):
+        try:
+            return self.logged_in_players[player_id][0]
+        except:
+            return None
 
     
     def getIdFromConnection(self, connection):
-        for player_id in self.logged_in_players:
-            if self.logged_in_players[player_id] == connection:
+        for player_id in self.logged_in_players.keys():
+            if self.logged_in_players[player_id][0] == connection:
                 return player_id
         return None
     
     
     
-    def handleSternerMsg(self, message, source):
+    def handleSternerMsg(self, message, connection):
         
         if message[0] == START_NEW_GAME:
             level = message[1]
@@ -257,17 +263,17 @@ class Sterner:
             player_ids = message[3]
             public_game = message[4]
             game_name = message[5]
-            player_id = self.getIdFromConnection(source)            
+            player_id = self.getIdFromConnection(connection)            
             
             #check if there are at least 2 players
             if len( player_ids ) < 2:
-                self.network._sendMsg( (ERROR, "Not enough players"), source )
+                self.network._sendMsg( (ERROR, "Not enough players"), connection )
                 return
             
             #check if level is ok
             all_levels = self.db_api.getAllLevels()
             if level not in all_levels:
-                self.network._sendMsg( (ERROR, "Wrong level"), source )
+                self.network._sendMsg( (ERROR, "Wrong level"), connection )
                 return
                  
             #TODO: krav: check if budget is ok
@@ -277,19 +283,19 @@ class Sterner:
                 all_player_ids = [ int(x) for x,y in self.db_api.getAllPlayers() ]
                 for p_id in player_ids:
                     if p_id not in all_player_ids:
-                        self.network._sendMsg( (ERROR, "Wrong player id:%d"%p_id), source )
+                        self.network._sendMsg( (ERROR, "Wrong player id:%d"%p_id), connection )
                         return
             #if public game, game creator's id must be one of the players, all others must be 0
             else:
                 if player_id not in player_ids:
-                        self.network._sendMsg( (ERROR, "You have to be in the game"), source )
+                        self.network._sendMsg( (ERROR, "You have to be in the game"), connection )
                         return
                 tmp_player_ids = player_ids[:]
                 tmp_player_ids.remove( player_id )
                 
                 for p in tmp_player_ids:
                     if p != 0:
-                        self.network._sendMsg( (ERROR, "You cannot assign players other than yourself in public games"), source )
+                        self.network._sendMsg( (ERROR, "You cannot assign players other than yourself in public games"), connection )
                         return
                         
                     
@@ -315,68 +321,78 @@ class Sterner:
                 
                 
         elif message[0] == ALL_FINISHED_GAMES:
-            self.network._sendMsg( (ALL_FINISHED_GAMES, self.db_api.getAllFinishedGames()), source )
+            self.network._sendMsg( (ALL_FINISHED_GAMES, self.db_api.getAllFinishedGames()), connection )
+            return
+                
+                
+        elif message[0] == ENTER_GAME:
+            game_id = message[1]
+            print "stavio unutra"
+            player_id = self.getIdFromConnection(connection)
+            self.logged_in_players[player_id] = (connection, game_id)
+            
+            self.msgs4engines.append( (game_id, ENTER_GAME) )
             return
                 
                 
         elif message[0] == REFRESH_MY_GAME_LISTS:
-            self.sendSternerData(source)
+            self.sendSternerData(connection)
             return
                 
                 
                 
         elif message[0] == DECLINE_GAME:
             game_id = message[1]
-            player_id = self.getIdFromConnection(source)
+            player_id = self.getIdFromConnection(connection)
 
             game = self.db_api.getGame(game_id, filter=True)
 
             #if there is no such game            
             if not game:
-                self.network._sendMsg( (ERROR, "No such game."), source )
+                self.network._sendMsg( (ERROR, "No such game."), connection )
                 return
 
             #if this is a public game, you cant decline that
             if game[9]:
-                self.network._sendMsg( (ERROR, "You cannot decline public games, just don't join :)"), source )
+                self.network._sendMsg( (ERROR, "You cannot decline public games, just don't join :)"), connection )
                 return
 
             #if this game already started
             if game[5] != 0: 
-                self.network._sendMsg( (ERROR, "This game already started, if you want to concede do it from inside the game"), source )
+                self.network._sendMsg( (ERROR, "This game already started, if you want to concede do it from inside the game"), connection )
                 return
 
             #if you are not a player in this game
             game_player = self.db_api.getGamePlayer(game_id, player_id)
             if not game_player:
-                self.network._sendMsg( (ERROR, "You cannot decline, you are not even part of this game!"), source )
+                self.network._sendMsg( (ERROR, "You cannot decline, you are not even part of this game!"), connection )
                 return
                 
             #ok so delete the game
             self.db_api.deleteGame(game_id)
             
             #refresh his unaccepted games list
-            self.network._sendMsg( (MY_UNACCEPTED_GAMES, self.db_api.getMyUnacceptedGames( player_id )), source )
+            self.network._sendMsg( (MY_UNACCEPTED_GAMES, self.db_api.getMyUnacceptedGames( player_id )), connection )
             
             
             
         elif message[0] == ACCEPT_GAME:
             game_id = message[1]
-            player_id = self.getIdFromConnection(source)
+            player_id = self.getIdFromConnection(connection)
 
             game = self.db_api.getGame(game_id)
             
             #if there is no such game            
             if not game:
-                self.network._sendMsg( (ERROR, "No such game."), source )
+                self.network._sendMsg( (ERROR, "No such game."), connection )
                 return
 
             #check if this game already started or is finished            
             if game[5] == 1:
-                self.network._sendMsg( (ERROR, "Game already started"), source )
+                self.network._sendMsg( (ERROR, "Game already started"), connection )
                 return
             elif game[5] == 2:
-                self.network._sendMsg( (ERROR, "Game finished"), source )
+                self.network._sendMsg( (ERROR, "Game finished"), connection )
                 return
                 
                 
@@ -385,7 +401,7 @@ class Sterner:
                 #if we are already in this game, return error
                 game_player = self.db_api.getGamePlayer(game_id, player_id)
                 if game_player:
-                    self.network._sendMsg( (ERROR, "You are already in this game"), source )
+                    self.network._sendMsg( (ERROR, "You are already in this game"), connection )
                     return
                 
                 #find first empty slot, set this players id in its stead
@@ -398,7 +414,7 @@ class Sterner:
                 #check if this player really did not accept this game yet
                 game_player = self.db_api.getGamePlayer(game_id, player_id)
                 if game_player[5] == 1:
-                    self.network._sendMsg( (ERROR, "Already accepted this game"), source )
+                    self.network._sendMsg( (ERROR, "Already accepted this game"), connection )
                     return
             
             #update this player's acceptance, for both cases (public/private game)
@@ -406,17 +422,17 @@ class Sterner:
             self.db_api.updateGamePlayer( game_player )
             
             #we accepted this game
-            self.network._sendMsg( (ACCEPT_GAME, game_id), source )
+            self.network._sendMsg( (ACCEPT_GAME, game_id), connection )
             
             #refresh unaccepted games list
-            self.network._sendMsg( (MY_UNACCEPTED_GAMES, self.db_api.getMyUnacceptedGames( player_id )), source )
+            self.network._sendMsg( (MY_UNACCEPTED_GAMES, self.db_api.getMyUnacceptedGames( player_id )), connection )
 
             #try to see if this is the last player accepting and if so start the game            
             #if at least 1 player did not accept, return
             for player in self.db_api.getGameAllPlayers( game_id ):
                 if player[5] == 0:
                     #refresh waiting games list
-                    self.network._sendMsg( (MY_WAITING_GAMES, self.db_api.getMyWaitingGames( player_id )), source )                    
+                    self.network._sendMsg( (MY_WAITING_GAMES, self.db_api.getMyWaitingGames( player_id )), connection )                    
                     return 
             
             #ok all players accepted, start this game
@@ -424,13 +440,13 @@ class Sterner:
             self.db_api.updateGame(game)
             
             #refresh active games 
-            self.network._sendMsg( (MY_ACTIVE_GAMES, self.db_api.getMyActiveGames( player_id )), source )            
+            self.network._sendMsg( (MY_ACTIVE_GAMES, self.db_api.getMyActiveGames( player_id )), connection )            
             return
                 
 
         elif message[1] == PING:
             print "ping:", message
-            self.network._sendMsg( (PONG, message[2] ), source )
+            self.network._sendMsg( (PONG, message[2] ), connection )
             return
 
         else:
@@ -455,10 +471,12 @@ class Sterner:
     def playerConnected(self, player_id, source):
         #if this player already has a connection, disconnect him
         if player_id in self.logged_in_players:
-            self.network.disconnect( self.logged_in_players[player_id] )
+            conn = self.getConnectionFromId(player_id)
+            if conn:
+                self.network.disconnect( conn )
 
         #remember this player-connection
-        self.logged_in_players[player_id] = source
+        self.logged_in_players[player_id] = (source, 0)
 
         #send this new player everything he needs
         self.sendSternerData(source)
@@ -582,8 +600,8 @@ class EngineHandlerThread( threading.Thread ):
             else:
                 #there is no active thread for this game, try to resume one from db
                 if self.startNewEngineThread(game_id):
-                    #send msg to client that new game created ok
-                    self.to_network.append( (creator_id, (NEW_GAME_STARTED, game_id) ) )
+                    #send msg to client that new game created ok, game id = STERNER_ID cause client didnt yet enter this game
+                    self.to_network.append( (creator_id, STERNER_ID, (NEW_GAME_STARTED, game_id) ) )
                     #send msg to sterner that we created a new game
                     self.to_sterner.append( (NEW_GAME_STARTED, creator_id, game_id) )
             
