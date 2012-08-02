@@ -58,7 +58,8 @@ class Net():
         elif msg[0] == NEWS_FEED:
             None 
         elif msg[0] == NEW_GAME_STARTED:
-            None    
+            from strain.gameinstance import GameInstance
+            self.parent.game_instance = GameInstance(self.parent, 'New', msg[1])
         elif msg[0] == PONG:
             None       
         elif msg[0] == ANIMATION:       

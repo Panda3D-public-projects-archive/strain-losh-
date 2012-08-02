@@ -4,7 +4,7 @@ from strain.client_messaging import ClientMsg
 from strain.share import *
 
 class GameInstance():
-    def __init__(self, parent, event, game_id=TEST_GAME_ID):
+    def __init__(self, parent, event, game_id):
         self.parent = parent
         self.fsm = GameInstanceFSM(self, 'GameInstanceFSM')
 
@@ -28,7 +28,7 @@ class GameInstance():
         #ClientMsg.setGameId(game_id)        
         
         if event == 'New':
-            self.fsm.request('NewGame')
+            self.fsm.request('NewGame', game_id)
         elif event == 'Continue':
             self.fsm.request('ContinueGame', game_id)
         
@@ -115,7 +115,7 @@ class GameInstanceFSM(FSM.FSM):
         FSM.FSM.__init__(self, name)
         self.parent = parent
 
-    def enterNewGame(self):
+    def enterNewGame(self, game_id):
         from strain.renderer.cameramanager import CameraManager
         self.parent.camera_manager = CameraManager(self.parent)
         
@@ -129,7 +129,7 @@ class GameInstanceFSM(FSM.FSM):
         self.parent.movement = Movement(self.parent)
         
         #ClientMsg.forceFirstTurn()
-        ClientMsg.enterGame()
+        ClientMsg.enterGame(game_id)
         
     def exitNewGame(self):
         None
