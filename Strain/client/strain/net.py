@@ -76,17 +76,17 @@ class Net():
             self.parent.game_instance.local_engine.units = pickle.loads(msg[1]['units'])
             self.parent.game_instance.local_engine.inactive_units = pickle.loads(msg[1]['dead_units'])
             # Update level dynamic lists for accurate calculation of walkable tiles
-            self.parent.game_instance.local_engine.refreshLevelUnitDict()          
+            self.parent.game_instance.local_engine.refreshLevelUnitDict()
             
             # Update renderers
             self.parent.game_instance.render_manager.refresh()
+            self.parent.game_instance.render_manager.refreshFow()          
             
             # Update interface
             self.parent.game_instance.interface.refreshStatusBar()
             for unit in self.parent.game_instance.local_engine.units.itervalues():
                 if unit['owner_id'] == self.parent.game_instance.player_id:
-                    self.parent.game_instance.interface.refreshUnitInfo(unit['id']) 
-            #self.parent.sgm.level_model.setInvisibleTilesInThread()              
+                    self.parent.game_instance.interface.refreshUnitInfo(unit['id'])              
 
             self._message_in_process = False
                 
