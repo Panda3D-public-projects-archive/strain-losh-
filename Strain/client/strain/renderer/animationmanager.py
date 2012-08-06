@@ -80,33 +80,12 @@ class AnimationManager():
             #========================================================================
             #
             elif msg[0] == SHOOT:
-                shooter_id = msg[1] # unit_id of the shooter
-                shoot_tile = msg[2] # (x,y) pos of targeted tile
-                weapon = msg[3] # weapon id
-                damage_list = msg[4] # list of all damaged/missed/bounced/killed units
-                # shooter_id can be negative if we don't see the shooter
-                if shooter_id >= 0:
-                    shooter_unit_renderer = self.parent.unit_renderer_dict[shooter_id]
-                    shoot_anim = shooter_unit_renderer.model.actorInterval('shoot')
-                    shooter_pos =  Point3(utils.TILE_SIZE*(self.parent.parent.local_engine.units[shooter_id]['pos'][0] + 0.5), 
-                                          utils.TILE_SIZE*(self.parent.parent.local_engine.units[shooter_id]['pos'][1] + 0.5),
-                                          utils.GROUND_LEVEL
-                                          )
-                    # We create the bullet and its animation
-                    start_pos = Point3(shooter_pos.getX(), shooter_pos.getY(), 0.6)
-                    end_pos = Point3(utils.TILE_SIZE*(shoot_tile[0] + 0.5), utils.TILE_SIZE*(shoot_tile[1] + 0.5), 0.6)
-                    dest_node = NodePath("dest_node")
-                    dest_node.setPos(end_pos)
-                    start_node = NodePath("start_node")
-                    start_node.setPos(start_pos)
-                    time = round(start_node.getDistance(dest_node) / utils.BULLET_SPEED, 2)
-                    bullet_sequence = Sequence(Func(self.bullet.unstash),
-                                               self.bullet.posInterval(time, end_pos, start_pos),
-                                               Func(self.bullet.stash)
-                                               )
-
-                    damage_anim = self.buildDamageAnim(damage_list)
-                    animation.append(Parallel(shoot_anim, Sequence(bullet_sequence, damage_anim)))  
+                animation.append(self.buildShootAnim(msg[1], msg[2], msg[3], msg[4]))
+            #========================================================================
+            #
+            elif msg[0] == OVERWATCH:
+                if msg[1] == SHOOT:
+                    animation.append(self.buildShootAnim(msg[2], msg[3], msg[4], msg[5]))                
             #========================================================================
             #
             elif msg[0] == SPOT:
@@ -193,10 +172,30 @@ class AnimationManager():
         taskMgr.add(self.combat.drawBeam, 'beamtask')
         
 
-    def buildMeleeAnim(self, unit_renderer, target_tile, weapon):
-        # Unit melee animation
-        melee_anim = unit_renderer.model.actorInterval('melee')
-        return melee_anim
+    def buildShootAnim(self, shooter_id, shoot_tile, weapon, damage_list):
+        # shooter_id can be negative if we don't see the shooter
+        if shooter_id >= 0:
+            shooter_unit_renderer = self.parent.unit_renderer_dict[shooter_id]
+            shoot_anim = shooter_unit_renderer.model.actorInterval('shoot')
+            shooter_pos =  Point3(utils.TILE_SIZE*(self.parent.parent.local_engine.units[shooter_id]['pos'][0] + 0.5), 
+                                  utils.TILE_SIZE*(self.parent.parent.local_engine.units[shooter_id]['pos'][1] + 0.5),
+                                  utils.GROUND_LEVEL
+                                  )
+            # We create the bullet and its animation
+            start_pos = Point3(shooter_pos.getX(), shooter_pos.getY(), 0.6)
+            end_pos = Point3(utils.TILE_SIZE*(shoot_tile[0] + 0.5), utils.TILE_SIZE*(shoot_tile[1] + 0.5), 0.6)
+            dest_node = NodePath("dest_node")
+            dest_node.setPos(end_pos)
+            start_node = NodePath("start_node")
+            start_node.setPos(start_pos)
+            time = round(start_node.getDistance(dest_node) / utils.BULLET_SPEED, 2)
+            bullet_sequence = Sequence(Func(self.bullet.unstash),
+                                       self.bullet.posInterval(time, end_pos, start_pos),
+                                       Func(self.bullet.stash)
+                                       )
+
+            damage_anim = self.buildDamageAnim(damage_list)
+            return Parallel(shoot_anim, Sequence(bullet_sequence, damage_anim))          
     
     def buildDamageAnim(self, damage_list):
         # Find all damaged units and play their damage/kill/miss animation
@@ -213,13 +212,13 @@ class AnimationManager():
                 target_anim = target_unit_renderer.model.actorInterval('get_hit') 
                 dmg = 'miss'                
             elif damage_type == "damage":
-                color_interval = Sequence(LerpColorScaleInterval(target_unit_renderer.model, 0.2, (10,10,10,1))
-                                         ,LerpColorScaleInterval(target_unit_renderer.model, 0.2, (1,1,1,1)))
+                color_interval = Sequence(LerpColorScaleInterval(target_unit_renderer.model, 0.5, (10,10,10,1))
+                                         ,LerpColorScaleInterval(target_unit_renderer.model, 0.5, (1,1,1,1)))
                 target_anim = Parallel(target_unit_renderer.model.actorInterval('get_hit'), color_interval)
                 dmg = str(action[2])
             elif damage_type == "kill":
-                color_interval = Sequence(LerpColorScaleInterval(target_unit_renderer.model, 0.2, (10,10,10,1))
-                                         ,LerpColorScaleInterval(target_unit_renderer.model, 0.2, (1,1,1,1)))                
+                color_interval = Sequence(LerpColorScaleInterval(target_unit_renderer.model, 0.5, (10,10,10,1))
+                                         ,LerpColorScaleInterval(target_unit_renderer.model, 0.5, (1,1,1,1)))                
                 target_anim = Parallel(target_unit_renderer.model.actorInterval('die')  , color_interval)
                 dmg = str(action[2])
             t.setText( "%s" % dmg)
