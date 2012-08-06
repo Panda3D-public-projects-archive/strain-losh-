@@ -33,7 +33,7 @@ class GameInstance():
             self.fsm.request('ContinueGame', game_id)
         
     def deselectUnit(self):
-        self.movement.deleteUnitAvailMove()
+        self.movement.hideUnitAvailMove()
         #self.sgm.hideVisibleEnemies()
         self.interface.clearUnitData()
         

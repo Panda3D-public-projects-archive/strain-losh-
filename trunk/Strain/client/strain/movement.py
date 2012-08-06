@@ -82,7 +82,11 @@ class Movement(DirectObject.DirectObject):
     
     def calcUnitAvailMove(self, unit_id):
         """Displays visual indicator of tiles which are in movement range of the selected unit."""
-        self.deleteUnitAvailMove()
+        # First delete old movement list
+        for c in self.move_np_list:
+            c.removeNode()
+        self.move_np_list = []  
+        # Start calculation of new list
         unit = self.parent.local_engine.units[unit_id]
         if self.parent.turn_player != self.parent.player_id:
             return
@@ -101,10 +105,16 @@ class Movement(DirectObject.DirectObject):
                 pos2d = utils.pointCoordIn2d(Point3(utils.TILE_SIZE * (tile[0]+0.5), utils.TILE_SIZE * (tile[1]+0.5), utils.GROUND_LEVEL))
                 textNodePath.setPos(pos2d)            
                 self.move_np_list.append(textNodePath)
+
+    def showUnitAvailMove(self):
         self.move_node.reparentTo(aspect2d)
         self.hovered_tile = None
-        self.drawMoveOutline(self.calcMoveOutline(move_dict, self.parent.local_engine.units[unit_id]['pos']))
-    
+        #self.drawMoveOutline(self.calcMoveOutline(move_dict, self.parent.local_engine.units[unit_id]['pos']))
+
+    def hideUnitAvailMove(self):
+        self.move_node.detachNode()
+
+    """
     def calcMoveOutline(self, move_dict, pos):
         outline = {}
         for tile in move_dict:
@@ -186,14 +196,8 @@ class Movement(DirectObject.DirectObject):
         self.move_outline_node.setBin("fixed", 40)
         #self.move_outline_node.setDepthTest(False)
         #self.move_outline_node.setDepthWrite(False)
-        self.move_outline_node.setLightOff()
-                
-    def deleteUnitAvailMove(self):
-        self.move_node.detachNode() 
-        for c in self.move_np_list:
-            c.removeNode()
-        self.move_np_list = []    
-            
+        self.move_outline_node.setLightOff()  
+    """        
     def showMoveCompass(self, dest):
         # Calculate postion of compass nodes based on destination tile
         for i in self.turn_np_list:

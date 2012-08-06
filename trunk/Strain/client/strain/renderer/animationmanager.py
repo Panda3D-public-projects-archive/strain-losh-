@@ -18,13 +18,17 @@ class AnimationManager():
     def beforeAnimHook(self):
         self._anim_in_process = True
     
-    def afterAnimHook(self):     
+    def afterAnimHook(self):  
+        # FoW calculation and display   
         self._anim_in_process = False
     
     def createSequence(self, msg_list):
         animation = Sequence()
         animation.append(Func(self.beforeAnimHook))
         unit_pos_dict = {}
+        
+        animation.append(Func(self.parent.parent.movement.hideUnitAvailMove))
+        
         for msg in msg_list:
             #========================================================================
             #
@@ -54,7 +58,6 @@ class AnimationManager():
                 else:
                     anim = interval_heading
                     unit_pos_dict[unit_id] = (start_pos, end_head)
-                
                 animation.append(anim)
             #========================================================================
             #
@@ -64,14 +67,15 @@ class AnimationManager():
                 old_y = self.parent.parent.local_engine.units[unit['id']]['pos'][1]
                 self.parent.parent.local_engine.refreshUnit(unit)
                 if self.parent.parent.local_engine.isThisMyUnit(unit['id']):
-                    self.parent.parent.interface.refreshUnitInfo(unit['id'])          
+                    animation.append(Func(self.parent.parent.interface.refreshUnitInfo, unit['id']))          
                 if self.parent.parent.sel_unit_id == unit['id']:
-                    self.parent.parent.interface.processUnitData( unit['id'] )                  
-                    self.parent.parent.interface.printUnitData( unit['id'] )
-                    self.parent.parent.movement.calcUnitAvailMove( unit['id'] )
+                    animation.append(Func(self.parent.parent.interface.processUnitData, unit['id']))                  
+                    animation.append(Func(self.parent.parent.interface.printUnitData, unit['id']))
+                    self.parent.parent.movement.calcUnitAvailMove( unit['id'])
+                    animation.append(Func(self.parent.parent.movement.showUnitAvailMove))
                     #self.parent.parent.render_manager.refreshEnemyUnitMarkers()
-                    if unit['pos'][0] != old_x or unit['pos'][1] != old_y or unit['last_action']=='use':
-                        animation.append(Func(self.parent.parent.render_manager.refreshFow))
+                    #if unit['pos'][0] != old_x or unit['pos'][1] != old_y or unit['last_action']=='use':
+                    #    animation.append(Func(self.parent.parent.render_manager.refreshFow))
                     #self.parent.sgm.playUnitStateAnim( unit['id'] )
             #========================================================================
             #
@@ -142,24 +146,23 @@ class AnimationManager():
                     self.parent.parent.movement.calcUnitAvailMove( self.parent.parent.sel_unit_id )
 
                 # Create animations based on level changes (opened doors etc)    
-                print self.parent.parent.local_engine.level._grid
                 for x, val in enumerate(self.parent.parent.local_engine.old_level._grid):
                     for y, val2 in enumerate(val):
                         if val2 != None and self.parent.parent.local_engine.level._grid[x][y] != None:
                             if val2.name != self.parent.parent.local_engine.level._grid[x][y].name:
-                                x,y,h = self.parent.level_renderer.getWallPosition(x, y)
-                                model = self.parent.level_renderer.door_dict[(x,y,h)]
-                                door = model.find("**/Door*")  
+                                mod_x,mod_y,mod_h = self.parent.level_renderer.getWallPosition(x, y)
+                                model = self.parent.level_renderer.door_dict[(mod_x,mod_y,mod_h)]
+                                door = model.find("**/Door*")
                                 if val2.name == 'ClosedDoor':
                                     if (x,y) in self.parent.parent.local_engine.visible_walls:
-                                        animation.append(Func(door.setPos, Vec3(0.5,0,-0.72)))
-                                    else:
                                         animation.append(door.posInterval(1, Vec3(0.5,0,-0.72)))
+                                    else:
+                                        animation.append(Func(door.setPos, Vec3(0.5,0,-0.72)))
                                 elif val2.name == 'OpenedDoor':
                                     if (x,y) in self.parent.parent.local_engine.visible_walls:
-                                        animation.append(Func(door.setPos, Vec3(0.5,0,0)))
-                                    else:                                    
                                         animation.append(door.posInterval(1, Vec3(0.5,0,0)))
+                                    else:                                    
+                                        animation.append(Func(door.setPos, Vec3(0.5,0,0)))
             #========================================================================
             #
             elif msg[0] == USE:
@@ -181,6 +184,7 @@ class AnimationManager():
                 self.log.error("Unknown message Type: %s", msg[0])
                 self._message_in_process = False
         
+        animation.append(Func(self.parent.parent.render_manager.refreshFow))
         animation.append(Func(self.afterAnimHook))            
         animation.start()
     

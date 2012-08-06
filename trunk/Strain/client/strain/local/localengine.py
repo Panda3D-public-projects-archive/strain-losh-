@@ -8,6 +8,7 @@ class LocalEngine():
         self.parent = parent
         self.level = None
         self.visible_walls = []
+        #self.old_visible_walls = []
     
     def refreshUnit(self, unit):
         if unit['alive'] == False:
