@@ -43,7 +43,7 @@ HEADING_SE        = 8
 TILE_SIZE = 1
 GROUND_LEVEL = 0.0
 MODEL_OFFSET = TILE_SIZE/2
-BULLET_SPEED = 15
+BULLET_SPEED = 7
 
 #############################################################################
 ### LEGO MODEL DICTS AND PARAMS

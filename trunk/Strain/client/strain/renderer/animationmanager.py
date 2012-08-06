@@ -129,9 +129,8 @@ class AnimationManager():
             #========================================================================
             #
             elif msg[0] == VANISH:
-                self._message_in_process = True            
-                # Animation manager sets _message_in_process to False when the animation is done
-                self.handleVanish(msg[1])                       
+                unit_id = msg[1]
+                animation.append(Func(self.parent.hideUnit, unit_id))                       
             #========================================================================
             #
             elif msg[0] == LEVEL:
@@ -188,15 +187,6 @@ class AnimationManager():
         animation.append(Func(self.afterAnimHook))            
         animation.start()
     
-    def buildDeleteAnim(self, unit_id):
-        return Sequence(Func(self.parent.hideUnit, unit_id), 
-                        Wait(0.2)
-                        #Func(self.parent.unit_marker_renderer.clearMarker, unit_id)
-                        )
-    
-    def buildDetachAnim(self, unit_id):
-        return Sequence(Func(self.sgm.detachUnit, unit_id), Wait(0.2))
-    
     def buildLaserAnim(self, source, target):
         self.combat.source = source
         self.combat.target = target
@@ -248,12 +238,7 @@ class AnimationManager():
                                             Func(textNodePath.removeNode)
                                             ) 
             damage_parallel = Parallel(damage_text_sequence, target_anim)       
-        return damage_parallel
-    
-    def handleVanish(self, unit_id):
-        i = self.buildDeleteAnim(unit_id)
-        s = Sequence(i)
-        s.start()        
+        return damage_parallel      
         
     def handleNewTurn(self):
         text = TextNode('new turn node')
