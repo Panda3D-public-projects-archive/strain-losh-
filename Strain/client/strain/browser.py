@@ -20,21 +20,24 @@ class Browser():
         self.parent.rRegion.setActive(1)
         self.parent.rContext = self.parent.rRegion.getContext()
         
-        doc = self.parent.rContext.LoadDocument('data/rml/game.rml')
+        self.doc = self.parent.rContext.LoadDocument('data/rml/game.rml')
 
-        element = doc.GetElementById('btn_new')
+        element = self.doc.GetElementById('btn_new')
         element.AddEventListener('click', self.newGame, True)
-        element = doc.GetElementById('btn_continue')
+        element = self.doc.GetElementById('btn_continue')
         element.AddEventListener('click', self.contGame, True)
-        element = doc.GetElementById('btn_obs')
+        element = self.doc.GetElementById('btn_obs')
         element.AddEventListener('click', self.obsGame, True)
-        element = doc.GetElementById('btn_replay')
+        element = self.doc.GetElementById('btn_replay')
         element.AddEventListener('click', self.viewReplay, True)
         
-        element = doc.GetElementById('status_bar')
-        element.inner_rml = 'Username: ' + self.parent.player
         
-        doc.Show()
+        
+        self.updateStatusBar()
+        #element = self.doc.GetElementById('status_bar')
+        #element.inner_rml = 'Username: ' + self.parent.player
+        
+        self.doc.Show()
         
     def cleanup(self):
         self.parent.rRegion.setActive(0)
@@ -55,3 +58,7 @@ class Browser():
         
     def backToMain(self):
         self.parent.fsm.request('Login')
+        
+    def updateStatusBar(self):
+        element = self.doc.GetElementById('status_bar')
+        element.inner_rml = 'Username: %s, Total players: %d, Active/unacceptes/waiting games: %d/%d/%d, News items: %d' % (self.parent.player, self.parent.players, self.parent.active_games, self.parent.unaccepted_games, self.parent.waiting_games, self.parent.news_items)
