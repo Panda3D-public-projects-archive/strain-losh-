@@ -44,6 +44,13 @@ class App():
             
         #PStatClient.connect()
         
+        #menu data
+        self.players = 0
+        self.active_games = 0
+        self.unaccepted_games = 0
+        self.waiting_games = 0
+        self.news_items = 0
+        
         #setup screen (initialize ShowBase to create window)
         self.screen = Screen(self, (800,600))
         self.rRegion = RocketRegion.make('main_menu', base.win)
