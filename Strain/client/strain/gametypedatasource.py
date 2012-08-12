@@ -12,37 +12,11 @@ from panda3d.rocket import *
 import traceback 
 
 class LevelListDataSource(DataSource): 
-    def __init__(self, name): 
+    def __init__(self, name, data): 
 
         self.levels = []
-        self.levels.append({'name':'assasins', 'size':'20x20', 'players':2, 'description':'description0Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'})
-        self.levels.append({'name':'assasins1', 'size':'21x20', 'players':2, 'description':'description1Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'})
-        self.levels.append({'name':'assasins2', 'size':'22x20', 'players':2, 'description':'description2Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'})
-        self.levels.append({'name':'assasins3', 'size':'23x20', 'players':2, 'description':'description3Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'})
-        self.levels.append({'name':'assasins4', 'size':'24x20', 'players':2, 'description':'description4Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'})
-        self.levels.append({'name':'assasins5', 'size':'25x20', 'players':4, 'description':'description5Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'})
-        self.levels.append({'name':'assasins6', 'size':'26x20', 'players':4, 'description':'description6Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'})
-        self.levels.append({'name':'assasins', 'size':'20x20', 'players':2, 'description':'description0Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'})
-        self.levels.append({'name':'assasins1', 'size':'21x20', 'players':2, 'description':'description1Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'})
-        self.levels.append({'name':'assasins2', 'size':'22x20', 'players':2, 'description':'description2Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'})
-        self.levels.append({'name':'assasins3', 'size':'23x20', 'players':2, 'description':'description3Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'})
-        self.levels.append({'name':'assasins4', 'size':'24x20', 'players':2, 'description':'description4Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'})
-        self.levels.append({'name':'assasins5', 'size':'25x20', 'players':4, 'description':'description5Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'})
-        self.levels.append({'name':'assasins6', 'size':'26x20', 'players':4, 'description':'description6Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'})
-        self.levels.append({'name':'assasins', 'size':'20x20', 'players':2, 'description':'description0Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'})
-        self.levels.append({'name':'assasins1', 'size':'21x20', 'players':2, 'description':'description1Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'})
-        self.levels.append({'name':'assasins2', 'size':'22x20', 'players':2, 'description':'description2Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'})
-        self.levels.append({'name':'assasins3', 'size':'23x20', 'players':2, 'description':'description3Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'})
-        self.levels.append({'name':'assasins4', 'size':'24x20', 'players':2, 'description':'description4Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'})
-        self.levels.append({'name':'assasins5', 'size':'25x20', 'players':4, 'description':'description5Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'})
-        self.levels.append({'name':'assasins6', 'size':'26x20', 'players':4, 'description':'description6Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'})
-        self.levels.append({'name':'assasins1', 'size':'21x20', 'players':2, 'description':'description1Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'})
-        self.levels.append({'name':'assasins2', 'size':'22x20', 'players':2, 'description':'description2Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'})
-        self.levels.append({'name':'assasins3', 'size':'23x20', 'players':2, 'description':'description3Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'})
-        self.levels.append({'name':'assasins4', 'size':'24x20', 'players':2, 'description':'description4Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'})
-        self.levels.append({'name':'assasins5', 'size':'25x20', 'players':4, 'description':'description5Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'})
-        self.levels.append({'name':'assasins6', 'size':'26x20', 'players':4, 'description':'description6Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'})
-
+        for row in data:
+            self.levels.append({'name':row, 'size':'20x20', 'players':2, 'description':'description0Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'})
         
         DataSource.__init__(self, name) 
 
