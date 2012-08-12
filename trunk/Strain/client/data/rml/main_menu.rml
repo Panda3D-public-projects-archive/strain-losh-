@@ -1,0 +1,29 @@
+<rml>
+	<head>
+		<link type="text/rcss" href="rkt.rcss"/>
+		<link type="text/rcss" href="strain.rcss"/>
+	</head>
+	<body >
+		<div id="status_bar" class="text_container">
+		</div>
+		<div id="game_type_container">
+			<div class="main_filler"></div>
+			<div id="main_left">
+			</div>
+			<div class="main_filler"></div>
+			<div id="main_middle">
+			</div>
+			<div class="main_filler"></div>
+			<div id="main_right">
+			</div>
+		</div>
+		<div id = "menu_center">
+			<div id="btn_enter" class="middle_button_default">
+				<div class="button_text">Enter Game</div>
+			</div>
+			<div id="btn_new" class="middle_button_default">
+				<div class="button_text">New Game</div>
+			</div>
+		</div>
+	</body>
+</rml>
