@@ -45,11 +45,17 @@ class App():
         #PStatClient.connect()
         
         #menu data
-        self.players = 0
-        self.active_games = 0
-        self.unaccepted_games = 0
-        self.waiting_games = 0
-        self.news_items = 0
+        self.players = None
+        self.active_games = None
+        self.unaccepted_games = None
+        self.waiting_games = None
+        self.news_items = None
+        self.levels = None
+        self.game_id = None
+        self.map = None
+        self.budget = None
+        self.game_name = None
+        self.browser = None
         
         #setup screen (initialize ShowBase to create window)
         self.screen = Screen(self, (800,600))
@@ -90,7 +96,8 @@ class AppFSM(FSM.FSM):
 
         self.defaultTransitions = {
             'Login' : [ 'Browser' ],
-            'Browser' : [ 'NewGame', 'ContinueGame' ]
+            'Browser' : [ 'NewGame', 'ContinueGame' ],
+            'NewGame' : [ 'Deploy' ]
             }
         
     def enterLogin(self):
@@ -109,9 +116,9 @@ class AppFSM(FSM.FSM):
         del self.parent.browser
         
     def enterNewGame(self):
-        ClientMsg.startNewGame('base2', 1000, [ClientMsg.loggedIn(), 0], 0, "game #1")
+        #ClientMsg.startNewGame('base2', 1000, [ClientMsg.loggedIn(), 0], 0, "game #1")
         #ClientMsg.startNewGame('level2', 1000, [ClientMsg.loggedIn(), 0], 1, '')
-        #self.parent.gametype = GameType(self.parent)
+        self.parent.gametype = GameType(self.parent)
     
     def exitNewGame(self):
         self.parent.gametype.cleanup()
@@ -119,8 +126,10 @@ class AppFSM(FSM.FSM):
         
     def enterContinueGame(self):
         from strain.gameinstance import GameInstance
-        self.parent.game_instance = GameInstance(self.parent, 'Continue', 243)
+        self.parent.game_instance = GameInstance(self.parent, 'Continue', self.parent.game_id)
         
+    def enterDeploy(self):
+        ClientMsg.startNewGame(self.parent.map, self.parent.budget, [ClientMsg.loggedIn(), 0], 0, self.parent.game_name)
     
     def exitContinueGame(self):
         #TODO: ogs: kod za brisanje i deinicijalizaciju GameInstance
