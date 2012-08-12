@@ -34,6 +34,9 @@
 					<p>Password protect:
 					<input type="checkbox" /></p>
 					<input id="password" type="password" visible="false"></input>
+					<br/>
+					<p>Game name:</p>
+					<input id="game_name" type="text"></input>
 				</div>
 			</div>
 		</div>
