@@ -16,11 +16,11 @@ from gametypedatasource import *
 class GameType():
     def __init__(self, parent):
         self.parent = parent
-
+        self.selected_index = None
         self.parent.rRegion.setActive(1)
         self.parent.rContext = self.parent.rRegion.getContext()
         self.previous_element = None
-        self.levelData = LevelListDataSource("level_list")
+        self.levelData = LevelListDataSource("level_list", self.parent.levels)
         self.armySize = ArmySizeDataSource("army_size")
         self.playerNumber = PlayerNumberDataSource("player_number")
         
@@ -43,6 +43,9 @@ class GameType():
         self.parent = None
     
     def deployUnits(self):
+        self.parent.map = self.levelData.levels[self.selected_index]['name']
+        self.parent.budget =  int(self.doc.GetElementById("army_size_select").value)
+        self.parent.game_name =  self.doc.GetElementById("game_name").value  
         self.parent.fsm.request('Deploy')
 
     def rowSelected(self):
@@ -55,8 +58,10 @@ class GameType():
             self.setLevelInfo(event.target_element.parent_node.table_relative_index)
         
     def setLevelInfo(self, index):
+        self.selected_index = index
         image = self.doc.GetElementById("level_info_left")
-        image.inner_rml = '<img height="215px" width="215px" src="../levels/' + self.levelData.levels[index]['name'] + '.png"/>'
+        #image.inner_rml = '<img height="215px" width="215px" src="../levels/' + self.levelData.levels[index]['name'] + '.png"/>'
+        image.inner_rml = '<img height="215px" width="215px" src="../levels/assasins.png"/>'
         name = self.doc.GetElementById("name")
         name.inner_rml = 'Map name: ' + self.levelData.levels[index]['name']
         players = self.doc.GetElementById("players")
@@ -65,4 +70,6 @@ class GameType():
         size.inner_rml = 'Map size: ' + self.levelData.levels[index]['size']
         description = self.doc.GetElementById("description")
         description.inner_rml = self.levelData.levels[index]['description']
+        self.doc.GetElementById("army_size_select").value = '1000'
+        self.doc.GetElementById("no_of_players_select").value = '2'
         
