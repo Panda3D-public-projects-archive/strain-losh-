@@ -17,6 +17,9 @@ class Browser():
     def __init__(self, parent):
         self.parent = parent
         self.game_id = ''
+        self.game_list = []
+        self.game_list_position = 'top'
+        self.top_game_index = 0
         self.parent.rRegion.setActive(1)
         self.parent.rContext = self.parent.rRegion.getContext()
         
@@ -42,14 +45,43 @@ class Browser():
         
         self.doc.Show()
     
-    def addGameItemEvents(self):
+    def addGameListEvents(self):
         element = self.doc.GetElementById('main_middle')
         for child in element.child_nodes:
-            child.AddEventListener('click', self.selectGame, True)
-                
+            if child.class_name == 'game_item':
+                child.AddEventListener('click', self.selectGame, True)
+            if child.class_name == 'button_up':
+                child.AddEventListener('click', self.gameButtonUp, True)
+            if child.class_name == 'button_down':
+                child.AddEventListener('click', self.gameButtonDown, True)
+    
+    def gameButtonUp(self):
+        if self.top_game_index > 0:
+            self.top_game_index -= 1
+
+        if self.top_game_index == 0:
+            self.game_list_position = 'top'
+        else:
+            self.game_list_position = 'middle'
+
+        self.renderGameList()
+            
+    def gameButtonDown(self):
+        if self.top_game_index + 6 < len(self.game_list):
+            self.top_game_index += 1
+            
+        if self.top_game_index + 6 == len(self.game_list):
+            self.game_list_position = 'bottom'
+        else:
+            self.game_list_position = 'middle'
+            
+        self.renderGameList()
+        
     def selectGame(self):
-        for child in event.current_element.parent_node.child_nodes:
-            child.class_name = "game_item"
+        #for child in event.current_element.parent_node.child_nodes:
+        for child in self.game_list:
+            if child.class_name == "game_item_selected":
+                child.class_name = "game_item"
         event.current_element.class_name = "game_item_selected"
         self.game_id = int(event.current_element.id)
         self.parent.game_id = self.game_id
@@ -87,9 +119,12 @@ class Browser():
                               </div>'
         element = self.doc.GetElementById('main_left')
         element.inner_rml = inner_rml
+        
                     
     def updateGames(self):
-        inner_rml = ' '
+        #element = self.doc.GetElementById('main_middle')
+        #element.inner_rml = ' '
+        self.game_list = []
         if self.parent.unaccepted_games != None:
             for row in self.parent.unaccepted_games:
                 game_id = str(row[0])
@@ -100,11 +135,29 @@ class Browser():
                 for player in self.parent.players:
                     if player[0] == on_turn_id:
                         on_turn = player[1]
-                inner_rml += '<div class="game_item" id="' + game_id + '"> \
-                              <div class="game_item_text">' + game_name + '</div> \
-                              <div class="game_item_text"> Turn: ' + turn + ', On turn: ' + on_turn + '</div> \
-                              <div class="game_item_text">Status: Invited</div> \
-                              </div>'
+                child_element = self.doc.CreateElement("div")
+                child_element.class_name = "game_item"
+                child_element.id = game_id
+                child_text_element1 = self.doc.CreateElement("div")
+                child_text_element1.class_name = "game_item_text"
+                child_text_element1.inner_rml = game_name
+                child_text_element2 = self.doc.CreateElement("div")
+                child_text_element2.class_name = "game_item_text"
+                child_text_element2.inner_rml = ' Turn: ' + turn + ', On turn: ' + on_turn
+                child_text_element3 = self.doc.CreateElement("div")
+                child_text_element3.class_name = "game_item_text"
+                child_text_element3.inner_rml = 'Status: Invited'
+                child_element.AppendChild(child_text_element1)
+                child_element.AppendChild(child_text_element2)
+                child_element.AppendChild(child_text_element3)
+                self.game_list.append(child_element)
+                #element.AppendChild(child_element)
+#                element.inner_rml += '<div class="game_item" id="' + game_id + '"> \
+#                              <div class="game_item_text">' + game_name + '</div> \
+#                              <div class="game_item_text"> Turn: ' + turn + ', On turn: ' + on_turn + '</div> \
+#                              <div class="game_item_text">Status: Invited</div> \
+#                              </div>'
+                self.parent.rContext.Update()
         
         if self.parent.active_games != None:
             for row in self.parent.active_games:
@@ -116,11 +169,29 @@ class Browser():
                 for player in self.parent.players:
                     if player[0] == on_turn_id:
                         on_turn = player[1]
-                inner_rml += '<div class="game_item" id="' + game_id + '"> \
-                              <div class="game_item_text">' + game_name + '</div> \
-                              <div class="game_item_text"> Turn: ' + turn + ', On turn: ' + on_turn + '</div> \
-                              <div class="game_item_text">Status: Active</div> \
-                              </div>'
+                child_element = self.doc.CreateElement("div")
+                child_element.class_name = "game_item"
+                child_element.id = game_id
+                child_text_element1 = self.doc.CreateElement("div")
+                child_text_element1.class_name = "game_item_text"
+                child_text_element1.inner_rml = game_name
+                child_text_element2 = self.doc.CreateElement("div")
+                child_text_element2.class_name = "game_item_text"
+                child_text_element2.inner_rml = ' Turn: ' + turn + ', On turn: ' + on_turn
+                child_text_element3 = self.doc.CreateElement("div")
+                child_text_element3.class_name = "game_item_text"
+                child_text_element3.inner_rml = 'Status: Invited'
+                child_element.AppendChild(child_text_element1)
+                child_element.AppendChild(child_text_element2)
+                child_element.AppendChild(child_text_element3)
+                self.game_list.append(child_element)
+                #element.AppendChild(child_element)
+#                element.inner_rml += '<div class="game_item" id="' + game_id + '"> \
+#                              <div class="game_item_text">' + game_name + '</div> \
+#                              <div class="game_item_text"> Turn: ' + turn + ', On turn: ' + on_turn + '</div> \
+#                              <div class="game_item_text">Status: Active</div> \
+#                              </div>'
+                self.parent.rContext.Update()
         
         if self.parent.waiting_games != None:
             for row in self.parent.waiting_games:
@@ -132,15 +203,71 @@ class Browser():
                 for player in self.parent.players:
                     if player[0] == on_turn_id:
                         on_turn = player[1]
-                inner_rml += '<div class="game_item" id="' + game_id + '"> \
-                              <div class="game_item_text">' + game_name + '</div> \
-                              <div class="game_item_text"> Turn: ' + turn + ', On turn: ' + on_turn + '</div> \
-                              <div class="game_item_text">Status: Waiting</div> \
-                              </div>'
+                child_element = self.doc.CreateElement("div")
+                child_element.class_name = "game_item"
+                child_element.id = game_id
+                child_text_element1 = self.doc.CreateElement("div")
+                child_text_element1.class_name = "game_item_text"
+                child_text_element1.inner_rml = game_name
+                child_text_element2 = self.doc.CreateElement("div")
+                child_text_element2.class_name = "game_item_text"
+                child_text_element2.inner_rml = ' Turn: ' + turn + ', On turn: ' + on_turn
+                child_text_element3 = self.doc.CreateElement("div")
+                child_text_element3.class_name = "game_item_text"
+                child_text_element3.inner_rml = 'Status: Invited'
+                child_element.AppendChild(child_text_element1)
+                child_element.AppendChild(child_text_element2)
+                child_element.AppendChild(child_text_element3)
+                self.game_list.append(child_element)
+                #element.AppendChild(child_element)
+#                element.inner_rml += '<div class="game_item" id="' + game_id + '"> \
+#                              <div class="game_item_text">' + game_name + '</div> \
+#                              <div class="game_item_text"> Turn: ' + turn + ', On turn: ' + on_turn + '</div> \
+#                              <div class="game_item_text">Status: Waiting</div> \
+#                              </div>'
+                self.parent.rContext.Update()
         
+#        element = self.doc.GetElementById('main_middle')
+#        element.inner_rml = inner_rml
+        self.renderGameList()
+        
+    
+    def renderGameList(self):
         element = self.doc.GetElementById('main_middle')
-        element.inner_rml = inner_rml
-        self.addGameItemEvents()
+#        for child in element.child_nodes:
+#            element.RemoveChild(child)
+        element.inner_rml = ''
+        
+        button_empty = self.doc.CreateElement("div")
+        button_empty.class_name = "button_empty"
+        
+        if self.game_list_position != 'top':  
+            child_element = self.doc.CreateElement("div")
+            child_element.class_name = 'button_up'
+            element.AppendChild(child_element)
+        else:
+            element.AppendChild(button_empty)
+            
+        if len(self.game_list) > 0:
+            size = len(self.game_list)
+            if size > 6:
+                size = 6
+            for i in range(6):
+                if i < size:
+                    element.AppendChild(self.game_list[self.top_game_index + i])
+                else:
+                    child_element_empty = self.doc.CreateElement("div")
+                    child_element_empty.class_name = "game_item_empty"
+                    element.AppendChild(child_element_empty)
+        
+        if self.game_list_position != 'bottom':
+            child_element = self.doc.CreateElement("div")
+            child_element.class_name = 'button_down'
+            element.AppendChild(child_element)
+        else:
+            element.AppendChild(button_empty)
+            
+        self.addGameListEvents()
         
     def showGameDetails(self):
         inner_rml = ' '
