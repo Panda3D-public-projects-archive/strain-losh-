@@ -312,7 +312,7 @@ div#info
 div.main_filler
 {
 	width: 5px;
-	height: 440px;
+	height: 400px;
 	background: #8b0000;
 	float:left;
 }
@@ -320,33 +320,66 @@ div.main_filler
 div#main_left
 {
 	width: 240px;
-	height: 440px;
+	height: 400px;
 	margin-left: 0px;
 	margin-right: 5px;
 	float: left;
-	overflow: hidden scroll;
+	overflow: hidden hidden;
 }
 
 div#main_middle
 {
 	width: 240px;
-	height: 440px;
+	height: 400px;
 	margin-left: 0px;
 	margin-right: 5px;
 	float: left;
-	overflow: hidden scroll;
+	overflow: hidden hidden;
 }
 
 div#main_right
 {
 	width: 240px;
-	height: 440px;
+	height: 400px;
 	margin-left: 0px;
 	margin-right: 5px;
 	float: left;
 }
 
+div.button_up
+{
+	width: 240px;
+	height: 20px;
+	float: left;
+	background: #8b0000;
+}
+
+div.button_empty
+{
+	width: 240px;
+	height: 20px;
+	float: left;
+	background: #000000;
+}
+
+div.button_down
+{
+	width: 240px;
+	height: 20px;
+	float: left;
+	background: #8b0000;
+}
+
 div.game_item
+{
+	width: 240px;
+	height: 60px;
+	background: #000000;
+	
+	float: left;
+}
+
+div.game_item_empty
 {
 	width: 240px;
 	height: 60px;
