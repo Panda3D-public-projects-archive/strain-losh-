@@ -352,6 +352,37 @@ div.button_up
 	height: 20px;
 	float: left;
 	background: #8b0000;
+	
+}
+
+div.button_up_img
+{
+	width: 20px;
+	height: 20px;
+	margin:auto;
+	icon-decorator: image;
+	icon-image: strain_arrow_inc.png;
+}
+
+div.button_down_img
+{
+	width: 20px;
+	height: 20px;
+	margin:auto;
+	icon-decorator: image;
+	icon-image: strain_arrow_dec.png;
+}
+
+div.button_up:hover,
+div.button_down:hover
+{
+	background: #ab2020;
+}
+
+div.button_up:active,
+div.button_down:active
+{
+	background: #8b0000;
 }
 
 div.button_empty
