@@ -244,6 +244,9 @@ class Browser():
         if self.game_list_position != 'top':  
             child_element = self.doc.CreateElement("div")
             child_element.class_name = 'button_up'
+            child_element_img = self.doc.CreateElement("div")
+            child_element_img.class_name = "button_up_img"
+            child_element.AppendChild(child_element_img)
             element.AppendChild(child_element)
         else:
             element.AppendChild(button_empty)
@@ -263,6 +266,9 @@ class Browser():
         if self.game_list_position != 'bottom':
             child_element = self.doc.CreateElement("div")
             child_element.class_name = 'button_down'
+            child_element_img = self.doc.CreateElement("div")
+            child_element_img.class_name = "button_down_img"
+            child_element.AppendChild(child_element_img)
             element.AppendChild(child_element)
         else:
             element.AppendChild(button_empty)
