@@ -1,3 +1,110 @@
+import math
+
+def linija_od_nulexy( x1, y1 ):
+    lista_tocaka = []
+    y_x =float(y1) / x1
+    D = y_x - 0.5
+    y = 0
+    for x in xrange( x1 ):
+        if D>0:
+            y += 1
+            D -= 1
+        D += y_x
+        lista_tocaka.append( (x,y) )
+    lista_tocaka.append( (x1, y1) )
+    return lista_tocaka
+    
+
+def linija_od_nule( x1, y1 ):
+    lista_tocaka = []
+    if x1 >= y1:
+        y_x =float(y1) / x1
+        D = y_x - 0.5
+        y = 0
+        for x in xrange( x1 ):
+            if D>0:
+                y += 1
+                D -= 1
+            D += y_x
+            lista_tocaka.append( (x,y) )
+        lista_tocaka.append( (x1, y1) )
+    else:
+        x_y =float(x1) / y1
+        D = x_y - 0.5
+        x = 0
+        for y in xrange( y1 ):
+            if D>0:
+                x += 1
+                D -= 1
+            D += x_y
+            lista_tocaka.append( (x,y) )
+        lista_tocaka.append( (x1, y1) )
+    return lista_tocaka
+
+def sig( num ):
+    if( num < 0 ): 
+        return -1
+    elif( num >= 0 ):
+        return 1
+    
+def linija( t1, t2 ):
+    x1, y1 = t1
+    x2, y2 = t2
+    absx0 = int(math.fabs(x2-x1))
+    absy0 = int(math.fabs(y2-y1))
+    
+    sgnx0 = sig(x2-x1)
+    sgny0 = sig(y2-y1)
+    
+    x = x1
+    y = y1
+    
+    li = [(x,y)]
+    
+    if absx0 > absy0:
+        y_x = float(absy0)/absx0
+        D = y_x - 0.5
+        print "y_x =", y_x, "    y_x_2=", y_x/2
+        for i in xrange( absx0 ):
+            print "D:",D
+            if D>0:
+                y += sgny0
+                D -= 1
+            x += sgnx0
+            D += y_x
+            li.append((x,y))
+        
+    else:
+        x_y = float(absx0)/absy0
+        D = x_y - 0.5
+        for i in xrange( absy0 ):
+            if D>0:
+                x+=sgnx0
+                D-=1
+            y+=sgny0
+            D+=x_y
+            li.append((x,y))
+            
+    return li
+    
+#print linija_od_nulexy( 8,4 )
+#print linija_od_nule( 4,8 )
+
+#print linija( (0,0), (8,1) )
+#li = linija( (8,4), (0,0) )
+#li.reverse()
+#print li
+
+#exit(0)
+
+
+
+
+
+
+
+
+
 from panda3d.core import *
 from direct.gui.OnscreenImage import OnscreenImage
 from direct.showbase import DirectObject
@@ -14,13 +121,16 @@ import random
 import os, sys
 lib_path = os.path.abspath('server/src')
 sys.path.append(lib_path)
-from unit import Unit
 
 
 loadPrcFile("./config/config.prc")
 ground_level = 0
 tile_size = 1.
 base.setFrameRateMeter(True)
+
+    
+    
+
 
 
 class Tester(DirectObject.DirectObject):
@@ -39,6 +149,7 @@ class Tester(DirectObject.DirectObject):
         base.accept('o', render.analyze)
         base.accept('i', render.ls)
         base.accept('c', self.displayLos)
+        base.accept('y', self.getInvisible3d)
         
         self.unit_renderer.loadForTester(1, 1, 'marine_common', 0, 0, utils.HEADING_N)
         unit_dict = {}
@@ -67,16 +178,31 @@ class Tester(DirectObject.DirectObject):
                 self.units[0] = unit_dict
 
 
+    def getInvisible3d(self):
+        for unit in self.units:
+            print "3d-",levelInvisibility3d3d(self.units, self.level)
+        
+       
+
     def getInvisibleTiles(self):
         t = time.clock()
+
         l = levelVisibilityDict(self.units, self.level)
-        print "tiles timer:::", (time.clock()-t)*1000
+        t2 = time.clock()
+        #print "tiles timer:::", (t2-t)*10, "ms"
+        """
+        t = time.clock()
+        for i in xrange( 100 ):
+            l = levelVisibilityDict(self.units, self.level)
+        t2 = time.clock()
+        print "tiles 100 call - timer:::", (t2-t)*10, "ms"
+        """
         return l
     
     def getInvisibleWalls(self):
         t = time.clock()
         l = visibleWalls(self.units, self.level)
-        print "walls timer:::", (time.clock()-t)*1000
+        #print "walls timer:::", (time.clock()-t)*1000
         return l
         
     def displayLos(self):

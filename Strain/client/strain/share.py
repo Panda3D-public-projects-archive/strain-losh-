@@ -74,6 +74,27 @@ UNDEFINED_MSG_2 = 'msg2'        #value undefined
 DYNAMICS_EMPTY = 0
 DYNAMICS_UNIT = 1
 
+def levelInvisibility3d3d( unit_list, level ):
+
+    invis_dict = {}
+    
+    for unit in unit_list:            
+        #for x in xrange(level.maxX):
+        for x in xrange(4):
+            #for y in xrange(level.maxY):
+            for y in xrange(4):
+                for z in xrange( 4 ):
+                    t = (x,y,z)
+                                       
+                    if not getTiles3D( unit['pos']+(0,), t, level ):
+                        invis_dict[t] = 1
+                        
+            
+    return invis_dict            
+    
+    
+    
+    
 
 def levelVisibilityDict( unit_list, level ):
     vis_dict = {}
@@ -459,6 +480,185 @@ def getLOS2D( t1, t2, level ):
             
     return list_visible_tiles
 
+    
+def getTiles3D( t1, t2, level ):
+
+    list_visible_tiles = [ t1 ]
+    
+    #we see ourselves
+    if( t1 == t2 ):
+        return list_visible_tiles
+    
+    x1, y1, z1 = t1
+    x2, y2, z2 = t2
+    
+    #if one of our end points is not empty space, return false
+    if level.test3D( x1, y1, z1 ) or level.test3D( x2, y2, z2 ):
+        return False
+    
+    absx0 = math.fabs(x2 - x1);
+    absy0 = math.fabs(y2 - y1);
+    absz0 = math.fabs(z2 - z1);
+    
+    dist = int( distance(x1, y1, x2, y2) )
+
+    if dist == 0:
+        return list_visible_tiles
+
+    rev = False
+    
+    if( absx0 > absy0 ):
+        if x2 < x1:
+            x1, y1, z1 = t2
+            x2, y2, z2 = t1
+            list_visible_tiles[0] = t2
+            rev = True
+    else:
+        if y2 < y1:
+            x1, y1, z1 = t2
+            x2, y2, z2 = t1
+            list_visible_tiles[0] = t2
+            rev = True
+    
+    
+    x = int( x1 );
+    y = int( y1 );
+    z = int( z1 )
+
+    
+    sgnz0 = signum(z2 - z1)
+    z_d = absz0/dist
+    
+    if( absx0 > absy0 ):
+        sgny0 = signum( y2 - y1 );
+        y_x = absy0/absx0            
+        D = y_x -0.5
+
+        if dist > absz0:
+            Dz = z_d - 0.5
+        
+        for i in xrange( int( absx0 ) ): #@UnusedVariable
+            lastx, lasty, lastz = x, y, z
+            
+            if( D > 0 ):
+                y += sgny0
+                D -= 1
+
+            if dist > absz0:
+                if Dz > 0:
+                    z += sgnz0
+                    Dz -= 1
+                Dz += z_d
+            else: 
+                z = z + z_d * sgnz0
+
+            x += 1
+            D += y_x
+            
+            #=========================TEST==========================================
+            if testTile3D( (x, y, int(z)), (lastx, lasty, int(lastz)), level ):
+                list_visible_tiles.append( (x, y, int(z)) )
+            else:
+                return False
+                break
+            
+    #//(y0 >= x0)            
+    else:
+        sgnx0 = signum( x2 - x1 );
+        x_y = absx0/absy0
+        D = x_y -0.5;
+        
+        if( dist > absz0 ):
+            Dz = z_d - 0.5
+
+        for i in xrange( int( absy0 ) ): #@UnusedVariable
+            lastx, lasty, lastz = x, y, z
+    
+            if( D > 0 ):
+                x += sgnx0
+                D -= 1.0
+
+            if dist > absz0:
+                if Dz > 0:
+                    z += sgnz0
+                    Dz -= 1
+                Dz += z_d 
+            else:
+                z = z + z_d * sgnz0
+                
+            y += 1
+            D += x_y
+            
+            #=========================TEST==========================================
+            if testTile3D( (x, y, int(z)), (lastx, lasty, int(lastz)), level ):
+                list_visible_tiles.append( (x, y, int(z)) )
+            else:
+                return False
+                break
+
+    if rev:
+        list_visible_tiles.reverse()
+    return list_visible_tiles
+
+            
+def testTile3D( pos, lastpos, level ):
+    
+    #level bounds
+    if( level.outOfBounds( pos[0], pos[1] ) ):
+        return False
+    if( level.outOfBounds( lastpos[0], lastpos[1] ) ):
+        return False
+    
+    #if we can't see here
+    if level.test3D( pos[0], pos[1], pos[2] ):
+        return False
+    
+    #moved along x
+    if pos[0] != lastpos[0]:
+        #moved along y
+        if pos[1] != lastpos[1]:
+            
+            #moved along z - diagonal x-y-z
+            if pos[2] != lastpos[2]:
+                    if( level.test3D( lastpos[0], lastpos[1], pos[2] ) and
+                        level.test3D( lastpos[0], pos[1], lastpos[2] ) and
+                        level.test3D( pos[0], lastpos[1], lastpos[2] ) ):                             
+                            return False
+                     
+                    if ( level.test3D( lastpos[0], pos[1], lastpos[2] ) and
+                          level.test3D( lastpos[0], pos[1], pos[2] ) and
+                          level.test3D( pos[0], lastpos[1], lastpos[2] ) and
+                          level.test3D( pos[0], lastpos[1], pos[2] ) ): 
+                        return False
+            
+                    return True
+            #diagonal x-y
+            if ( level.test3D( pos[0], lastpos[1], pos[2] ) and
+                 level.test3D( lastpos[0], pos[1], pos[2] ) ):  
+                        return False
+            else:
+                return True
+
+        #moved along z - diagonal x-z
+        if pos[2] != lastpos[2]:
+            if ( level.test3D( pos[0], pos[1], lastpos[2] ) and
+                 level.test3D( lastpos[0], pos[1], pos[2] ) ):  
+                        return False
+            else:
+                return True
+                
+    #moved along y 
+    if pos[1] != lastpos[1]:
+        #moved along z - diagonal y-z
+        if pos[2] != lastpos[2]:
+            if ( level.test3D( pos[0], pos[1], lastpos[2] ) and
+                 level.test3D( pos[0], lastpos[1], pos[2] ) ):  
+                        return False
+            else:
+                return True
+    
+    return True
+    
 
 
 def getTiles2D( t1, t2, level ):
@@ -1024,6 +1224,11 @@ class Level:
             self.load( name )        
 
         self.center = ( self.maxX / 2, self.maxY / 2 )
+
+    def test3D(self, x, y, z):
+            if self._level_data[ int(x) ][ int(y) ] <= z:
+                return False
+            return True
 
 
     def load(self, name):
