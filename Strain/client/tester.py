@@ -1,4 +1,5 @@
 from panda3d.core import *
+from direct.gui.OnscreenImage import OnscreenImage
 from direct.showbase import DirectObject
 from strain.renderer.levelrenderer import LevelRenderer
 from strain.renderer.cameramanager import CameraManager
@@ -42,6 +43,10 @@ class Tester(DirectObject.DirectObject):
         unit_dict = {}
         unit_dict['pos'] = (0,0)
         self.units.append(unit_dict)
+
+        b=OnscreenImage(parent=render2dp, image="galaxy1.jpg") #@UndefinedVariable
+        #base.cam.node().getDisplayRegion(0).setSort(20)
+        base.cam2dp.node().getDisplayRegion(0).setSort(-20)#@UndefinedVariable
         
         self.displayLos()
 
