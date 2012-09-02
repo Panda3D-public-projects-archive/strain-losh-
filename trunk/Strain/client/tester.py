@@ -27,16 +27,21 @@ class Tester(DirectObject.DirectObject):
         self.level = Level(level_name)
         self.level_renderer = LevelRenderer(self, self.node)
         self.level_renderer.create(self.level, self.level.maxX, self.level.maxY, tile_size, ground_level)
+        #self.level_renderer.redrawLights()
         self.camera = CameraManager(self)
         self.units = []
-        self.unit_renderers = {}
-        self.id_counter = 1
+        self.unit_renderer = UnitRenderer(self, self.node)
         
         self.plane = Plane(Vec3(0, 0, 1), Point3(0, 0, ground_level))
         base.accept('mouse1', self.toggleUnit)
         base.accept('o', render.analyze)
         base.accept('i', render.ls)
         base.accept('c', self.displayLos)
+        
+        self.unit_renderer.loadForTester(1, 1, 'marine_common', 0, 0, utils.HEADING_N)
+        unit_dict = {}
+        unit_dict['pos'] = (0,0)
+        self.units.append(unit_dict)
         
         self.displayLos()
 
@@ -48,26 +53,11 @@ class Tester(DirectObject.DirectObject):
             farPoint = Point3()
             base.camLens.extrude(mpos, nearPoint, farPoint)
             if self.plane.intersectsLine(pos3d,render.getRelativePoint(camera, nearPoint),render.getRelativePoint(camera, farPoint)):
-                id = None
-                for u in self.unit_renderers.itervalues():
-                    if int(u.node.getX()) == int(pos3d.x) and int(u.node.getY()) == int(pos3d.y):
-                        id = int(u.id)
-                        u.cleanup()
-                        u.node.removeNode()
-                        break
-                if id:
-                    self.unit_renderers.pop(id)
-                    unit_dict = {}
-                    unit_dict['pos'] = (int(pos3d.x), int(pos3d.y))
-                    self.units.remove(unit_dict)
-                else:
-                    id = self.id_counter                
-                    self.unit_renderers[self.id_counter] = UnitRenderer(self, self.node)
-                    self.unit_renderers[self.id_counter].loadForTester(self.id_counter, 1, 'marine_common', int(pos3d.x), int(pos3d.y), utils.HEADING_N)
-                    self.id_counter += 1
-                    unit_dict = {}
-                    unit_dict['pos'] = (int(pos3d.x), int(pos3d.y))
-                    self.units.append(unit_dict)
+                self.unit_renderer.node.setPos(int(pos3d.x)+0.5, int(pos3d.y)+0.5, 0)
+                unit_dict = {}
+                unit_dict['pos'] = (int(pos3d.x), int(pos3d.y))
+                self.units[0] = unit_dict
+
 
     def getInvisibleTiles(self):
         t = time.clock()
@@ -83,8 +73,8 @@ class Tester(DirectObject.DirectObject):
         
     def displayLos(self):
         self.level_renderer.updateLevelLos(self.getInvisibleTiles(), self.getInvisibleWalls())
-        self.level_renderer.switchNodes()
-        self.level_renderer.flattenNodes()
+        #self.level_renderer.switchNodes()
+        #self.level_renderer.flattenNodes()
 
 tester = Tester(level_name='../server/data/levels/level2.txt')
 run()
