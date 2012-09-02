@@ -172,7 +172,7 @@ class LevelRenderer():
             model.setTexture(self.floor_tex_C)
             #model.setTexture(self.texstage_normal, self.floor_tex_N)
         elif type == 'CUBE1':
-            model = loader.loadModel('halfcube')
+            model = loader.loadModel('cube')
             model.setScale(tile_size)
             model.setPos(x*tile_size, y*tile_size, zpos)
         elif type == 'CUBE2':    
