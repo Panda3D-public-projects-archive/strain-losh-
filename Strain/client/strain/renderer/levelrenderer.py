@@ -175,10 +175,12 @@ class LevelRenderer():
             model = loader.loadModel('cube')
             model.setScale(tile_size)
             model.setPos(x*tile_size, y*tile_size, zpos)
+            model.setScale(1,1,0.7)
         elif type == 'CUBE2':    
             model = loader.loadModel('cube')
             model.setScale(tile_size)
-            model.setPos(x*tile_size, y*tile_size, (i-1)*tile_size+zpos)
+            model.setPos(x*tile_size, y*tile_size, (i-1)*tile_size*0.7+zpos)
+            model.setScale(1,1,0.7)
         return model
     
     def loadWallModel(self, type, x, y, h, tile_size, zpos):
