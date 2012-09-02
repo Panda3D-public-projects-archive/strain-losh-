@@ -79,10 +79,10 @@ def levelInvisibility3d3d( unit_list, level ):
     invis_dict = {}
     
     for unit in unit_list:            
-        #for x in xrange(level.maxX):
-        for x in xrange(4):
-            #for y in xrange(level.maxY):
-            for y in xrange(4):
+        for x in xrange(level.maxX):
+        #for x in xrange(4):
+            for y in xrange(level.maxY):
+            #for y in xrange(4):
                 for z in xrange( 4 ):
                     t = (x,y,z)
                                        
