@@ -4,6 +4,7 @@ from direct.showbase import DirectObject
 from strain.renderer.levelrenderer import LevelRenderer
 from strain.renderer.cameramanager import CameraManager
 from strain.renderer.unitrenderer import UnitRenderer
+from strain.renderer.coordrenderer import CoordRenderer
 from strain.share import Level
 import strain.utils as utils
 from strain.share import *
@@ -43,6 +44,8 @@ class Tester(DirectObject.DirectObject):
         unit_dict = {}
         unit_dict['pos'] = (0,0)
         self.units.append(unit_dict)
+        self.cr = CoordRenderer(self, self.node)
+        self.cr.redraw(self.level.maxX, self.level.maxY, tile_size, ground_level)
 
         b=OnscreenImage(parent=render2dp, image="galaxy1.jpg") #@UndefinedVariable
         #base.cam.node().getDisplayRegion(0).setSort(20)
