@@ -87,10 +87,11 @@ class UnitRenderer:
         self.node = self.parent_node.attachNewNode("UnitRendererNode_"+self.id)
         
         i = string.index(name, '_')
-        self.model = self.loadModel(name[0:i], name[i+1:], self.team_id)           
+        self.model = loader.loadModel('marine_sergeant')#self.loadModel(name[0:i], name[i+1:], self.team_id)           
         self.model.reparentTo(self.node)
+        self.model.setTexture(loader.loadTexture('marine_sergeant.png'))
         
-        scale = utils.DOW_UNIT_SCALE
+        scale = 0.3
         h = 180
         pos = Point3(x, y, 0)
         pos = self.calcWorldPos(pos)

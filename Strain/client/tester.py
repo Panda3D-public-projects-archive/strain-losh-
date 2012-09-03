@@ -183,7 +183,6 @@ class Tester(DirectObject.DirectObject):
     def getInvisible3d(self):
         #getTiles3D( (0,0,0), (2,0,1), self.level)
         d = levelInvisibility3d3d(self.units, self.level)
-        print d
         t = loader.loadTexture('testercube.png')
         if self.node_3d != None:
             self.node_3d.removeNode()
