@@ -77,18 +77,34 @@ DYNAMICS_UNIT = 1
 def levelInvisibility3d3d( unit_list, level ):
 
     invis_dict = {}
+
+    xx = 3
+    yy = 3
+    zz = 3
+    
+    
+    for x in xrange(xx):
+        for y in xrange(yy):
+            for z in xrange(zz):
+                invis_dict[(x,y,z)] = 0
+    
     
     for unit in unit_list:            
-        for x in xrange(level.maxX):
-        #for x in xrange(4):
-            for y in xrange(level.maxY):
-            #for y in xrange(4):
-                for z in xrange( 4 ):
+        for x in xrange(xx):
+            for y in xrange(yy):
+                for z in xrange( zz ):
                     t = (x,y,z)
                                        
-                    if not getTiles3D( unit['pos']+(0,), t, level ):
+                    if getTiles3D( unit['pos']+(0,), t, level ):
                         invis_dict[t] = 1
                         
+                        
+    for x in xrange(xx):
+        for y in xrange(yy):
+            for z in xrange(zz):
+                if invis_dict[(x,y,z)]:
+                    del invis_dict[(x,y,z)]
+            
             
     return invis_dict            
     
@@ -483,14 +499,25 @@ def getLOS2D( t1, t2, level ):
     
 def getTiles3D( t1, t2, level ):
 
+    x1, y1, z1 = t1
+    x2, y2, z2 = t2
+    
+    #if this is a 2d check with both z==0, than do a 2d check instead
+    if z1 == 0 and z2 == 0:
+        lst = getLOS2D((x1,y1), (x2,y2), level)
+        if not lst:
+            return False
+        tmp_lst = []
+        for entry in lst:
+            tmp_lst.append(entry+(0,))
+        return tmp_lst
+
+
     list_visible_tiles = [ t1 ]
     
     #we see ourselves
     if( t1 == t2 ):
         return list_visible_tiles
-    
-    x1, y1, z1 = t1
-    x2, y2, z2 = t2
     
     #if one of our end points is not empty space, return false
     if level.test3D( x1, y1, z1 ) or level.test3D( x2, y2, z2 ):
@@ -600,18 +627,91 @@ def getTiles3D( t1, t2, level ):
         list_visible_tiles.reverse()
     return list_visible_tiles
 
+
+
+def testTile3DWith0( new, old, level ):
+
+    #if the cube with z=0 is new, switch their places
+    if new[2] == 0:
+        a = new
+        new = old
+        old = a
+    
+    #old[2] = 0!
+    _2x = old[0] * 2
+    _2y = old[1] * 2
+    
+    #moved along x
+    if new[0] != old[0]:
+        #moved along y
+        if new[1] != old[1]:
+            
+            #moved along z - diagonal x-y-z
+            if new[2] != old[2]:
+                    if ( level.test3D( old[0], new[1], new[2] ) and
+                          level.test3D( new[0], old[1], new[2] ) ): 
+                        return False
+            
+                    return True
+            #diagonal x-y, this will never happen cause if both have z=0, we will check it with 2d check
+
+        #moved along z - diagonal x-z
+        if new[2] != old[2]:
+            if level.test3D( old[0], new[1], new[2] ):
+                if level.test3D( new[0], new[1], old[2] ):   
+                        return False                
+                    
+                #x++
+                if new[0] > old[0]:
+                    if level.gridVisionBlocked( _2x+2, _2y+1 ):
+                        return False
+                #x--
+                else:
+                    if level.gridVisionBlocked( _2x, _2y+1 ):
+                        return False
+                    
+            else:
+                return True
+                
+    #moved along y 
+    if new[1] != old[1]:
+        #moved along z - diagonal y-z
+        if new[2] != old[2]:
+            if level.test3D( new[0], old[1], new[2] ): 
+                if level.test3D( new[0], new[1], old[2] ):  
+                        return False
+                    
+                #y++
+                if new[1] > old[1]:
+                    if level.gridVisionBlocked( _2x+1, _2y+2 ):
+                        return False
+                #y--                    
+                else:
+                    if level.gridVisionBlocked( _2x+1, _2y ):
+                        return False                    
+                    
+            else:
+                return True
+    
+    
+    
+    return True
+            
             
 def testTile3D( pos, lastpos, level ):
-    
-    #level bounds
-    if( level.outOfBounds( pos[0], pos[1] ) ):
-        return False
-    if( level.outOfBounds( lastpos[0], lastpos[1] ) ):
-        return False
     
     #if we can't see here
     if level.test3D( pos[0], pos[1], pos[2] ):
         return False
+    
+    
+    if pos[2] == 0 and lastpos[2] == 0:
+        return getLOS2D((pos[0], pos[1]), (lastpos[0], lastpos[1]), level)
+    
+    #if any z==0 we need a special check which takes walls into an account
+    if pos[2] == 0 or lastpos[2] == 0:
+        return testTile3DWith0( pos, lastpos, level)
+
     
     #moved along x
     if pos[0] != lastpos[0]:
