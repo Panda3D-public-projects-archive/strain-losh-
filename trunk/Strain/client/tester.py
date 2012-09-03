@@ -157,6 +157,8 @@ class Tester(DirectObject.DirectObject):
         self.units.append(unit_dict)
         self.cr = CoordRenderer(self, self.node)
         self.cr.redraw(self.level.maxX, self.level.maxY, tile_size, ground_level)
+        
+        self.node_3d = self.node.attachNewNode('3dnode')
 
         b=OnscreenImage(parent=render2dp, image="galaxy1.jpg") #@UndefinedVariable
         #base.cam.node().getDisplayRegion(0).setSort(20)
@@ -180,8 +182,19 @@ class Tester(DirectObject.DirectObject):
 
     def getInvisible3d(self):
         #getTiles3D( (0,0,0), (2,0,1), self.level)
-        for unit in self.units:
-            print "3d-",levelInvisibility3d3d(self.units, self.level).keys()
+        d = levelInvisibility3d3d(self.units, self.level)
+        print d
+        t = loader.loadTexture('testercube.png')
+        if self.node_3d != None:
+            self.node_3d.removeNode()
+            self.node_3d = self.node.attachNewNode('3dnode')
+        for i in d.iterkeys():
+            m = loader.loadModel('cube')
+            m.setScale(1,1,0.7)
+            m.setTexture(t)
+            m.setTransparency(TransparencyAttrib.MAlpha)
+            m.setPos(i[0], i[1], i[2]*0.7)
+            m.reparentTo(self.node_3d)
         
        
 
