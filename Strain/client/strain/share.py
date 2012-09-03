@@ -80,8 +80,11 @@ def levelInvisibility3d3d( unit_list, level ):
 
     xx = 3
     yy = 3
-    zz = 3
+    zz = 4
     
+    xx = level.maxX
+    yy = level.maxY
+
     
     for x in xrange(xx):
         for y in xrange(yy):
@@ -102,7 +105,7 @@ def levelInvisibility3d3d( unit_list, level ):
     for x in xrange(xx):
         for y in xrange(yy):
             for z in xrange(zz):
-                if invis_dict[(x,y,z)]:
+                if invis_dict[(x,y,z)] or level.opaque(x,y,z+1):
                     del invis_dict[(x,y,z)]
             
             

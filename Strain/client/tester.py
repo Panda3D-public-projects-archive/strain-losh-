@@ -179,6 +179,9 @@ class Tester(DirectObject.DirectObject):
                 unit_dict['pos'] = (int(pos3d.x), int(pos3d.y))
                 self.units[0] = unit_dict
 
+                self.displayLos()
+                self.getInvisible3d()
+
 
     def getInvisible3d(self):
         #getTiles3D( (0,0,0), (2,0,1), self.level)
