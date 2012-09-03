@@ -179,8 +179,9 @@ class Tester(DirectObject.DirectObject):
 
 
     def getInvisible3d(self):
+        #getTiles3D( (0,0,0), (2,0,1), self.level)
         for unit in self.units:
-            print "3d-",levelInvisibility3d3d(self.units, self.level)
+            print "3d-",levelInvisibility3d3d(self.units, self.level).keys()
         
        
 
@@ -210,5 +211,5 @@ class Tester(DirectObject.DirectObject):
         #self.level_renderer.switchNodes()
         #self.level_renderer.flattenNodes()
 
-tester = Tester(level_name='../server/data/levels/level2.txt')
+tester = Tester(level_name='../server/data/levels/level3.txt')
 run()
