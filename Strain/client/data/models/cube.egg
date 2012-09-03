@@ -7,15 +7,6 @@
   "Egg laid by Chicken for Blender, version R85"
 }
 <Material> Material {
-  <Scalar> diffr { 1 }
-  <Scalar> diffg { 1 }
-  <Scalar> diffb { 1 }
-  <Scalar> ambr { 1 }
-  <Scalar> ambg { 1 }
-  <Scalar> ambb { 1 }
-  <Scalar> specr { 0 }
-  <Scalar> specg { 0 }
-  <Scalar> specb { 0 }
   <Scalar> shininess { 0 }
 }
 <Group> Cube {

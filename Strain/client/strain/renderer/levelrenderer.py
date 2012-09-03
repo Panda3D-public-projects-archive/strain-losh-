@@ -44,22 +44,13 @@ class LevelRenderer():
                 
         for x in xrange(0, self.maxX):
             for y in xrange(0, self.maxY):
-                if self.level.getHeight( (x, y) ) == 0:
-                    model = self.loadModel('FLOOR1', x, y, tile_size, zpos)
-                    model.reparentTo(self.temp_node_floor)
-                elif self.level.getHeight( (x, y) ) == 1:                    
-                    model = self.loadModel('FLOOR1', x, y, tile_size, zpos)
-                    model.reparentTo(self.temp_node_floor)
-                    model = self.loadModel('CUBE1', x, y, tile_size, zpos)
-                    model.reparentTo(self.temp_node_floor)                   
-                else:
-                    for i in xrange(0, self.level.getHeight( (x, y) )):
-                        if i == 0:
-                            model = self.loadModel('FLOOR1', x, y, tile_size, zpos)
-                            model.reparentTo(self.temp_node_floor)                           
-                        else:
-                            model = self.loadModel('CUBE2', x, y, tile_size, zpos, i)
-                            model.reparentTo(self.temp_node_floor)
+                for i in xrange(0, self.level.getHeight( (x, y) )+1):
+                    if i == 0:
+                        model = self.loadModel('FLOOR1', x, y, tile_size, zpos)
+                        model.reparentTo(self.temp_node_floor)                           
+                    else:
+                        model = self.loadModel('CUBE2', x, y, tile_size, zpos, i)
+                        model.reparentTo(self.temp_node_floor)
         
         #Calculate and place walls between tiles
         for x, val in enumerate(self.level._grid):
@@ -179,6 +170,7 @@ class LevelRenderer():
         elif type == 'CUBE2':    
             model = loader.loadModel('cube')
             model.setScale(tile_size)
+            print (i-1)*tile_size*0.7+zpos
             model.setPos(x*tile_size, y*tile_size, (i-1)*tile_size*0.7+zpos)
             model.setScale(1,1,0.7)
         return model
