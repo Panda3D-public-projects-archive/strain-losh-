@@ -4,14 +4,17 @@ def linija_od_nulexy( x1, y1 ):
     lista_tocaka = []
     y_x =float(y1) / x1
     D = y_x - 0.5
+    x = 0
     y = 0
-    for x in xrange( x1 ):
+    lista_tocaka.append( (0, 0) )
+    print (x,y),",",D 
+    for x in xrange( 1, x1+1 ):
         if D>0:
             y += 1
             D -= 1
         D += y_x
         lista_tocaka.append( (x,y) )
-    lista_tocaka.append( (x1, y1) )
+        print (x,y),",",D 
     return lista_tocaka
     
 
@@ -87,7 +90,7 @@ def linija( t1, t2 ):
             
     return li
     
-#print linija_od_nulexy( 8,4 )
+linija_od_nulexy( 7,5 )
 #print linija_od_nule( 4,8 )
 
 #print linija( (0,0), (8,1) )
@@ -143,9 +146,12 @@ class Tester(DirectObject.DirectObject):
         self.camera = CameraManager(self)
         self.units = []
         self.unit_renderer = UnitRenderer(self, self.node)
+        self.unit_renderers = {}
+        self.id_counter = 1
         
         self.plane = Plane(Vec3(0, 0, 1), Point3(0, 0, ground_level))
         base.accept('mouse1', self.toggleUnit)
+        base.accept('mouse3', self.addUnit)
         base.accept('o', render.analyze)
         base.accept('i', render.ls)
         base.accept('c', self.displayLos)
@@ -165,8 +171,54 @@ class Tester(DirectObject.DirectObject):
         base.cam2dp.node().getDisplayRegion(0).setSort(-20)#@UndefinedVariable
         
         self.displayLos()
+        self.getInvisible3d()
+
+    def addUnit(self):
+        print "add"
+        if base.mouseWatcherNode.hasMouse():
+            mpos = base.mouseWatcherNode.getMouse()
+            pos3d = Point3()
+            nearPoint = Point3()
+            farPoint = Point3()
+            base.camLens.extrude(mpos, nearPoint, farPoint)
+            if self.plane.intersectsLine(pos3d,render.getRelativePoint(camera, nearPoint),render.getRelativePoint(camera, farPoint)):
+                
+                
+                id = None
+                for u in self.unit_renderers.itervalues():
+                    if int(u.node.getX()) == int(pos3d.x) and int(u.node.getY()) == int(pos3d.y):
+                        id = int(u.id)
+                        #u.cleanup()
+                        u.node.removeNode()
+                        break
+                if id:
+                    self.unit_renderers.pop(id)
+                    unit_dict = {}
+                    unit_dict['pos'] = (int(pos3d.x), int(pos3d.y))
+                    self.units.remove(unit_dict)
+                else:
+                    id = self.id_counter                
+                    self.unit_renderers[self.id_counter] = UnitRenderer(self, self.node)
+                    self.unit_renderers[self.id_counter].loadForTester(self.id_counter, 1, 'marine_common', int(pos3d.x), int(pos3d.y), utils.HEADING_N)
+                    self.id_counter += 1
+                    unit_dict = {}
+                    unit_dict['pos'] = (int(pos3d.x), int(pos3d.y))
+                    self.units.append(unit_dict)
+                
+                
+                
+                """
+                self.unit_renderer.node.setPos(int(pos3d.x)+0.5, int(pos3d.y)+0.5, 0)
+                unit_dict = {}
+                unit_dict['pos'] = (int(pos3d.x), int(pos3d.y))
+                self.units.append( unit_dict )
+                """
+                
+                self.displayLos()
+                self.getInvisible3d()
 
     def toggleUnit(self):
+        print "toggle"
         if base.mouseWatcherNode.hasMouse():
             mpos = base.mouseWatcherNode.getMouse()
             pos3d = Point3()
