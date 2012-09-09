@@ -150,17 +150,19 @@ class Tester(DirectObject.DirectObject):
         self.id_counter = 1
         
         self.plane = Plane(Vec3(0, 0, 1), Point3(0, 0, ground_level))
-        base.accept('mouse1', self.toggleUnit)
-        base.accept('mouse3', self.addUnit)
+        base.accept('mouse1', self.addUnit)
+        #base.accept('mouse2', self.addUnit)
         base.accept('o', render.analyze)
         base.accept('i', render.ls)
         base.accept('c', self.displayLos)
         base.accept('y', self.getInvisible3d)
         
+        """
         self.unit_renderer.loadForTester(1, 1, 'marine_common', 0, 0, utils.HEADING_N)
         unit_dict = {}
         unit_dict['pos'] = (0,0)
         self.units.append(unit_dict)
+        """
         self.cr = CoordRenderer(self, self.node)
         self.cr.redraw(self.level.maxX, self.level.maxY, tile_size, ground_level)
         
@@ -197,6 +199,8 @@ class Tester(DirectObject.DirectObject):
                     unit_dict['pos'] = (int(pos3d.x), int(pos3d.y))
                     self.units.remove(unit_dict)
                 else:
+                    if pos3d.x >= self.level.maxX or pos3d.y >= self.level.maxY or pos3d.x < 0 or pos3d.y < 0:
+                        return
                     id = self.id_counter                
                     self.unit_renderers[self.id_counter] = UnitRenderer(self, self.node)
                     self.unit_renderers[self.id_counter].loadForTester(self.id_counter, 1, 'marine_common', int(pos3d.x), int(pos3d.y), utils.HEADING_N)
