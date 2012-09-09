@@ -327,13 +327,14 @@ def getLOS2D( t1, t2, level ):
                 
     opaq_ht = 1
             
+    #if one of the points is out of bounds, return false
+    if level.outOfBounds( x1, x2 ) or level.outOfBounds( x2,y2 ):
+        return False
+    
     #if one of our end points is not empty space, return false
     if level.opaque( x1, y1, opaq_ht ) or level.opaque( x2, y2, opaq_ht ):
         return False
     
-    #if one of the points is out of bounds, return false
-    if level.outOfBounds( x1, x2 ) or level.outOfBounds( x2,y2 ):
-        return False
     
     #we see ourself
     if( t1 == t2 ):
@@ -504,6 +505,10 @@ def getTiles3D( t1, t2, level ):
 
     x1, y1, z1 = t1
     x2, y2, z2 = t2
+    
+    
+    if level.outOfBounds(x1, y1) or level.outOfBounds(x2, y2):
+        return False
     
     #if this is a 2d check with both z==0, than do a 2d check instead
     if z1 == 0 and z2 == 0:
