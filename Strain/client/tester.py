@@ -90,7 +90,7 @@ def linija( t1, t2 ):
             
     return li
     
-linija_od_nulexy( 7,5 )
+#linija_od_nulexy( 7,5 )
 #print linija_od_nule( 4,8 )
 
 #print linija( (0,0), (8,1) )
@@ -176,7 +176,7 @@ class Tester(DirectObject.DirectObject):
         self.getInvisible3d()
 
     def addUnit(self):
-        print "add"
+        
         if base.mouseWatcherNode.hasMouse():
             mpos = base.mouseWatcherNode.getMouse()
             pos3d = Point3()
@@ -222,7 +222,7 @@ class Tester(DirectObject.DirectObject):
                 self.getInvisible3d()
 
     def toggleUnit(self):
-        print "toggle"
+        
         if base.mouseWatcherNode.hasMouse():
             mpos = base.mouseWatcherNode.getMouse()
             pos3d = Point3()
