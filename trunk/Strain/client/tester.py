@@ -50,7 +50,7 @@ def sig( num ):
     elif( num >= 0 ):
         return 1
     
-def linija( t1, t2 ):
+def orig_linija( t1, t2 ):
     x1, y1 = t1
     x2, y2 = t2
     absx0 = int(math.fabs(x2-x1))
@@ -126,6 +126,7 @@ lib_path = os.path.abspath('server/src')
 sys.path.append(lib_path)
 
 
+
 loadPrcFile("./config/config.prc")
 ground_level = 0
 tile_size = 1.
@@ -148,6 +149,7 @@ class Tester(DirectObject.DirectObject):
         self.unit_renderer = UnitRenderer(self, self.node)
         self.unit_renderers = {}
         self.id_counter = 1
+        self.mode = 2
         
         self.plane = Plane(Vec3(0, 0, 1), Point3(0, 0, ground_level))
         base.accept('mouse1', self.addUnit)
@@ -156,6 +158,10 @@ class Tester(DirectObject.DirectObject):
         base.accept('i', render.ls)
         base.accept('c', self.displayLos)
         base.accept('y', self.getInvisible3d)
+        
+        base.accept('1', self.setMode1)
+        base.accept('2', self.setMode2)
+        base.accept('3', self.setMode3)
         
         """
         self.unit_renderer.loadForTester(1, 1, 'marine_common', 0, 0, utils.HEADING_N)
@@ -172,8 +178,23 @@ class Tester(DirectObject.DirectObject):
         #base.cam.node().getDisplayRegion(0).setSort(20)
         base.cam2dp.node().getDisplayRegion(0).setSort(-20)#@UndefinedVariable
         
-        self.displayLos()
         self.getInvisible3d()
+        self.displayLos()
+
+    def setMode1(self):
+        self.mode = 1
+        self.getInvisible3d()
+        self.displayLos()
+
+    def setMode2(self):
+        self.mode = 2
+        self.getInvisible3d()
+        self.displayLos()
+
+    def setMode3(self):
+        self.mode = 3
+        self.getInvisible3d()
+        self.displayLos()
 
     def addUnit(self):
         
@@ -218,8 +239,8 @@ class Tester(DirectObject.DirectObject):
                 self.units.append( unit_dict )
                 """
                 
-                self.displayLos()
                 self.getInvisible3d()
+                self.displayLos()
 
     def toggleUnit(self):
         
@@ -235,8 +256,8 @@ class Tester(DirectObject.DirectObject):
                 unit_dict['pos'] = (int(pos3d.x), int(pos3d.y))
                 self.units[0] = unit_dict
 
-                self.displayLos()
                 self.getInvisible3d()
+                self.displayLos()
 
 
     def getInvisible3d(self):
@@ -246,6 +267,8 @@ class Tester(DirectObject.DirectObject):
         if self.node_3d != None:
             self.node_3d.removeNode()
             self.node_3d = self.node.attachNewNode('3dnode')
+        if self.mode != 3:
+            return
         for i in d.iterkeys():
             m = loader.loadModel('cube')
             m.setScale(1,1,0.7)
