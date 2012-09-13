@@ -50,9 +50,13 @@ def sig( num ):
     elif( num >= 0 ):
         return 1
     
-def orig_linija( t1, t2 ):
+def orig_linija( t1, t2, level ):
     x1, y1 = t1
     x2, y2 = t2
+    
+    if x1 == x2 and y1 == y2:
+        return [t1]
+    
     absx0 = int(math.fabs(x2-x1))
     absy0 = int(math.fabs(y2-y1))
     
@@ -67,25 +71,34 @@ def orig_linija( t1, t2 ):
     if absx0 > absy0:
         y_x = float(absy0)/absx0
         D = y_x - 0.5
-        print "y_x =", y_x, "    y_x_2=", y_x/2
+        #print "y_x =", y_x, "    y_x_2=", y_x/2
         for i in xrange( absx0 ):
-            print "D:",D
+            lastx = x
+            lasty = y
+            #print "D:",D
             if D>0:
                 y += sgny0
                 D -= 1
             x += sgnx0
             D += y_x
+            if level.opaque(x,y,1) or not checkGridVisibility((x,y), (lastx,lasty), level):
+                return []
             li.append((x,y))
         
     else:
         x_y = float(absx0)/absy0
         D = x_y - 0.5
         for i in xrange( absy0 ):
+            lastx = x
+            lasty = y
             if D>0:
                 x+=sgnx0
                 D-=1
             y+=sgny0
             D+=x_y
+            if level.opaque(x,y,1) or not checkGridVisibility((x,y), (lastx,lasty), level):
+                return []
+            
             li.append((x,y))
             
     return li
@@ -140,6 +153,7 @@ base.setFrameRateMeter(True)
 class Tester(DirectObject.DirectObject):
     def __init__(self, level_name):
         self.node = render.attachNewNode('RootNode')
+        self.writenode = self.node.attachNewNode('')
         self.level = Level(level_name)
         self.level_renderer = LevelRenderer(self, self.node)
         self.level_renderer.create(self.level, self.level.maxX, self.level.maxY, tile_size, ground_level)
@@ -181,6 +195,19 @@ class Tester(DirectObject.DirectObject):
         self.getInvisible3d()
         self.displayLos()
 
+    def writeNumbers(self, d):
+        for c in self.writenode.getChildren():
+            c.removeNode()
+        for i in d:
+            t = TextNode('node name')
+            t.setText( "%s" % d[i]) 
+            tnp = self.writenode.attachNewNode(t)
+            tnp.setColor(1, 1, 1)
+            tnp.setScale(0.3)
+            tnp.setPos(i[0]+0.4, i[1]+0.4, 0.1)
+            tnp.setBillboardPointEye()
+            tnp.setLightOff()  
+    
     def setMode1(self):
         self.mode = 1
         self.getInvisible3d()
@@ -195,6 +222,7 @@ class Tester(DirectObject.DirectObject):
         self.mode = 3
         self.getInvisible3d()
         self.displayLos()
+        self.writeNumbers({(0,0):2,(0,1):2.3})
 
     def addUnit(self):
         
@@ -301,9 +329,27 @@ class Tester(DirectObject.DirectObject):
         return l
         
     def displayLos(self):
-        self.level_renderer.updateLevelLos(self.getInvisibleTiles(), self.getInvisibleWalls())
+        #self.level_renderer.updateLevelLos({}, {})
+        if self.mode == 1:
+            self.orig()    
+        else:
+            self.level_renderer.updateLevelLos(self.getInvisibleTiles(), self.getInvisibleWalls())
+            
         #self.level_renderer.switchNodes()
         #self.level_renderer.flattenNodes()
 
-tester = Tester(level_name='../server/data/levels/level3.txt')
+
+    def orig(self):
+        dic = {}
+        
+        for u in self.units:
+            for x in xrange( self.level.maxX ):
+                for y in xrange( self.level.maxY ):
+                    for t in orig_linija(u['pos'], (x,y), self.level):
+                        dic[t] = 1
+        
+        self.level_renderer.updateLevelLos(dic, {})
+        
+
+tester = Tester(level_name='../server/data/levels/level2.txt')
 run()
