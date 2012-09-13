@@ -170,7 +170,7 @@ class LevelRenderer():
         elif type == 'CUBE2':    
             model = loader.loadModel('cube')
             model.setScale(tile_size)
-            print (i-1)*tile_size*0.7+zpos
+            #print (i-1)*tile_size*0.7+zpos
             model.setPos(x*tile_size, y*tile_size, (i-1)*tile_size*0.7+zpos)
             model.setScale(1,1,0.7)
         return model
