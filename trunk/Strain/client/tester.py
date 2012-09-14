@@ -317,6 +317,7 @@ class Tester(DirectObject.DirectObject):
         base.accept('1', self.setMode1)
         base.accept('2', self.setMode2)
         base.accept('3', self.setMode3)
+        base.accept('4', self.setMode4)
         
         """
         self.unit_renderer.loadForTester(1, 1, 'marine_common', 0, 0, utils.HEADING_N)
@@ -353,17 +354,24 @@ class Tester(DirectObject.DirectObject):
         self.mode = 1
         self.getInvisible3d()
         self.displayLos()
+        #self.writeNumbers({})
 
     def setMode2(self):
         self.mode = 2
         self.getInvisible3d()
         self.displayLos()
+        #self.writeNumbers({})
 
     def setMode3(self):
         self.mode = 3
         self.getInvisible3d()
         self.displayLos()
-        self.writeNumbers({(0,0):2,(0,1):2.3})
+        #self.writeNumbers({})
+
+    def setMode4(self):
+        self.mode = 4
+        self.getInvisible3d()
+        self.displayLos()
 
     def addUnit(self):
         
@@ -472,9 +480,11 @@ class Tester(DirectObject.DirectObject):
     def displayLos(self):
         #self.level_renderer.updateLevelLos({}, {})
         if self.mode == 1:
-            self.cilin()    
-        else:
+            self.orig()    
+        elif self.mode == 2:
             self.level_renderer.updateLevelLos(self.getInvisibleTiles(), self.getInvisibleWalls())
+        elif self.mode == 4:
+            self.cilin()
             
         #self.level_renderer.switchNodes()
         #self.level_renderer.flattenNodes()
