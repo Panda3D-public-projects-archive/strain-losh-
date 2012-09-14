@@ -1,4 +1,5 @@
 import math
+from share import MASK_UP_RIGHT
 
 def linija_od_nulexy( x1, y1 ):
     lista_tocaka = []
@@ -44,7 +45,7 @@ def linija_od_nule( x1, y1 ):
         lista_tocaka.append( (x1, y1) )
     return lista_tocaka
 
-def sig( num ):
+def signum( num ):
     if( num < 0 ): 
         return -1
     elif( num >= 0 ):
@@ -60,8 +61,8 @@ def orig_linija( t1, t2, level ):
     absx0 = int(math.fabs(x2-x1))
     absy0 = int(math.fabs(y2-y1))
     
-    sgnx0 = sig(x2-x1)
-    sgny0 = sig(y2-y1)
+    sgnx0 = signum(x2-x1)
+    sgny0 = signum(y2-y1)
     
     x = x1
     y = y1
@@ -102,7 +103,143 @@ def orig_linija( t1, t2, level ):
             li.append((x,y))
             
     return li
+
+
+def getTiles2DCilindar( t1, t2, level ):
+    x1, y1 = t1
+    x2, y2 = t2
     
+    #we see ourself
+    if( t1 == t2 ):
+        return [ (x1,y1) ]
+    
+    absx0 = math.fabs(x2 - x1);
+    absy0 = math.fabs(y2 - y1);
+    
+    list_visible_tiles = [ (x1,y1) ]
+    
+    x = int( x1 )
+    y = int( y1 )
+
+    
+    if( absx0 > absy0 ):
+        sgny0 = signum( y2 - y1 )
+        sgnx0 = signum( x2 - x1 )
+        y_x = absy0/absx0            
+        D = y_x -0.5
+
+        for i in xrange( int( absx0 ) ): #@UnusedVariable
+            
+            _y_p_1 = y+1 
+            if not level.outOfBounds( x, _y_p_1 ):
+                list_visible_tiles.append( (x, _y_p_1) )
+            
+            _y_1 = y-1
+            if not level.outOfBounds( x, _y_1 ):
+                list_visible_tiles.append( (x, _y_1) )
+            
+            if( D > 0 ):
+                y += sgny0
+                D -= 1
+                
+            x += sgnx0
+            D += y_x
+
+            #its visible add it to list            
+            list_visible_tiles.append( (x, y) )
+            
+    #//(y0 >= x0)            
+    else:
+        sgnx0 = signum( x2 - x1 )
+        sgny0 = signum( y2 - y1 )
+        x_y = absx0/absy0
+        D = x_y -0.5;
+        
+        for i in xrange( int( absy0 ) ): #@UnusedVariable
+            
+            _x_p_1 = x+1
+            if not level.outOfBounds( _x_p_1, y ):
+                list_visible_tiles.append( (_x_p_1, y) )
+
+            _x_1 = x-1
+            if not level.outOfBounds( _x_1, y ):
+                list_visible_tiles.append( (_x_1, y) )
+            
+            if( D > 0 ):
+                x += sgnx0
+                D -= 1
+            
+            y += sgny0
+            D += x_y
+            
+            #its clear, add it to visible list
+            list_visible_tiles.append( (x, y) )
+
+
+    #special case for last square
+    if absx0 > absy0:
+        if absy0 != 0:
+            list_visible_tiles.append( (x, y-sgny0) )
+    else:
+        if absx0 != 0:
+            list_visible_tiles.append( (x-sgnx0, y) )
+
+    return list_visible_tiles
+
+
+def cilindar(t1, t2, level):    
+    x1,y1 = t1
+    x2,y2 = t2
+        
+    dx = x2 - x1
+    dy = y2 - y1
+     
+    d = math.sqrt(  math.pow(dx, 2) + math.pow(dy, 2)  )
+    
+    if d == 0:
+        return 1
+    
+    alfa = math.degrees( math.atan( 0.5 / d ) )    
+
+
+    mid = math.degrees( math.atan2( float(dy),dx ) )
+
+    left = mid + alfa
+    right = mid - alfa        
+    orig_angle = left - right 
+    
+
+    for x,y in getTiles2DCilindar(t1, t2, level): 
+        if level.opaque( x,y, 1):
+            _x = x-x1
+            _y = y-y1
+            _xy = level.getMask( _x, _y )
+            
+            if _x < 0 and _y == 0:
+                if mid > 0:
+                    mini = _xy[MASK_UP_RIGHT]                    
+                    maxi = _xy[MASK_DOWN_RIGHT]+360
+                else:
+                    mini = _xy[MASK_UP_RIGHT]-360
+                    maxi = _xy[MASK_DOWN_RIGHT]
+            else:
+                mini = _xy[MASK_MIN]
+                maxi = _xy[MASK_MAX]
+                
+            if left > mini and left < maxi:
+                left = mini
+            if right > mini and right < maxi:
+                right = maxi
+                
+            if left <= right:
+                return 0
+    
+    visible_angle = left - right
+    return visible_angle/orig_angle
+    
+
+#cilindar( (0,0), (4,3) )
+#print getTiles2DCilindar( (2,2), (5,2)  )
 #linija_od_nulexy( 7,5 )
 #print linija_od_nule( 4,8 )
 
@@ -115,6 +252,10 @@ def orig_linija( t1, t2, level ):
 
 
 
+
+#level = Level('../server/data/levels/l1.txt')
+#print getTiles2DCilindar( (2, 0), (3, 7), level)
+#exit(0)
 
 
 
@@ -163,7 +304,7 @@ class Tester(DirectObject.DirectObject):
         self.unit_renderer = UnitRenderer(self, self.node)
         self.unit_renderers = {}
         self.id_counter = 1
-        self.mode = 2
+        self.mode = 1
         
         self.plane = Plane(Vec3(0, 0, 1), Point3(0, 0, ground_level))
         base.accept('mouse1', self.addUnit)
@@ -331,7 +472,7 @@ class Tester(DirectObject.DirectObject):
     def displayLos(self):
         #self.level_renderer.updateLevelLos({}, {})
         if self.mode == 1:
-            self.orig()    
+            self.cilin()    
         else:
             self.level_renderer.updateLevelLos(self.getInvisibleTiles(), self.getInvisibleWalls())
             
@@ -351,5 +492,30 @@ class Tester(DirectObject.DirectObject):
         self.level_renderer.updateLevelLos(dic, {})
         
 
-tester = Tester(level_name='../server/data/levels/level2.txt')
+    def cilin(self):
+        dic = {}
+
+                                
+        for unit in self.units:        
+            for x in xrange( self.level.maxX ):
+                for y in xrange( self.level.maxY ):
+                    dic[(x,y)] = '{:.0%}'.format(cilindar( unit['pos'], (x,y), self.level)) 
+        """
+        x = 0
+        y = 1
+        dic[(x,y)] = '{:.2%}'.format(cilindar((2,4), (x,y), self.level))
+        """
+        """
+        for unit in self.units:
+            for y in xrange(8):
+                dic[(x,y)] = '{:.2%}'.format(cilindar( unit['pos'], (x,y), self.level))
+        """
+        
+        
+        self.writeNumbers(dic)
+        
+        
+
+
+tester = Tester(level_name='../server/data/levels/halls0.txt')
 run()
