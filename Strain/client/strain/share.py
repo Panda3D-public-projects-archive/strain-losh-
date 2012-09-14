@@ -71,6 +71,20 @@ UNDEFINED_MSG_2 = 'msg2'        #value undefined
 
 #---------------------------------------------------------------------------------------
 
+
+
+#-------LEVEL:MASK-----------------
+MASK_UP_LEFT    = 0
+MASK_UP_RIGHT   = 1
+MASK_DOWN_LEFT  = 2
+MASK_DOWN_RIGHT = 3
+MASK_DISTANCE   = 4
+MASK_MAX        = 5
+MASK_MIN        = 6 
+
+
+
+
 DYNAMICS_EMPTY = 0
 DYNAMICS_UNIT = 1
 
@@ -1317,6 +1331,50 @@ def distanceTupple( t1, t2 ):
 
 class Level:
         
+
+    class Mask:
+        
+        def __init__(self, level):
+            self.level = level    
+            self._data = []
+            
+            for x in xrange( level.maxX*2 ):
+                self._data.append( [0] * level.maxY*2 )
+           
+            for x in xrange( level.maxX*2 ):
+                for y in xrange( level.maxY*2 ):
+                    xx = x-level.maxX
+                    yy = y-level.maxY
+                    _0 = math.degrees( math.atan2( (yy+0.5), (xx-0.5) ) )
+                    _1 = math.degrees( math.atan2( (yy+0.5), (xx+0.5) ) )
+                    _2 = math.degrees( math.atan2( (yy-0.5), (xx-0.5) ) )
+                    _3 = math.degrees( math.atan2( (yy-0.5), (xx+0.5) ) )
+                    _4 = math.sqrt(  math.pow(xx, 2) + math.pow(yy, 2)  )
+                    _5 = max( [_0,_1,_2,_3])
+                    _6 = min( [_0,_1,_2,_3])
+                    
+                    self._data[x][y] = (_0, _1, _2, _3, _4, _5, _6)
+
+        
+        def get(self, x,y):
+            return self._data[ x + self.level.maxX ][ y + self.level.maxY ]
+            
+    
+        def prnt(self):
+
+            for y in xrange( self.level.maxY*2-1, -1, -1):
+                line = ""
+                for x in xrange( self.level.maxX*2 ):
+                    line += "("
+                    for j in xrange( 5 ):
+                        line += "%4.0f " % self._data[x][y][j]
+
+                    line += ")  "
+            
+                print line
+
+        
+        
     def __init__(self, name = None):        
         self.maxX = 0
         self.maxY = 0
@@ -1327,16 +1385,22 @@ class Level:
         self._dynamics = []
         self._grid = []
         self._walls = {}
+        self.mask = None
                 
         if name:
             self.load( name )        
 
         self.center = ( self.maxX / 2, self.maxY / 2 )
 
+
     def test3D(self, x, y, z):
             if self._level_data[ int(x) ][ int(y) ] <= z:
                 return False
             return True
+
+
+    def getMask(self, x, y):
+        return self.mask.get(x, y)
 
 
     def load(self, name):
@@ -1429,6 +1493,9 @@ class Level:
                 tmp[i][j] = self._level_data[j][i]
         self._level_data = tmp 
 
+
+        #----init mask for cylindrical los checking---
+        self.mask = Level.Mask( self )        
 
 
     def changeRowNumber(self, newY):
