@@ -109,12 +109,14 @@ def getTiles2DCilindar( t1, t2, level ):
     x1, y1 = t1
     x2, y2 = t2
     
-    #we see ourself
-    if( t1 == t2 ):
-        return [ (x1,y1) ]
+    dx = x2 - x1
+    dy = y2 - y1
     
-    absx0 = math.fabs(x2 - x1);
-    absy0 = math.fabs(y2 - y1);
+    absX = math.fabs( dx );
+    absY = math.fabs( dy );
+    
+    sgnX = signum( dx )
+    sgnY = signum( dy )
     
     list_visible_tiles = [ (x1,y1) ]
     
@@ -122,13 +124,11 @@ def getTiles2DCilindar( t1, t2, level ):
     y = int( y1 )
 
     
-    if( absx0 > absy0 ):
-        sgny0 = signum( y2 - y1 )
-        sgnx0 = signum( x2 - x1 )
-        y_x = absy0/absx0            
+    if( absX > absY ):
+        y_x = absY/absX            
         D = y_x -0.5
 
-        for i in xrange( int( absx0 ) ): #@UnusedVariable
+        for i in xrange( int( absX ) ): #@UnusedVariable
             
             _y_p_1 = y+1 
             if not level.outOfBounds( x, _y_p_1 ):
@@ -139,23 +139,20 @@ def getTiles2DCilindar( t1, t2, level ):
                 list_visible_tiles.append( (x, _y_1) )
             
             if( D > 0 ):
-                y += sgny0
+                y += sgnY
                 D -= 1
                 
-            x += sgnx0
+            x += sgnX
             D += y_x
 
-            #its visible add it to list            
             list_visible_tiles.append( (x, y) )
             
     #//(y0 >= x0)            
     else:
-        sgnx0 = signum( x2 - x1 )
-        sgny0 = signum( y2 - y1 )
-        x_y = absx0/absy0
+        x_y = absX/absY
         D = x_y -0.5;
         
-        for i in xrange( int( absy0 ) ): #@UnusedVariable
+        for i in xrange( int( absY ) ): #@UnusedVariable
             
             _x_p_1 = x+1
             if not level.outOfBounds( _x_p_1, y ):
@@ -166,23 +163,22 @@ def getTiles2DCilindar( t1, t2, level ):
                 list_visible_tiles.append( (_x_1, y) )
             
             if( D > 0 ):
-                x += sgnx0
+                x += sgnX
                 D -= 1
             
-            y += sgny0
+            y += sgnY
             D += x_y
             
-            #its clear, add it to visible list
             list_visible_tiles.append( (x, y) )
 
 
     #special case for last square
-    if absx0 > absy0:
-        if absy0 != 0:
-            list_visible_tiles.append( (x, y-sgny0) )
+    if absX > absY:
+        if absY != 0:
+            list_visible_tiles.append( (x, y-sgnY) )
     else:
-        if absx0 != 0:
-            list_visible_tiles.append( (x-sgnx0, y) )
+        if absX != 0:
+            list_visible_tiles.append( (x-sgnX, y) )
 
     return list_visible_tiles
 
@@ -194,37 +190,35 @@ def cilindar(t1, t2, level):
     dx = x2 - x1
     dy = y2 - y1
      
+    if dx == 0 and dy == 0:
+        return 1
+     
     d = math.sqrt(  math.pow(dx, 2) + math.pow(dy, 2)  )
     
-    if d == 0:
-        return 1
-    
+        
     alfa = math.degrees( math.atan( 0.5 / d ) )    
-
-
     mid = math.degrees( math.atan2( float(dy),dx ) )
-
     left = mid + alfa
     right = mid - alfa        
     orig_angle = left - right 
     
 
     for x,y in getTiles2DCilindar(t1, t2, level): 
-        if level.opaque( x,y, 1):
+        if level.opaque( x, y, 1):
             _x = x-x1
             _y = y-y1
-            _xy = level.getMask( _x, _y )
+            mask = level.getMask( _x, _y )
             
             if _x < 0 and _y == 0:
                 if mid > 0:
-                    mini = _xy[MASK_UP_RIGHT]                    
-                    maxi = _xy[MASK_DOWN_RIGHT]+360
+                    mini = mask[MASK_UP_RIGHT]                    
+                    maxi = mask[MASK_DOWN_RIGHT]+360
                 else:
-                    mini = _xy[MASK_UP_RIGHT]-360
-                    maxi = _xy[MASK_DOWN_RIGHT]
+                    mini = mask[MASK_UP_RIGHT]-360
+                    maxi = mask[MASK_DOWN_RIGHT]
             else:
-                mini = _xy[MASK_MIN]
-                maxi = _xy[MASK_MAX]
+                mini = mask[MASK_MIN]
+                maxi = mask[MASK_MAX]
                 
             if left > mini and left < maxi:
                 left = mini
@@ -458,10 +452,9 @@ class Tester(DirectObject.DirectObject):
 
     def getInvisibleTiles(self):
         t = time.clock()
-
         l = levelVisibilityDict(self.units, self.level)
         t2 = time.clock()
-        #print "tiles timer:::", (t2-t)*10, "ms"
+        print "tiles timer:::", (t2-t)*10, "ms"
         """
         t = time.clock()
         for i in xrange( 100 ):
@@ -505,6 +498,8 @@ class Tester(DirectObject.DirectObject):
     def cilin(self):
         dic = {}
 
+        t = time.clock()
+
                                 
         for unit in self.units:        
             for x in xrange( self.level.maxX ):
@@ -520,6 +515,8 @@ class Tester(DirectObject.DirectObject):
             for y in xrange(8):
                 dic[(x,y)] = '{:.2%}'.format(cilindar( unit['pos'], (x,y), self.level))
         """
+        t2 = time.clock()
+        print "cilin timer:::", (t2-t)*10, "ms"
         
         
         self.writeNumbers(dic)
