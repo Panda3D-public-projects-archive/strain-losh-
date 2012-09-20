@@ -440,6 +440,7 @@ class Tester(DirectObject.DirectObject):
             self.node_3d = self.node.attachNewNode('3dnode')
         if self.mode != 3:
             return
+        self.displayLos()
         for i in d.iterkeys():
             m = loader.loadModel('cube')
             m.setScale(1,1,0.7)
@@ -451,10 +452,14 @@ class Tester(DirectObject.DirectObject):
        
 
     def getInvisibleTiles(self):
-        t = time.clock()
-        l = levelVisibilityDict(self.units, self.level)
-        t2 = time.clock()
-        print "tiles timer:::", (t2-t)*10, "ms"
+        if self.mode == 2 or self.mode == 1:
+            t = time.clock()
+            l = levelVisibilityDict(self.units, self.level)
+            t2 = time.clock()
+            self.writeNumbers({})
+        else:
+            l = {}
+        #print "tiles timer:::", (t2-t)*10, "ms"
         """
         t = time.clock()
         for i in xrange( 100 ):
@@ -476,6 +481,8 @@ class Tester(DirectObject.DirectObject):
             self.orig()    
         elif self.mode == 2:
             self.level_renderer.updateLevelLos(self.getInvisibleTiles(), self.getInvisibleWalls())
+        elif self.mode == 3:
+            self.level_renderer.updateLevelLos({}, {})
         elif self.mode == 4:
             self.cilin()
             
