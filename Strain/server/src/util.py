@@ -162,13 +162,14 @@ def compileAllDetectedUnits(units):
 def compileLevel(level):
     lvl = copy.deepcopy( level )
     lvl.clearDynamics()
+    lvl.mask = None
     return lvl
 
 
 def compileLevelWithDifferentGrid(level, grid):
     lvl = copy.deepcopy( level )
     lvl.clearDynamics()
-    
+    lvl.mask = None
     #del lvl['_grid']
     lvl._grid = grid
     
