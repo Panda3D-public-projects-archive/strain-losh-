@@ -7,6 +7,7 @@ import math
 import time
 from xml.dom import minidom
 
+
 #-------------------------------------NETWORK----------------------------------------
 COMMUNICATION_PROTOCOL_VERSION = '0.1'
 COMMUNICATION_PROTOCOL_STRING = 'comm_version'
@@ -88,62 +89,10 @@ MASK_MIN        = 6
 DYNAMICS_EMPTY = 0
 DYNAMICS_UNIT = 1
 
-def levelInvisibility3d3d( unit_list, level ):
 
-    invis_dict = {}
-
-    xx = 3
-    yy = 3
-    zz = 4
-    
-    xx = level.maxX
-    yy = level.maxY
-
-    
-    for x in xrange(xx):
-        for y in xrange(yy):
-            for z in xrange(zz):
-                invis_dict[(x,y,z)] = 0
-    
-    
-    for unit in unit_list:            
-        for x in xrange(xx):
-            for y in xrange(yy):
-                for z in xrange( zz ):
-                    t = (x,y,z)
-                                       
-                    if getTiles3D( unit['pos']+(0,), t, level ):
-                        invis_dict[t] = 1
-                        
-                        
-    for x in xrange(xx):
-        for y in xrange(yy):
-            for z in xrange(zz):
-                if invis_dict[(x,y,z)] or level.opaque(x,y,z+1):
-                    del invis_dict[(x,y,z)]
-            
-            
-    return invis_dict            
-    
-    
-    
-    
 
 def levelVisibilityDict( unit_list, level ):
     vis_dict = {}
-    
-    """
-    #BEZ OPTIMIZIRANJA
-    for unit in unit_list:
-        for x in xrange(level.maxX):
-            for y in xrange(level.maxY):
-                x_y = (x,y)
-                if getLOS2D( unit['pos'], x_y, level ):
-                    vis_dict[x_y] = 1
-
-    return vis_dict
-    """
-    
 
     for x in xrange(level.maxX):
         for y in xrange(level.maxY):
@@ -158,14 +107,13 @@ def levelVisibilityDict( unit_list, level ):
                 if vis_dict[x_y] == 1:
                     continue
                 
-                tiles = getLOS2D( unit['pos'], x_y, level )
-                    
-                if tiles:
-                    for t in tiles:
-                        vis_dict[t] = 1
-                    #vis_dict[x_y] = 1
-                    continue
+                res = LOS( unit['pos'], x_y, level )
 
+                if not res:
+                    continue
+                   
+                if res > vis_dict[x_y]:
+                    vis_dict[x_y] = res
             
     return vis_dict            
 
@@ -514,273 +462,6 @@ def getLOS2D( t1, t2, level ):
             
     return list_visible_tiles
 
-    
-def getTiles3D( t1, t2, level ):
-
-    x1, y1, z1 = t1
-    x2, y2, z2 = t2
-    
-    
-    if level.outOfBounds(x1, y1) or level.outOfBounds(x2, y2):
-        return False
-    
-    #if this is a 2d check with both z==0, than do a 2d check instead
-    if z1 == 0 and z2 == 0:
-        lst = getLOS2D((x1,y1), (x2,y2), level)
-        if not lst:
-            return False
-        tmp_lst = []
-        for entry in lst:
-            tmp_lst.append(entry+(0,))
-        return tmp_lst
-
-
-    list_visible_tiles = [ t1 ]
-    
-    #we see ourselves
-    if( t1 == t2 ):
-        return list_visible_tiles
-    
-    #if one of our end points is not empty space, return false
-    if level.test3D( x1, y1, z1 ) or level.test3D( x2, y2, z2 ):
-        return False
-    
-    absx0 = math.fabs(x2 - x1);
-    absy0 = math.fabs(y2 - y1);
-    absz0 = math.fabs(z2 - z1);
-    
-    dist = int( distance(x1, y1, x2, y2) )
-
-    if dist == 0:
-        return list_visible_tiles
-
-    rev = False
-    
-    if( absx0 > absy0 ):
-        if x2 < x1:
-            x1, y1, z1 = t2
-            x2, y2, z2 = t1
-            list_visible_tiles[0] = t2
-            rev = True
-    else:
-        if y2 < y1:
-            x1, y1, z1 = t2
-            x2, y2, z2 = t1
-            list_visible_tiles[0] = t2
-            rev = True
-    
-    
-    x = int( x1 );
-    y = int( y1 );
-    z = int( z1 )
-
-    
-    sgnz0 = signum(z2 - z1)
-    z_d = absz0/dist
-    
-    if( absx0 > absy0 ):
-        sgny0 = signum( y2 - y1 );
-        y_x = absy0/absx0            
-        D = y_x -0.5
-
-        if dist > absz0:
-            Dz = z_d - 0.5
-        
-        for i in xrange( int( absx0 ) ): #@UnusedVariable
-            lastx, lasty, lastz = x, y, z
-            
-            if( D > 0 ):
-                y += sgny0
-                D -= 1
-
-            if dist > absz0:
-                if Dz > 0:
-                    z += sgnz0
-                    Dz -= 1
-                Dz += z_d
-            else: 
-                z = z + z_d * sgnz0
-
-            x += 1
-            D += y_x
-            
-            #=========================TEST==========================================
-            if testTile3D( (x, y, int(z)), (lastx, lasty, int(lastz)), level ):
-                list_visible_tiles.append( (x, y, int(z)) )
-            else:
-                return False
-                break
-            
-    #//(y0 >= x0)            
-    else:
-        sgnx0 = signum( x2 - x1 );
-        x_y = absx0/absy0
-        D = x_y -0.5;
-        
-        if( dist > absz0 ):
-            Dz = z_d - 0.5
-
-        for i in xrange( int( absy0 ) ): #@UnusedVariable
-            lastx, lasty, lastz = x, y, z
-    
-            if( D > 0 ):
-                x += sgnx0
-                D -= 1.0
-
-            if dist > absz0:
-                if Dz > 0:
-                    z += sgnz0
-                    Dz -= 1
-                Dz += z_d 
-            else:
-                z = z + z_d * sgnz0
-                
-            y += 1
-            D += x_y
-            
-            #=========================TEST==========================================
-            if testTile3D( (x, y, int(z)), (lastx, lasty, int(lastz)), level ):
-                list_visible_tiles.append( (x, y, int(z)) )
-            else:
-                return False
-                break
-
-    if rev:
-        list_visible_tiles.reverse()
-    return list_visible_tiles
-
-
-
-def testTile3DWith0( new, old, level ):
-
-    #if the cube with z=0 is new, switch their places
-    if new[2] == 0:
-        a = new
-        new = old
-        old = a
-    
-    #old[2] = 0!
-    _2x = old[0] * 2
-    _2y = old[1] * 2
-    
-    #moved along x
-    if new[0] != old[0]:
-        #moved along y
-        if new[1] != old[1]:
-            
-            #moved along z - diagonal x-y-z
-            if new[2] != old[2]:
-                    if ( level.test3D( old[0], new[1], new[2] ) and
-                          level.test3D( new[0], old[1], new[2] ) ): 
-                        return False
-            
-                    return True
-            #diagonal x-y, this will never happen cause if both have z=0, we will check it with 2d check
-
-        #moved along z - diagonal x-z
-        if new[2] != old[2]:
-            if level.test3D( old[0], new[1], new[2] ):
-                if level.test3D( new[0], new[1], old[2] ):   
-                        return False                
-                    
-                #x++
-                if new[0] > old[0]:
-                    if level.gridVisionBlocked( _2x+2, _2y+1 ):
-                        return False
-                #x--
-                else:
-                    if level.gridVisionBlocked( _2x, _2y+1 ):
-                        return False
-                    
-            else:
-                return True
-                
-    #moved along y 
-    if new[1] != old[1]:
-        #moved along z - diagonal y-z
-        if new[2] != old[2]:
-            if level.test3D( new[0], old[1], new[2] ): 
-                if level.test3D( new[0], new[1], old[2] ):  
-                        return False
-                    
-                #y++
-                if new[1] > old[1]:
-                    if level.gridVisionBlocked( _2x+1, _2y+2 ):
-                        return False
-                #y--                    
-                else:
-                    if level.gridVisionBlocked( _2x+1, _2y ):
-                        return False                    
-                    
-            else:
-                return True
-    
-    
-    
-    return True
-            
-            
-def testTile3D( pos, lastpos, level ):
-    
-    #if we can't see here
-    if level.test3D( pos[0], pos[1], pos[2] ):
-        return False
-    
-    
-    if pos[2] == 0 and lastpos[2] == 0:
-        return getLOS2D((pos[0], pos[1]), (lastpos[0], lastpos[1]), level)
-    
-    #if any z==0 we need a special check which takes walls into an account
-    if pos[2] == 0 or lastpos[2] == 0:
-        return testTile3DWith0( pos, lastpos, level)
-
-    
-    #moved along x
-    if pos[0] != lastpos[0]:
-        #moved along y
-        if pos[1] != lastpos[1]:
-            
-            #moved along z - diagonal x-y-z
-            if pos[2] != lastpos[2]:
-                    if( level.test3D( lastpos[0], lastpos[1], pos[2] ) and
-                        level.test3D( lastpos[0], pos[1], lastpos[2] ) and
-                        level.test3D( pos[0], lastpos[1], lastpos[2] ) ):                             
-                            return False
-                     
-                    if ( level.test3D( lastpos[0], pos[1], lastpos[2] ) and
-                          level.test3D( lastpos[0], pos[1], pos[2] ) and
-                          level.test3D( pos[0], lastpos[1], lastpos[2] ) and
-                          level.test3D( pos[0], lastpos[1], pos[2] ) ): 
-                        return False
-            
-                    return True
-            #diagonal x-y
-            if ( level.test3D( pos[0], lastpos[1], pos[2] ) and
-                 level.test3D( lastpos[0], pos[1], pos[2] ) ):  
-                        return False
-            else:
-                return True
-
-        #moved along z - diagonal x-z
-        if pos[2] != lastpos[2]:
-            if ( level.test3D( pos[0], pos[1], lastpos[2] ) and
-                 level.test3D( lastpos[0], pos[1], pos[2] ) ):  
-                        return False
-            else:
-                return True
-                
-    #moved along y 
-    if pos[1] != lastpos[1]:
-        #moved along z - diagonal y-z
-        if pos[2] != lastpos[2]:
-            if ( level.test3D( pos[0], pos[1], lastpos[2] ) and
-                 level.test3D( pos[0], lastpos[1], pos[2] ) ):  
-                        return False
-            else:
-                return True
-    
-    return True
-    
 
 
 def getTiles2D( t1, t2, level ):
@@ -1109,141 +790,6 @@ def _getVision( tiles, level):
     return vision
     
 
-
-def checkGridVisibility( pos, lastpos, level):
-    
-    dx = pos[0] - lastpos[0]
-    dy = pos[1] - lastpos[1]
-    
-    x = lastpos[0]
-    y = lastpos[1]
-
-    _2x = x*2
-    _2y = y*2
-  
-  
-    if dx == 1:
-        if dy == 1:
-            if level.gridVisionBlocked( _2x+2, _2y+1 ):
-                if level.gridVisionBlocked( _2x+2, _2y+3 ):
-                    return False
-                if level.getHeight( (x, y+1) ) > 1:
-                    return False
-                
-                
-            if level.gridVisionBlocked( _2x+2, _2y+3 ):
-                if level.getHeight( (x+1, y) ) > 1:
-                    return False
-                if level.gridVisionBlocked( _2x+3, _2y+2 ):
-                    return False
-            
-            
-            if level.gridVisionBlocked( _2x+1, _2y+2 ):
-                if level.gridVisionBlocked( _2x+3, _2y+2 ):
-                    return False
-                if level.getHeight( (x+1, y) ) > 1:
-                    return False
-            
-            if level.gridVisionBlocked( _2x+3, _2y+2 ) and level.getHeight( (x, y+1) ) > 1:
-                    return False
-                
-                
-        if dy == -1:
-            if level.gridVisionBlocked( _2x+2, _2y+1 ):
-                if level.gridVisionBlocked( _2x+2, _2y-1 ):
-                    return False
-                if level.getHeight( (x, y-1) ) > 1:
-                    return False
-
-                
-            if level.gridVisionBlocked( _2x+2, _2y-1 ):
-                if level.getHeight( (x+1, y) ) > 1:
-                    return False
-                if level.gridVisionBlocked( _2x+3, _2y ):
-                    return False
-                
-                
-            if level.gridVisionBlocked( _2x+1, _2y ):
-                if level.gridVisionBlocked( _2x+3, _2y ):
-                    return False
-                if level.getHeight( (x+1, y) ) > 1:
-                    return False
-
-            if level.gridVisionBlocked( _2x+3, _2y ) and level.getHeight( (x, y-1) ) > 1:
-                    return False
-
-
-        if level.gridVisionBlocked( _2x+2, _2y+1 ):
-            return False
-
-        
-    if dx == -1:
-        if dy == 1:
-            if level.gridVisionBlocked( _2x, _2y+1 ):
-                if level.gridVisionBlocked( _2x, _2y+3 ):
-                    return False
-                if level.getHeight( (x, y+1) ) > 1:
-                    return False
-                
-            if level.gridVisionBlocked( _2x, _2y+3 ):
-                if level.getHeight( (x-1, y) ) > 1:
-                    return False
-                if level.gridVisionBlocked( _2x-1, _2y+2 ):
-                    return False
-                
-                
-            if level.gridVisionBlocked( _2x+1, _2y+2 ):
-                if level.gridVisionBlocked( _2x-1, _2y+2 ):
-                    return False
-                if level.getHeight( (x-1, y) ) > 1:
-                    return False
-
-            if level.gridVisionBlocked( _2x-1, _2y+2 ) and level.getHeight( (x, y+1) ) > 1:
-                return False
-
-
-
-        if dy == -1:
-            if level.gridVisionBlocked( _2x, _2y+1 ):
-                if level.gridVisionBlocked( _2x, _2y-1 ):
-                    return False
-                if level.getHeight( (x, y-1) ) > 1:
-                    return False
-
-            
-            if level.gridVisionBlocked( _2x, _2y-1 ):
-                if level.getHeight( (x-1, y) ) > 1:
-                    return False
-                if level.gridVisionBlocked( _2x-1, _2y ):
-                    return False
-            
-            
-            if level.gridVisionBlocked( _2x+1, _2y ):
-                if level.gridVisionBlocked( _2x-1, _2y ):
-                    return False
-                if level.getHeight( (x-1, y) ) > 1:
-                    return False
-             
-            if level.gridVisionBlocked( _2x-1, _2y ) and level.getHeight( (x, y-1) ) > 1:
-                return False 
-             
-             
-        if level.gridVisionBlocked( _2x, _2y+1 ):
-            return False
-
-        
-    if dy == 1:
-        if level.gridVisionBlocked( _2x+1, _2y+2 ):
-            return False
-
-    if dy == -1:
-        if level.gridVisionBlocked( _2x+1, _2y ):
-            return False
-    
-    
-    return True    
-    
-    
     
 def visibleWalls( unit_list, level ):
     
@@ -1311,9 +857,9 @@ def canSeeWall( x, y, level, level_vis_dict ):
     
 
 def signum( num ):
-    if( num < 0 ): 
+    if num < 0: 
         return -1
-    elif( num >= 0 ):
+    else:
         return 1
 
 
@@ -1400,7 +946,11 @@ class Level:
 
 
     def getMask(self, x, y):
-        return self.mask.get(x, y)
+        try:
+            return self.mask.get(x, y)
+        except:
+            self.mask = Level.Mask( self )
+            return self.mask.get(x, y)
 
 
     def load(self, name):
@@ -1843,4 +1393,4 @@ def loadWalls():
     return walls
 
 
-    
+from visibility import *
