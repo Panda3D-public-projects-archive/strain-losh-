@@ -105,7 +105,7 @@ def orig_linija( t1, t2, level ):
     return li
 
 
-def getTiles2DCilindar( t1, t2, level ):
+def getTiles2DCilindar( t1, t2, left, right, mid, level ):
     x1, y1 = t1
     x2, y2 = t2
     
@@ -118,11 +118,10 @@ def getTiles2DCilindar( t1, t2, level ):
     sgnX = signum( dx )
     sgnY = signum( dy )
     
-    list_visible_tiles = [ (x1,y1) ]
-    
     x = int( x1 )
     y = int( y1 )
 
+    angles = [[left,right]]
     
     if( absX > absY ):
         y_x = absY/absX            
@@ -132,11 +131,13 @@ def getTiles2DCilindar( t1, t2, level ):
             
             _y_p_1 = y+1 
             if not level.outOfBounds( x, _y_p_1 ):
-                list_visible_tiles.append( (x, _y_p_1) )
+                if not checkAngles(angles, mid, x, _y_p_1, x-x1, _y_p_1-y1, level, dx, dy):
+                    return 0
             
             _y_1 = y-1
             if not level.outOfBounds( x, _y_1 ):
-                list_visible_tiles.append( (x, _y_1) )
+                if not checkAngles(angles, mid, x, _y_1, x-x1, _y_1-y1, level, dx, dy):
+                    return 0
             
             if( D > 0 ):
                 y += sgnY
@@ -145,7 +146,9 @@ def getTiles2DCilindar( t1, t2, level ):
             x += sgnX
             D += y_x
 
-            list_visible_tiles.append( (x, y) )
+            if not checkAngles(angles, mid, x, y, x-x1, y-y1, level, dx, dy):
+                return 0
+
             
     #//(y0 >= x0)            
     else:
@@ -156,11 +159,14 @@ def getTiles2DCilindar( t1, t2, level ):
             
             _x_p_1 = x+1
             if not level.outOfBounds( _x_p_1, y ):
-                list_visible_tiles.append( (_x_p_1, y) )
+                if not checkAngles(angles, mid, _x_p_1, y, _x_p_1-x1, y-y1, level, dx, dy):
+                    return 0
 
             _x_1 = x-1
             if not level.outOfBounds( _x_1, y ):
-                list_visible_tiles.append( (_x_1, y) )
+                if not checkAngles(angles, mid, _x_1, y, _x_1-x1, y-y1, level, dx, dy):
+                    return 0
+                
             
             if( D > 0 ):
                 x += sgnX
@@ -169,18 +175,24 @@ def getTiles2DCilindar( t1, t2, level ):
             y += sgnY
             D += x_y
             
-            list_visible_tiles.append( (x, y) )
-
+            if not checkAngles(angles, mid, x, y, x-x1, y-y1, level, dx, dy):
+                return 0
+            
 
     #special case for last square
     if absX > absY:
         if absY != 0:
-            list_visible_tiles.append( (x, y-sgnY) )
+            _y_sgn = y-sgnY
+            if not checkAngles(angles, mid, x, _y_sgn, x-x1, _y_sgn-y1, level, dx, dy):
+                return 0
     else:
         if absX != 0:
-            list_visible_tiles.append( (x-sgnX, y) )
+            _x_sgn = x-sgnX
+            if not checkAngles(angles, mid, _x_sgn, y, _x_sgn-x1, y-y1, level, dx, dy):
+                return 0
 
-    return list_visible_tiles
+    return angles
+
 
 
 def cilindar(t1, t2, level):    
@@ -203,11 +215,109 @@ def cilindar(t1, t2, level):
     orig_angle = left - right 
     
 
-    for x,y in getTiles2DCilindar(t1, t2, level): 
+    angles = getTiles2DCilindar(t1, t2, left, right, mid, level)
+    if not angles:
+        return 0 
+    
+    total_angles = 0
+    for l, r in angles:
+        total_angles += l - r 
+         
+    
+    return total_angles / orig_angle
+    
+
+def checkWallAngles( angles, mid, x, y, _x, _y, level, dx, dy ):
+    _2x = x * 2
+    _2y = y * 2
+    mask = level.getMask( _x, _y )
+    
+    for lr in angles:
+        #lr[0] = left
+        #lr[1] = right        
+        
+        if dx > 0:
+            #left wall
+            if level.gridVisionBlocked( _2x, _2y+1 ):
+                
+                if _x > 0:
+                    mini = mask[MASK_DOWN_LEFT]
+                    maxi = mask[MASK_UP_LEFT]
+                else:
+                    mini = mask[MASK_UP_LEFT]
+                    maxi = mask[MASK_DOWN_LEFT]
+                    if _y == 0:
+                        if mid > 0:
+                            maxi = mask[MASK_DOWN_LEFT]+360
+                        else:
+                            mini = mask[MASK_UP_LEFT]-360
+                            
+                vis_angles_return = modifyVisibleAngle(lr, mini, maxi, angles) 
+                if not vis_angles_return:
+                    return 0
+                elif vis_angles_return == -1:
+                    return -1
+                    
+
+        elif dx < 0:
+            #right wall
+            if level.gridVisionBlocked( _2x+2, _2y+1 ):
+                
+                if _x > 0:
+                    mini = mask[MASK_DOWN_RIGHT]
+                    maxi = mask[MASK_UP_RIGHT]
+                else:
+                    mini = mask[MASK_UP_RIGHT]
+                    maxi = mask[MASK_DOWN_RIGHT]
+                    if _y == 0:
+                        if mid > 0:
+                            maxi = mask[MASK_DOWN_RIGHT]+360
+                        else:
+                            mini = mask[MASK_UP_RIGHT]-360
+                            
+                vis_angles_return = modifyVisibleAngle(lr, mini, maxi, angles) 
+                if not vis_angles_return:
+                    return 0
+                elif vis_angles_return == -1:
+                    return -1
+
+        if dy > 0:
+            #down wall
+            if level.gridVisionBlocked( _2x+1, _2y ):
+                
+                mini = mask[MASK_DOWN_RIGHT]
+                maxi = mask[MASK_DOWN_LEFT]
+                            
+                vis_angles_return = modifyVisibleAngle(lr, mini, maxi, angles) 
+                if not vis_angles_return:
+                    return 0
+                elif vis_angles_return == -1:
+                    return -1
+
+        elif dy < 0:
+            #up wall
+            if level.gridVisionBlocked( _2x+1, _2y+2 ):
+                
+                mini = mask[MASK_UP_LEFT]
+                maxi = mask[MASK_UP_RIGHT]
+                            
+                vis_angles_return = modifyVisibleAngle(lr, mini, maxi, angles) 
+                if not vis_angles_return:
+                    return 0
+                elif vis_angles_return == -1:
+                    return -1
+
+    return 1
+
+
+def checkAngles( angles, mid, x, y, _x, _y, level, dx, dy ):
+    
+    mask = level.getMask( _x, _y )
+    
+    for lr in angles[:]:
+        
+        #if this square is not empty check angles for it
         if level.opaque( x, y, 1):
-            _x = x-x1
-            _y = y-y1
-            mask = level.getMask( _x, _y )
             
             if _x < 0 and _y == 0:
                 if mid > 0:
@@ -219,18 +329,49 @@ def cilindar(t1, t2, level):
             else:
                 mini = mask[MASK_MIN]
                 maxi = mask[MASK_MAX]
+
+            if not modifyVisibleAngle(lr, mini, maxi, angles):
+                return 0                
+
+        #check walls    
+        walls_result = checkWallAngles(angles, mid, x, y, _x, _y, level, dx, dy)     
+        if walls_result == 0:
+            return 0
+        elif walls_result == -1:
+            return checkAngles(angles, mid, x, y, _x, _y, level, dx, dy)
+   
                 
-            if left > mini and left < maxi:
-                left = mini
-            if right > mini and right < maxi:
-                right = maxi
-                
-            if left <= right:
-                return 0
+    return 1
+        
+        
+def modifyVisibleAngle( lr, mini, maxi, angles ):
     
-    visible_angle = left - right
-    return visible_angle/orig_angle
+    left_bigger = False
     
+    if lr[0] > mini: 
+        if lr[0] <= maxi:
+            lr[0] = mini
+        else:
+            left_bigger = True
+            
+    if lr[1] >= mini:
+        if lr[1] < maxi:
+            lr[1] = maxi
+    else:
+        if left_bigger:
+            #----------------SPLIT-------------------
+            old_right = lr[1]
+            lr[1] = maxi
+            angles.append( [mini, old_right] )
+            return -1
+            
+        
+    if lr[0] <= lr[1]:
+        return 0    
+        
+    return 1
+        
+
 
 #cilindar( (0,0), (4,3) )
 #print getTiles2DCilindar( (2,2), (5,2)  )
@@ -298,7 +439,7 @@ class Tester(DirectObject.DirectObject):
         self.unit_renderer = UnitRenderer(self, self.node)
         self.unit_renderers = {}
         self.id_counter = 1
-        self.mode = 1
+        self.mode = 4
         
         self.plane = Plane(Vec3(0, 0, 1), Point3(0, 0, ground_level))
         base.accept('mouse1', self.addUnit)
@@ -440,7 +581,6 @@ class Tester(DirectObject.DirectObject):
             self.node_3d = self.node.attachNewNode('3dnode')
         if self.mode != 3:
             return
-        self.displayLos()
         for i in d.iterkeys():
             m = loader.loadModel('cube')
             m.setScale(1,1,0.7)
@@ -452,14 +592,10 @@ class Tester(DirectObject.DirectObject):
        
 
     def getInvisibleTiles(self):
-        if self.mode == 2 or self.mode == 1:
-            t = time.clock()
-            l = levelVisibilityDict(self.units, self.level)
-            t2 = time.clock()
-            self.writeNumbers({})
-        else:
-            l = {}
-        #print "tiles timer:::", (t2-t)*10, "ms"
+        t = time.clock()
+        l = levelVisibilityDict(self.units, self.level)
+        t2 = time.clock()
+        print "tiles timer:::", (t2-t)*10, "ms"
         """
         t = time.clock()
         for i in xrange( 100 ):
@@ -481,8 +617,6 @@ class Tester(DirectObject.DirectObject):
             self.orig()    
         elif self.mode == 2:
             self.level_renderer.updateLevelLos(self.getInvisibleTiles(), self.getInvisibleWalls())
-        elif self.mode == 3:
-            self.level_renderer.updateLevelLos({}, {})
         elif self.mode == 4:
             self.cilin()
             
@@ -507,23 +641,27 @@ class Tester(DirectObject.DirectObject):
 
         t = time.clock()
 
-                                
+        
         for unit in self.units:        
             for x in xrange( self.level.maxX ):
                 for y in xrange( self.level.maxY ):
-                    dic[(x,y)] = '{:.0%}'.format(cilindar( unit['pos'], (x,y), self.level)) 
+                    value = cilindar( unit['pos'], (x,y), self.level)
+                    if value == 0:
+                        dic[(x,y)] = "" 
+                    else:
+                        dic[(x,y)] = '{:.0%}'.format(value) 
         """
-        x = 0
-        y = 1
-        dic[(x,y)] = '{:.2%}'.format(cilindar((2,4), (x,y), self.level))
+        x = 3
+        y = 5
+        #dic[(x,y)] = '{:.2%}'.format(cilindar((2,4), (x,y), self.level))
         """
         """
         for unit in self.units:
-            for y in xrange(8):
+            #for y in xrange(8):
                 dic[(x,y)] = '{:.2%}'.format(cilindar( unit['pos'], (x,y), self.level))
         """
         t2 = time.clock()
-        print "cilin timer:::", (t2-t)*10, "ms"
+        print "cilin timer:::", (t2-t)*1000, "ms"
         
         
         self.writeNumbers(dic)
@@ -531,5 +669,5 @@ class Tester(DirectObject.DirectObject):
         
 
 
-tester = Tester(level_name='../server/data/levels/halls0.txt')
+tester = Tester(level_name='../server/data/levels/level2.txt')
 run()
