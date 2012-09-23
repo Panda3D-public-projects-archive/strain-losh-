@@ -485,8 +485,9 @@ if __name__ == "__main__":
     
     #for i in xrange(40,60):
     #    dbapi.deleteGame(i)
-    #dbapi.deleteGame(361)
-    dbapi.deleteGame(422)
+    #dbapi.deleteGame(423)
+    #dbapi.deleteGame(443)
+    #print dbapi.getAllActiveGames()
     
     #dbapi.finishGame(21)
     #dbapi.finishAllGamesExceptVersion('0.1')
@@ -503,7 +504,7 @@ if __name__ == "__main__":
     #print dbapi.getGameAllPlayers(21)
     #print dbapi.getAllPlayers()
     #print dbapi.getAllLevels()
-    print dbapi.getAllActiveGames()
+    #print dbapi.getAllActiveGames()
     #print dbapi.getAllFinishedGames()
     #print dbapi.getAllEmptyPublicGames()
     #print dbapi.getGame(21, True)

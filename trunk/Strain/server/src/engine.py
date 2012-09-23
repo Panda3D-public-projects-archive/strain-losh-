@@ -16,6 +16,7 @@ from util import OBSERVER_ID
 from share import *
 import eventHandler
 from eventHandler import EventHandler
+from dblocalproxyapi import DBLocalProxyApi
 
 
 LEVELS_ROOT = "./data/levels/"
@@ -42,6 +43,11 @@ class EngineThread( Thread ):
         self.db_api = db_api
            
         self.last_active_time = time.time()
+        
+        #DEBUG: check if this is a test game, if so than use localproxy db
+        if self.game_id == -1:
+            self.db_api = DBLocalProxyApi()
+           
         
         #check if we need to load Engine from db..
         db_game = self.db_api.getGame( self.game_id )
