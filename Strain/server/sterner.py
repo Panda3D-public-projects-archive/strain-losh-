@@ -265,6 +265,11 @@ class Sterner:
             game_name = message[5]
             player_id = self.getIdFromConnection(connection)            
             
+            #DEBUG: this is for setting up local test game
+            if public_game == -1:
+                self.msgs4engines.append( (STERNER_ID, START_NEW_GAME, -1, player_id ) )
+                return
+            
             #check if there are at least 2 players
             if len( player_ids ) < 2:
                 self.network._sendMsg( (ERROR, "Not enough players"), connection )
@@ -459,8 +464,13 @@ class Sterner:
     def sendSternerData(self, source):
         player_id = self.getIdFromConnection(source)
         self.network._sendMsg( (ALL_PLAYERS, self.db_api.getAllPlayers()), source )
-        self.network._sendMsg( (ALL_LEVELS, self.db_api.getAllLevels()), source )            
-        self.network._sendMsg( (MY_ACTIVE_GAMES, self.db_api.getMyActiveGames( player_id )), source )
+        self.network._sendMsg( (ALL_LEVELS, self.db_api.getAllLevels()), source )
+                  
+        #DEBUG: add local test game
+        active_games = self.db_api.getMyActiveGames( player_id )
+        active_games.append( ( -1, "level2", 1000, 1, 22, 0, 0, 0, '0.1', 0, "local test game", 0, 0 ))
+        self.network._sendMsg( (MY_ACTIVE_GAMES, active_games, source ) )
+        
         self.network._sendMsg( (MY_UNACCEPTED_GAMES, self.db_api.getMyUnacceptedGames( player_id )), source )
         self.network._sendMsg( (MY_WAITING_GAMES, self.db_api.getMyWaitingGames( player_id )), source )
         self.network._sendMsg( (EMPTY_PUBLIC_GAMES, self.db_api.getAllEmptyPublicGames()), source )
@@ -608,6 +618,7 @@ class EngineHandlerThread( threading.Thread ):
             
         
     def checkGameExists(self, game_id):
+        
         #first check if there is an active engine thread with this game_id
         if game_id in self.engine_threads:
             return True
@@ -617,6 +628,11 @@ class EngineHandlerThread( threading.Thread ):
             if game_id == game[0]:
                 #resume this game
                 return self.startNewEngineThread(game_id)
+
+        #DEBUG:
+        if game_id == -1:
+            return self.startNewEngineThread(game_id)
+        
         
         self.notify.error("Couldn't find game:%s in active games!",str(game_id))
         return False
