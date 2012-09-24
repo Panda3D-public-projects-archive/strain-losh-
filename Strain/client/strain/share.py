@@ -84,6 +84,7 @@ MASK_MAX        = 5
 MASK_MIN        = 6 
 
 
+VISIBILITY_MIN = 40
 
 
 DYNAMICS_EMPTY = 0
@@ -873,51 +874,51 @@ def distanceTupple( t1, t2 ):
 
 
 
+class Mask:
+    
+    def __init__(self, level):
+        self.level = level    
+        self._data = []
+        
+        for x in xrange( level.maxX*2 ):
+            self._data.append( [0] * level.maxY*2 )
+       
+        for x in xrange( level.maxX*2 ):
+            for y in xrange( level.maxY*2 ):
+                xx = x-level.maxX
+                yy = y-level.maxY
+                _0 = math.degrees( math.atan2( (yy+0.5), (xx-0.5) ) )
+                _1 = math.degrees( math.atan2( (yy+0.5), (xx+0.5) ) )
+                _2 = math.degrees( math.atan2( (yy-0.5), (xx-0.5) ) )
+                _3 = math.degrees( math.atan2( (yy-0.5), (xx+0.5) ) )
+                _4 = math.sqrt(  math.pow(xx, 2) + math.pow(yy, 2)  )
+                _5 = max( [_0,_1,_2,_3])
+                _6 = min( [_0,_1,_2,_3])
+                
+                self._data[x][y] = (_0, _1, _2, _3, _4, _5, _6)
+
+    
+    def get(self, x,y):
+        return self._data[ x + self.level.maxX ][ y + self.level.maxY ]
+        
+
+    def prnt(self):
+
+        for y in xrange( self.level.maxY*2-1, -1, -1):
+            line = ""
+            for x in xrange( self.level.maxX*2 ):
+                line += "("
+                for j in xrange( 5 ):
+                    line += "%4.0f " % self._data[x][y][j]
+
+                line += ")  "
+        
+            print line
+
 
 
 class Level:
         
-
-    class Mask:
-        
-        def __init__(self, level):
-            self.level = level    
-            self._data = []
-            
-            for x in xrange( level.maxX*2 ):
-                self._data.append( [0] * level.maxY*2 )
-           
-            for x in xrange( level.maxX*2 ):
-                for y in xrange( level.maxY*2 ):
-                    xx = x-level.maxX
-                    yy = y-level.maxY
-                    _0 = math.degrees( math.atan2( (yy+0.5), (xx-0.5) ) )
-                    _1 = math.degrees( math.atan2( (yy+0.5), (xx+0.5) ) )
-                    _2 = math.degrees( math.atan2( (yy-0.5), (xx-0.5) ) )
-                    _3 = math.degrees( math.atan2( (yy-0.5), (xx+0.5) ) )
-                    _4 = math.sqrt(  math.pow(xx, 2) + math.pow(yy, 2)  )
-                    _5 = max( [_0,_1,_2,_3])
-                    _6 = min( [_0,_1,_2,_3])
-                    
-                    self._data[x][y] = (_0, _1, _2, _3, _4, _5, _6)
-
-        
-        def get(self, x,y):
-            return self._data[ x + self.level.maxX ][ y + self.level.maxY ]
-            
-    
-        def prnt(self):
-
-            for y in xrange( self.level.maxY*2-1, -1, -1):
-                line = ""
-                for x in xrange( self.level.maxX*2 ):
-                    line += "("
-                    for j in xrange( 5 ):
-                        line += "%4.0f " % self._data[x][y][j]
-
-                    line += ")  "
-            
-                print line
 
         
         
@@ -949,7 +950,7 @@ class Level:
         try:
             return self.mask.get(x, y)
         except:
-            self.mask = Level.Mask( self )
+            self.mask = Mask( self )
             return self.mask.get(x, y)
 
 
@@ -1045,7 +1046,7 @@ class Level:
 
 
         #----init mask for cylindrical los checking---
-        self.mask = Level.Mask( self )        
+        self.mask = Mask( self )        
 
 
     def changeRowNumber(self, newY):

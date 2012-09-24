@@ -17,7 +17,7 @@ from share import *
 import eventHandler
 from eventHandler import EventHandler
 from dblocalproxyapi import DBLocalProxyApi
-
+from profilestats import profile
 
 LEVELS_ROOT = "./data/levels/"
 
@@ -63,7 +63,7 @@ class EngineThread( Thread ):
         players = [ g_p[2] for g_p in self.db_api.getGameAllPlayers(db_game[0])]
         
         if db_game[12]:
-            self.engine = loadFromPickle( str(db_game[12]), from_network, to_network, notify, db_api )
+            self.engine = loadFromPickle( str(db_game[12]), from_network, to_network, self.notify, self.db_api )
         else:
             self.engine = Engine( game_id, from_network, to_network, notify, self.db_api )
             self.engine.Init( level, budget, players )
@@ -83,7 +83,7 @@ class EngineThread( Thread ):
                 if self.engine.pickleSelf():
                     break
 
-            #run one tick                
+            #run one tick           
             if self.engine.runOneTick():
                 self.last_active_time = time.time()
 
@@ -736,7 +736,7 @@ class Engine():
         self.error( 'It is not your turn.', source )
         return None
         
-        
+    @profile
     def moveUnit(self, unit_id, new_position, new_heading, source ):
 
         owner = self.validatePlayer( source )
