@@ -4,7 +4,7 @@ Created on 22 Sep 2012
 @author: krav
 '''
 import math
-from strain.share import *
+
 
 
 
@@ -61,7 +61,7 @@ def LOS(t1, t2, level):
 
 
 
-def LOS2(t1, t2, level, vis_dict ):    
+def LOS2(t1, t2, level, unit_dict, vis_dict ):    
     x1,y1 = t1
     x2,y2 = t2
         
@@ -81,7 +81,7 @@ def LOS2(t1, t2, level, vis_dict ):
     orig_angle = left - right 
     
 
-    angles = _goThroughTiles2(x1, y1, x2, y2, dx, dy, left, right, mid, level, vis_dict)
+    angles = _goThroughTiles2(x1, y1, x2, y2, dx, dy, left, right, mid, level, unit_dict, vis_dict)
     if not angles:
         return 0 
     
@@ -94,9 +94,59 @@ def LOS2(t1, t2, level, vis_dict ):
 
 
 
+def levelVisibilityDict( unit_list, level ):
+    
+    vis_dict = {}
+    
+    for unit in unit_list:      
+        smartSearch(unit, level, vis_dict)      
+        
+                    
+    #fill dict with zeroes
+    for x in xrange(level.maxX):
+        for y in xrange(level.maxY):
+            x_y = (x,y)        
+            if x_y not in vis_dict:
+                vis_dict[ x_y ] = 0
+
+            
+    return vis_dict            
 
 
-def _goThroughTiles2( x1, y1, x2, y2, dx, dy, left, right, mid, level, vis_dict ):
+def smartSearch( unit, level, vis_dict ):
+    
+    unit_dict = {}
+    min_x = 0
+    max_x = level.maxX
+    step_x = 1
+    
+    min_y = 0
+    max_y = level.maxY
+    step_y = 1
+    
+    if unit['pos'][0] <= level.center[0]:
+            min_x, max_x, step_x = max_x-1, min_x-1, -1 
+    if unit['pos'][1] <= level.center[1]:
+            min_y, max_y, step_y = max_y-1, min_y-1, -1
+            
+
+    for x in xrange(min_x, max_x, step_x):
+        for y in xrange(min_y, max_y, step_y):
+            x_y = (x,y)
+            
+            if x_y in vis_dict:
+                continue
+            if x_y in unit_dict:
+                continue
+            
+            if LOS2( unit['pos'], x_y, level, unit_dict, vis_dict ) > VISIBILITY_MIN:
+                unit_dict[x_y] = 1
+                vis_dict[x_y] = 1
+
+
+
+
+def _goThroughTiles2( x1, y1, x2, y2, dx, dy, left, right, mid, level, unit_dict, vis_dict ):
     
     absX = math.fabs( dx );
     absY = math.fabs( dy );
@@ -141,9 +191,16 @@ def _goThroughTiles2( x1, y1, x2, y2, dx, dy, left, right, mid, level, vis_dict 
                 if not _checkAngles(angles, mid, x, y, x-x1, y-y1, level, dx, dy):
                     vis = 0
                     #return 0
+                else:
+                    if dy == 0:
+                        if i > 1:
+                            vis_dict[ (x,y) ] = 1
+
                     
             if not vis:
-                vis_dict[(x,y)] = 0
+                unit_dict[(x,y)] = 0
+
+                
 
             
     #//(y0 >= x0)            
@@ -178,9 +235,18 @@ def _goThroughTiles2( x1, y1, x2, y2, dx, dy, left, right, mid, level, vis_dict 
                 if not _checkAngles(angles, mid, x, y, x-x1, y-y1, level, dx, dy):
                     vis = 0
                     #return 0
+                else:
+                    if dx == 0:
+                        if i > 0:
+                            vis_dict[ (x,y) ] = 1
+                    
+                    
                     
             if not vis:
-                vis_dict[(x,y)] = 0
+                unit_dict[(x,y)] = 0
+
+
+
 
     #special case for last square
     if vis:
@@ -198,7 +264,7 @@ def _goThroughTiles2( x1, y1, x2, y2, dx, dy, left, right, mid, level, vis_dict 
                     #return 0
 
     if not vis:
-        vis_dict[(x,y)] = 0        
+        unit_dict[ (x,y) ] = 0        
         
         
     return angles
