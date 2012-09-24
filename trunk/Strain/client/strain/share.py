@@ -7,6 +7,7 @@ import math
 import time
 from xml.dom import minidom
 from profilestats import profile
+from visibility import *
 
 #-------------------------------------NETWORK----------------------------------------
 COMMUNICATION_PROTOCOL_VERSION = '0.1'
@@ -74,16 +75,6 @@ UNDEFINED_MSG_2 = 'msg2'        #value undefined
 
 
 
-#-------LEVEL:MASK-----------------
-MASK_UP_LEFT    = 0
-MASK_UP_RIGHT   = 1
-MASK_DOWN_LEFT  = 2
-MASK_DOWN_RIGHT = 3
-MASK_MAX        = 4
-MASK_MIN        = 5 
-
-
-VISIBILITY_MIN = 0.4
 
 
 DYNAMICS_EMPTY = 0
@@ -92,30 +83,55 @@ DYNAMICS_UNIT = 1
 
 
 def levelVisibilityDict( unit_list, level ):
+    
     vis_dict = {}
-
+    
+    for unit in unit_list:      
+        smartSearch(unit, level, vis_dict)      
+        
+                    
+    #fill dict with zeroes
     for x in xrange(level.maxX):
         for y in xrange(level.maxY):
-            vis_dict[(x,y)] = 0
+            x_y = (x,y)        
+            if x_y not in vis_dict:
+                vis_dict[ x_y ] = 0
 
-
-    for unit in unit_list:            
-        for x in xrange(level.maxX):
-            for y in xrange(level.maxY):
-                x_y = (x,y)
-                
-                if vis_dict[x_y] > VISIBILITY_MIN:
-                    continue
-                
-                res = LOS( unit['pos'], x_y, level )
-
-                if not res:
-                    continue
-                   
-                if res > vis_dict[x_y]:
-                    vis_dict[x_y] = res
             
     return vis_dict            
+
+
+def smartSearch( unit, level, vis_dict ):
+    
+    unit_dict = {}
+    min_x = 0
+    max_x = level.maxX
+    step_x = 1
+    
+    min_y = 0
+    max_y = level.maxY
+    step_y = 1
+    
+    if unit['pos'][0] <= level.center[0]:
+            min_x, max_x, step_x = max_x-1, min_x-1, -1 
+    if unit['pos'][1] <= level.center[1]:
+            min_y, max_y, step_y = max_y-1, min_y-1, -1
+            
+
+    for x in xrange(min_x, max_x, step_x):
+        for y in xrange(min_y, max_y, step_y):
+            x_y = (x,y)
+            
+            if x_y in vis_dict:
+                continue
+            if x_y in unit_dict:
+                continue
+            
+
+            if LOS2( unit['pos'], x_y, level, unit_dict ) > VISIBILITY_MIN:
+                unit_dict[x_y] = 1
+                vis_dict[x_y] = 1
+
 
 
 def getMoveDict( unit, level, units, returnOriginTile = False ):    
@@ -855,13 +871,6 @@ def canSeeWall( x, y, level, level_vis_dict ):
     return False
     
     
-
-def signum( num ):
-    if num < 0: 
-        return -1
-    else:
-        return 1
-
 
 def distance( x1, y1, x2, y2 ):    
     return math.sqrt( math.pow( (x2-x1) , 2) +  math.pow( (y2-y1) , 2) )

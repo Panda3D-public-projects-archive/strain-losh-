@@ -1,5 +1,5 @@
+from strain.visibility import *
 import math
-from strain.visibility import LOS
 from panda3d.core import *
 from direct.gui.OnscreenImage import OnscreenImage
 from direct.showbase import DirectObject
@@ -7,9 +7,8 @@ from strain.renderer.levelrenderer import LevelRenderer
 from strain.renderer.cameramanager import CameraManager
 from strain.renderer.unitrenderer import UnitRenderer
 from strain.renderer.coordrenderer import CoordRenderer
-from strain.share import Level
-import strain.utils as utils
 from strain.share import *
+import strain.utils as utils
 import direct.directbase.DirectStart
 import random
 from profilestats import profile
@@ -137,21 +136,20 @@ class Tester(DirectObject.DirectObject):
     def displayLos(self):
         self.cilin()
 
-    @profile
+
+
+
+
+
     def cilin(self):
         
-        pm = pickle.dumps(self.level.mask)
+        t = time.clock()
+        dic = levelVisibilityDict(self.units, self.level)
+        t2 = time.clock()
+        print "levelvis timer:::", (t2-t)*1000, "ms"
         
-        print "mask size:", len( pm )
-        
-        import zlib
-        zpm = zlib.compress( pm, 6 )
-        print "ziped mask", len( zpm )
-        
-        pmz = zlib.decompress(zpm)
-        print "compare", cmp( pm, pmz )
-        
-        return 0
+        self.writeNumbers(dic)        
+        return 
         dic = {}
 
         t = time.clock()
@@ -160,6 +158,8 @@ class Tester(DirectObject.DirectObject):
         for unit in self.units:        
             for x in xrange( self.level.maxX ):
                 for y in xrange( self.level.maxY ):
+                    if self.level.opaque(x,y,1):
+                        continue
                     value = LOS( unit['pos'], (x,y), self.level)
                     if value == 0:
                         dic[(x,y)] = "" 
@@ -180,7 +180,6 @@ class Tester(DirectObject.DirectObject):
         
         
         self.writeNumbers(dic)
-        
         
 
 
