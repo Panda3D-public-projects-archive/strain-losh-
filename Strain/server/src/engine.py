@@ -736,7 +736,7 @@ class Engine():
         self.error( 'It is not your turn.', source )
         return None
         
-    @profile
+
     def moveUnit(self, unit_id, new_position, new_heading, source ):
 
         owner = self.validatePlayer( source )
@@ -1161,14 +1161,20 @@ class Engine():
             db_api = self.db_api
             self.db_api = None
     
+            msk = self.level.mask
+            self.level.mask = None
             #pickle the engine
             pickled_engine = pickle.dumps( self ) 
-    
+            print "pickle size:", len(pickled_engine)
+            import zlib
+            print "zip pickle size:", len( zlib.compress( pickled_engine) )
+            
             #restore all transient objects
             self.notify = notify
             self.to_network = to_network
             self.from_network = from_network
             self.db_api = db_api
+            self.level.mask = msk
             
             #update game record in database with pickled state
             self.db_api.setPickledEngine( self.game_id, pickled_engine )

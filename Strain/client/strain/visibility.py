@@ -24,14 +24,14 @@ def LOS(t1, t2, level):
     d = math.sqrt(  math.pow(dx, 2) + math.pow(dy, 2)  )
     
         
-    alfa = math.degrees( math.atan( 0.5 / d ) )    
-    mid = math.degrees( math.atan2( float(dy),dx ) )
+    alfa = math.atan( 0.5 / d )    
+    mid = math.atan2( float(dy),dx )
     left = mid + alfa
     right = mid - alfa        
     orig_angle = left - right 
     
 
-    angles = _getTiles2DForAngles(t1, t2, left, right, mid, level)
+    angles = _goThroughTiles(x1, y1, x2, y2, dx, dy, left, right, mid, level)
     if not angles:
         return 0 
     
@@ -46,12 +46,7 @@ def LOS(t1, t2, level):
 
 
 
-def _getTiles2DForAngles( t1, t2, left, right, mid, level ):
-    x1, y1 = t1
-    x2, y2 = t2
-    
-    dx = x2 - x1
-    dy = y2 - y1
+def _goThroughTiles( x1, y1, x2, y2, dx, dy, left, right, mid, level ):
     
     absX = math.fabs( dx );
     absY = math.fabs( dy );
@@ -63,6 +58,7 @@ def _getTiles2DForAngles( t1, t2, left, right, mid, level ):
     y = int( y1 )
 
     angles = [[left,right]]
+    
     
     if( absX > absY ):
         y_x = absY/absX            

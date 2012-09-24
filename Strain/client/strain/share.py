@@ -6,7 +6,7 @@ Created on 19.12.2011.
 import math
 import time
 from xml.dom import minidom
-
+from profilestats import profile
 
 #-------------------------------------NETWORK----------------------------------------
 COMMUNICATION_PROTOCOL_VERSION = '0.1'
@@ -79,12 +79,11 @@ MASK_UP_LEFT    = 0
 MASK_UP_RIGHT   = 1
 MASK_DOWN_LEFT  = 2
 MASK_DOWN_RIGHT = 3
-MASK_DISTANCE   = 4
-MASK_MAX        = 5
-MASK_MIN        = 6 
+MASK_MAX        = 4
+MASK_MIN        = 5 
 
 
-VISIBILITY_MIN = 40
+VISIBILITY_MIN = 0.4
 
 
 DYNAMICS_EMPTY = 0
@@ -105,7 +104,7 @@ def levelVisibilityDict( unit_list, level ):
             for y in xrange(level.maxY):
                 x_y = (x,y)
                 
-                if vis_dict[x_y] == 1:
+                if vis_dict[x_y] > VISIBILITY_MIN:
                     continue
                 
                 res = LOS( unit['pos'], x_y, level )
@@ -887,15 +886,14 @@ class Mask:
             for y in xrange( level.maxY*2 ):
                 xx = x-level.maxX
                 yy = y-level.maxY
-                _0 = math.degrees( math.atan2( (yy+0.5), (xx-0.5) ) )
-                _1 = math.degrees( math.atan2( (yy+0.5), (xx+0.5) ) )
-                _2 = math.degrees( math.atan2( (yy-0.5), (xx-0.5) ) )
-                _3 = math.degrees( math.atan2( (yy-0.5), (xx+0.5) ) )
-                _4 = math.sqrt(  math.pow(xx, 2) + math.pow(yy, 2)  )
-                _5 = max( [_0,_1,_2,_3])
-                _6 = min( [_0,_1,_2,_3])
+                _0 = math.atan2( (yy+0.5), (xx-0.5) )
+                _1 = math.atan2( (yy+0.5), (xx+0.5) )
+                _2 = math.atan2( (yy-0.5), (xx-0.5) )
+                _3 = math.atan2( (yy-0.5), (xx+0.5) )
+                _4 = max( [_0,_1,_2,_3])
+                _5 = min( [_0,_1,_2,_3])
                 
-                self._data[x][y] = (_0, _1, _2, _3, _4, _5, _6)
+                self._data[x][y] = (_0, _1, _2, _3, _4, _5)
 
     
     def get(self, x,y):
@@ -952,7 +950,6 @@ class Level:
         except:
             self.mask = Mask( self )
             return self.mask.get(x, y)
-
 
     def load(self, name):
         self.name = name

@@ -12,8 +12,13 @@ import strain.utils as utils
 from strain.share import *
 import direct.directbase.DirectStart
 import random
+from profilestats import profile
+import zipfile
+import cPickle as pickle
+
 
 import os, sys
+from zipfile import ZipFile
 lib_path = os.path.abspath('server/src')
 sys.path.append(lib_path)
 
@@ -132,8 +137,21 @@ class Tester(DirectObject.DirectObject):
     def displayLos(self):
         self.cilin()
 
-
+    @profile
     def cilin(self):
+        
+        pm = pickle.dumps(self.level.mask)
+        
+        print "mask size:", len( pm )
+        
+        import zlib
+        zpm = zlib.compress( pm, 6 )
+        print "ziped mask", len( zpm )
+        
+        pmz = zlib.decompress(zpm)
+        print "compare", cmp( pm, pmz )
+        
+        return 0
         dic = {}
 
         t = time.clock()
@@ -166,5 +184,5 @@ class Tester(DirectObject.DirectObject):
         
 
 
-tester = Tester(level_name='../server/data/levels/level2.txt')
+tester = Tester(level_name='../server/data/levels/assassins2.txt')
 run()
