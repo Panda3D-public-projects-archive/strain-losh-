@@ -13,7 +13,7 @@ from client_messaging import *
 import utils as utils
 
 
-PING_TIMER = 42  #seconds
+PING_TIMER = 9999999  #seconds
 
 #========================================================================
 #
