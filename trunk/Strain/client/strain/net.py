@@ -13,7 +13,7 @@ from client_messaging import *
 import utils as utils
 
 
-PING_TIMER = 9999999  #seconds
+PING_TIMER = 0  #seconds
 
 #========================================================================
 #
@@ -150,7 +150,7 @@ class Net():
                 self.handleMsg(msg)
                 
         t = time.time()
-        if t - self.ping_timer >= PING_TIMER:
+        if PING_TIMER and t - self.ping_timer >= PING_TIMER:
             self.ping_timer = t
             ClientMsg.ping()
                      
