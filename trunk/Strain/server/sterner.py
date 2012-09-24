@@ -468,7 +468,7 @@ class Sterner:
                   
         #DEBUG: add local test game
         active_games = self.db_api.getMyActiveGames( player_id )
-        active_games.append( ( -1, "level2", 1000, 1, 22, 0, 0, 0, '0.1', 0, "local test game", 0, 0 ))
+        active_games.insert( 0, ( -1, "level2", 1000, 1, 22, 0, 0, 0, '0.1', 0, "--------local test game-------", 0, 0 ))
         self.network._sendMsg( (MY_ACTIVE_GAMES, active_games, source ) )
         
         self.network._sendMsg( (MY_UNACCEPTED_GAMES, self.db_api.getMyUnacceptedGames( player_id )), source )
