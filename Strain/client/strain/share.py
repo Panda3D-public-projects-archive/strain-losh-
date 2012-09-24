@@ -82,57 +82,6 @@ DYNAMICS_UNIT = 1
 
 
 
-def levelVisibilityDict( unit_list, level ):
-    
-    vis_dict = {}
-    
-    for unit in unit_list:      
-        smartSearch(unit, level, vis_dict)      
-        
-                    
-    #fill dict with zeroes
-    for x in xrange(level.maxX):
-        for y in xrange(level.maxY):
-            x_y = (x,y)        
-            if x_y not in vis_dict:
-                vis_dict[ x_y ] = 0
-
-            
-    return vis_dict            
-
-
-def smartSearch( unit, level, vis_dict ):
-    
-    unit_dict = {}
-    min_x = 0
-    max_x = level.maxX
-    step_x = 1
-    
-    min_y = 0
-    max_y = level.maxY
-    step_y = 1
-    
-    if unit['pos'][0] <= level.center[0]:
-            min_x, max_x, step_x = max_x-1, min_x-1, -1 
-    if unit['pos'][1] <= level.center[1]:
-            min_y, max_y, step_y = max_y-1, min_y-1, -1
-            
-
-    for x in xrange(min_x, max_x, step_x):
-        for y in xrange(min_y, max_y, step_y):
-            x_y = (x,y)
-            
-            if x_y in vis_dict:
-                continue
-            if x_y in unit_dict:
-                continue
-            
-
-            if LOS2( unit['pos'], x_y, level, unit_dict ) > VISIBILITY_MIN:
-                unit_dict[x_y] = 1
-                vis_dict[x_y] = 1
-
-
 
 def getMoveDict( unit, level, units, returnOriginTile = False ):    
     """returnOriginTile - if you need to get the tile the unit is standing on, set this to True"""        
@@ -880,6 +829,50 @@ def distanceTupple( t1, t2 ):
     return math.sqrt( math.pow( (t2[0]-t1[0]) , 2) +  math.pow( (t2[1]-t1[1]) , 2) )
     
 
+from sys import getsizeof, stderr
+from itertools import chain
+from collections import deque
+#import reprlib
+
+def total_size(o, handlers={}, verbose=False):
+    """ Returns the approximate memory footprint an object and all of its contents.
+
+    Automatically finds the contents of the following builtin containers and
+    their subclasses:  tuple, list, deque, dict, set and frozenset.
+    To search other containers, add handlers to iterate over their contents:
+
+        handlers = {SomeContainerClass: iter,
+                    OtherContainerClass: OtherContainerClass.get_elements}
+
+    """
+    dict_handler = lambda d: chain.from_iterable(d.items())
+    all_handlers = {tuple: iter,
+                    list: iter,
+                    deque: iter,
+                    dict: dict_handler,
+                    set: iter,
+                    frozenset: iter,
+                   }
+    all_handlers.update(handlers)     # user handlers take precedence
+    seen = set()                      # track which object id's have already been seen
+    default_size = getsizeof(0)       # estimate sizeof object without __sizeof__
+
+    def sizeof(o):
+        if id(o) in seen:       # do not double count the same object
+            return 0
+        seen.add(id(o))
+        s = getsizeof(o, default_size)
+
+        if verbose:
+            print s, type(o), #reprlib.repr(o)
+
+        for typ, handler in all_handlers.items():
+            if isinstance(o, typ):
+                s += sum(map(sizeof, handler(o)))
+                break
+        return s
+
+    return sizeof(o)
 
 
 class Mask:

@@ -14,6 +14,7 @@ import random
 from profilestats import profile
 import zipfile
 import cPickle as pickle
+from strain.visibility import *
 
 
 import os, sys
@@ -184,4 +185,5 @@ class Tester(DirectObject.DirectObject):
 
 
 tester = Tester(level_name='../server/data/levels/assassins2.txt')
+#tester = Tester(level_name='../server/data/levels/level2.txt')
 run()
