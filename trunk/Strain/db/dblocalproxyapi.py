@@ -5,6 +5,8 @@ Created on 22 Sep 2012
 '''
 import cPickle as pickle
 import os
+import zlib
+import traceback
 
 RED_ID = 22
 BLUE_ID = 0
@@ -41,7 +43,7 @@ class DBLocalProxyApi():
             except:
                 pass
             
-        return ( -1, "level2", 1000, 1, RED_ID, 0, 0, 0, '0.1', 0, "local test game", 0, pickled )
+        return ( -1, "assassins2", 1000, 1, RED_ID, 0, 0, 0, '0.1', 0, "local test game", 0, pickled )
 
     
     
@@ -49,8 +51,10 @@ class DBLocalProxyApi():
         fname = PLAYER_EVENTS_FILE_NAME + str(player_id)
         
         try:
-            f = open( fname )
-            lst = pickle.load(f)
+            f = open( fname, "rb" )
+            buf = f.read()
+            unz = zlib.decompress(buf)
+            lst = pickle.loads(unz)
             f.close()
             return lst
         except:
@@ -64,15 +68,19 @@ class DBLocalProxyApi():
         lst = self.getGamePlayerEvents(game_id, player_id)
         lst.append(event)
         
-        f = open( fname, "w" )
-        pickle.dump(lst, f)
+        f = open( fname, "wb" )
+        st = pickle.dumps(lst)
+        zst = zlib.compress(st)
+        f.write(zst)
         f.close()
 
     
     def getGameEvents(self, game_id):
         try:
-            f = open( GAME_EVENTS_FILE_NAME )
-            lst = pickle.load(f)
+            f = open( GAME_EVENTS_FILE_NAME, "rb" )
+            buf = f.read()
+            unz = zlib.decompress(buf)
+            lst = pickle.loads(unz)
             f.close()
             return lst
         except:
@@ -84,26 +92,34 @@ class DBLocalProxyApi():
         lst = self.getGameEvents(game_id)
         lst.append(event)
         
-        f = open( GAME_EVENTS_FILE_NAME, "w" )
-        pickle.dump(lst, f)
+        f = open( GAME_EVENTS_FILE_NAME, "wb" )
+        st = pickle.dumps(lst)
+        zst = zlib.compress(st)
+        f.write( zst )
         f.close()        
         
 
     def getPickledEngine(self):
         try:
-            f = open( PICKLED_ENGINE_FILE_NAME )
-            lst = pickle.load(f)
+            f = open( PICKLED_ENGINE_FILE_NAME, "rb" )
+            buf = f.read()
+            unz = zlib.decompress(buf)
+            lst = pickle.loads(unz)
             f.close()
             return lst
         except:
+            print traceback.format_exc()
             return None        
         
         
         
     def setPickledEngine(self, game_id, pickled_engine):
-        f = open( PICKLED_ENGINE_FILE_NAME, "w" )
-        pickle.dump( pickled_engine, f )
+        f = open( PICKLED_ENGINE_FILE_NAME, "wb" )
+        st = pickle.dumps( pickled_engine )
+        zst = zlib.compress(st)
+        f.write(zst)
         f.close()
+
 
     
 if __name__ == "__main__":
