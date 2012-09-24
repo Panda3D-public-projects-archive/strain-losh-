@@ -483,11 +483,11 @@ if __name__ == "__main__":
     #game_player_id = dbapi.addPlayerToGame(21, dbapi.returnPlayer('krav')[0][0], 1, 1, 1)
     #print game_player_id
     
-    #for i in xrange(40,60):
-    #    dbapi.deleteGame(i)
+    for i in xrange(440,450):
+        dbapi.deleteGame(i)
     #dbapi.deleteGame(423)
     #dbapi.deleteGame(443)
-    #print dbapi.getAllActiveGames()
+    print dbapi.getAllActiveGames()
     
     #dbapi.finishGame(21)
     #dbapi.finishAllGamesExceptVersion('0.1')

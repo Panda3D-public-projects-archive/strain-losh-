@@ -34,32 +34,31 @@ class DBLocalProxyApi():
     def getGame(self, game_id, filter = False):
         pickled = self.getPickledEngine()
         if not pickled:
-            os.remove( GAME_EVENTS_FILE_NAME )
-            os.remove( PLAYER_EVENTS_FILE_NAME + str(RED_ID) )
-            os.remove( PLAYER_EVENTS_FILE_NAME + str(BLUE_ID) )
+            try:
+                os.remove( GAME_EVENTS_FILE_NAME )
+                os.remove( PLAYER_EVENTS_FILE_NAME + str(RED_ID) )
+                os.remove( PLAYER_EVENTS_FILE_NAME + str(BLUE_ID) )
+            except:
+                pass
             
         return ( -1, "level2", 1000, 1, RED_ID, 0, 0, 0, '0.1', 0, "local test game", 0, pickled )
 
     
     
     def getGamePlayerEvents(self, game_id, player_id):
-        print "getting gpe"
         fname = PLAYER_EVENTS_FILE_NAME + str(player_id)
         
         try:
             f = open( fname )
             lst = pickle.load(f)
             f.close()
-            print "returning gpe"
             return lst
         except:
-            print "returning gpe - empty"
             return []
     
     
     
     def addGamePlayerEvent(self, game_id, player_id, event):
-        print "adding gpe"
         fname = PLAYER_EVENTS_FILE_NAME + str(player_id) 
         
         lst = self.getGamePlayerEvents(game_id, player_id)
@@ -68,54 +67,43 @@ class DBLocalProxyApi():
         f = open( fname, "w" )
         pickle.dump(lst, f)
         f.close()
-        print "added game player event"
 
     
     def getGameEvents(self, game_id):
-        print "getting ge"
         try:
             f = open( GAME_EVENTS_FILE_NAME )
             lst = pickle.load(f)
             f.close()
-            print "returning ge"
             return lst
         except:
-            print "returning ge - empty"
             return []        
             
     
     
     def addGameEvent(self, game_id, event):
-        print "adding ge"
         lst = self.getGameEvents(game_id)
         lst.append(event)
         
         f = open( GAME_EVENTS_FILE_NAME, "w" )
         pickle.dump(lst, f)
         f.close()        
-        print "added game event"
         
 
     def getPickledEngine(self):
-        print "getting pickled"
         try:
             f = open( PICKLED_ENGINE_FILE_NAME )
             lst = pickle.load(f)
             f.close()
-            print "returning pickled"
             return lst
         except:
-            print "returning pickled - empty"
             return None        
         
         
         
     def setPickledEngine(self, game_id, pickled_engine):
-        print "writing pickled"
         f = open( PICKLED_ENGINE_FILE_NAME, "w" )
-        f.write( pickled_engine)
+        pickle.dump( pickled_engine, f )
         f.close()
-        print "set pickled engine"
 
     
 if __name__ == "__main__":
