@@ -134,9 +134,9 @@ def smartSearch( unit, level, vis_dict ):
             
             x_y = (x,y)
             
-            if x_y in vis_dict:
-                continue
             if x_y in unit_dict:
+                continue
+            if x_y in vis_dict:
                 continue
             
             if LOS2( unit['pos'], x_y, level, unit_dict, vis_dict ) > VISIBILITY_MIN:
@@ -247,9 +247,11 @@ def _goThroughTiles2( x1, y1, x2, y2, dx, dy, left, right, mid, level, unit_dict
                             vis_dict[ (x,y) ] = 1
                     
             if not vis:
-                if math.fabs( x - x1 ) != math.fabs( _y_y1 ):
+                if absX != absY: 
+                    if math.fabs( x - x1 ) != math.fabs( _y_y1 ):
+                        unit_dict[(x,y)] = 0
+                else:
                     unit_dict[(x,y)] = 0
-
 
     #special case for last square
     if vis:
