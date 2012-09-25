@@ -66,7 +66,7 @@ def LOS2(t1, t2, level, unit_dict, vis_dict ):
     x2,y2 = t2
         
     dx = x2 - x1
-    dy = y2 - y1
+    dy = y2 - y1    
      
     if dx == 0 and dy == 0:
         return 1
@@ -89,27 +89,26 @@ def LOS2(t1, t2, level, unit_dict, vis_dict ):
     for l, r in angles:
         total_angles += l - r 
          
-    
     return total_angles / orig_angle
 
 
 
 def levelVisibilityDict( unit_list, level ):
-    
+
     vis_dict = {}
     
     for unit in unit_list:      
         smartSearch(unit, level, vis_dict)      
         
-                    
+    """
     #fill dict with zeroes
     for x in xrange(level.maxX):
         for y in xrange(level.maxY):
             x_y = (x,y)        
             if x_y not in vis_dict:
                 vis_dict[ x_y ] = 0
-
-            
+    """
+         
     return vis_dict            
 
 
@@ -132,6 +131,7 @@ def smartSearch( unit, level, vis_dict ):
 
     for x in xrange(min_x, max_x, step_x):
         for y in xrange(min_y, max_y, step_y):
+            
             x_y = (x,y)
             
             if x_y in vis_dict:
@@ -165,18 +165,20 @@ def _goThroughTiles2( x1, y1, x2, y2, dx, dy, left, right, mid, level, unit_dict
         y_x = absY/absX            
         D = y_x -0.5
 
+        _x_x1 = x - x1
+        
         for i in xrange( int( absX ) ): #@UnusedVariable
 
             if vis:
                 _y_p_1 = y+1 
                 if not level.outOfBounds( x, _y_p_1 ):
-                    if not _checkAngles(angles, mid, x, _y_p_1, x-x1, _y_p_1-y1, level, dx, dy):
+                    if not _checkAngles(angles, mid, x, _y_p_1, _x_x1, _y_p_1-y1, level, dx, dy):
                         vis = 0
                         #return 0
                 
                 _y_1 = y-1
                 if not level.outOfBounds( x, _y_1 ):
-                    if not _checkAngles(angles, mid, x, _y_1, x-x1, _y_1-y1, level, dx, dy):
+                    if not _checkAngles(angles, mid, x, _y_1, _x_x1, _y_1-y1, level, dx, dy):
                         vis = 0
                         #return 0
             
@@ -187,8 +189,10 @@ def _goThroughTiles2( x1, y1, x2, y2, dx, dy, left, right, mid, level, unit_dict
             x += sgnX
             D += y_x
 
+            _x_x1 = x - x1
+            
             if vis:
-                if not _checkAngles(angles, mid, x, y, x-x1, y-y1, level, dx, dy):
+                if not _checkAngles(angles, mid, x, y, _x_x1, y-y1, level, dx, dy):
                     vis = 0
                     #return 0
                 else:
@@ -196,11 +200,9 @@ def _goThroughTiles2( x1, y1, x2, y2, dx, dy, left, right, mid, level, unit_dict
                         if i > 1:
                             vis_dict[ (x,y) ] = 1
 
-                    
-            if not vis:
-                unit_dict[(x,y)] = 0
-
-                
+            if not vis:           
+                if math.fabs( _x_x1 ) != math.fabs( y - y1 ):
+                    unit_dict[(x,y)] = 0
 
             
     #//(y0 >= x0)            
@@ -208,18 +210,20 @@ def _goThroughTiles2( x1, y1, x2, y2, dx, dy, left, right, mid, level, unit_dict
         x_y = absX/absY
         D = x_y -0.5;
         
+        _y_y1 = y - y1
+        
         for i in xrange( int( absY ) ): #@UnusedVariable
             
             if vis:
                 _x_p_1 = x+1
                 if not level.outOfBounds( _x_p_1, y ):
-                    if not _checkAngles(angles, mid, _x_p_1, y, _x_p_1-x1, y-y1, level, dx, dy):
+                    if not _checkAngles(angles, mid, _x_p_1, y, _x_p_1-x1, _y_y1, level, dx, dy):
                         vis = 0
                         #return 0
     
                 _x_1 = x-1
                 if not level.outOfBounds( _x_1, y ):
-                    if not _checkAngles(angles, mid, _x_1, y, _x_1-x1, y-y1, level, dx, dy):
+                    if not _checkAngles(angles, mid, _x_1, y, _x_1-x1, _y_y1, level, dx, dy):
                         vis = 0
                         #return 0
                 
@@ -231,8 +235,10 @@ def _goThroughTiles2( x1, y1, x2, y2, dx, dy, left, right, mid, level, unit_dict
             y += sgnY
             D += x_y
             
+            _y_y1 = y - y1              
+            
             if vis:
-                if not _checkAngles(angles, mid, x, y, x-x1, y-y1, level, dx, dy):
+                if not _checkAngles(angles, mid, x, y, x-x1, _y_y1, level, dx, dy):
                     vis = 0
                     #return 0
                 else:
@@ -240,12 +246,9 @@ def _goThroughTiles2( x1, y1, x2, y2, dx, dy, left, right, mid, level, unit_dict
                         if i > 0:
                             vis_dict[ (x,y) ] = 1
                     
-                    
-                    
             if not vis:
-                unit_dict[(x,y)] = 0
-
-
+                if math.fabs( x - x1 ) != math.fabs( _y_y1 ):
+                    unit_dict[(x,y)] = 0
 
 
     #special case for last square
@@ -262,7 +265,8 @@ def _goThroughTiles2( x1, y1, x2, y2, dx, dy, left, right, mid, level, unit_dict
                 if not _checkAngles(angles, mid, _x_sgn, y, _x_sgn-x1, y-y1, level, dx, dy):
                     vis = 0
                     #return 0
-
+                    
+                    
     if not vis:
         unit_dict[ (x,y) ] = 0        
         
