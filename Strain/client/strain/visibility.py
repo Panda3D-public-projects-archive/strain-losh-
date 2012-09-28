@@ -15,6 +15,11 @@ MASK_DOWN_LEFT  = 2
 MASK_DOWN_RIGHT = 3
 MASK_MAX        = 4
 MASK_MIN        = 5 
+MASK_MID        = 6
+MASK_LEFT       = 7
+MASK_RIGHT      = 8
+MASK_ORIG_ANGLE = 9
+
 
 
 VISIBILITY_MIN = 0.4
@@ -71,17 +76,9 @@ def LOS2(t1, t2, level, unit_dict, vis_dict ):
     if dx == 0 and dy == 0:
         return 1
      
-    d = math.sqrt(  math.pow(dx, 2) + math.pow(dy, 2)  )
-    
-        
-    alfa = math.atan( 0.5 / d )    
-    mid = math.atan2( float(dy),dx )
-    left = mid + alfa
-    right = mid - alfa        
-    orig_angle = left - right 
-    
-
-    angles = _goThroughTiles2(x1, y1, x2, y2, dx, dy, left, right, mid, level, unit_dict, vis_dict)
+    mask = level.getMask( dx, dy )     
+     
+    angles = _goThroughTiles2(x1, y1, x2, y2, dx, dy, mask, level, unit_dict, vis_dict)
     if not angles:
         return 0 
     
@@ -89,7 +86,274 @@ def LOS2(t1, t2, level, unit_dict, vis_dict ):
     for l, r in angles:
         total_angles += l - r 
          
-    return total_angles / orig_angle
+    return total_angles / mask[MASK_ORIG_ANGLE]
+
+
+
+def levelVisibilityDict3( unit_list, level ):
+
+    
+    left = level.getMask(1,0)[MASK_MAX]
+    right = level.getMask(1,0)[MASK_MIN]
+    
+    if not unit_list:
+        return []
+    
+    unit = unit_list[0]
+    unit_x = unit['pos'][0]
+    unit_y = unit['pos'][1]
+
+    unit_dict = {}
+    
+
+    y = unit_y
+
+    new_right = scanZeroLineX(unit_x, unit_y, level, unit_dict)    
+    
+    y_range_pos = level.maxY - unit_y
+
+    
+    for i in xrange( 1, y_range_pos ):
+            
+        if unit_x+i >= level.maxX:
+            return unit_dict
+        
+        if new_right:
+            new_right = scanLineX( unit_x, unit_y, i, i, left, new_right, level, unit_dict)
+        else:
+            new_right = scanLineX( unit_x, unit_y, i, i, left, right, level, unit_dict)
+    
+    
+    return unit_dict
+
+
+
+def scanLineX( unit_x, unit_y, dx, dy, left, right, level, unit_dict):
+    
+    #vis can be: 
+    #    1 - we see 100% of this, 
+    #    -1- we cannot see this tile and no other in this tile till the end of level
+    #    0 - we dont know, we have to check 
+    vis = 1
+    
+    right_for_next_line = 0
+    
+    unit_x_dx = unit_x + dx
+    
+    #check for end of level
+    if unit_x_dx >= level.maxX:
+        return right
+    
+    this_y = unit_y + dy
+    
+    sigY = signum(dy)
+    
+    maxi = MASK_MAX
+    mini = MASK_MIN
+        
+
+    x1 = -1
+    
+    for x in xrange( unit_x_dx, level.maxX ):
+        
+        if (x,this_y) in unit_dict:
+            continue
+        
+        if vis == -1:
+            unit_dict[ (x,this_y) ] = -1
+            continue
+
+        #we hit a wall
+        if level.opaque( x, this_y, 1 ):
+            
+            #if the line below is -1 we cant see anything from this line anymore, put vis = -1
+            if unit_dict[ (x, this_y-sigY) ] == -1:
+                unit_dict[ (x,this_y) ] = -1
+                vis = -1
+            #else put vis = 0
+            else:
+                unit_dict[ (x,this_y) ] = 0
+                vis = 0
+                
+            #we will return this right for next line only if it is the first new right we found
+            if not right_for_next_line:
+                right_for_next_line = level.getMask(x-unit_x, dy)[maxi]
+            else:
+                #we know we found a cube already on this line so now we need to check this hole
+                #check right angle, if it is already bigger then this, than skip it
+                tmp_right = level.getMask(x-unit_x, dy)[maxi] 
+                if tmp_right >= right:
+                    scanHole(x1, this_y+1, x1-unit_x, dy+1, left, tmp_right, level, unit_dict)
+                else:
+                    scanHole(x1, this_y+1, x1-unit_x, dy+1, left, right, level, unit_dict)
+                
+            x1 = x
+        
+            left = level.getMask(x-unit_x, dy)[mini]
+            
+            #check line below for -1
+            if left <= right:
+                if unit_dict[ (x, this_y-sigY) ] == -1:
+                    unit_dict[ (x,this_y) ] = -1
+                    vis = -1
+                else:
+                    unit_dict[ (x,this_y) ] = 0
+                    vis = 0
+                
+            continue
+            
+        
+        #if tile down and left are visible, this is also visible if it is empty
+        if x != unit_x_dx:
+            if unit_dict[ (x-1,this_y) ] == 1 and unit_dict[ (x,this_y-sigY) ] == 1:
+                unit_dict[ (x,this_y) ] = 1
+                continue
+    
+        if left <= right:
+            unit_dict[ (x,this_y) ] = 0
+            continue
+    
+        #if all else fails do the percent check
+        percent = calculatePercent( level.getMask(x-unit_x, dy), left, right )
+        if not percent:
+            if unit_dict[ (x, this_y-sigY) ] == -1:
+                unit_dict[ (x,this_y) ] = -1
+                vis = -1
+            else:
+                vis = 0 
+        unit_dict[ (x,this_y) ] = percent
+    
+    
+    
+    #check for end of level
+    if vis != -1:
+        #if there was a hole
+        if x1 != -1:
+            scanHole(x1, this_y+1, x1-unit_x, dy+1, left, right, level, unit_dict)
+    
+    
+    
+    #if we found a new right return that one, if not return the one we got
+    if not right_for_next_line:
+        return right
+    else:
+        return right_for_next_line
+
+
+
+def scanHole( x1, this_y, dx1, dy1, left, right, level, unit_dict ):
+    
+    if left <= right:
+        return
+
+    min_x = x1+1
+    at_least_one_x = False
+
+    old_right = right
+        
+    for y in xrange( this_y, level.maxY ):
+        
+        dy = dy1+(y-this_y)
+        
+        at_least_one_x = False
+        
+        new_x1 = -1
+        new_left = None
+        new_dx1 = None
+        
+        for x in xrange( x1+1, level.maxX ):
+            
+            if x < min_x:
+                continue
+            
+            dx = dx1+(x-x1)
+            
+            if level.opaque( x, y, 1 ):
+                unit_dict[ (x,y) ] = 0
+                
+                if new_x1 != -1:
+                    scanHole( new_x1, y, new_dx1, dy, new_left, level.getMask( dx, dy )[MASK_MAX], level, unit_dict)
+                    
+                new_x1 = x
+                new_left = level.getMask( dx, dy )[MASK_MIN]
+                new_dx1 = dx
+                
+                right = level.getMask( dx, dy )[MASK_MAX]
+                if left <= right:
+                    return  
+            
+                continue
+            
+            perc = calculatePercent( level.getMask( dx, dy ), left, right )
+            
+            if perc:
+                if not at_least_one_x:
+                    min_x = x
+                    at_least_one_x = True
+
+                unit_dict[ (x,y) ] = perc
+            else:
+                if at_least_one_x:
+                    if new_x1 != -1:
+                        scanHole( new_x1, y, new_dx1, dy, new_left, old_right, level, unit_dict)
+                        new_x1 = -1
+                    break            
+            
+        #scan last hole between new_x1 and right
+        if new_x1 != -1: 
+            scanHole( new_x1, y, new_dx1, dy, new_left, old_right, level, unit_dict)
+                
+        #if we didnt find any visible tile on this y line, than stop checking
+        if not at_least_one_x:
+            return
+            
+            
+            
+
+
+def scanZeroLineX( unit_x, unit_y, level, unit_dict ):
+    vis = 1
+    
+    left = 0
+    
+    #positive direction
+    for x in xrange( unit_x+1, level.maxX ):
+        
+        if not vis:
+            unit_dict[ (x,unit_y) ] = -1
+            continue
+        
+        if level.opaque( x, unit_y, 1 ):
+            unit_dict[ (x,unit_y) ] = -1
+            vis = 0
+            left = level.getMask( x-unit_x, 0 )[MASK_MAX]
+        else:
+            unit_dict[ (x,unit_y) ] = 1
+            
+            
+    return left
+            
+
+
+def calculatePercent( mask, left, right ):
+
+    if left <= mask[MASK_RIGHT] or right >= mask[MASK_LEFT]:
+        return 0
+    
+    tmp_left = left
+    tmp_right = right
+    
+    if left >= mask[MASK_LEFT]:
+        if right <= mask[MASK_RIGHT]:
+            return 1
+        
+        tmp_left = mask[MASK_LEFT]
+        
+    if right <= mask[MASK_RIGHT]:
+        tmp_right = mask[MASK_RIGHT]
+        
+    return (tmp_left-tmp_right)/mask[MASK_ORIG_ANGLE]
+
 
 
 
@@ -146,7 +410,7 @@ def smartSearch( unit, level, vis_dict ):
 
 
 
-def _goThroughTiles2( x1, y1, x2, y2, dx, dy, left, right, mid, level, unit_dict, vis_dict ):
+def _goThroughTiles2( x1, y1, x2, y2, dx, dy, mask, level, unit_dict, vis_dict ):
     
     absX = math.fabs( dx );
     absY = math.fabs( dy );
@@ -157,7 +421,9 @@ def _goThroughTiles2( x1, y1, x2, y2, dx, dy, left, right, mid, level, unit_dict
     x = int( x1 )
     y = int( y1 )
 
-    angles = [[left,right]]
+    angles = [ [mask[MASK_LEFT], mask[MASK_RIGHT]] ]
+    
+    mid = mask[MASK_MID]
     
     vis = 1
     

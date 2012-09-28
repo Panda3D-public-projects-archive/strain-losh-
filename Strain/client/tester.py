@@ -143,7 +143,27 @@ class Tester(DirectObject.DirectObject):
 
 
     def cilin(self):
-        
+
+
+        dic = levelVisibilityDict3(self.units, self.level)
+        if dic:
+            vis_list = []
+            invis_list = []
+            for tile in dic:
+                if dic[tile]> VISIBILITY_MIN:
+                    vis_list.append(tile)
+                    #dic[tile] = 1
+                    dic[tile] = '{0:2.0%}'.format(dic[tile])
+                else:
+                    invis_list.append(tile)
+                    dic[tile] = '{0:2.0%}'.format(dic[tile])
+
+                    
+            print "-------visible:", vis_list
+            print "invis:", invis_list
+        self.writeNumbers(dic)
+
+        """        
         t = time.clock()
         dic = levelVisibilityDict(self.units, self.level)
         t2 = time.clock()
@@ -151,39 +171,11 @@ class Tester(DirectObject.DirectObject):
         
         self.writeNumbers(dic)        
         return 
-        dic = {}
-
-        t = time.clock()
-
-        
-        for unit in self.units:        
-            for x in xrange( self.level.maxX ):
-                for y in xrange( self.level.maxY ):
-                    if self.level.opaque(x,y,1):
-                        continue
-                    value = LOS( unit['pos'], (x,y), self.level)
-                    if value == 0:
-                        dic[(x,y)] = "" 
-                    else:
-                        dic[(x,y)] = '{:.0%}'.format(value) 
         """
-        x = 3
-        y = 5
-        #dic[(x,y)] = '{:.2%}'.format(LOS((2,4), (x,y), self.level))
-        """
-        """
-        for unit in self.units:
-            #for y in xrange(8):
-                dic[(x,y)] = '{:.2%}'.format(LOS( unit['pos'], (x,y), self.level))
-        """
-        t2 = time.clock()
-        print "cilin timer:::", (t2-t)*1000, "ms"
-        
-        
-        self.writeNumbers(dic)
         
 
 
-tester = Tester(level_name='../server/data/levels/assassins2.txt')
+tester = Tester(level_name='../server/data/levels/l1.txt')
+#tester = Tester(level_name='../server/data/levels/assassins2.txt')
 #tester = Tester(level_name='../server/data/levels/level2.txt')
 run()

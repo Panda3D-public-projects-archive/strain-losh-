@@ -895,7 +895,23 @@ class Mask:
                 _4 = max( [_0,_1,_2,_3])
                 _5 = min( [_0,_1,_2,_3])
                 
-                self._data[x][y] = (_0, _1, _2, _3, _4, _5)
+                d = math.sqrt(  math.pow(xx, 2) + math.pow(yy, 2)  )
+                
+                if xx == 0 and yy == 0:
+                    _6 = mid = 0    
+                    _7 = left = 0
+                    _8 = right = 0        
+                    _9 = orig_angle = 0                 
+                    
+                else:
+                    _6 = mid = math.atan2( float(yy),xx )
+                    alfa = math.atan( 0.5 / d )    
+                    _7 = left = mid + alfa
+                    _8 = right = mid - alfa        
+                    _9 = orig_angle = left - right                 
+                
+                
+                self._data[x][y] = (_0, _1, _2, _3, _4, _5, _6, _7, _8, _9)
 
     
     def get(self, x,y):
