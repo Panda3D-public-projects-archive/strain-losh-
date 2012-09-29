@@ -80,12 +80,18 @@ class Interface(DirectObject.DirectObject):
         self.action_c = GuiButton2("right", Point3(-0.1, 0, -0.09), self.aspect, plane, "empty")
         self.action_d = GuiButton2("right", Point3(-0.1, 0, -0.2), self.aspect, plane, "empty")
         
+        #1. stupac - default
         self.overwatch = GuiButton2("bottom", Point3(1.5+0.01, 0, -0.09), self.aspect, plane, "overwatch")
-        self.set_up = GuiButton2("bottom", Point3(1.6+0.02, 0, -0.09), self.aspect, plane, "set_up")
-        self.use = GuiButton2("bottom", Point3(1.7+0.03, 0, -0.09), self.aspect, plane, "use")
-        self.taunt = GuiButton2("bottom", Point3(1.5+0.01, 0, -0.2), self.aspect, plane, "taunt")
-        self.action_5 = GuiButton2("bottom", Point3(1.6+0.02, 0, -0.2), self.aspect, plane, "empty")
-        self.action_6 = GuiButton2("bottom", Point3(1.7+0.03, 0, -0.2), self.aspect, plane, "empty")
+        self.use = GuiButton2("bottom", Point3(1.5+0.01, 0, -0.2), self.aspect, plane, "use")
+        #2. stupac
+        self.ability_1 = GuiButton2("bottom", Point3(1.6+0.02, 0, -0.09), self.aspect, plane, "empty")
+        self.ability_4 = GuiButton2("bottom", Point3(1.6+0.02, 0, -0.2), self.aspect, plane, "empty")
+        #3. stupac
+        self.ability_2 = GuiButton2("bottom", Point3(1.7+0.03, 0, -0.09), self.aspect, plane, "empty")
+        self.ability_5 = GuiButton2("bottom", Point3(1.7+0.03, 0, -0.2), self.aspect, plane, "empty")
+        #4.stupac
+        self.ability_3 = GuiButton2("bottom", Point3(1.8+0.04, 0, -0.09), self.aspect, plane, "empty")
+        self.ability_6 = GuiButton2("bottom", Point3(1.8+0.04, 0, -0.2), self.aspect, plane, "empty")
         
         self.buttons["deselect"] = self.deselect_button
         #self.buttons["prev_unit"] = self.punit_button
@@ -96,17 +102,31 @@ class Interface(DirectObject.DirectObject):
         self.buttons["action_c"] = self.action_c
         self.buttons["action_d"] = self.action_d
         self.buttons["overwatch"] = self.overwatch
-        self.buttons["set_up"] = self.set_up
         self.buttons["use"] = self.use
-        self.buttons["taunt"] = self.taunt
-        self.buttons["action_5"] = self.action_5
-        self.buttons["action_6"] = self.action_6
+        self.buttons["ability_1"] = self.ability_1
+        self.buttons["ability_2"] = self.ability_2
+        self.buttons["ability_3"] = self.ability_3
+        self.buttons["ability_4"] = self.ability_4
+        self.buttons["ability_5"] = self.ability_5
+        self.buttons["ability_6"] = self.ability_6
         
         self.action_buttons = {}
         self.action_buttons["overwatch"] = self.overwatch
-        self.action_buttons["set_up"] = self.set_up
         self.action_buttons["use"] = self.use
-        self.action_buttons["taunt"] = self.taunt
+        self.action_buttons["ability_1"] = self.ability_1
+        self.action_buttons["ability_2"] = self.ability_2
+        self.action_buttons["ability_3"] = self.ability_3
+        self.action_buttons["ability_4"] = self.ability_4
+        self.action_buttons["ability_5"] = self.ability_5
+        self.action_buttons["ability_6"] = self.ability_6
+        
+        self.ability_buttons = []
+        self.ability_buttons.append(self.ability_1)
+        self.ability_buttons.append(self.ability_2)
+        self.ability_buttons.append(self.ability_3)
+        self.ability_buttons.append(self.ability_4)
+        self.ability_buttons.append(self.ability_5)
+        self.ability_buttons.append(self.ability_6)
         
         self.hovered_gui = None
         
@@ -255,6 +275,39 @@ class Interface(DirectObject.DirectObject):
            Procedure first checks for gui clicks, if there are none then it checks 3d collision.
         """
         self.destination = None
+        
+        for button in self.ability_buttons:
+            if self.hovered_gui == button:
+                #TODO odhendlati klikanje na ability
+                if button.name == 'set_up':
+                    if button.enabled:
+                        #self.toggleSetUp()
+                        self.console.unfocus()
+                        
+                if button.name == 'taunt':
+                    #ClientMsg.taunt( self.parent.sel_unit_id )
+                    continue
+                    
+                if button.name == 'ability_1':
+                    continue
+                
+                if button.name == 'ability_1':
+                    continue
+                    
+                if button.name == 'ability_1':
+                    continue
+                    
+                if button.name == 'ability_1':
+                    continue
+                    
+                if button.name == 'ability_1':
+                    continue
+                    
+                if button.name == 'ability_1':
+                    continue
+                    
+                self.console.unfocus()
+        
         if self.hovered_gui == self.deselect_button:
             self.parent.deselectUnit()
             self.console.unfocus()
@@ -271,16 +324,16 @@ class Interface(DirectObject.DirectObject):
             if self.overwatch.enabled:
                 self.toggleOverwatch()
             self.console.unfocus()
-        elif self.hovered_gui == self.set_up:
-            if self.set_up.enabled:
-                self.toggleSetUp()
-            self.console.unfocus()
+        #elif self.hovered_gui == self.set_up:
+        #    if self.set_up.enabled:
+        #        self.toggleSetUp()
+        #    self.console.unfocus()
         elif self.hovered_gui == self.use:
             ClientMsg.use( self.parent.sel_unit_id )
             self.console.unfocus()
-        elif self.hovered_gui == self.taunt:
-            ClientMsg.taunt( self.parent.sel_unit_id )
-            self.console.unfocus()
+        #elif self.hovered_gui == self.taunt:
+        #    ClientMsg.taunt( self.parent.sel_unit_id )
+        #    self.console.unfocus()
         elif self.hovered_gui == self.action_a:
             ClientMsg.undefMsg1()
         elif self.hovered_gui == self.action_b:
@@ -339,18 +392,29 @@ class Interface(DirectObject.DirectObject):
         ClientMsg.setUp( self.parent.sel_unit_id )
     
     def setButtons(self, unit_id):
-        for button in self.action_buttons.itervalues():
-            button.enable()
+        #for button in self.action_buttons.itervalues():
+        #    button.enable()
+        self.overwatch.enable()
+        self.use.enable()
+        
         #if self.parent.units[unit_id]['heavy_weapon'] == False:
-        if not 'set_up' in self.parent.local_engine.units[unit_id]:
-            self.set_up.disable()
+        #if not 'set_up' in self.parent.local_engine.units[unit_id]:
+        #    self.set_up.disable()
             
         if 'can_use' in self.parent.local_engine.units[unit_id]:
             if self.parent.local_engine.units[unit_id]['can_use'] == False:
                 self.use.disable()
+        i = 0
+        ability_list = self.parent.local_engine.units[unit_id]['ability_list']
+        for ability in ability_list:
+            self.ability_buttons[i].setAbility(ability)
+            i = i + 1
             
     def clearButtons(self):
         for button in self.action_buttons.itervalues():
+            button.disable()
+            
+        for button in self.ability_buttons:
             button.disable()
             
     def getPanelPos(self, unit_id):
