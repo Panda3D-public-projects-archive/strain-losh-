@@ -49,6 +49,7 @@ class Unit():
                 
         self.ws = -1
         
+        self.ability_list = []
         
     def init(self, in_id, owner, x, y ):
         self.id = in_id
@@ -294,7 +295,7 @@ def loadUnit( name, engine ):
         unit.db_id = int( p.attributes['id'].value )
         unit.default_hp = int( p.attributes['hp'].value )
         unit.ws = int( p.attributes['ws'].value )
-
+        
         try:
             unit.ranged_weapon = weapon.loadWeapon( p.attributes['ranged_weapon'].value, unit )
         except:
@@ -313,6 +314,9 @@ def loadUnit( name, engine ):
         unit.armour =  armour.loadArmour( p.attributes['armour'].value )
         unit.armour.owner = unit
         unit.default_ap = unit.armour.ap
+        
+        for ability in p.getElementsByTagName('ability'):
+            unit.ability_list.append(ability.attributes['name'].value)
         
     xmldoc.unlink()
     
