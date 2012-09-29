@@ -93,8 +93,8 @@ def LOS2(t1, t2, level, unit_dict, vis_dict ):
 def levelVisibilityDict3( unit_list, level ):
 
     
-    left = level.getMask(1,0)[MASK_MAX]
-    right = level.getMask(1,0)[MASK_MIN]
+    left_45 = level.getMask(1,0)[MASK_MAX]
+    right_45 = level.getMask(1,0)[MASK_MIN]
     
     if not unit_list:
         return []
@@ -105,23 +105,32 @@ def levelVisibilityDict3( unit_list, level ):
 
     unit_dict = {}
     
-
-    y = unit_y
-
-    new_right = scanZeroLineX(unit_x, unit_y, level, unit_dict)    
     
     y_range_pos = level.maxY - unit_y
 
+    left = left_45
+    right = scanZeroLineX(unit_x, unit_y, level, unit_dict)
     
     for i in xrange( 1, y_range_pos ):
             
         if unit_x+i >= level.maxX:
             return unit_dict
         
-        if new_right:
-            new_right = scanLineX( unit_x, unit_y, i, i, left, new_right, level, unit_dict)
+        left, right = scanLineX( unit_x, unit_y, i, i, left, right, level, unit_dict)
+    
+    
+    """
+    for i in xrange( -1, -unit_y-1, -1 ):
+
+        if unit_x+i >= level.maxX:
+            break
+        
+        if new_left:
+            new_left = scanLineX( unit_x, unit_y, i, i, new_left, right, level, unit_dict)
         else:
-            new_right = scanLineX( unit_x, unit_y, i, i, left, right, level, unit_dict)
+            new_left = scanLineX( unit_x, unit_y, i, i, left, right, level, unit_dict)
+    """
+    
     
     
     return unit_dict
@@ -130,19 +139,19 @@ def levelVisibilityDict3( unit_list, level ):
 
 def scanLineX( unit_x, unit_y, dx, dy, left, right, level, unit_dict):
     
-    #vis can be: 
-    #    1 - we see 100% of this, 
-    #    -1- we cannot see this tile and no other in this tile till the end of level
-    #    0 - we dont know, we have to check 
+    #if vis is = -1 we cannot see this tile and no other tiles in this line till the end of level 
     vis = 1
     
-    right_for_next_line = 0
+    old_right = right
+    
+    right_for_next_line = right
+    left_for_next_line = left
     
     unit_x_dx = unit_x + dx
     
     #check for end of level
     if unit_x_dx >= level.maxX:
-        return right
+        return left_for_next_line, right_for_next_line
     
     this_y = unit_y + dy
     
@@ -151,18 +160,18 @@ def scanLineX( unit_x, unit_y, dx, dy, left, right, level, unit_dict):
     maxi = MASK_MAX
     mini = MASK_MIN
         
-
+    #for remembering x pos of last cube we encountered
     x1 = -1
     
     for x in xrange( unit_x_dx, level.maxX ):
-        
-        if (x,this_y) in unit_dict:
-            continue
         
         if vis == -1:
             unit_dict[ (x,this_y) ] = -1
             continue
 
+        if (x,this_y) in unit_dict:
+            continue
+        
         #we hit a wall
         if level.opaque( x, this_y, 1 ):
             
@@ -170,25 +179,33 @@ def scanLineX( unit_x, unit_y, dx, dy, left, right, level, unit_dict):
             if unit_dict[ (x, this_y-sigY) ] == -1:
                 unit_dict[ (x,this_y) ] = -1
                 vis = -1
-            #else put vis = 0
             else:
                 unit_dict[ (x,this_y) ] = 0
-                vis = 0
                 
-            #we will return this right for next line only if it is the first new right we found
-            if not right_for_next_line:
-                right_for_next_line = level.getMask(x-unit_x, dy)[maxi]
-            else:
-                #we know we found a cube already on this line so now we need to check this hole
-                #check right angle, if it is already bigger then this, than skip it
+            tmp_mask = level.getMask(x-unit_x, dy)
+            
+            #we will return this right for next line only if it is bigger than right_for_next_line
+            right_for_next_line = max( right_for_next_line, tmp_mask[maxi] )
+                
+            #if this cube blocks our right angle, than move the right angle to MAX
+            if tmp_mask[MASK_MIN] <= right:
+                right = tmp_mask[MASK_MAX]
+                
+                
+            #if this cube blocks our left angle for next line, than move it to MIN
+            if tmp_mask[MASK_MAX] >= left_for_next_line:
+                left_for_next_line = tmp_mask[MASK_MIN]
+
+            
+            #if we found a cube already on this line we need to check this hole
+            if x1 != -1:
                 tmp_right = level.getMask(x-unit_x, dy)[maxi] 
-                if tmp_right >= right:
-                    scanHole(x1, this_y+1, x1-unit_x, dy+1, left, tmp_right, level, unit_dict)
-                else:
-                    scanHole(x1, this_y+1, x1-unit_x, dy+1, left, right, level, unit_dict)
+                scanHole(x1, this_y+1, x1-unit_x, dy+1, left, max(tmp_right, right), level, unit_dict)
                 
+            #remember this x for next hole checking
             x1 = x
         
+            #set left to MIN
             left = level.getMask(x-unit_x, dy)[mini]
             
             #check line below for -1
@@ -198,20 +215,16 @@ def scanLineX( unit_x, unit_y, dx, dy, left, right, level, unit_dict):
                     vis = -1
                 else:
                     unit_dict[ (x,this_y) ] = 0
-                    vis = 0
                 
             continue
             
         
-        #if tile down and left are visible, this is also visible if it is empty
+        #if tile down and left are visible, this is also visible if it is empty (we already checked for that)
         if x != unit_x_dx:
             if unit_dict[ (x-1,this_y) ] == 1 and unit_dict[ (x,this_y-sigY) ] == 1:
                 unit_dict[ (x,this_y) ] = 1
                 continue
-    
-        if left <= right:
-            unit_dict[ (x,this_y) ] = 0
-            continue
+
     
         #if all else fails do the percent check
         percent = calculatePercent( level.getMask(x-unit_x, dy), left, right )
@@ -219,9 +232,8 @@ def scanLineX( unit_x, unit_y, dx, dy, left, right, level, unit_dict):
             if unit_dict[ (x, this_y-sigY) ] == -1:
                 unit_dict[ (x,this_y) ] = -1
                 vis = -1
-            else:
-                vis = 0 
         unit_dict[ (x,this_y) ] = percent
+        
     
     
     
@@ -229,15 +241,12 @@ def scanLineX( unit_x, unit_y, dx, dy, left, right, level, unit_dict):
     if vis != -1:
         #if there was a hole
         if x1 != -1:
-            scanHole(x1, this_y+1, x1-unit_x, dy+1, left, right, level, unit_dict)
+            scanHole(x1, this_y+1, x1-unit_x, dy+1, left, old_right, level, unit_dict)
+            pass
     
     
     
-    #if we found a new right return that one, if not return the one we got
-    if not right_for_next_line:
-        return right
-    else:
-        return right_for_next_line
+    return left_for_next_line, right_for_next_line
 
 
 
@@ -280,7 +289,8 @@ def scanHole( x1, this_y, dx1, dy1, left, right, level, unit_dict ):
                 
                 right = level.getMask( dx, dy )[MASK_MAX]
                 if left <= right:
-                    return  
+                    #return
+                    break  
             
                 continue
             
@@ -314,7 +324,7 @@ def scanHole( x1, this_y, dx1, dy1, left, right, level, unit_dict ):
 def scanZeroLineX( unit_x, unit_y, level, unit_dict ):
     vis = 1
     
-    left = 0
+    max = 0
     
     #positive direction
     for x in xrange( unit_x+1, level.maxX ):
@@ -326,12 +336,12 @@ def scanZeroLineX( unit_x, unit_y, level, unit_dict ):
         if level.opaque( x, unit_y, 1 ):
             unit_dict[ (x,unit_y) ] = -1
             vis = 0
-            left = level.getMask( x-unit_x, 0 )[MASK_MAX]
+            max = level.getMask( x-unit_x, 0 )[MASK_MAX]
         else:
             unit_dict[ (x,unit_y) ] = 1
             
             
-    return left
+    return max
             
 
 
