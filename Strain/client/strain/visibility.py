@@ -106,7 +106,7 @@ def levelVisibilityDict3( unit_list, level ):
     unit_dict = {}
     
 
-    zero_line = scanZeroLineX(unit_x, unit_y, level, unit_dict)
+    zero_line = scanZeroLineXPositive(unit_x, unit_y, level, unit_dict)
 
 
     left = left_45
@@ -121,7 +121,6 @@ def levelVisibilityDict3( unit_list, level ):
             break
         
         left, right = scanLineX( unit_x, unit_y, i, i, left, right, level, unit_dict)
-        print "+  ",left,right
 
     left = -zero_line
     right = right_45
@@ -133,7 +132,6 @@ def levelVisibilityDict3( unit_list, level ):
             break
         
         left, right = scanLineX( unit_x, unit_y, -i, i, left, right, level, unit_dict)
-        print "-  ",left,right
     
     
     return unit_dict
@@ -382,10 +380,10 @@ def scanHole( x1, this_y, dx1, dy1, left, right, level, unit_dict ):
             
 
 
-def scanZeroLineX( unit_x, unit_y, level, unit_dict ):
+def scanZeroLineXPositive( unit_x, unit_y, level, unit_dict ):
     vis = 1
     
-    max = 0
+    maxi = 0
     
     #positive direction
     for x in xrange( unit_x+1, level.maxX ):
@@ -397,12 +395,12 @@ def scanZeroLineX( unit_x, unit_y, level, unit_dict ):
         if level.opaque( x, unit_y, 1 ):
             unit_dict[ (x,unit_y) ] = -1
             vis = 0
-            max = level.getMask( x-unit_x, 0 )[MASK_MAX]
+            maxi = level.getMask( x-unit_x, 0 )[MASK_MAX]
         else:
             unit_dict[ (x,unit_y) ] = 1
             
             
-    return max
+    return maxi
             
 
 
