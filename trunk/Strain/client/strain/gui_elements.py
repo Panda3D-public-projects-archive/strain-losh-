@@ -179,6 +179,13 @@ class GuiButton2:
             
     def removeNode(self):
         self.frame.removeNode()   
+        
+    def setAbility(self, ability):
+        self.name = ability
+        self.imageObject.setImage(self.name+".png")
+        self.imageObject.setTransparency(TransparencyAttrib.MAlpha)
+        self.imageObject.setAlphaScale(1) 
+        #self.imageObject.reparentTo(self.frame)
                       
 class GuiTextFrame:
     def __init__(self, offset, h_size, v_size, numLines, hugpos):
