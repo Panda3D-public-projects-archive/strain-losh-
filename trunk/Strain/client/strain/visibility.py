@@ -98,51 +98,52 @@ def levelVisibilityDict3( unit_list, level ):
     unit_dict_x = {}
     unit_dict_y = {}
     
-    unit_dict_x = visibility3X(unit_list, level)
-    unit_dict_y = visibility3Y(unit_list, level)
-
+    vis_dict = {}
     
-    unit_x = unit_list[0]['pos'][0]
-    unit_y = unit_list[0]['pos'][1]
-
-        
-    for k in unit_dict_y.keys():
-        x,y = k
-        dx = x - unit_x
-        dy = y - unit_y
-        
-
-        if dx == dy or dx == -dy:            
-            if k in unit_dict_x:
-                if k in unit_dict_y:
-                    unit_dict_x[ k ] += unit_dict_y[ k ] 
+    for unit in unit_list:
+        unit_dict_x = visibility3X(unit, level, vis_dict)
+        unit_dict_y = visibility3Y(unit, level, vis_dict)
+    
+        """
+        unit_x = unit['pos'][0]
+        unit_y = unit['pos'][1]
+    
+            
+        for k in unit_dict_y.keys():
+            x,y = k
+            dx = x - unit_x
+            dy = y - unit_y
+            
+    
+            if dx == dy or dx == -dy:            
+                if k in unit_dict_x:
+                    if k in unit_dict_y:
+                        unit_dict_x[ k ] += unit_dict_y[ k ] 
+                else:
+                    if k in unit_dict_y:
+                        unit_dict_x[ k ] = unit_dict_y[ k ]
             else:
-                if k in unit_dict_y:
-                    unit_dict_x[ k ] = unit_dict_y[ k ]
-        else:
-            unit_dict_x[ k ] = unit_dict_y[ k ]
-
-    return unit_dict_x
+                unit_dict_x[ k ] = unit_dict_y[ k ]
+        """
+        
+    return vis_dict
 
 
 
-def visibility3Y( unit_list, level ):
+def visibility3Y( unit, level, vis_dict ):
 
-    left_45 = level.getMask(0,1)[MASK_MAX]
-    right_45 = level.getMask(0,1)[MASK_MIN]
-    
-    if not unit_list:
-        return {}
-    
-    unit = unit_list[0]
     unit_x = unit['pos'][0]
     unit_y = unit['pos'][1]
 
     unit_dict = {}
 
+    left_45 = level.getMask(0,1)[MASK_MAX]
+    right_45 = level.getMask(0,1)[MASK_MIN]
+    
+    
     #----------------------------Y > 0-------------------------------- 
     if unit_y+1 < level.maxY and not level.opaque( unit_x, unit_y+1, 1 ):
-        zero_line = scanZeroLineY(unit_x, unit_y, level, unit_dict)
+        zero_line = scanZeroLineY( unit_x, unit_y, level, unit_dict, vis_dict )
         
         left = zero_line[0]
         right = right_45
@@ -153,7 +154,7 @@ def visibility3Y( unit_list, level ):
             if unit_y+i >= level.maxY:
                 break
             
-            left, right = scanLineYPos( unit_x, unit_y, i, i, left, right, level, unit_dict)
+            left, right = scanLineYPos( unit_x, unit_y, i, i, left, right, level, unit_dict, vis_dict )
     
         left = left_45
         right = zero_line[1]
@@ -163,11 +164,12 @@ def visibility3Y( unit_list, level ):
             if unit_y-i >= level.maxY:
                 break
             
-            left, right = scanLineYPos( unit_x, unit_y, i, -i, left, right, level, unit_dict, )
+            left, right = scanLineYPos( unit_x, unit_y, i, -i, left, right, level, unit_dict, vis_dict )
+
 
     #----------------------------Y < 0-------------------------------- 
     if unit_y-1 >= 0 and not level.opaque( unit_x, unit_y-1, 1 ):
-        zero_line = scanZeroLineY(unit_x, unit_y, level, unit_dict, -1)
+        zero_line = scanZeroLineY( unit_x, unit_y, level, unit_dict, vis_dict, -1 )
         
         left = -right_45
         right = zero_line[1]
@@ -179,7 +181,7 @@ def visibility3Y( unit_list, level ):
             if unit_y-i < 0:
                 break
 
-            left, right = scanLineYNeg( unit_x, unit_y, i, -i, left, right, level, unit_dict)
+            left, right = scanLineYNeg( unit_x, unit_y, i, -i, left, right, level, unit_dict, vis_dict )
         
         left = zero_line[0] 
         right = -left_45 
@@ -189,19 +191,14 @@ def visibility3Y( unit_list, level ):
             if unit_y+i < 0:
                 break
             
-            left, right = scanLineYNeg( unit_x, unit_y, i, i, left, right, level, unit_dict )
+            left, right = scanLineYNeg( unit_x, unit_y, i, i, left, right, level, unit_dict, vis_dict )
 
     
     return unit_dict
 
 
-def visibility3X( unit_list, level ):
+def visibility3X( unit, level, vis_dict ):
     
-    
-    if not unit_list:
-        return {}
-    
-    unit = unit_list[0]
     unit_x = unit['pos'][0]
     unit_y = unit['pos'][1]
 
@@ -214,7 +211,7 @@ def visibility3X( unit_list, level ):
         
         left_45 = level.getMask(1,0)[MASK_MAX]
         right_45 = level.getMask(1,0)[MASK_MIN]
-        zero_line = scanZeroLineX(unit_x, unit_y, level, unit_dict)
+        zero_line = scanZeroLineX( unit_x, unit_y, level, unit_dict, vis_dict )
     
         left = left_45
         right = zero_line
@@ -223,30 +220,28 @@ def visibility3X( unit_list, level ):
     
         #check positive part, x+, y+
         for i in xrange( 1, y_range_pos ):
-                
             if unit_x+i >= level.maxX:
                 break
             
-            left, right = scanLineXPos( unit_x, unit_y, i, i, left, right, level, unit_dict)
+            left, right = scanLineXPos( unit_x, unit_y, i, i, left, right, level, unit_dict, vis_dict )
     
         left = -zero_line
         right = right_45
         
         #check negative part, x+, y-
         for i in xrange( -1, -unit_y-1, -1 ):
-    
             if unit_x-i >= level.maxX:
                 break
             
-            left, right = scanLineXPos( unit_x, unit_y, -i, i, left, right, level, unit_dict)
+            left, right = scanLineXPos( unit_x, unit_y, -i, i, left, right, level, unit_dict, vis_dict )
             
 
     #------------------------ X < 0----------------------------
     if unit_x -1 >= 0 and not level.opaque( unit_x-1, unit_y, 1 ):
         left_45 = level.getMask(-1,0)[MASK_DOWN_RIGHT]
         right_45 = level.getMask(-1,0)[MASK_UP_RIGHT]
-        zero_line = scanZeroLineX(unit_x, unit_y, level, unit_dict, -1)
     
+        zero_line = scanZeroLineX(unit_x, unit_y, level, unit_dict, vis_dict, -1)
         left = min( zero_line[1], math.pi )
         right = right_45
         
@@ -257,7 +252,7 @@ def visibility3X( unit_list, level ):
             if unit_x-i < 0:
                 break
             
-            left, right = scanLineXNeg( unit_x, unit_y, -i, i, left, right, level, unit_dict)
+            left, right = scanLineXNeg( unit_x, unit_y, -i, i, left, right, level, unit_dict, vis_dict )
     
         
         left = left_45
@@ -268,14 +263,24 @@ def visibility3X( unit_list, level ):
             if unit_x+i < 0:
                 break
             
-            left, right = scanLineXNeg( unit_x, unit_y, i, i, left, right, level, unit_dict)
+            left, right = scanLineXNeg( unit_x, unit_y, i, i, left, right, level, unit_dict, vis_dict )
     
 
     return unit_dict
 
 
 
-def scanLineYNeg( unit_x, unit_y, dx, dy, left, right, level, unit_dict):   
+def scanLineYNeg( unit_x, unit_y, dx, dy, left, right, level, unit_dict, vis_dict ):   
+    
+    #check if this line is visible at all    
+    if left <= right:
+        return left, right
+    
+    unit_y_dy = unit_y + dy
+    
+    #check for end of level
+    if unit_y_dy < 0:
+        return left, right
     
     #if vis is = -1 we cannot see this tile and no other tiles in this line till the end of level 
     vis = 1
@@ -286,12 +291,6 @@ def scanLineYNeg( unit_x, unit_y, dx, dy, left, right, level, unit_dict):
     right_for_next_line = right
     left_for_next_line = left
     
-    unit_y_dy = unit_y + dy
-    
-    #check for end of level
-    if unit_y_dy >= level.maxY:
-        return left_for_next_line, right_for_next_line
-        
     sgnX = signum(dx)
     
     this_x = unit_x + dx
@@ -301,11 +300,17 @@ def scanLineYNeg( unit_x, unit_y, dx, dy, left, right, level, unit_dict):
     
     for y in xrange( unit_y_dy, -1, -1 ):
         
+        tile = (this_x, y)
+        
         if vis == -1:
-            unit_dict[ (this_x, y) ] = -1
+            unit_dict[ tile ] = -1
             continue
 
-        if (this_x, y) in unit_dict:
+        if tile in unit_dict:
+            continue
+        
+        if tile in vis_dict:
+            unit_dict[ tile ] = 1
             continue
         
         #we hit a wall
@@ -313,10 +318,10 @@ def scanLineYNeg( unit_x, unit_y, dx, dy, left, right, level, unit_dict):
             
             #dx > 0 !! if the line right is -1 we cant see anything from this line anymore, put vis = -1
             if unit_dict[ (this_x-sgnX, y) ] == -1:
-                unit_dict[ (this_x, y) ] = -1
+                unit_dict[ tile ] = -1
                 vis = -1
             else:
-                unit_dict[ (this_x, y) ] = 0
+                unit_dict[ tile ] = 0
                 
             tmp_mask = level.getMask( dx, y-unit_y )
             
@@ -354,7 +359,7 @@ def scanLineYNeg( unit_x, unit_y, dx, dy, left, right, level, unit_dict):
                 else:
                     tmp_left = min( level.getMask(dx, y-unit_y)[MASK_MIN], left )
                     tmp_right = right
-                scanHoleYNeg(this_x+sgnX, y1, dx+sgnX, y1-unit_y, tmp_left, tmp_right, level, unit_dict)
+                scanHoleYNeg( this_x+sgnX, y1, dx+sgnX, y1-unit_y, tmp_left, tmp_right, level, unit_dict, vis_dict )
                 
                     
                 
@@ -370,10 +375,10 @@ def scanLineYNeg( unit_x, unit_y, dx, dy, left, right, level, unit_dict):
             #dx > 0 !! check line left for -1
             if left <= right:
                 if unit_dict[ (this_x-sgnX, y) ] == -1:
-                    unit_dict[ (this_x, y) ] = -1
+                    unit_dict[ tile ] = -1
                     vis = -1
                 else:
-                    unit_dict[ (this_x, y) ] = 0
+                    unit_dict[ tile ] = 0
                 
             continue
             
@@ -381,7 +386,8 @@ def scanLineYNeg( unit_x, unit_y, dx, dy, left, right, level, unit_dict):
         #dx > 0 !! if tile up and left are visible, this is also visible if it is empty (we already checked for that)
         if y != unit_y_dy:
             if unit_dict[ (this_x, y+1) ] == 1 and unit_dict[ (this_x-sgnX, y) ] == 1:
-                unit_dict[ (this_x, y) ] = 1
+                unit_dict[ tile ] = 1
+                vis_dict[ tile ] = 1 
                 continue
 
     
@@ -389,31 +395,44 @@ def scanLineYNeg( unit_x, unit_y, dx, dy, left, right, level, unit_dict):
         percent = _calculatePercent( level.getMask(dx, y-unit_y), left, right )
         if not percent:
             if unit_dict[ (this_x-sgnX, y) ] == -1:
-                unit_dict[ (this_x, y) ] = -1
+                unit_dict[ tile ] = -1
                 vis = -1
-        unit_dict[ (this_x, y) ] = percent
-        
-    
-    
-    
-    #check for end of level
-    if vis != -1:
-        #if there was a hole
-        if y1 != -1:
-            if dx > 0:
-                tmp_left = left
-                tmp_right = old_right
             else:
-                tmp_left = old_left
-                tmp_right = right
-            scanHoleYNeg(this_x+sgnX, y1, dx+sgnX, y1-unit_y, tmp_left, tmp_right, level, unit_dict)                
+                unit_dict[ tile ] = 0
+        else:
+            unit_dict[ tile ] = percent
+            
+            if percent > VISIBILITY_MIN:
+                vis_dict[ tile ] = 1 
+    
+    
+    
+    #if there was a hole
+    if y1 != -1:
+        if dx > 0:
+            tmp_left = left
+            tmp_right = old_right
+        else:
+            tmp_left = old_left
+            tmp_right = right
+        scanHoleYNeg( this_x+sgnX, y1, dx+sgnX, y1-unit_y, tmp_left, tmp_right, level, unit_dict, vis_dict )
 
     
     return left_for_next_line, right_for_next_line
 
 
 
-def scanLineYPos( unit_x, unit_y, dx, dy, left, right, level, unit_dict):   
+def scanLineYPos( unit_x, unit_y, dx, dy, left, right, level, unit_dict, vis_dict ):   
+    
+    #check if this line is visible at all    
+    if left <= right:
+        return left, right
+        
+    unit_y_dy = unit_y + dy
+    
+    #check for end of level
+    if unit_y_dy >= level.maxY:
+        return left, right
     
     #if vis is = -1 we cannot see this tile and no other tiles in this line till the end of level 
     vis = 1
@@ -423,12 +442,6 @@ def scanLineYPos( unit_x, unit_y, dx, dy, left, right, level, unit_dict):
     
     right_for_next_line = right
     left_for_next_line = left
-    
-    unit_y_dy = unit_y + dy
-    
-    #check for end of level
-    if unit_y_dy >= level.maxY:
-        return left_for_next_line, right_for_next_line
         
     sgnX = signum(dx)
     
@@ -439,11 +452,17 @@ def scanLineYPos( unit_x, unit_y, dx, dy, left, right, level, unit_dict):
     
     for y in xrange( unit_y_dy, level.maxY ):
         
+        tile = (this_x, y)
+        
         if vis == -1:
-            unit_dict[ (this_x, y) ] = -1
+            unit_dict[ tile ] = -1
             continue
 
-        if (this_x, y) in unit_dict:
+        if tile in unit_dict:
+            continue
+        
+        if tile in vis_dict:
+            unit_dict[ tile ] = 1
             continue
         
         #we hit a wall
@@ -451,10 +470,10 @@ def scanLineYPos( unit_x, unit_y, dx, dy, left, right, level, unit_dict):
             
             #dx > 0 !! if the line left is -1 we cant see anything from this line anymore, put vis = -1
             if unit_dict[ (this_x-sgnX, y) ] == -1:
-                unit_dict[ (this_x, y) ] = -1
+                unit_dict[ tile ] = -1
                 vis = -1
             else:
-                unit_dict[ (this_x, y) ] = 0
+                unit_dict[ tile ] = 0
                 
             tmp_mask = level.getMask( dx, y-unit_y)
             
@@ -492,7 +511,7 @@ def scanLineYPos( unit_x, unit_y, dx, dy, left, right, level, unit_dict):
                 else:
                     tmp_left = left 
                     tmp_right = max( level.getMask(dx, y-unit_y)[MASK_MAX], right )
-                scanHoleYPos(this_x+sgnX, y1, dx+sgnX, y1-unit_y, tmp_left, tmp_right, level, unit_dict)
+                scanHoleYPos( this_x+sgnX, y1, dx+sgnX, y1-unit_y, tmp_left, tmp_right, level, unit_dict, vis_dict )
                 
                     
                 
@@ -508,50 +527,55 @@ def scanLineYPos( unit_x, unit_y, dx, dy, left, right, level, unit_dict):
             #dx > 0 !! check line left for -1
             if left <= right:
                 if unit_dict[ (this_x-sgnX, y) ] == -1:
-                    unit_dict[ (this_x, y) ] = -1
+                    unit_dict[ tile ] = -1
                     vis = -1
                 else:
-                    unit_dict[ (this_x, y) ] = 0
+                    unit_dict[ tile ] = 0
                 
             continue
             
         
         #dx > 0 !! if tile down and left are visible, this is also visible if it is empty (we already checked for that)
         if y != unit_y_dy:
-            if unit_dict[ (this_x, y-1) ] == 1 and unit_dict[ (this_x-sgnX, y) ] == 1:
-                unit_dict[ (this_x, y) ] = 1
-                continue
+            if unit_dict[ (this_x, y-1) ] == 1:
+                if unit_dict[ (this_x-sgnX, y) ] == 1:
+                    unit_dict[ tile ] = 1
+                    vis_dict[ tile ] = 1
+                    continue
 
     
         #if all else fails do the percent check
         percent = _calculatePercent( level.getMask(dx, y-unit_y), left, right )
         if not percent:
             if unit_dict[ (this_x-sgnX, y) ] == -1:
-                unit_dict[ (this_x, y) ] = -1
+                unit_dict[ tile ] = -1
                 vis = -1
-        unit_dict[ (this_x, y) ] = percent
+            else:
+                unit_dict[ tile ] = 0
+        else:
+            unit_dict[ tile ] = percent
+            
+            if percent > VISIBILITY_MIN:
+                vis_dict[ tile ] = 1
         
     
-    
-    
-    #check for end of level
-    if vis != -1:
-        #if there was a hole
-        if y1 != -1:
-            if dx > 0:
-                tmp_left = old_left
-                tmp_right = right
-            else:
-                tmp_left = left
-                tmp_right = old_right
-            scanHoleYPos(this_x+sgnX, y1, dx+sgnX, y1-unit_y, tmp_left, tmp_right, level, unit_dict)                
+        
+    #if there was a hole
+    if y1 != -1:
+        if dx > 0:
+            tmp_left = old_left
+            tmp_right = right
+        else:
+            tmp_left = left
+            tmp_right = old_right
+        scanHoleYPos( this_x+sgnX, y1, dx+sgnX, y1-unit_y, tmp_left, tmp_right, level, unit_dict, vis_dict )                
 
     
     return left_for_next_line, right_for_next_line
 
 
 
-def scanHoleYPos( this_x, y1, dx1, dy1, left, right, level, unit_dict ):
+def scanHoleYPos( this_x, y1, dx1, dy1, left, right, level, unit_dict, vis_dict ):
     
     if left <= right:
         return
@@ -585,13 +609,18 @@ def scanHoleYPos( this_x, y1, dx1, dy1, left, right, level, unit_dict ):
         
         for y in xrange( y1+1, level.maxY ):
             
+            tile = (x, y)
+            
             if y < min_y:
+                continue
+            
+            if at_least_one_y and tile in vis_dict:
                 continue
             
             dy = dy1+(y-y1)
             
             if level.opaque( x, y, 1 ):
-                unit_dict[ (x,y) ] = 0
+                unit_dict[ tile ] = 0
                 
                 if new_y1 != -1:
                     if dy1 > 0:
@@ -600,7 +629,7 @@ def scanHoleYPos( this_x, y1, dx1, dy1, left, right, level, unit_dict ):
                     else:
                         tmp_left = new_left
                         tmp_right = level.getMask( dx, dy )[MASK_MAX]
-                    scanHoleXPos( x, new_y1, dx, new_dy1, tmp_left, tmp_right, level, unit_dict)
+                    scanHoleYPos( x, new_y1, dx, new_dy1, tmp_left, tmp_right, level, unit_dict, vis_dict )
                         
                     
                 new_y1 = y
@@ -628,7 +657,11 @@ def scanHoleYPos( this_x, y1, dx1, dy1, left, right, level, unit_dict ):
                     min_y = y
                     at_least_one_y = True
 
-                unit_dict[ (x,y) ] = perc
+                unit_dict[ tile ] = perc
+                
+                if perc > VISIBILITY_MIN:
+                    vis_dict[ tile ] = 1 
+                
             else:
                 if at_least_one_y:
                     if new_y1 != -1:
@@ -638,7 +671,7 @@ def scanHoleYPos( this_x, y1, dx1, dy1, left, right, level, unit_dict ):
                         else:
                             tmp_left = old_left
                             tmp_right = new_right
-                        scanHoleXPos( x, new_y1, dx, new_dy1, tmp_left, tmp_right, level, unit_dict)
+                        scanHoleYPos( x, new_y1, dx, new_dy1, tmp_left, tmp_right, level, unit_dict, vis_dict )
                             
                         new_y1 = -1
                     break            
@@ -651,7 +684,7 @@ def scanHoleYPos( this_x, y1, dx1, dy1, left, right, level, unit_dict ):
             else:
                 tmp_left = old_left
                 tmp_right = new_right
-            scanHoleXPos( x, new_y1, dx, new_dy1, tmp_left, tmp_right, level, unit_dict)
+            scanHoleYPos( x, new_y1, dx, new_dy1, tmp_left, tmp_right, level, unit_dict, vis_dict )
                 
                 
         #if we didnt find any visible tile on this y line, than stop checking
@@ -660,7 +693,7 @@ def scanHoleYPos( this_x, y1, dx1, dy1, left, right, level, unit_dict ):
             
             
 
-def scanHoleYNeg( this_x, y1, dx1, dy1, left, right, level, unit_dict ):
+def scanHoleYNeg( this_x, y1, dx1, dy1, left, right, level, unit_dict, vis_dict ):
     
     if left <= right:
         return
@@ -694,13 +727,18 @@ def scanHoleYNeg( this_x, y1, dx1, dy1, left, right, level, unit_dict ):
         
         for y in xrange( y1-2, -1, -1 ):
             
+            tile = (x, y)
+            
             if y > min_y:
                 continue
             
+            if at_least_one_y and tile in vis_dict:
+                continue
+                        
             dy = dy1+(y-y1)
             
             if level.opaque( x, y, 1 ):
-                unit_dict[ (x,y) ] = 0
+                unit_dict[ tile ] = 0
                 
                 if new_y1 != -1:
                     if dy1 > 0:
@@ -709,7 +747,7 @@ def scanHoleYNeg( this_x, y1, dx1, dy1, left, right, level, unit_dict ):
                     else:
                         tmp_left = level.getMask( dx, dy )[MASK_MIN]
                         tmp_right = new_right
-                    scanHoleXPos( x, new_y1, dx, new_dy1, tmp_left, tmp_right, level, unit_dict)
+                    scanHoleYNeg( x, new_y1, dx, new_dy1, tmp_left, tmp_right, level, unit_dict, vis_dict )
                         
                     
                 new_y1 = y
@@ -737,7 +775,11 @@ def scanHoleYNeg( this_x, y1, dx1, dy1, left, right, level, unit_dict ):
                     min_y = y
                     at_least_one_y = True
 
-                unit_dict[ (x,y) ] = perc
+                unit_dict[ tile ] = perc
+                
+                if perc > VISIBILITY_MIN:
+                    vis_dict[ tile ] = 1 
+                
             else:
                 if at_least_one_y:
                     if new_y1 != -1:
@@ -747,7 +789,7 @@ def scanHoleYNeg( this_x, y1, dx1, dy1, left, right, level, unit_dict ):
                         else:
                             tmp_left = new_left
                             tmp_right = old_right
-                        scanHoleXPos( x, new_y1, dx, new_dy1, tmp_left, tmp_right, level, unit_dict)
+                        scanHoleYNeg( x, new_y1, dx, new_dy1, tmp_left, tmp_right, level, unit_dict, vis_dict )
                             
                         new_y1 = -1
                     break            
@@ -760,7 +802,7 @@ def scanHoleYNeg( this_x, y1, dx1, dy1, left, right, level, unit_dict ):
             else:
                 tmp_left = new_left
                 tmp_right = old_right
-            scanHoleXPos( x, new_y1, dx, new_dy1, tmp_left, tmp_right, level, unit_dict)
+            scanHoleYNeg( x, new_y1, dx, new_dy1, tmp_left, tmp_right, level, unit_dict, vis_dict )
                 
                 
         #if we didnt find any visible tile on this y line, than stop checking
@@ -771,8 +813,17 @@ def scanHoleYNeg( this_x, y1, dx1, dy1, left, right, level, unit_dict ):
             
 
 
-def scanLineXNeg( unit_x, unit_y, dx, dy, left, right, level, unit_dict):
+def scanLineXNeg( unit_x, unit_y, dx, dy, left, right, level, unit_dict, vis_dict ):
     
+    if left <= right:
+        return left, right
+        
+    unit_x_dx = unit_x + dx
+    
+    #check for end of level
+    if unit_x_dx < 0:
+        return left, right
+        
     #if vis is = -1 we cannot see this tile and no other tiles in this line till the end of level 
     vis = 1
     
@@ -782,12 +833,6 @@ def scanLineXNeg( unit_x, unit_y, dx, dy, left, right, level, unit_dict):
     right_for_next_line = right
     left_for_next_line = left
     
-    unit_x_dx = unit_x + dx
-    
-    #check for end of level
-    if unit_x_dx >= level.maxX or unit_x_dx < 0:
-        return left_for_next_line, right_for_next_line
-        
     sgnY = signum(dy)
     
     this_y = unit_y + dy
@@ -797,11 +842,17 @@ def scanLineXNeg( unit_x, unit_y, dx, dy, left, right, level, unit_dict):
     
     for x in xrange( unit_x_dx, -1, -1 ):
         
+        tile = (x, this_y)
+        
         if vis == -1:
-            unit_dict[ (x,this_y) ] = -1
+            unit_dict[ tile ] = -1
             continue
 
-        if (x,this_y) in unit_dict:
+        if tile in unit_dict:
+            continue
+        
+        if tile in vis_dict:
+            unit_dict[ tile ] = 1
             continue
         
         #we hit a wall
@@ -809,10 +860,10 @@ def scanLineXNeg( unit_x, unit_y, dx, dy, left, right, level, unit_dict):
             
             #dy > 0 !! if the line below is -1 we cant see anything from this line anymore, put vis = -1
             if unit_dict[ (x, this_y-sgnY) ] == -1:
-                unit_dict[ (x,this_y) ] = -1
+                unit_dict[ tile ] = -1
                 vis = -1
             else:
-                unit_dict[ (x,this_y) ] = 0
+                unit_dict[ tile ] = 0
                 
             tmp_mask = level.getMask(x-unit_x, dy)
             
@@ -850,7 +901,7 @@ def scanLineXNeg( unit_x, unit_y, dx, dy, left, right, level, unit_dict):
                 else:
                     tmp_left = left
                     tmp_right = max( level.getMask(x-unit_x, dy)[MASK_MAX], right ) 
-                scanHoleXNeg(x1, this_y+sgnY, x1-unit_x, dy+sgnY, tmp_left, tmp_right, level, unit_dict)
+                scanHoleXNeg( x1, this_y+sgnY, x1-unit_x, dy+sgnY, tmp_left, tmp_right, level, unit_dict, vis_dict )
                     
                 
             #remember this x for next hole checking
@@ -865,10 +916,10 @@ def scanLineXNeg( unit_x, unit_y, dx, dy, left, right, level, unit_dict):
             #dy > 0 !! check line below for -1
             if left <= right:
                 if unit_dict[ (x, this_y-sgnY) ] == -1:
-                    unit_dict[ (x,this_y) ] = -1
+                    unit_dict[ tile ] = -1
                     vis = -1
                 else:
-                    unit_dict[ (x,this_y) ] = 0
+                    unit_dict[ tile ] = 0
                 
             continue
             
@@ -876,7 +927,8 @@ def scanLineXNeg( unit_x, unit_y, dx, dy, left, right, level, unit_dict):
         #dy > 0 !! if tile down and left are visible, this is also visible if it is empty (we already checked for that)
         if x != unit_x_dx:
             if unit_dict[ (x+1,this_y) ] == 1 and unit_dict[ (x,this_y-sgnY) ] == 1:
-                unit_dict[ (x,this_y) ] = 1
+                unit_dict[ tile ] = 1
+                vis_dict[ tile ] = 1
                 continue
 
     
@@ -884,31 +936,35 @@ def scanLineXNeg( unit_x, unit_y, dx, dy, left, right, level, unit_dict):
         percent = _calculatePercent( level.getMask(x-unit_x, dy), left, right )
         if not percent:
             if unit_dict[ (x, this_y-sgnY) ] == -1:
-                unit_dict[ (x,this_y) ] = -1
+                unit_dict[ tile ] = -1
                 vis = -1
-        unit_dict[ (x,this_y) ] = percent
+            else:
+                unit_dict[ tile ] = 0                
+        else:
+            unit_dict[ tile ] = percent
+            
+            if percent > VISIBILITY_MIN:
+                vis_dict[ tile ] = 1
         
     
     
     
-    #check for end of level
-    if vis != -1:
-        #if there was a hole
-        if x1 != -1:
-            if dy > 0:
-                tmp_left = old_left
-                tmp_right = right
-            else:
-                tmp_left = left
-                tmp_right = old_right
-            scanHoleXNeg(x1, this_y+sgnY, x1-unit_x, dy+sgnY, tmp_left, tmp_right, level, unit_dict)                
+    #if there was a hole
+    if x1 != -1:
+        if dy > 0:
+            tmp_left = old_left
+            tmp_right = right
+        else:
+            tmp_left = left
+            tmp_right = old_right
+        scanHoleXNeg( x1, this_y+sgnY, x1-unit_x, dy+sgnY, tmp_left, tmp_right, level, unit_dict, vis_dict )                
 
     
     return left_for_next_line, right_for_next_line
 
 
 
-def scanLineXPos( unit_x, unit_y, dx, dy, left, right, level, unit_dict):
+def scanLineXPos( unit_x, unit_y, dx, dy, left, right, level, unit_dict, vis_dict ):
     """
         if y > 0, max right angle is being carried over, and left is saved in the beggining and later used for hole
         angles.
@@ -916,6 +972,14 @@ def scanLineXPos( unit_x, unit_y, dx, dy, left, right, level, unit_dict):
         if y < 0, min left angle is being carried over, and right is saved and used for hole angles. 
     """
     
+    if left <= right:
+        return left, right
+    
+    unit_x_dx = unit_x + dx
+    
+    #check for end of level
+    if unit_x_dx >= level.maxX:
+        return left, right
     
     #if vis is = -1 we cannot see this tile and no other tiles in this line till the end of level 
     vis = 1
@@ -925,12 +989,6 @@ def scanLineXPos( unit_x, unit_y, dx, dy, left, right, level, unit_dict):
     
     right_for_next_line = right
     left_for_next_line = left
-    
-    unit_x_dx = unit_x + dx
-    
-    #check for end of level
-    if unit_x_dx >= level.maxX:
-        return left_for_next_line, right_for_next_line
         
     sgnY = signum(dy)
     
@@ -941,11 +999,17 @@ def scanLineXPos( unit_x, unit_y, dx, dy, left, right, level, unit_dict):
     
     for x in xrange( unit_x_dx, level.maxX ):
         
+        tile = (x, this_y)
+        
         if vis == -1:
-            unit_dict[ (x,this_y) ] = -1
+            unit_dict[ tile ] = -1
             continue
 
-        if (x,this_y) in unit_dict:
+        if tile in unit_dict:
+            continue
+        
+        if tile in vis_dict:
+            unit_dict[ tile ] = 1
             continue
         
         #we hit a wall
@@ -953,10 +1017,10 @@ def scanLineXPos( unit_x, unit_y, dx, dy, left, right, level, unit_dict):
             
             #dy > 0 !! if the line below is -1 we cant see anything from this line anymore, put vis = -1
             if unit_dict[ (x, this_y-sgnY) ] == -1:
-                unit_dict[ (x,this_y) ] = -1
+                unit_dict[ tile ] = -1
                 vis = -1
             else:
-                unit_dict[ (x,this_y) ] = 0
+                unit_dict[ tile ] = 0
                 
             tmp_mask = level.getMask(x-unit_x, dy)
             
@@ -994,7 +1058,7 @@ def scanLineXPos( unit_x, unit_y, dx, dy, left, right, level, unit_dict):
                 else:
                     tmp_left = min( level.getMask(x-unit_x, dy)[MASK_MIN], left )
                     tmp_right = right 
-                scanHoleXPos(x1, this_y+sgnY, x1-unit_x, dy+sgnY, tmp_left, tmp_right, level, unit_dict)
+                scanHoleXPos(x1, this_y+sgnY, x1-unit_x, dy+sgnY, tmp_left, tmp_right, level, unit_dict, vis_dict)
                     
                 
             #remember this x for next hole checking
@@ -1009,10 +1073,10 @@ def scanLineXPos( unit_x, unit_y, dx, dy, left, right, level, unit_dict):
             #dy > 0 !! check line below for -1
             if left <= right:
                 if unit_dict[ (x, this_y-sgnY) ] == -1:
-                    unit_dict[ (x,this_y) ] = -1
+                    unit_dict[ tile ] = -1
                     vis = -1
                 else:
-                    unit_dict[ (x,this_y) ] = 0
+                    unit_dict[ tile ] = 0
                 
             continue
             
@@ -1020,7 +1084,8 @@ def scanLineXPos( unit_x, unit_y, dx, dy, left, right, level, unit_dict):
         #dy > 0 !! if tile down and left are visible, this is also visible if it is empty (we already checked for that)
         if x != unit_x_dx:
             if unit_dict[ (x-1,this_y) ] == 1 and unit_dict[ (x,this_y-sgnY) ] == 1:
-                unit_dict[ (x,this_y) ] = 1
+                unit_dict[ tile ] = 1
+                vis_dict[ tile ] = 1
                 continue
 
     
@@ -1028,31 +1093,34 @@ def scanLineXPos( unit_x, unit_y, dx, dy, left, right, level, unit_dict):
         percent = _calculatePercent( level.getMask(x-unit_x, dy), left, right )
         if not percent:
             if unit_dict[ (x, this_y-sgnY) ] == -1:
-                unit_dict[ (x,this_y) ] = -1
+                unit_dict[ tile ] = -1
                 vis = -1
-        unit_dict[ (x,this_y) ] = percent
+            else:
+                unit_dict[ tile ] = 0
+        else:
+            unit_dict[ tile ] = percent
+        
+            if percent > VISIBILITY_MIN:
+                vis_dict[ tile ] = 1
         
     
-    
-    
-    #check for end of level
-    if vis != -1:
-        #if there was a hole
-        if x1 != -1:
-            if dy > 0:
-                tmp_left = left
-                tmp_right = old_right
-            else:
-                tmp_left = old_left
-                tmp_right = right
-            scanHoleXPos(x1, this_y+sgnY, x1-unit_x, dy+sgnY, tmp_left, tmp_right, level, unit_dict)                
+        
+    #if there was a hole
+    if x1 != -1:
+        if dy > 0:
+            tmp_left = left
+            tmp_right = old_right
+        else:
+            tmp_left = old_left
+            tmp_right = right
+        scanHoleXPos(x1, this_y+sgnY, x1-unit_x, dy+sgnY, tmp_left, tmp_right, level, unit_dict, vis_dict)                
 
     
     return left_for_next_line, right_for_next_line
 
 
 
-def scanHoleXNeg( x1, this_y, dx1, dy1, left, right, level, unit_dict ):
+def scanHoleXNeg( x1, this_y, dx1, dy1, left, right, level, unit_dict, vis_dict ):
     
     if left <= right:
         return
@@ -1086,13 +1154,18 @@ def scanHoleXNeg( x1, this_y, dx1, dy1, left, right, level, unit_dict ):
         
         for x in xrange( x1-2, -1, -1 ):
             
+            tile = (x,y)
+            
             if x > min_x:
+                continue
+            
+            if at_least_one_x and tile in vis_dict:
                 continue
             
             dx = dx1+(x-x1)
             
             if level.opaque( x, y, 1 ):
-                unit_dict[ (x,y) ] = 0
+                unit_dict[ tile ] = 0
                 
                 if new_x1 != -1:
                     if dy1 > 0:
@@ -1101,7 +1174,7 @@ def scanHoleXNeg( x1, this_y, dx1, dy1, left, right, level, unit_dict ):
                     else:
                         tmp_left = new_left
                         tmp_right = level.getMask( dx, dy )[MASK_MAX]
-                    scanHoleXNeg( new_x1, y, new_dx1, dy, tmp_left, tmp_right, level, unit_dict)
+                    scanHoleXNeg( new_x1, y, new_dx1, dy, tmp_left, tmp_right, level, unit_dict, vis_dict )
                         
                     
                 new_x1 = x
@@ -1129,7 +1202,11 @@ def scanHoleXNeg( x1, this_y, dx1, dy1, left, right, level, unit_dict ):
                     min_x = x
                     at_least_one_x = True
 
-                unit_dict[ (x,y) ] = perc
+                unit_dict[ tile ] = perc
+                
+                if perc > VISIBILITY_MIN:
+                    vis_dict[ tile ] = 1
+                    
             else:
                 if at_least_one_x:
                     if new_x1 != -1:
@@ -1139,7 +1216,7 @@ def scanHoleXNeg( x1, this_y, dx1, dy1, left, right, level, unit_dict ):
                         else:
                             tmp_left = new_left
                             tmp_right = old_right
-                        scanHoleXNeg( new_x1, y, new_dx1, dy, tmp_left, tmp_right, level, unit_dict)
+                        scanHoleXNeg( new_x1, y, new_dx1, dy, tmp_left, tmp_right, level, unit_dict, vis_dict )
                             
                         new_x1 = -1
                     break            
@@ -1152,7 +1229,7 @@ def scanHoleXNeg( x1, this_y, dx1, dy1, left, right, level, unit_dict ):
             else:
                 tmp_left = new_left
                 tmp_right = old_right
-            scanHoleXNeg( new_x1, y, new_dx1, dy, tmp_left, tmp_right, level, unit_dict)
+            scanHoleXNeg( new_x1, y, new_dx1, dy, tmp_left, tmp_right, level, unit_dict, vis_dict )
                 
                 
         #if we didnt find any visible tile on this y line, than stop checking
@@ -1162,7 +1239,7 @@ def scanHoleXNeg( x1, this_y, dx1, dy1, left, right, level, unit_dict ):
             
             
 
-def scanHoleXPos( x1, this_y, dx1, dy1, left, right, level, unit_dict ):
+def scanHoleXPos( x1, this_y, dx1, dy1, left, right, level, unit_dict, vis_dict ):
     
     if left <= right:
         return
@@ -1199,10 +1276,15 @@ def scanHoleXPos( x1, this_y, dx1, dy1, left, right, level, unit_dict ):
             if x < min_x:
                 continue
             
+            tile = (x,y)
+            
+            if at_least_one_x and tile in vis_dict:
+                continue
+            
             dx = dx1+(x-x1)
             
             if level.opaque( x, y, 1 ):
-                unit_dict[ (x,y) ] = 0
+                unit_dict[ tile ] = 0
                 
                 if new_x1 != -1:
                     if dy1 > 0:
@@ -1211,7 +1293,7 @@ def scanHoleXPos( x1, this_y, dx1, dy1, left, right, level, unit_dict ):
                     else:
                         tmp_left = level.getMask( dx, dy )[MASK_MIN]
                         tmp_right = new_right
-                    scanHoleXPos( new_x1, y, new_dx1, dy, tmp_left, tmp_right, level, unit_dict)
+                    scanHoleXPos( new_x1, y, new_dx1, dy, tmp_left, tmp_right, level, unit_dict, vis_dict )
                         
                     
                 new_x1 = x
@@ -1239,7 +1321,9 @@ def scanHoleXPos( x1, this_y, dx1, dy1, left, right, level, unit_dict ):
                     min_x = x
                     at_least_one_x = True
 
-                unit_dict[ (x,y) ] = perc
+                unit_dict[ tile ] = perc
+                if perc > VISIBILITY_MIN:
+                    vis_dict[ tile ] = 1
             else:
                 if at_least_one_x:
                     if new_x1 != -1:
@@ -1249,7 +1333,7 @@ def scanHoleXPos( x1, this_y, dx1, dy1, left, right, level, unit_dict ):
                         else:
                             tmp_left = old_left
                             tmp_right = new_right
-                        scanHoleXPos( new_x1, y, new_dx1, dy, tmp_left, tmp_right, level, unit_dict)
+                        scanHoleXPos( new_x1, y, new_dx1, dy, tmp_left, tmp_right, level, unit_dict, vis_dict )
                             
                         new_x1 = -1
                     break            
@@ -1262,7 +1346,7 @@ def scanHoleXPos( x1, this_y, dx1, dy1, left, right, level, unit_dict ):
             else:
                 tmp_left = old_left
                 tmp_right = new_right
-            scanHoleXPos( new_x1, y, new_dx1, dy, tmp_left, tmp_right, level, unit_dict)
+            scanHoleXPos( new_x1, y, new_dx1, dy, tmp_left, tmp_right, level, unit_dict, vis_dict )
                 
                 
         #if we didnt find any visible tile on this y line, than stop checking
@@ -1273,7 +1357,7 @@ def scanHoleXPos( x1, this_y, dx1, dy1, left, right, level, unit_dict ):
             
 
 
-def scanZeroLineX( unit_x, unit_y, level, unit_dict, sgn = 1 ):
+def scanZeroLineX( unit_x, unit_y, level, unit_dict, vis_dict, sgn = 1 ):
     vis = 1
     
     #default values if we dont find a blocking cube
@@ -1293,26 +1377,29 @@ def scanZeroLineX( unit_x, unit_y, level, unit_dict, sgn = 1 ):
         
     for x in xrange( start, stop, step ):
         
+        tile = (x, unit_y)
+        
         if not vis:
-            unit_dict[ (x,unit_y) ] = -1
+            unit_dict[ tile ] = -1
             continue
         
         if level.opaque( x, unit_y, 1 ):
-            unit_dict[ (x,unit_y) ] = -1
+            unit_dict[ tile ] = -1
             vis = 0
             if sgn > 0:
                 maxi = level.getMask( x-unit_x, 0 )[MASK_MAX]
             else:
                 maxi = level.getMask( x-unit_x, 0 )[MASK_DOWN_RIGHT], level.getMask( x-unit_x, 0 )[MASK_UP_RIGHT] 
         else:
-            unit_dict[ (x,unit_y) ] = 1
+            unit_dict[ tile ] = 1
+            vis_dict[ tile ] = 1
             
             
     return maxi
             
 
 
-def scanZeroLineY( unit_x, unit_y, level, unit_dict, sgn = 1 ):
+def scanZeroLineY( unit_x, unit_y, level, unit_dict, vis_dict, sgn = 1 ):
     vis = 1
     
     if sgn > 0:
@@ -1331,12 +1418,14 @@ def scanZeroLineY( unit_x, unit_y, level, unit_dict, sgn = 1 ):
         
     for y in xrange( start, stop, step ):
 
+        tile = (unit_x, y)
+
         if not vis:
-            unit_dict[ (unit_x, y) ] = -1
+            unit_dict[ tile ] = -1
             continue
         
         if level.opaque( unit_x, y, 1 ):
-            unit_dict[ (unit_x, y) ] = -1
+            unit_dict[ tile ] = -1
             vis = 0
 
             maxi = level.getMask( 0, y-unit_y )[MASK_MAX]
@@ -1344,7 +1433,8 @@ def scanZeroLineY( unit_x, unit_y, level, unit_dict, sgn = 1 ):
                 
                 
         else:
-            unit_dict[ (unit_x, y) ] = 1
+            unit_dict[ tile ] = 1
+            vis_dict[ tile ] = 1
             
             
     return mini, maxi
