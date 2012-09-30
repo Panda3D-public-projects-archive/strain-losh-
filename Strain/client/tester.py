@@ -156,8 +156,8 @@ class Tester(DirectObject.DirectObject):
             for tile in dic.keys():
                 if dic[tile]> VISIBILITY_MIN:
                     vis_list.append(tile)
-                    #dic[tile] = 1
-                    dic[tile] = '{0:2.0%}'.format(dic[tile])
+                    dic[tile] = 1
+                    #dic[tile] = '{0:2.0%}'.format(dic[tile])
                     #del( dic[tile] )
                 else:
                     invis_list.append(tile)
