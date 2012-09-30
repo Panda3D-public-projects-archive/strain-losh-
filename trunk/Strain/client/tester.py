@@ -144,26 +144,33 @@ class Tester(DirectObject.DirectObject):
 
     def cilin(self):
 
-
+        
+        t = time.clock()        
         dic = levelVisibilityDict3(self.units, self.level)
+        t2 = time.clock()
+        print "levelvis timer:::", (t2-t)*1000, "ms"
+        
         if dic:
             vis_list = []
             invis_list = []
-            for tile in dic:
+            for tile in dic.keys():
                 if dic[tile]> VISIBILITY_MIN:
                     vis_list.append(tile)
                     #dic[tile] = 1
                     dic[tile] = '{0:2.0%}'.format(dic[tile])
+                    #del( dic[tile] )
                 else:
                     invis_list.append(tile)
-                    dic[tile] = '{0:2.0%}'.format(dic[tile])
+                    #dic[tile] = '{0:2.0%}'.format(dic[tile])
+                    del( dic[tile] )
 
                     
-            print "-------visible:", vis_list
-            print "invis:", invis_list
+            #print "-------visible:", vis_list
+            #print "invis:", invis_list
         self.writeNumbers(dic)
 
-        """        
+                
+        """
         t = time.clock()
         dic = levelVisibilityDict(self.units, self.level)
         t2 = time.clock()
