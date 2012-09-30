@@ -760,7 +760,7 @@ def visibleWalls( unit_list, level ):
     
     visible_walls = []
     
-    lvl_vis = levelVisibilityDict(unit_list, level)
+    lvl_vis = levelVisibilityDict3(unit_list, level)
     
     for x in xrange( level.maxgridX ):
         for y in xrange( level.maxgridY ):
