@@ -43,7 +43,7 @@ class DBLocalProxyApi():
             except:
                 pass
             
-        return ( -1, "assassins2", 1000, 1, RED_ID, 0, 0, 0, '0.1', 0, "local test game", 0, pickled )
+        return ( -1, "level2", 1000, 1, RED_ID, 0, 0, 0, '0.1', 0, "local test game", 0, pickled )
 
     
     
