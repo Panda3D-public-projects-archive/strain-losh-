@@ -138,45 +138,118 @@ class Tester(DirectObject.DirectObject):
         self.cilin()
 
 
+    def testDiff(self):
 
+        """
+        print "maska left:", self.level.getMask(-21, -24)[MASK_LEFT]
+        print "maska right:", self.level.getMask(-21,-24)[MASK_RIGHT]
+        
+        print "obs mask min:", self.level.getMask(-(21-2), -20)[MASK_MIN]
+        print "obs mask max:", self.level.getMask(-(21-2), -20)[MASK_MAX]
+        
+        LOS( (21,0), (0,24), self.level)
+        return
+        """
+        diff_dic = {}
+        
+        ok = True
+                
+                
+                
+                
+                
+        for unit_x in xrange( self.level.maxX-1, -1, -1 ):
+            for unit_y in xrange( self.level.maxY-1, -1, -1 ):
+                
+                if self.level.opaque( unit_x, unit_y, 1 ):
+                    continue
 
-
+                test_dic = {}
+                #make test_dic
+                for x in xrange( self.level.maxX ):
+                    for y in xrange( self.level.maxY ):
+                        perc = LOS( (unit_x, unit_y), (x,y), self.level )
+                        if perc > VISIBILITY_MIN:
+                            test_dic[ (x,y) ] = perc
+                
+                print "\n\nview from:", ( unit_x, unit_y )
+                self.units = []
+                unit_dict = {}
+                unit_dict['pos'] = ( unit_x, unit_y )
+                self.units.append( unit_dict )
+                
+                t = time.clock()        
+                dic3 = levelVisibilityDict(self.units, self.level)
+                t2 = time.clock()
+                print "dic3 timer:::", (t2-t)*1000, "ms"
+                #print "dic3:", dic3
+                
+                
+                for x in xrange( self.level.maxX ):
+                    for y in xrange( self.level.maxY ):
+                        
+                        t = (x,y)
+                        
+                        if t in test_dic:
+                            if t not in dic3:
+                                print "fali u dic3:", t, "test_dic:", test_dic[t], "LOS:", LOS((unit_x,unit_y), t, self.level)
+                                ok = False
+                                #return
+                            else:     
+                                if test_dic[t] != dic3[t]:
+                                    diff_dic[t] = (test_dic[t], dic3[t])
+                                    print "diff: ", t, " test_dict:",test_dic[t], "  dic3:", dic3[t]
+                                    #ok = False
+                                    #return                                    
+                            
+                        if t in dic3:
+                            if not t in test_dic:
+                                print "viska u dic3:", t, "dic3:", dic3[t], "LOS:", LOS((unit_x,unit_y), t, self.level)
+                                ok = False
+                                #return                                 
+                                
+                
+        if ok:
+            print "sve ok"
+        else:
+            print "NIJE OKKK!!!!"
 
     def cilin(self):
 
+        #self.testDiff()
         
         t = time.clock()        
-        dic = levelVisibilityDict3(self.units, self.level)
-        t2 = time.clock()
-        print "levelvis timer:::", (t2-t)*1000, "ms"
-        
-        if dic:
+        dic3 = levelVisibilityDict(self.units, self.level)
+        t2 = time.clock()        
+
+            
+        if dic3:
             vis_list = []
             invis_list = []
-            for tile in dic.keys():
-                if dic[tile]> VISIBILITY_MIN:
+            for tile in dic3.keys():
+                if dic3[tile]> VISIBILITY_MIN:
                     vis_list.append(tile)
-                    dic[tile] = 1
-                    #dic[tile] = '{0:2.0%}'.format(dic[tile])
-                    #del( dic[tile] )
+                    dic3[tile] = 1
+                    #diff_dic[tile] = '{0:2.0%}'.format(diff_dic[tile])
+                    #del( diff_dic[tile] )
                 else:
                     invis_list.append(tile)
-                    #dic[tile] = '{0:2.0%}'.format(dic[tile])
-                    del( dic[tile] )
+                    #diff_dic[tile] = '{0:2.0%}'.format(diff_dic[tile])
+                    del( dic3[tile] )
 
                     
             #print "-------visible:", vis_list
             #print "invis:", invis_list
-        self.writeNumbers(dic)
+        self.writeNumbers(dic3)
 
                 
         """
         t = time.clock()
-        dic = levelVisibilityDict(self.units, self.level)
+        dic3 = levelVisibilityDict(self.units, self.level)
         t2 = time.clock()
         print "levelvis timer:::", (t2-t)*1000, "ms"
         
-        self.writeNumbers(dic)        
+        self.writeNumbers(dic3)        
         return 
         """
         
