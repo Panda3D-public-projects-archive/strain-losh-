@@ -25,25 +25,28 @@ class Browser():
         
         self.doc = self.parent.rContext.LoadDocument('data/rml/main_menu.rml')
 
-        element = self.doc.GetElementById('btn_new')
-        element.AddEventListener('click', self.newGame, True)
+#        element = self.doc.GetElementById('btn_new')
+#        element.AddEventListener('click', self.newGame, True)
         element = self.doc.GetElementById('btn_enter')
         element.AddEventListener('click', self.enterGame, True)
-        element = self.doc.GetElementById('main_middle')
-        for child in element.child_nodes:
-            child.AddEventListener('click', self.selectGame, True)
+        
+#        element = self.doc.GetElementById('main_middle')
+#        for child in element.child_nodes:
+#            child.AddEventListener('click', self.selectGame, True)
 #        element = self.doc.GetElementById('btn_obs')
 #        element.AddEventListener('click', self.obsGame, True)
 #        element = self.doc.GetElementById('btn_replay')
 #        element.AddEventListener('click', self.viewReplay, True)
         
-        self.updateGames()
-        self.updateNews()
         
         element = self.doc.GetElementById('status_bar')
         element.inner_rml = 'Username: ' + self.parent.player
         
+        self.updateGames()
+        self.updateNews()
+        
         self.doc.Show()
+        
     
     def addGameListEvents(self):
         element = self.doc.GetElementById('main_middle')
@@ -122,8 +125,8 @@ class Browser():
         
                     
     def updateGames(self):
-        #element = self.doc.GetElementById('main_middle')
-        #element.inner_rml = ' '
+        element = self.doc.GetElementById('main_middle')
+        element.inner_rml = ' '
         self.game_list = []
         if self.parent.unaccepted_games != None:
             for row in self.parent.unaccepted_games:
@@ -157,7 +160,7 @@ class Browser():
 #                              <div class="game_item_text"> Turn: ' + turn + ', On turn: ' + on_turn + '</div> \
 #                              <div class="game_item_text">Status: Invited</div> \
 #                              </div>'
-                self.parent.rContext.Update()
+#                self.parent.rContext.Update()
         
         if self.parent.active_games != None:
             for row in self.parent.active_games:
@@ -191,7 +194,7 @@ class Browser():
 #                              <div class="game_item_text"> Turn: ' + turn + ', On turn: ' + on_turn + '</div> \
 #                              <div class="game_item_text">Status: Active</div> \
 #                              </div>'
-                self.parent.rContext.Update()
+#                self.parent.rContext.Update()
         
         if self.parent.waiting_games != None:
             for row in self.parent.waiting_games:
@@ -225,7 +228,7 @@ class Browser():
 #                              <div class="game_item_text"> Turn: ' + turn + ', On turn: ' + on_turn + '</div> \
 #                              <div class="game_item_text">Status: Waiting</div> \
 #                              </div>'
-                self.parent.rContext.Update()
+#                self.parent.rContext.Update()
         
 #        element = self.doc.GetElementById('main_middle')
 #        element.inner_rml = inner_rml
@@ -303,3 +306,5 @@ class Browser():
                       <div class="game_item_text">Budget: ' + budget + '</div>'
         element = self.doc.GetElementById('main_right')
         element.inner_rml = inner_rml
+        
+
