@@ -1,0 +1,233 @@
+body
+{
+	width: 100%;
+	height: 100%;
+	
+	font-family: Verdana;
+	font-size: 11px;
+	font-weight: normal;
+	font-style: normal;
+	shadow-font-effect: shadow;
+	shadow-offset: 1px 1px;
+	shadow-color: black;
+	background-decorator: image; 
+	background-image: sc2.jpg;
+}
+
+div#body
+{
+	width: 100%;
+	height: 100%;
+	float:left;
+}
+
+div#logo
+{
+	width: 300px;
+	height: 69px;
+	margin-left:auto;
+	margin-right: auto;
+	margin-top: 10px;
+	logo-decorator: image;
+    logo-image: logo.png;
+	float: left;
+}
+
+div#buttons
+{
+	width: 650px;
+	height: 70px;
+	margin-left: auto;
+	margin-right: auto;
+	float:left;
+}
+div#buttons_container
+{
+	width: 100%;
+	height: 95px;
+	position: absolute;
+	top: 80px;
+	float:left;
+}
+
+div#chat
+{
+	width: 350px;
+	height: 180px;
+	position: absolute;
+	bottom: 0px;
+	left:15px;
+}
+
+div#news
+{
+	width: 350px;
+	height: 180px;
+	position: absolute;
+	bottom: 0px;
+	right: 15px;
+}
+
+div.button
+{
+	width: 120px;
+	height: 30px;
+	margin-right: 10px;
+	margin-bottom: 5px;
+	background-color: #8b0000;
+	float:left;
+}
+
+div.button:hover
+{
+	background-color: #ab2020;
+}
+
+div.button:active
+{
+	background-color: #cb4040;
+}
+
+div.unused_button
+{
+	width: 120px;
+	height: 30px;
+	margin-right: 10px;
+	margin-bottom: 5px;
+	float:left;
+}
+
+div.inactive_button
+{
+	width: 120px;
+	height: 30px;
+	margin-right: 10px;
+	margin-bottom: 5px;
+	float:left;
+	background-color: #3b0000;
+}
+
+div.button_text
+{
+	width: 115px;
+	height: 20px;
+	margin: 3px auto auto auto;
+	font-size: 13px;
+	font-weight: bold;
+	float:left;
+	text-align: center;
+	
+}
+
+div#window_title
+{
+	width: 120px;
+	height: 20px;
+	float:left;
+	background-color: #8b0000;
+}
+
+div#window_title_text
+{
+	width: 120px;
+	height: 20px;
+	margin-left: 10px;
+	margin-top: -1px;
+	text-align: left;
+}
+
+div#chat_container
+{
+	width: 100%;
+	height: 115px;
+	float:left;
+	background-color: #00000088;
+}
+
+div#news_container
+{
+	width:100%;
+	height:115px;
+	background-color: #00000088;
+	float:left;
+	overflow-y: scroll;
+}
+
+div#news_item_container
+{
+	width: 335px;
+	height: 115px;
+	overflow-y: scroll;
+	float: left;
+}
+
+div.news_item
+{
+	width: 335px;
+	float: left;
+}
+
+div.news_item_date
+{
+	width: 335px;
+	height: 15px;
+	font-weight: bold;
+	float:left;
+}
+
+div.news_item_text
+{
+	width: 335px;
+	margin-bottom: 3px;
+	float:left;
+}
+
+div#chatline_container
+{
+	width: 335px;
+	height: 97px;
+	overflow-y: scroll;
+	float: left;
+}
+
+input
+{
+	width: 335px;
+	height: 17px;
+	float: left;
+	background-color: #000000aa;
+	color: white;
+	padding-top: 2px;
+}
+
+div.chatline
+{
+	width:335px;
+	float:left;
+}
+
+div.vertical_bar_185
+{
+	width: 10px;
+	height: 100%;
+	background-color: #8b0000;
+	float:left;
+	margin-right: 5px;
+}
+
+div#vertical_bar_280
+{
+	width: 10px;
+	height: 280px;
+	background-color: #8b0000;
+	position: absolute;
+	top: 20px;
+	left: 0px;
+}
+
+div.horizontal_filler_5
+{
+	width: 100%;
+	height:5px;
+	float:left;
+}
