@@ -64,7 +64,7 @@ class LoginScreen():
             return 
         
         self.parent.player = username
-        self.parent.fsm.request('Browser')
+        self.parent.fsm.request('Lobby')
 
 
     def loginButRedPressed(self):
@@ -77,7 +77,7 @@ class LoginScreen():
             return 
         
         self.parent.player = username
-        self.parent.fsm.request('Browser')
+        self.parent.fsm.request('Lobby')
         
         
     def loginButBluePressed(self):
@@ -90,5 +90,5 @@ class LoginScreen():
             return 
         
         self.parent.player = username
-        self.parent.fsm.request('Browser')
+        self.parent.fsm.request('Lobby')
         
