@@ -16,6 +16,7 @@ from panda3d.rocket import *
 # strain related imports
 from strain.loginscreen import LoginScreen
 from strain.browser import Browser
+from strain.lobby import Lobby
 from strain.gametype import GameType
 from strain.client_messaging import ClientMsg
 from strain.net import Net
@@ -56,9 +57,10 @@ class App():
         self.budget = None
         self.game_name = None
         self.browser = None
+        self.lobby = None
         
         #setup screen (initialize ShowBase to create window)
-        self.screen = Screen(self, (800,600))
+        self.screen = Screen(self, (980,720))
         self.rRegion = RocketRegion.make('main_menu', base.win)
         self.rContext = self.rRegion.getContext()
         ih = RocketInputHandler()
@@ -95,8 +97,9 @@ class AppFSM(FSM.FSM):
         self.parent = parent
 
         self.defaultTransitions = {
-            'Login' : [ 'Browser' ],
-            'Browser' : [ 'NewGame', 'ContinueGame' ],
+            'Login' : [ 'Lobby' ],
+            'Lobby' : ['Browser', 'NewGame'],
+            'Browser' : [ 'ContinueGame' ],
             'NewGame' : [ 'Deploy' ]
             }
         
@@ -107,6 +110,13 @@ class AppFSM(FSM.FSM):
     def exitLogin(self):
         self.parent.login.cleanup()      
         del self.parent.login
+
+    def enterLobby(self):
+        self.parent.lobby = Lobby(self.parent)
+        
+    def exitLobby(self):
+        self.parent.lobby.cleanup()
+        del self.parent.lobby
         
     def enterBrowser(self):
         self.parent.browser = Browser(self.parent)
