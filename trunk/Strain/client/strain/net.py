@@ -49,22 +49,22 @@ class Net():
             self.parent.levels = msg[1]
         elif msg[0] == MY_ACTIVE_GAMES:
             self.parent.active_games = msg[1]
-            if hasattr(self.parent, 'browser'):
+            if self.parent.browser != None:
                 self.parent.browser.updateGames()
         elif msg[0] == MY_UNACCEPTED_GAMES:
             self.parent.unaccepted_games = msg[1]
-            if hasattr(self.parent, 'browser'):
+            if self.parent.browser != None:
                 self.parent.browser.updateGames()
         elif msg[0] == MY_WAITING_GAMES:
             self.parent.waiting_games = msg[1]
-            if hasattr(self.parent, 'browser'):
+            if self.parent.browser != None:
                 self.parent.browser.updateGames()
         elif msg[0] == EMPTY_PUBLIC_GAMES:
             None            
         elif msg[0] == NEWS_FEED:
             self.parent.news_items = msg[1]
-            if self.parent.browser != None:
-                self.parent.browser.updateNews()
+            if self.parent.lobby != None:
+                self.parent.lobby.updateNews()
         elif msg[0] == NEW_GAME_STARTED:
             from strain.gameinstance import GameInstance
             self.parent.game_instance = GameInstance(self.parent, 'New', msg[1])
