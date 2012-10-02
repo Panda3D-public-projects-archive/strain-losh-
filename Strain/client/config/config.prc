@@ -18,7 +18,7 @@ window-title Strain
 # These control the placement and size of the default rendering window.
 
 #win-origin 50 50
-win-size 800 600
+win-size 980 720
 
 # Uncomment this line if you want to run Panda fullscreen instead of
 # in a window.
@@ -125,8 +125,9 @@ yield-timeslice #t
 server-ip 127.0.0.1
 #server-ip 178.79.164.4
 #server-port 56005
-server-port 80808
+#server-port 80808
+server-port 15272
 
-resx 800
-resy 600
+resx 980
+resy 720
 
