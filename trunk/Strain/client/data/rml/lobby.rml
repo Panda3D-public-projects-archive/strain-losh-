@@ -1,0 +1,50 @@
+<rml>
+	<head>
+		<link type="text/css" rel="stylesheet" href="lobby.rcss"/>
+	</head>
+	<body>
+		<div id="body">
+			<div id="logo"></div>
+			<div id="buttons_container">
+				<div id="buttons">
+					<div id="btn1" class="button"><div id="btn1txt" class="button_text">New Game</div></div>
+					<div id="btn2" class="button"><div id="btn2txt" class="button_text">Continue Game</div></div>
+					<div id="btn3" class="inactive_button"><div id="btn3txt" class="button_text">Ladder Game</div></div>
+					<div id="btn4" class="inactive_button"><div id="btn4txt" class="button_text">View Ladder</div></div>
+					<div id="btn5" class="inactive_button"><div id="btn5txt" class="button_text">Watch Replay</div></div>
+					<div id="btn6" class="unused_button"><div id="btn6txt" class="button_text"></div></div>
+					<div id="btn7" class="unused_button"><div id="btn7txt" class="button_text"></div></div>
+					<div id="btn8" class="inactive_button"><div id="btn8txt" class="button_text">Quick Game</div></div>
+					<div id="btn9" class="unused_button"><div id="btn9txt" class="button_text"></div></div>
+					<div id="btn10" class="unused_button"><div id="btn10txt" class="button_text"></div></div>
+				
+				</div>
+			</div>
+			<div id="chat">
+				<div id="window_title"><div id="window_title_text">Chat</div></div>
+				<div id="chat_container">
+					<div class="vertical_bar_185"></div>
+					<div id="chatline_container">
+						<div class="chatline">Krav: fak pokrenuo sam sinoc kill -9 -1 i brijem da je to ubilo bazu :)</div>
+						<div class="chatline">Vjeko: Profinjen izbor parametara. :)</div>
+						<div class="chatline">Ogi: Tesko ti bilo napravit kill -9 PID gah, jebiga neam pojma, probat cu ju danas restartati...Inace, to je ubilo i webserver tak da ne rade linkovi na zitd i strain. Ajd nemoj to vise radit kk?</div>
+						<div class="chatline">Krav: necu bilo je u naletu ludila </div>
+						<div id="first_chatline" class="chatline">Ogi: Mirko "Ludi" Fabris zvani Krav!</div>
+					</div>
+					<input id="chat_input" type="text"></input>
+				</div>
+				<div class="horizontal_filler_5"></div>
+				<div id="btnchat" class="button"><div class="button_text">Close chat</div></div>
+			</div>
+			<div id="news">
+				<div id="window_title"><div id="window_title_text">News</div></div>
+				<div id="news_container">
+					<div class="vertical_bar_185"></div>
+					<div id="news_item_container"></div>
+				</div>
+				<div class="horizontal_filler_5"></div>
+				<div id="btnnews" class="button"><div class="button_text">Close News</div></div>
+			</div>
+		</div>
+	</body>
+</rml>
