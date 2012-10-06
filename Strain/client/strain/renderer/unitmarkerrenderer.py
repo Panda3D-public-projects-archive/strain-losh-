@@ -8,7 +8,6 @@ class UnitMarkerRenderer():
         self.parent = parent
         self.enemy_markers = {}
         self.tex_selected = loader.loadTexture('selected.png')
-        self.tex_enemy = loader.loadTexture('enemy_circle.png')
                 
         taskMgr.add(self.markEnemyUnits, 'MarkEnemyUnitsTask', sort=2)
 

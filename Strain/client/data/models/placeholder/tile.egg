@@ -1,0 +1,63 @@
+<CoordinateSystem> { Z-Up }
+
+<Comment> {
+  "egg-trans -tbnall -o 'C:\floortile.egg' 'C:\floortile.egg'"
+}
+<Material> Tile {  
+  <Scalar> emitr { 0 }
+  <Scalar> emitg { 0 }
+  <Scalar> emitb { 0 }
+  <Scalar> specr { 0.5 }
+  <Scalar> specg { 0.5 }
+  <Scalar> specb { 0.5 }
+  <Scalar> shininess { 12.5 }
+}
+<Group> FloorTile {
+  <Transform> {
+    <Matrix4> {
+      1 0 0 0
+      0 1 0 0
+      0 0 1 0
+      0.5 0.5 0 1
+    }
+  }
+  <VertexPool> FloorTile {
+    <Vertex> 0 {
+      -0 0 0
+      <UV> {
+        1 1
+        <Tangent> { -1 0 0 }
+        <Binormal> { 0 -1 0 }
+      }
+    }
+    <Vertex> 1 {
+      0 1 0
+      <UV> {
+        1 0
+        <Tangent> { -1 0 0 }
+        <Binormal> { 0 -1 0 }
+      }
+    }
+    <Vertex> 2 {
+      1 0 0
+      <UV> {
+        0 1
+        <Tangent> { -1 0 0 }
+        <Binormal> { 0 -1 0 }
+      }
+    }
+    <Vertex> 3 {
+      1 1 0
+      <UV> {
+        0 0
+        <Tangent> { -1 0 0 }
+        <Binormal> { 0 -1 0 }
+      }
+    }
+  }
+  <Polygon> {
+    <Normal> { 0 0 1 }
+    <MRef> { Tile }
+    <VertexRef> { 3 1 0 2 <Ref> { FloorTile } }
+  }
+}

@@ -52,15 +52,6 @@ multisamples 8
 notify-level warning
 default-directnotify-level warning
 
-# These specify where model files may be loaded from.  You probably
-# want to set this to a sensible path for yourself.  $THIS_PRC_DIR is
-# a special variable that indicates the same directory as this
-# particular Config.prc file.
-
-##model-path    $MAIN_DIR
-##model-path    $THIS_PRC_DIR/..
-##model-path    $THIS_PRC_DIR/../models
-
 # This enable the automatic creation of a TK window when running
 # Direct.
 
@@ -86,7 +77,7 @@ use-movietexture #t
 
 hardware-animated-vertices #f
 
-# Enable the model-cache, but only for models, not textures.
+# Enable the model-cache
 
 #model-cache-dir $MAIN_DIR/tmp
 #model-cache-textures #f
@@ -108,22 +99,25 @@ basic-shaders-only #f
 #or false to hold each frame until the next one is ready
 interpolate-frames 1
 
-#custom app resources dirs
-model-path $MAIN_DIR/data/models/
-model-path $MAIN_DIR/data/fonts/
-model-path $MAIN_DIR/data/shaders/
-model-path $MAIN_DIR/data/textures/
-sound-path $MAIN_DIR/data/sounds/
-particle-path $MAIN_DIR/data/particles/
-
 # Set this true to yield the timeslice at the end of the frame to be more polite to other applications that are trying to run.
 yield-timeslice #t
 
 #threading-model /Draw
 
+#custom app resources dirs
+model-path $MAIN_DIR/data/models/
+model-path $MAIN_DIR/data/models/placeholder/
+model-path $MAIN_DIR/data/fonts/
+model-path $MAIN_DIR/data/shaders/
+model-path $MAIN_DIR/data/textures/
+#sound-path $MAIN_DIR/data/sounds/
+#particle-path $MAIN_DIR/data/particles/
+
 # Custom Strain parameters
 server-ip 127.0.0.1
+#server-ip 192.168.5.100
 #server-ip 178.79.164.4
+#server-ip krav.servebeer.com
 #server-port 56005
 #server-port 80808
 server-port 15272

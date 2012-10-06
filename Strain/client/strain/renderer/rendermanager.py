@@ -38,7 +38,7 @@ class RenderManager():
             del unit_renderer
         self.unit_renderer_dict = {}
         for unit in self.parent.local_engine.units.itervalues():
-            unit_renderer = UnitRenderer(self, self.node)
+            unit_renderer = UnitRenderer(self, self.level_renderer.node)
             unit_renderer.loadForGameEngine(unit)
             self.unit_renderer_dict[unit['id']] = unit_renderer
         
