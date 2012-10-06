@@ -26,7 +26,7 @@ class LevelRenderer():
         self.maxX = x
         self.maxY = y        
         
-        self.floor_tex_C = loader.loadTexture("tile3.png")
+        self.floor_tex_C = loader.loadTexture("tile.png")
         #self.floor_tex_N = loader.loadTexture("floortile_N.png")
         
         self.forcewall_tex_C = loader.loadTexture("rnbw.png")
@@ -157,7 +157,7 @@ class LevelRenderer():
     
     def loadModel(self, type, x, y, tile_size, zpos, i=None):
         if type == 'FLOOR1':
-            model = loader.loadModel('floortile')
+            model = loader.loadModel('tile')
             model.setScale(tile_size)
             model.setPos(x*tile_size, y*tile_size, zpos)
             model.setTexture(self.floor_tex_C)
@@ -177,12 +177,12 @@ class LevelRenderer():
     
     def loadWallModel(self, type, x, y, h, tile_size, zpos):
         if type == 'Wall1' or type == 'Wall2' or type == 'HalfWall' or type == 'Ruin':
-            model = loader.loadModel("WallA")
+            model = loader.loadModel("wall")
             model.setScale(tile_size)
             model.setPos(x*tile_size, y*tile_size, zpos)
             model.setH(h)
         elif type == 'ClosedDoor':
-            model = loader.loadModel("DoorA")
+            model = loader.loadModel("door")
             model.setScale(tile_size)
             model.setPos(x*tile_size, y*tile_size, zpos)
             model.setH(h)
@@ -191,7 +191,7 @@ class LevelRenderer():
             door = model.find("**/Door*")
             door.setColor(0.7,0.2,0.2,0.0)
         elif type == 'OpenedDoor':
-            model = loader.loadModel("DoorA")
+            model = loader.loadModel("door")
             model.setScale(tile_size)
             model.setPos(x*tile_size, y*tile_size, zpos)
             model.setH(h)
@@ -231,11 +231,11 @@ class LevelRenderer():
         dlight1 = DirectionalLight("dlight1")
         dlight1.setColor(VBase4(0.7, 0.7, 0.7, 1.0))
         self.dlnp1 = self.node.attachNewNode(dlight1)
-        self.dlnp1.setHpr(0, -50, 0)
+        self.dlnp1.setHpr(0, -90, 0)
         self.node.setLight(self.dlnp1)
 
         alight = AmbientLight("alight")
-        alight.setColor(VBase4(0.4, 0.4, 0.4, 1.0))
+        alight.setColor(VBase4(0.6, 0.6, 0.6, 1.0))
         self.alnp = self.node.attachNewNode(alight)
         self.node.setLight(self.alnp)
     

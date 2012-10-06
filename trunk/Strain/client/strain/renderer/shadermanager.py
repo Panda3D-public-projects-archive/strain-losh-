@@ -16,11 +16,13 @@ class ShaderManager():
         self.teamcolor_shader = Shader.load('./data/shaders/teamcolor.sha')
         
     def setOutlineShader(self, node):
+        return
         node.setShader(self.outline_shader) 
         node.setShaderInput('cam', base.camera)  
         node.setAntialias(AntialiasAttrib.MMultisample) 
         
     def setFacingShader(self, node, color=Vec4(1, 1, 1, 0), power=1.1):
+        return
         facingRatioPower = power
         envirLightColor = color        
         node.setShader(self.facing_ratio_shader) 
