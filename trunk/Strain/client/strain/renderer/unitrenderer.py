@@ -87,9 +87,10 @@ class UnitRenderer:
         self.node = self.parent_node.attachNewNode("UnitRendererNode_"+self.id)
         
         i = string.index(name, '_')
-        self.model = loader.loadModel('marine_sergeant')#self.loadModel(name[0:i], name[i+1:], self.team_id)           
+        #self.model = loader.loadModel('marine_sergeant')#self.loadModel(name[0:i], name[i+1:], self.team_id)           
+        self.model = self.loadModel(name[0:i], name[i+1:], self.team_id)           
         self.model.reparentTo(self.node)
-        self.model.setTexture(loader.loadTexture('marine_sergeant.png'))
+        #self.model.setTexture(loader.loadTexture('marine_sergeant.png'))
         
         scale = 0.3
         h = 180
