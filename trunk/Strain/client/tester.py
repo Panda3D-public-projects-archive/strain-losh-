@@ -277,7 +277,7 @@ class Tester(DirectObject.DirectObject):
 
 
 #tester = Tester(level_name='../server/data/levels/l1.txt')
-tester = Tester(level_name='../server/data/levels/assassins.txt')
+#tester = Tester(level_name='../server/data/levels/assassins.txt')
 #tester = Tester(level_name='../server/data/levels/assassins2.txt')
 #tester = Tester(level_name='../server/data/levels/level2.txt')
 run()
