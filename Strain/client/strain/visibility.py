@@ -4,7 +4,7 @@ Created on 22 Sep 2012
 @author: krav
 '''
 import math
-
+from profilestats import profile
 
 
 
@@ -208,13 +208,14 @@ def _visibility3YPercent( unit, level, vis_dict ):
         x_range_pos = level.maxX - unit_x
         
         covered_angles = []
+        min_y = unit_y
         
         #check positive part, x+, y+
         for i in xrange( 1, x_range_pos ):
             if unit_y+i >= level.maxY:
                 break
             
-            left, right = _scanLineYPercent( unit_x, unit_y, i, i, left, right, covered_angles, level, unit_dict, vis_dict )
+            left, right, min_y = _scanLineYPercent( unit_x, unit_y, i, i, left, right, covered_angles, min_y, level, unit_dict, vis_dict )
             
             if left <= right:
                 break
@@ -223,13 +224,14 @@ def _visibility3YPercent( unit, level, vis_dict ):
         right = zero_line[1]
         
         covered_angles = []
-                
+        min_y = unit_y
+                        
         #check negative part, x-, y+
         for i in xrange( -1, -unit_x-1, -1 ):
             if unit_y-i >= level.maxY:
                 break
             
-            left, right = _scanLineYPercent( unit_x, unit_y, i, -i, left, right, covered_angles, level, unit_dict, vis_dict )
+            left, right, min_y = _scanLineYPercent( unit_x, unit_y, i, -i, left, right, covered_angles, min_y, level, unit_dict, vis_dict )
 
             if left <= right:
                 break
@@ -244,13 +246,14 @@ def _visibility3YPercent( unit, level, vis_dict ):
         x_range_pos = level.maxX - unit_x
         
         covered_angles = []
-                   
+        min_y = unit_y
+                           
         #check positive part, x+, y-
         for i in xrange( 1, x_range_pos ):
             if unit_y-i < 0:
                 break
 
-            left, right = _scanLineYPercent( unit_x, unit_y, i, -i, left, right, covered_angles, level, unit_dict, vis_dict )
+            left, right, min_y = _scanLineYPercent( unit_x, unit_y, i, -i, left, right, covered_angles, min_y, level, unit_dict, vis_dict )
         
             if left <= right:
                 break
@@ -259,13 +262,14 @@ def _visibility3YPercent( unit, level, vis_dict ):
         right = -left_45
          
         covered_angles = []
-                
+        min_y = unit_y
+                        
         #check negative part, x-, y-
         for i in xrange( -1, -unit_x-1, -1 ):
             if unit_y+i < 0:
                 break
             
-            left, right = _scanLineYPercent( unit_x, unit_y, i, i, left, right, covered_angles, level, unit_dict, vis_dict )
+            left, right, min_y = _scanLineYPercent( unit_x, unit_y, i, i, left, right, covered_angles, min_y, level, unit_dict, vis_dict )
 
             if left <= right:
                 break
@@ -301,13 +305,14 @@ def _visibility3XPercent( unit, level, vis_dict ):
         y_range_pos = level.maxY - unit_y
     
         covered_angles = []
+        min_x = unit_x
     
         #check positive part, x+, y+
         for i in xrange( 1, y_range_pos ):
             if unit_x+i >= level.maxX:
                 break
             
-            left, right = _scanLineXPercent( unit_x, unit_y, i, i, left, right, covered_angles, level, unit_dict, vis_dict )
+            left, right, min_x = _scanLineXPercent( unit_x, unit_y, i, i, left, right, covered_angles, min_x, level, unit_dict, vis_dict )
     
             if left <= right:
                 break    
@@ -317,13 +322,14 @@ def _visibility3XPercent( unit, level, vis_dict ):
         right = right_45
         
         covered_angles = []
-        
+        min_x = unit_x
+                
         #check negative part, x+, y-
         for i in xrange( -1, -unit_y-1, -1 ):
             if unit_x-i >= level.maxX:
                 break
             
-            left, right = _scanLineXPercent( unit_x, unit_y, -i, i, left, right, covered_angles, level, unit_dict, vis_dict )
+            left, right, min_x = _scanLineXPercent( unit_x, unit_y, -i, i, left, right, covered_angles, min_x, level, unit_dict, vis_dict )
             
             if left <= right:
                 break
@@ -340,12 +346,14 @@ def _visibility3XPercent( unit, level, vis_dict ):
         y_range_pos = level.maxY - unit_y
         
         covered_angles = []
+        min_x = unit_x
+                
         #check positive part, x-, y+
         for i in xrange( 1, y_range_pos ):
             if unit_x-i < 0:
                 break
             
-            left, right = _scanLineXPercent( unit_x, unit_y, -i, i, left, right, covered_angles, level, unit_dict, vis_dict )
+            left, right, min_x = _scanLineXPercent( unit_x, unit_y, -i, i, left, right, covered_angles, min_x, level, unit_dict, vis_dict )
     
             if left <= right:
                 break
@@ -354,13 +362,14 @@ def _visibility3XPercent( unit, level, vis_dict ):
         right = max( zero_line[0], -math.pi )
         
         covered_angles = []
-        
+        min_x = unit_x
+                
         #check negative part, x-, y-
         for i in xrange( -1, -unit_y-1, -1 ):
             if unit_x+i < 0:
                 break
             
-            left, right = _scanLineXPercent( unit_x, unit_y, i, i, left, right, covered_angles, level, unit_dict, vis_dict )
+            left, right, min_x = _scanLineXPercent( unit_x, unit_y, i, i, left, right, covered_angles, min_x, level, unit_dict, vis_dict )
     
             if left <= right:
                 break
@@ -370,17 +379,17 @@ def _visibility3XPercent( unit, level, vis_dict ):
 
 
 
-def _scanLineYPercent( unit_x, unit_y, dx, dy, left, right, covered_angles, level, unit_dict, vis_dict ):   
+def _scanLineYPercent( unit_x, unit_y, dx, dy, left, right, covered_angles, min_y, level, unit_dict, vis_dict ):   
     
     #check if this line is visible at all    
     if left <= right:
-        return left, right
+        return left, right, min_y
         
     unit_y_dy = unit_y + dy
     
     #check for end of level
     if unit_y_dy >= level.maxY or unit_y_dy < 0:
-        return left, right
+        return left, right, min_y
     
     #if vis is = -1 we cannot see this tile and no other tiles in this line till the end of level 
     vis = 1
@@ -399,9 +408,20 @@ def _scanLineYPercent( unit_x, unit_y, dx, dy, left, right, covered_angles, leve
         stop = -1
         step = -1
         
+    at_least_one = False
+    
     for y in xrange( start, stop, step ):
         
         tile = (this_x, y)
+        
+        if dy > 0:
+            if y < min_y:
+                unit_dict[ tile ] = 0
+                continue
+        else:
+            if y > min_y:
+                unit_dict[ tile ] = 0
+                continue
         
         if vis == -1:
             unit_dict[ tile ] = -1
@@ -478,7 +498,7 @@ def _scanLineYPercent( unit_x, unit_y, dx, dy, left, right, covered_angles, leve
             
             #dx > 0 !! check line left for -1
             if left <= right:
-                return left, right
+                return left, right, min_y
             
             if blocked == 2:
                 #dx > 0 !! if the line left is -1 we cant see anything from this line anymore, put vis = -1
@@ -489,7 +509,8 @@ def _scanLineYPercent( unit_x, unit_y, dx, dy, left, right, covered_angles, leve
                     unit_dict[ tile ] = 0
                 
                 continue
-            
+        
+        #-----------not blocked-------------------
         else:
             #do not check this is there was a block of any sorts
             #dx > 0 !! if tile down and left are visible, this is also visible if it is empty (we already checked for that)
@@ -512,24 +533,34 @@ def _scanLineYPercent( unit_x, unit_y, dx, dy, left, right, covered_angles, leve
                 unit_dict[ tile ] = 0
         else:
             #lines must put something regardles of visibility
+            if not at_least_one:
+                min_y = y
+                at_least_one = True
             unit_dict[ tile ] = percent
             if percent > VISIBILITY_MIN:
                 vis_dict[ tile ] = percent
         
-    return left, right
+        
+    if not at_least_one:
+        return left, left, 0
+
+     
+    return left, right, min_y
 
 
 
-def _scanLineXPercent( unit_x, unit_y, dx, dy, left, right, covered_angles, level, unit_dict, vis_dict ):
+def _scanLineXPercent( unit_x, unit_y, dx, dy, left, right, covered_angles, min_x, level, unit_dict, vis_dict ):
     
     if left <= right:
-        return left, right
+        return left, right, min_x
     
     unit_x_dx = unit_x + dx
     
+    """
     #check for end of level
     if unit_x_dx >= level.maxX or unit_x_dx < 0:
-        return left, right
+        return left, right, min_x
+    """
     
     #if vis is = -1 we cannot see this tile and no other tiles in this line till the end of level 
     vis = 1
@@ -548,9 +579,21 @@ def _scanLineXPercent( unit_x, unit_y, dx, dy, left, right, covered_angles, leve
         stop = -1
         step = -1
     
+    at_least_one = False
+    
     for x in xrange( start, stop, step ):
-        
+                
         tile = (x, this_y)
+        
+        if dx > 0:
+            if x < min_x:
+                unit_dict[ tile ] = 0
+                continue
+        else:
+            if x > min_x:
+                unit_dict[ tile ] = 0
+                continue
+            
         
         if vis == -1:
             unit_dict[ tile ] = -1
@@ -627,19 +670,26 @@ def _scanLineXPercent( unit_x, unit_y, dx, dy, left, right, covered_angles, leve
             left, right = _processNewAngle(maxi, mini, left, right, covered_angles)
                     
             if left <= right:
-                return left, right
+                return left, right, min_x
 
             if blocked == 2:
-                unit_dict[ tile ] = 0
+                #dy > 0 !! if the line below is -1 we cant see anything from this line anymore, put vis = -1
+                if unit_dict[ (x, this_y-sgnY) ] == -1:
+                    unit_dict[ tile ] = -1
+                    vis = -1
+                else:
+                    unit_dict[ tile ] = 0
+
                 continue
         #---------------------not blocked------------------
         else:
             #dy > 0 !! if tile down and left are visible, this is also visible if it is empty (we already checked for that)
             if x != unit_x_dx:
-                if unit_dict[ (x-sgnX,this_y) ] == 1 and unit_dict[ (x,this_y-sgnY) ] == 1:
-                    unit_dict[ tile ] = 1
-                    vis_dict[ tile ] = 1
-                    continue
+                if unit_dict[ (x-sgnX,this_y) ] == 1:
+                    if unit_dict[ (x,this_y-sgnY) ] == 1:
+                        unit_dict[ tile ] = 1
+                        vis_dict[ tile ] = 1
+                        continue
 
     
         #if all else fails do the percent check
@@ -653,12 +703,18 @@ def _scanLineXPercent( unit_x, unit_y, dx, dy, left, right, covered_angles, leve
                 unit_dict[ tile ] = 0
         else:
             #must put something regardless of visibility
+            if not at_least_one:
+                min_x = x
+                at_least_one = True
             unit_dict[ tile ] = percent
             if percent > VISIBILITY_MIN:
                 vis_dict[ tile ] = percent
     
         
-    return left, right
+    if not at_least_one:
+        return left, left, 0
+        
+    return left, right, min_x
 
 
 def _processNewAngle( maxi, mini, left, right, covered_angles ):
