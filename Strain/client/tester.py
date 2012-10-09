@@ -43,6 +43,7 @@ class Tester(DirectObject.DirectObject):
         self.unit_renderer = UnitRenderer(self, self.node)
         self.unit_renderers = {}
         self.id_counter = 1
+        self.mode = 1
         
         self.plane = Plane(Vec3(0, 0, 1), Point3(0, 0, ground_level))
         base.accept('mouse1', self.addUnit)
@@ -51,6 +52,8 @@ class Tester(DirectObject.DirectObject):
         base.accept('o', render.analyze)
         base.accept('i', render.ls)
         base.accept('c', self.displayLos)
+        base.accept('1', self.setMode1)
+        base.accept('2', self.setMode2)
 
         """
         self.unit_renderer.loadForTester(1, 1, 'marine_common', 0, 0, utils.HEADING_N)
@@ -67,6 +70,14 @@ class Tester(DirectObject.DirectObject):
         #base.cam.node().getDisplayRegion(0).setSort(20)
         base.cam2dp.node().getDisplayRegion(0).setSort(-20)#@UndefinedVariable
         
+        self.displayLos()
+
+    def setMode1(self):
+        self.mode = 1
+        self.displayLos()
+
+    def setMode2(self):
+        self.mode = 2
         self.displayLos()
 
     def writeNumbers(self, d):
@@ -140,26 +151,13 @@ class Tester(DirectObject.DirectObject):
 
     def testDiff(self):
 
-        """
-        print "maska left:", self.level.getMask(-21, -24)[MASK_LEFT]
-        print "maska right:", self.level.getMask(-21,-24)[MASK_RIGHT]
-        
-        print "obs mask min:", self.level.getMask(-(21-2), -20)[MASK_MIN]
-        print "obs mask max:", self.level.getMask(-(21-2), -20)[MASK_MAX]
-        
-        LOS( (21,0), (0,24), self.level)
-        return
-        """
         diff_dic = {}
         
         ok = True
                 
                 
-                
-                
-                
-        for unit_x in xrange( self.level.maxX-1, -1, -1 ):
-            for unit_y in xrange( self.level.maxY-1, -1, -1 ):
+        for unit_x in xrange( self.level.maxX ):
+            for unit_y in xrange( self.level.maxY ):
                 
                 if self.level.opaque( unit_x, unit_y, 1 ):
                     continue
@@ -179,36 +177,51 @@ class Tester(DirectObject.DirectObject):
                 self.units.append( unit_dict )
                 
                 t = time.clock()        
-                dic3 = levelVisibilityDict(self.units, self.level)
+                dic3 = levelVisibilityDictPercent(self.units, self.level)
                 t2 = time.clock()
                 print "dic3 timer:::", (t2-t)*1000, "ms"
                 #print "dic3:", dic3
-                
+
+                """
+                #ispis test_dicta
+                test2_dic = {}                
+                for tile in test_dic.keys():
+                    #test_dic[tile] = float( test_dic[tile] )
+                    test2_dic[tile] = '{0:2.0%}'.format(test_dic[tile])
+                self.writeNumbers(test2_dic)
+                """
                 
                 for x in xrange( self.level.maxX ):
+                    #for y in xrange( x ):
                     for y in xrange( self.level.maxY ):
                         
                         t = (x,y)
                         
                         if t in test_dic:
                             if t not in dic3:
-                                print "fali u dic3:", t, "test_dic:", test_dic[t], "LOS:", LOS((unit_x,unit_y), t, self.level)
+                                print "fali u dic3:", t, "LOS:", LOS((unit_x,unit_y), t, self.level)
                                 ok = False
                                 #return
                             else:     
                                 if test_dic[t] != dic3[t]:
-                                    diff_dic[t] = (test_dic[t], dic3[t])
-                                    print "diff: ", t, " test_dict:",test_dic[t], "  dic3:", dic3[t]
-                                    #ok = False
-                                    #return                                    
+                                    diff = test_dic[t]-dic3[t]
+                                    if diff > 0.0001:                                            
+                                        diff_dic[t] = (test_dic[t], dic3[t])
+                                        print "diff: ", t, " test_dict:",test_dic[t], "  dic3:", dic3[t], "   d:",diff
+                                        #ok = False
+                                        #return                                    
                             
                         if t in dic3:
                             if not t in test_dic:
                                 print "viska u dic3:", t, "dic3:", dic3[t], "LOS:", LOS((unit_x,unit_y), t, self.level)
                                 ok = False
                                 #return                                 
-                                
-                
+                        
+            
+                #break
+                if not ok:
+                    return
+    
         if ok:
             print "sve ok"
         else:
@@ -216,10 +229,15 @@ class Tester(DirectObject.DirectObject):
 
     def cilin(self):
 
-        #self.testDiff()
+
+        #p = LOS( (0,20), (12,21), self.level )
+        #print p
+        #return
+
+        self.testDiff()
         
         t = time.clock()        
-        dic3 = levelVisibilityDict(self.units, self.level)
+        dic3 = levelVisibilityDictPercent(self.units, self.level)
         t2 = time.clock()        
 
             
@@ -229,18 +247,21 @@ class Tester(DirectObject.DirectObject):
             for tile in dic3.keys():
                 if dic3[tile]> VISIBILITY_MIN:
                     vis_list.append(tile)
-                    dic3[tile] = 1
+                    #dic3[tile] = 1
                     #diff_dic[tile] = '{0:2.0%}'.format(diff_dic[tile])
+                    dic3[tile] = '{0:2.0%}'.format(dic3[tile])
                     #del( diff_dic[tile] )
                 else:
                     invis_list.append(tile)
                     #diff_dic[tile] = '{0:2.0%}'.format(diff_dic[tile])
-                    del( dic3[tile] )
+                    #del( dic3[tile] )
 
                     
             #print "-------visible:", vis_list
             #print "invis:", invis_list
-        self.writeNumbers(dic3)
+        if self.mode == 1:
+            self.writeNumbers(dic3)
+
 
                 
         """
@@ -255,7 +276,8 @@ class Tester(DirectObject.DirectObject):
         
 
 
-tester = Tester(level_name='../server/data/levels/l1.txt')
+#tester = Tester(level_name='../server/data/levels/l1.txt')
+tester = Tester(level_name='../server/data/levels/assassins.txt')
 #tester = Tester(level_name='../server/data/levels/assassins2.txt')
 #tester = Tester(level_name='../server/data/levels/level2.txt')
 run()
