@@ -149,7 +149,7 @@ class Tester(DirectObject.DirectObject):
         self.cilin()
 
 
-    def testDiff(self):
+    def testDiffPercent(self):
 
         diff_dic = {}
         
@@ -223,9 +223,66 @@ class Tester(DirectObject.DirectObject):
                     return
     
         if ok:
-            print "sve ok"
+            print "sve ok - percentage"
         else:
-            print "NIJE OKKK!!!!"
+            print "NIJE OKKK!!!! - percentage"
+
+
+
+    def testDiff(self):
+        ok = True
+                
+        for unit_x in xrange( self.level.maxX ):
+            for unit_y in xrange( self.level.maxY ):
+                
+                if self.level.opaque( unit_x, unit_y, 1 ):
+                    continue
+
+                test_dic = {}
+                #make test_dic
+                for x in xrange( self.level.maxX ):
+                    for y in xrange( self.level.maxY ):
+                        perc = LOS( (unit_x, unit_y), (x,y), self.level )
+                        if perc > VISIBILITY_MIN:
+                            test_dic[ (x,y) ] = 1
+                
+                print "\n\nview from:", ( unit_x, unit_y )
+                self.units = []
+                unit_dict = {}
+                unit_dict['pos'] = ( unit_x, unit_y )
+                self.units.append( unit_dict )
+                
+                t = time.clock()        
+                dic3 = levelVisibilityDict(self.units, self.level)
+                t2 = time.clock()
+                print "dic3 timer:::", (t2-t)*1000, "ms"
+                #print "dic3:", dic3
+
+                for x in xrange( self.level.maxX ):
+                    for y in xrange( self.level.maxY ):
+                        
+                        t = (x,y)
+                        
+                        if t in test_dic:
+                            if t not in dic3:
+                                print "fali u dic3:", t, "LOS:", LOS((unit_x,unit_y), t, self.level)
+                                ok = False
+                                #return
+                            
+                        if t in dic3:
+                            if not t in test_dic:
+                                print "viska u dic3:", t, "dic3:", dic3[t], "LOS:", LOS((unit_x,unit_y), t, self.level)
+                                ok = False
+                                #return                                 
+                        
+                #break
+                if not ok:
+                    return
+    
+        if ok:
+            print "sve ok - 0/1"
+        else:
+            print "NIJE OKKK!!!! - 0/1"
 
     def cilin(self):
 
@@ -234,6 +291,7 @@ class Tester(DirectObject.DirectObject):
         #print p
         #return
 
+        #self.testDiffPercent()
         self.testDiff()
         
         t = time.clock()        
@@ -280,4 +338,7 @@ class Tester(DirectObject.DirectObject):
 #tester = Tester(level_name='../server/data/levels/assassins.txt')
 #tester = Tester(level_name='../server/data/levels/assassins2.txt')
 #tester = Tester(level_name='../server/data/levels/level2.txt')
+#tester = Tester(level_name='../server/data/levels/halls0.txt')
+#tester = Tester(level_name='../server/data/levels/hugeone.txt')
+tester = Tester(level_name='../server/data/levels/level3.txt')
 run()
