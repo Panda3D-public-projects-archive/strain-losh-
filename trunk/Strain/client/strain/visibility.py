@@ -146,46 +146,15 @@ def levelVisibilityDict( unit_list, level ):
     if not unit_list:
         return {}
 
-    unit_dict_x = {}
-    unit_dict_y = {}
-    
     vis_dict = {}
     
     for unit in unit_list:
-        unit_dict_x = _visibility3XPercent(unit, level, vis_dict)
-        unit_dict_y = _visibility3YPercent(unit, level, vis_dict)
+        _visibility3XPercent(unit, level, vis_dict)
+        _visibility3YPercent(unit, level, vis_dict)
     
-        unit_x = unit['pos'][0]
-        unit_y = unit['pos'][1]
-    
-        for x in xrange( level.maxX ):
-            for y in xrange( level.maxY ):
-            
-                k = (x,y)
-                dx = x - unit_x
-                dy = y - unit_y
-                
-        
-                if dx == dy or dx == -dy:            
-                    if k in unit_dict_x:
-                        if k in unit_dict_y:
-                            #print "dic_x:", unit_dict_x[k], "dic_y", unit_dict_y[k]
-                            unit_dict_x[ k ] += unit_dict_y[ k ]
-                            if unit_dict_x[k] > VISIBILITY_MIN:  
-                                vis_dict[k] = unit_dict_x[ k ]
-                    else:
-                        if k in unit_dict_y:
-                            #unit_dict_x[ k ] = unit_dict_y[ k ]
-                            if unit_dict_y[k] > VISIBILITY_MIN:  
-                                vis_dict[k] = unit_dict_y[ k ]
-                #else:
-                #    unit_dict_x[ k ] = unit_dict_y[ k ]
-                #    if unit_dict_x[k] > VISIBILITY_MIN:  
-                #        vis_dict[k] = unit_dict_x[ k ]
-                
-
         
     return vis_dict
+
 
 
 
