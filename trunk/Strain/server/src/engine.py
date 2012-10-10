@@ -467,7 +467,6 @@ class Engine():
 
         #calculate visible walls for every player and store it in vis_walls dict        
         for p in self.needToCheckLevel.values():
-            print "checking for:", p.name
             vis_walls[p.id] = visibleWalls( compileAllUnits( p.units ).values() , self.level)
             #print "player:", p.name, "walls:", vis_walls[p.id]
             
