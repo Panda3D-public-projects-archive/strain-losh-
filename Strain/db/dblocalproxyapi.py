@@ -108,7 +108,7 @@ class DBLocalProxyApi():
             f.close()
             return lst
         except:
-            print traceback.format_exc()
+            #print traceback.format_exc()
             return None        
         
         
