@@ -144,6 +144,8 @@ class Engine():
 
         self.event_handler = EventHandler( self )
         
+        self.needToCheckLevel = {}
+        
         print "Engine started"
 
 
@@ -251,6 +253,7 @@ class Engine():
             self.notify.error( "Unknown message Type: %s", msg )
             return
  
+        self.checkLevel()
         self.event_handler.sendSession()
         self.pickleSelf()    
         
@@ -369,7 +372,8 @@ class Engine():
 
                     
         self.event_handler.addEvent( (UNIT, unit) )
-        self.checkLevel()
+        self.needToCheckLevel[player.id] = player
+        #self.checkLevel()
         self.updateVisibility()
         
         
@@ -457,8 +461,13 @@ class Engine():
         vis_walls = {}
         changes = {}
 
+        #if we dont need to check anything just return
+        if not self.needToCheckLevel:
+            return
+
         #calculate visible walls for every player and store it in vis_walls dict        
-        for p in self.players:
+        for p in self.needToCheckLevel.values():
+            print "checking for:", p.name
             vis_walls[p.id] = visibleWalls( compileAllUnits( p.units ).values() , self.level)
             #print "player:", p.name, "walls:", vis_walls[p.id]
             
@@ -470,8 +479,7 @@ class Engine():
                     continue
 
                 #go through all players and check if this wall can be seen (if it is in vis_walls)
-                for p in self.players:
-                    
+                for p in self.needToCheckLevel.values():
                     #if there is a change from what this player last saw, note it 
                     if (x,y) in vis_walls[p.id]:
                         if self.level._grid[x][y] != self._grid_player[p.id][x][y]:
@@ -483,7 +491,8 @@ class Engine():
             self.event_handler.addEvent( (LEVEL, p) )
 
         
-        
+        #delete everything from dict, we checked everything
+        self.needToCheckLevel = {}
         
         
     def checkVictoryConditions(self):
@@ -579,7 +588,9 @@ class Engine():
                                      
         #check visibility
         self.updateVisibility()
-                                     
+                        
+        for p in self.players:             
+            self.needToCheckLevel[p.id] = p
         self.checkLevel()
         
         self.event_handler.sendSession()
@@ -812,7 +823,8 @@ class Engine():
         self.event_handler.addEvent( (UNIT, unit) )
 
         self.removeDeadUnits()
-        self.checkLevel()
+        self.needToCheckLevel[owner.id] = owner
+        #self.checkLevel()
             
         
         
@@ -930,7 +942,8 @@ class Engine():
         self.removeDeadUnits()        
                 
         self.updateVisibility()
-        self.checkLevel()
+        #self.checkLevel()
+        self.needToCheckLevel[owner.id] = owner
         
         
     def updateVisibility(self):
