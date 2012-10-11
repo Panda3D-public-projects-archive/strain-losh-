@@ -359,6 +359,8 @@ class Engine():
             if self.use( unit ):
                 unit.use()
                 self.event_handler.addEvent( (USE, unit) )
+                self.needToCheckLevel[player.id] = player
+                #self.checkLevel()
             else:
                 return
                     
@@ -372,8 +374,6 @@ class Engine():
 
                     
         self.event_handler.addEvent( (UNIT, unit) )
-        self.needToCheckLevel[player.id] = player
-        #self.checkLevel()
         self.updateVisibility()
         
         
@@ -941,8 +941,6 @@ class Engine():
         self.removeDeadUnits()        
                 
         self.updateVisibility()
-        #self.checkLevel()
-        self.needToCheckLevel[owner.id] = owner
         
         
     def updateVisibility(self):
@@ -983,6 +981,9 @@ class Engine():
         for unit in self.units.values():
             if unit.alive:
                 continue
+                
+            #self.checkLevel()
+            self.needToCheckLevel[unit.owner.id] = unit.owner
                 
             self.notify.info("Unit:%s died", unit.id )
             print "unit died:", unit.id
