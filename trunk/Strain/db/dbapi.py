@@ -328,6 +328,20 @@ class DBApi():
         finally:
             cur.close()
             
+    def deleteAllGames(self):
+        cur = self.conn.cursor()
+        try:
+            cur.execute('DELETE FROM STR_GAME_PLAYER')
+            cur.execute('DELETE FROM STR_GAME ')            
+            self.conn.commit()
+        except DatabaseError, exception:
+            error, = exception
+            print "Oracle error: ", error.message
+        else:
+            print "All games deleted..."
+        finally:
+            cur.close()            
+            
     def finishGame(self, game_id):
         #TODO: ogs: ovo ne provjerava da li je game vec u statusu = 2 i uvijek radi UPDATE
         cur = self.conn.cursor()
@@ -471,6 +485,8 @@ class DBApi():
     
 if __name__ == "__main__":
     dbapi = DBApi()
+    dbapi.deleteAllGames()
+    #dbapi.deleteGame(201)
     #player_id = dbapi.createPlayer('red@sterner.666', 'Blue', 'Blue')
     #print dbapi.returnPlayer('ogi')
     
@@ -483,11 +499,11 @@ if __name__ == "__main__":
     #game_player_id = dbapi.addPlayerToGame(21, dbapi.returnPlayer('krav')[0][0], 1, 1, 1)
     #print game_player_id
     
-    for i in xrange(440,450):
-        dbapi.deleteGame(i)
+    #for i in xrange(440,450):
+    #    dbapi.deleteGame(i)
     #dbapi.deleteGame(423)
     #dbapi.deleteGame(443)
-    print dbapi.getAllActiveGames()
+    #print dbapi.getAllActiveGames()
     
     #dbapi.finishGame(21)
     #dbapi.finishAllGamesExceptVersion('0.1')
