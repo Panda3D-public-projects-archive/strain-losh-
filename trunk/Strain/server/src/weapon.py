@@ -1,7 +1,7 @@
 from xml.dom import minidom
 import math
 import util
-from strain.share import *
+from share import *
 
 
 

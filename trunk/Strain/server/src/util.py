@@ -5,7 +5,7 @@ import logging.handlers
 import cPickle as pickle
 import datetime
 import os
-from strain.share import *
+from share import *
 import copy
 
 OBSERVER_ID = -666
