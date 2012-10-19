@@ -6,7 +6,8 @@ import math
 import engine
 from server_messaging import *
 from share import *
-from utils import *
+#from util import *
+from buffs import *
 
 #TODO: ovo je kopirano u interface.py
 HEADING_NONE      = 0
@@ -39,7 +40,7 @@ class Unit():
         self.overwatch = False
         self.alive = True
         self.last_action = 'spawn'
-        #self.set_up = False #for heavy weapons this is only initialized if a unit has a heavy weapon
+        #self.set_up = False #for heavy weapons this is only initialized if a owner has a heavy weapon
         self.height = 2
         
         self.ap, self.default_ap = 0, 0
@@ -50,6 +51,9 @@ class Unit():
         self.ws = -1
         
         self.ability_list = []
+
+        self.buffs = []
+        
         
     def init(self, in_id, owner, x, y ):
         self.id = in_id
@@ -99,12 +103,12 @@ class Unit():
          
         self.last_action = 'melee'
             
-        #get event from weapon
+        #get action from weapon
         tmp_event = self.melee_weapon.fire(target, to_hit)
         if overwatch:
             tmp_event = (OVERWATCH,) + tmp_event
             
-        #send event to handler
+        #send action to handler
         self.engine.event_handler.addEvent( tmp_event )
 
         return True
@@ -131,7 +135,7 @@ class Unit():
             return False
         self.ap -= self.ranged_weapon.ap_cost
                         
-        #check to see if we need to rotate unit before shooting, but if we are on overwatch, we cant rotate
+        #check to see if we need to rotate owner before shooting, but if we are on overwatch, we cant rotate
         #we already checked if target is in front, if this is overwatch
         if not overwatch:
             if self.rotate( target.pos ):
@@ -140,24 +144,86 @@ class Unit():
         #ok everything checks out, we can do the actual shooting                        
         self.last_action = 'shoot'
         
-        #get event from weapon
-        tmp_event = self.ranged_weapon.fire( target, to_hit )
+        
+
+        modifier = self.buffCheck( ACTION_SHOOT_BEGIN )
+        
+        
+        #get action from weapon
+        tmp_event = self.ranged_weapon.fire( target, to_hit * modifier )
         if overwatch:
             tmp_event = (OVERWATCH,) + tmp_event
             
-        #add event to handler
+        #add action to handler
         self.engine.event_handler.addEvent( tmp_event )
+        
+        self.buffCheck( ACTION_SHOOT_OVER )
+        
         
         return True
 
 
-    def setOverwatch(self):
+    def buffCheck(self, action):
+        
+        ret_value = None
+        
+        events = []
+        
+        if action == ACTION_SHOOT_BEGIN:
+            modifiers = [1]
+            for buff in self.buffs[:]:
+                buff.action( ACTION_SHOOT_BEGIN, modifiers, events, self.buffs )
+            ret_value = modifiers[0]
+            
+        #generic event
+        else:
+            for buff in self.buffs[:]:
+                buff.action( action, None, events, self.buffs )
+            
+        
+        for action in events:
+            self.engine.event_handler.addEvent( action )
+
+        
+        return ret_value
+
+
+    def toggleOverwatch(self):
         #check if there are enough AP
         if self.ap >= 2:
             self.overwatch = True
-            return True
+            self.ap -= 2
+        else:
+            return "Not enough AP for overwatch."
         
-        return False
+
+    def toggleSetup(self):
+        if not self.hasHeavyWeapon():
+            return "The owner does not have any heavy weapons."
+
+        if self.set_up:
+            msg = self.tearDown()
+            if msg:
+                return msg
+        else:
+            msg = self.setUp()
+            if msg:
+                return msg
+
+    def tryToUse(self):
+        if not self.can_use:
+            return "Unit cannot use anything."
+                
+        if self.ap < 1:
+            return "Not enough AP for using."
+                
+        #try to use something
+        if self.engine.use( self ):
+            self.ap -= 1
+            self.last_action = 'use'
+            self.engine.event_handler.addEvent( (USE, self) )
+        else:
+            return "There is nothing to use in front."
 
 
     def iAmHit(self, weapon):
@@ -185,7 +251,7 @@ class Unit():
        
     def setUp(self):
         if self.set_up:
-            return "This unit already set-up."
+            return "This owner already set-up."
         else:
             if self.ap < 2:
                 return "Not enough AP to set up."
@@ -206,7 +272,7 @@ class Unit():
             self.last_action = 'tearDown'
             return None
         else:
-            return "This unit is not set-up."
+            return "This owner is not set-up."
        
        
     def doOverwatch(self, target, to_hit ):
@@ -235,11 +301,16 @@ class Unit():
         #replenish AP
         self.ap = self.default_ap
         
-        #if unit rested last turn
+        #if owner rested last turn
         if self.resting:
             self.ap += 1
             self.resting = False
 
+        self.buffCheck( ACTION_NEW_TURN )
+        
+        
+    def endTurn(self):
+        self.buffCheck( ACTION_TURN_END )
         
 
     def hasHeavyWeapon(self):
@@ -269,14 +340,16 @@ class Unit():
         return False
 
     
-    def use(self):
-        self.ap -= 1
-        self.last_action = 'use'
-
     
     def taunt(self):
+        if self.ap < 1:
+            return "Not enough AP for taunting."
+        
         self.ap -= 1
         self.last_action = 'taunt'
+        
+        self.engine.taunt( self )
+        
         
         
 
@@ -286,7 +359,7 @@ def loadUnit( name, engine ):
     
     unit = None
     
-    for p in xmldoc.getElementsByTagName( 'unit' ):
+    for p in xmldoc.getElementsByTagName( 'owner' ):
                 
         if p.attributes['name'].value != name:
             continue
@@ -312,11 +385,11 @@ def loadUnit( name, engine ):
             
         #load armour                     
         unit.armour =  armour.loadArmour( p.attributes['armour'].value )
-        unit.armour.owner = unit
-        unit.default_ap = unit.armour.ap
+        owner.armour.owner = unit
+        unit.default_ap = owner.armour.ap
         
         for ability in p.getElementsByTagName('ability'):
-            unit.ability_list.append(ability.attributes['name'].value)
+            owner.ability_list.append(ability.attributes['name'].value)
         
     xmldoc.unlink()
     
@@ -325,3 +398,25 @@ def loadUnit( name, engine ):
     return unit
     
 
+
+def getHeadingTile(h, dest):
+    int_h = int(h)
+    if int_h == HEADING_N:
+        offset = (0, 1)
+    elif int_h == HEADING_NW:
+        offset = (-1, 1)
+    elif int_h == HEADING_W:
+        offset = (-1, 0)
+    elif int_h == HEADING_SW:
+        offset = (-1, -1)
+    elif int_h == HEADING_S:
+        offset = (0, -1)
+    elif int_h == HEADING_SE:
+        offset = (1, -1)
+    elif int_h == HEADING_E:
+        offset = (1, 0)
+    elif int_h == HEADING_NE:
+        offset = (1, 1)
+    else:
+        offset = (0, 0)
+    return tuple([item1 + item2 for item1, item2 in zip(dest, offset)])

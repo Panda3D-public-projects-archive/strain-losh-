@@ -17,7 +17,7 @@ from share import *
 import eventHandler
 from eventHandler import EventHandler
 from dblocalproxyapi import DBLocalProxyApi
-from profilestats import profile
+#from profilestats import profile
 
 LEVELS_ROOT = "./data/levels/"
 
@@ -285,7 +285,7 @@ class Engine():
                 
                 #check if this is legal position for deployment
                 if self.level._deploy[x][y] != int(player.id):
-                    raise Exception( "Illegal position for deployment for unit " + tmpUnit.name + "@" + str( (x,y) ) )
+                    raise Exception( "Illegal position for deployment for owner " + tmpUnit.name + "@" + str( (x,y) ) )
                 
                 tmpUnit.init( self.getUID(), player, x, y )                
                 tmpUnit.heading = util.getHeading(tmpUnit.pos, self.level.center)
@@ -325,52 +325,32 @@ class Engine():
             return                    
         
         if param == OVERWATCH:
-            if unit.ap >= 2:
-                unit.overwatch = not unit.overwatch
-            else:
-                self.error("Not enough AP for overwatch.", source)
+            err_msg = unit.toggleOverwatch()
+            
+            if err_msg:
+                self.error( err_msg, source)
                 return
 
         elif param == SET_UP:
-            if not unit.hasHeavyWeapon():
-                self.error( "The unit does not have any heavy weapons.", source )
+            err_msg = unit.toggleSetup()
+            if err_msg:
+                self.error(err_msg, source)
                 return
-
-            if unit.set_up:
-                msg = unit.tearDown()
-                if msg:
-                    self.error( msg, source )
-                    return
-            else:
-                msg = unit.setUp()
-                if msg:
-                    self.error( msg, source )
-                    return
                     
         elif param == USE:
-            if not unit.can_use:
-                self.error( "Unit cannot use anything.", source )
+            err_msg = unit.tryToUse()
+            if err_msg:
+                self.error(err_msg, source)
                 return
+            #we need to check level for all players now
+            for p in self.players:
+                self.needToCheckLevel[p.id] = player                
                     
-            if unit.ap < 1:
-                self.error( "Not enough AP for using.", source )
+        elif param == TAUNT:                    
+            err_msg = unit.taunt()
+            if err_msg:
+                self.error(err_msg, source)            
                 return
-                    
-            if self.use( unit ):
-                unit.use()
-                self.event_handler.addEvent( (USE, unit) )
-                self.needToCheckLevel[player.id] = player
-                #self.checkLevel()
-            else:
-                return
-                    
-        elif param == TAUNT:
-            if unit.ap < 1:
-                self.error( "Not enough AP for taunting.", source )
-                return
-                    
-            unit.taunt()            
-            self.taunt( unit )
 
                     
         self.event_handler.addEvent( (UNIT, unit) )
@@ -407,7 +387,7 @@ class Engine():
         for p in xmldoc.getElementsByTagName( 'player' ):
             player = Player( int(p.attributes['id'].value), p.attributes['name'].value, p.attributes['team'].value, self )                        
             
-            for u in p.getElementsByTagName( 'unit' ):
+            for u in p.getElementsByTagName( 'owner' ):
                 
                 x = int( u.attributes['x'].value )
                 y = int( u.attributes['y'].value )
@@ -416,7 +396,7 @@ class Engine():
                 
                 #check to see level boundaries
                 if( self.level.outOfBounds(x, y) ):
-                    print "This unit is out of level bounds", unittype, x, y
+                    print "This owner is out of level bounds", unittype, x, y
                     continue
                 
                 
@@ -447,6 +427,12 @@ class Engine():
 #        if player != self.active_player:
 #            self.error( "It's not your turn.", source)
 #            return
+        
+        for unit in self.units.values():
+            unit.endTurn()
+        
+        #maybe someone died at the end of turn
+        self.removeDeadUnits()
         
         if self.checkVictoryConditions():
             self.error( "Game over, engine stopping" )
@@ -724,16 +710,16 @@ class Engine():
                 
     def findAndValidateUnit(self, unit_id, source):
         if( unit_id in self.units ) == False:
-            self.notify.critical( "Got wrong unit id:%s", unit_id )
-            self.error( "Wrong unit id.", source )
+            self.notify.critical( "Got wrong owner id:%s", unit_id )
+            self.error( "Wrong owner id.", source )
             return None
 
         unit = self.units[unit_id]
 
         #check to see if this is the owner
-        if unit.owner.id != source:
-            self.notify.critical( "Client:%s\ttried to do an action with unit that he does not own" % source.getAddress() )
-            self.error( "You cannot do this to a unit you do not own.", source )
+        if owner.owner.id != source:
+            self.notify.critical( "Client:%s\ttried to do an action with owner that he does not own" % source.getAddress() )
+            self.error( "You cannot do this to a owner you do not own.", source )
             return None
 
         return unit
@@ -764,10 +750,10 @@ class Engine():
                 self.error( msg, source )            
                 return 
         
-        #special case if we just need to rotate the unit
+        #special case if we just need to rotate the owner
         if unit.pos == new_position:
             
-            #see if we actually need to rotate the unit
+            #see if we actually need to rotate the owner
             if unit.rotate( new_heading ):
                 self.event_handler.addEvent( (ROTATE, unit, new_heading ) )
             #if not, than do nothing
@@ -786,19 +772,19 @@ class Engine():
             #everything checks out, do the actual moving
             for tile, ap_remaining in path:
                 
-                #do low level moving of unit
+                #do low level moving of owner
                 self.level.removeUnit( unit )
                 unit.rotate( tile )                
                 unit.move( tile, ap_remaining )
                 self.level.putUnit( unit )            
                                     
-                #add event that unit moved
+                #add event that owner moved
                 self.event_handler.addEvent( (MOVE, unit, tile) )
                 
-                #check enemies vision to this unit
+                #check enemies vision to this owner
                 self.checkEnemyVision(unit)
                 
-                #check if this unit spotted any new enemy
+                #check if this owner spotted any new enemy
                 spot = self.didISpotAnyoneNew( unit )
                 
                 #check for overwatch
@@ -815,10 +801,10 @@ class Engine():
                         self.event_handler.addEvent( (ROTATE, unit, new_heading ) )
         #---------------------------------------------------------------------------
                                         
-        #check to see if unit can use at this new location
+        #check to see if owner can use at this new location
         self.checkUnitCanUse( unit )
         
-        #refresh this unit's data
+        #refresh this owner's data
         self.event_handler.addEvent( (UNIT, unit) )
 
         self.removeDeadUnits()
@@ -830,9 +816,9 @@ class Engine():
     def checkEnemyVision(self, unit ):
         """Iterates over all players and checks and updates their visible_enemies list, also adds SPOT and VANISH events if needed"""
         
-        #go through all enemy players, if we see this unit we need to spot or vanish someone
+        #go through all enemy players, if we see this owner we need to spot or vanish someone
         for p in self.players:
-            if p == unit.owner or p.team == unit.owner.team:
+            if p == unit.owner or p.team == owner.owner.team:
                 continue
             
             seen = 0
@@ -859,7 +845,7 @@ class Engine():
         overwatch = False
         
         for p in self.players:
-            if p == unit.owner or p.team == unit.owner.team:
+            if p == unit.owner or p.team == owner.owner.team:
                 continue
             
             for enemy in p.units:  
@@ -868,7 +854,7 @@ class Engine():
                     if enemy.overwatch and enemy.inFront( unit.pos ) and enemy.alive:
                         if enemy.doOverwatch( unit, to_hit ):
                             overwatch = True
-                        #if unit died, return
+                        #if owner died, return
                         if not unit.alive:
                             break
         
@@ -915,7 +901,7 @@ class Engine():
 
         #check to see if the owner is trying to shoot his own or his allies units
         if target.owner == owner or target.owner.team == owner.team:
-            self.notify.critical( "Client:%s\ttried to shoot his own unit." % source.getAddress() )
+            self.notify.critical( "Client:%s\ttried to shoot his own owner." % source.getAddress() )
             self.error( "You cannot shoot you own units.", source )
             return
         
@@ -983,10 +969,10 @@ class Engine():
                 continue
                 
             #self.checkLevel()
-            self.needToCheckLevel[unit.owner.id] = unit.owner
+            self.needToCheckLevel[owner.owner.id] = unit.owner
                 
             self.notify.info("Unit:%s died", unit.id )
-            print "unit died:", unit.id
+            print "owner died:", unit.id
             
             del self.units[unit.id]
             

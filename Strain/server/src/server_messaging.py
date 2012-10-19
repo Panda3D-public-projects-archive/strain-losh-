@@ -3,260 +3,258 @@ Created on 4.10.2011.
 
 @author: krav
 '''
-import sys
-import cPickle as pickle
-from pandac.PandaModules import QueuedConnectionManager, QueuedConnectionListener, QueuedConnectionReader, ConnectionWriter #@UnresolvedImport
-from pandac.PandaModules import NetAddress, NetDatagram, PointerToConnection #@UnresolvedImport
-from direct.distributed.PyDatagramIterator import PyDatagramIterator 
-import threading
+from threading import Thread
 import collections
-import util
-from strain.share import *
-import traceback
+from twisted.internet.protocol import Factory 
+from twisted.internet.endpoints import TCP4ServerEndpoint
+from twisted.internet import reactor
+from twisted.protocols.basic import Int16StringReceiver, IntNStringReceiver
+from share import * #@UnusedWildImport
+import threading
+import sys
+
+
+HANDSHAKE_TIMEOUT = 6 #seconds
+
 
 #max message size je 65k (0xffff) if we want to send a larger message, we need something else
 #a level has cca 7k
 
+def f(s):
+    print s, "f-", threading.currentThread().name,"-----"
 
-class Network:
-    
-    
-    def __init__(self, sterner, notify, db_api):
-    
-        self.sterner = sterner
-        self.cManager = None
-        self.cListener = None
-        self.cReader = None
-        self.cWriter = None
-        self.tcpSocket = None
-    
-        self.activeConnections = []
-        
-        #used by handshaking threads to put results in
-        self.handshakedConnections = collections.deque()
-        
-        self.notify = notify
-        self.db_api = db_api
-    
-    
-    
-    
-    def startServer( self ):
-        self.cManager = QueuedConnectionManager()
-        self.cListener = QueuedConnectionListener(self.cManager, 0)
-        self.cReader = QueuedConnectionReader(self.cManager, 0)
-        self.cWriter = ConnectionWriter(self.cManager, 0)
+class Connection(Int16StringReceiver):
 
-        backlog = 5
-        self.tcpSocket = self.cManager.openTCPServerRendezvous(TCP_PORT , backlog)        
-        
-        self.cListener.addConnection(self.tcpSocket)
-    
-    
-    
-    
-    def stopServer( self ):
-        
-        self.notify.info( "Stopping server!" )
-        
-        for connection in self.activeConnections[:]:
-            self.notify.info("Closing connection with: %s", connection.getAddress() )
-            self.disconnect( connection )
-    
-        self.activeConnections = []
-        
-        self.cManager = None
-        self.cListener = None
-        self.cReader = None
-        self.cWriter = None
-        self.tcpSocket = None
-     
-        self.handshakedConnections.clear()
-    
-    
-    
-    
-    def handleConnections( self ):
-        
-        #check for new connections
-        if self.cListener.newConnectionAvailable():
-        
-            rendezvous = PointerToConnection()
-            netAddress = NetAddress()
-            newConnection = PointerToConnection()
-        
-            if self.cListener.getNewConnection(rendezvous, netAddress, newConnection):
-                newConnection = newConnection.p()
-                newConnection.setNoDelay(1)
-                              
-                #try handshaking
-                threading.Thread(target=self.handshake, args=( [newConnection] ) ).start()
+    def __init__(self, factory):
+        self.factory = factory
+        self.logged_in_players = self.factory.logged_in_players
+        self.player_id = -1
+        self.player_name = None
+        self.handshaked = 0
+        self.handshake_phase = 0
 
-                
-                 
-        #check if we have a new handshaked connection
-        try:
-            conn, success, player_id = self.handshakedConnections.pop()            
-            if success:
-                #add this connection to cReader                        
-                self.cReader.addConnection(conn)
-                self.notify.info("Client connected: %s", conn.getAddress() )
-                self.activeConnections.append( conn )
-                
-                #tell sterner someone connected
-                self.sterner.playerConnected( player_id, conn )
+    def checkHandshakeTimeout(self):
+        #if we already disconnected in the meantime just return
+        if not self.connected:
+            return
+        if not self.handshaked:
+            print "Handshake timed out with:", self.transport.hostname
+            self.transport.abortConnection()
+            return
+        print "ok"
+
+
+    def makeConnection(self, transport):
+        self.connected = 1
+        self.transport = transport
+        
+        #print "make connection, transport:", transport
+        #print "reactor-", threading.currentThread().name
+        
+        reactor.callLater( HANDSHAKE_TIMEOUT, self.checkHandshakeTimeout) #@UndefinedVariable
+        #self.handshaked = 666
+        
+        #reactor.callInThread(f, "------")
+        
+
+    def stringReceived(self, string):
+        
+        if not self.handshaked:
+            self.goThroughHandshake( string )
+            return
+        #string = zlib.decompress(string)
+        #print "string recv:", string
+        
+    """
+    def dataReceived(self, data):
+        print "data recv:", data
+        return IntNStringReceiver.dataReceived(self, data)
+    """
+
+    def goThroughHandshake(self, string):
+        
+        #================================phase 0=====================================
+        if self.handshake_phase == 0:
+            if string != "LOSH?":
+                self.transport.loseConnection()
             else:
-                self.disconnect( conn )
-                self.notify.info("Client didn't pass handshaking.")   
-                             
-        except IndexError:
-            pass
-                   
-                   
-        #check for disconnects
-        for connection in self.activeConnections[:]:   
-            if not connection.getSocket().Active():
-                #once socket disconnects there is no address in it so this will just write 0.0.0.0
-                #self.notify.info("Client disconnected: %s", str(connection.getAddress()) )
-                self.disconnect( connection )
-    
+                self.handshake_phase = 1
+                self.sendString("LOSH!")
+                
+        #================================phase 1=====================================
+        elif self.handshake_phase == 1:
+            if string != "Sterner?":
+                self.transport.loseConnection()
+            else:
+                self.handshake_phase = 2
+                self.sendString("Regnix!")
 
-    
-    def handshake( self, connection ):
 
-        s = connection.getSocket()        
-        
-        if self.getData(s, 3) != 'LOSH?':
-            s.SendData("Wrong server!")
-            self.handshakedConnections.append( (connection, False, 0) )
-            return
-        s.SendData('LOSH!')
+        #================================phase 2=====================================
+        elif self.handshake_phase == 2:
+            try:
+                msg = string.split(':')
+                if msg[0] == COMMUNICATION_PROTOCOL_STRING:
+                    ver = msg[1]
+                    if ver != COMMUNICATION_PROTOCOL_VERSION:
+                        self.sendString( "Wrong version! Version needed:" + ver, ", You have:" + msg[1] )
+                        raise Exception( "Client with wrong version trying to connect from:" + self.transport.hostname ) 
+                else:                    
+                    self.sendString("Wrong communication protocol")
+                    raise Exception("Wrong communication protocol")
+            except:
+                self.transport.loseConnection()
+                return
+            
+            #passed phase 2
+            self.sendString( HANDSHAKE_SUCCESS )
+            self.handshake_phase = 3
+                
+        #================================phase 3=====================================
+        elif self.handshake_phase == 3:
+            #check username & pass
+            reactor.callInThread(self.checkUsernameAndPass, string) #@UndefinedVariable
 
-        if self.getData(s, 3) != 'Sterner?':
-            s.SendData("Wrong server!")            
-            self.handshakedConnections.append( (connection, False, 0) )
-            return
-        s.SendData('Regix!')        
-        
-        
-        msg = self.getData(s, 3)
+
+    def checkUsernameAndPass(self, string):
         try:
-            msg = msg.split(':')
-            if msg[0] == COMMUNICATION_PROTOCOL_STRING:
-                ver = msg[1]
-                if ver != COMMUNICATION_PROTOCOL_VERSION:
-                    s.SendData( "Wrong version!" )
-                    raise Exception("Client with wrong version trying to connect from:" + str( connection.getAddress() ))
-            else:                    
-                s.SendData("Wrong communication protocol")
-                raise Exception("Wrong communication protocol")
-        except:
-            self.handshakedConnections.append( (connection, False, 0) )
-            self.notify.error( "Could not handshake! Info:%s", traceback.format_exc() )
-            return
-        
-        
-        #if we passed everything ok, than its a great success!        
-        s.SendData( HANDSHAKE_SUCCESS )
-        
-        #now we expect username and password
-        msg = self.getData(s, 3)
-        try:
-            login_data = pickle.loads(msg)
+            login_data = string.split(',')
             
             if login_data[0] != STERNER_LOGIN:
-                s.SendData( "Wrong login message." )
                 raise Exception("Wrong login message.")
             
             username = login_data[1]
             pswd = login_data[2]
              
-            user_data = self.db_api.returnPlayer( username )
+            user_data = self.factory.db_api.returnPlayer( username )
             if not user_data or pswd != user_data[3]:
-                s.SendData( "Wrong username/password" )
                 raise Exception( "Wrong username/password" )
-
-            #send client success message and his id
-            s.SendData( LOGIN_SUCCESS + ":" + str(user_data[0]) )
-            
-            #everything is ok, tell main thread who connected
-            self.handshakedConnections.append( (connection, True, user_data[0]) )
-            
-        except:
-            self.handshakedConnections.append( (connection, False, 0) )
-            self.notify.error( "Could not handshake! Info:%s", traceback.format_exc() )
+        
+        except Exception as e:
+            reactor.callFromThread( self.sendStringAndDisconnect, e ) #@UndefinedVariable
             return
+        except:
+            reactor.callFromThread( self.sendStringAndDisconnect, "Unable to verify username and password" ) #@UndefinedVariable
+            return
+        
+        #username and pass check went ok, return back to reactor thread and call handshakePassed()
+        reactor.callFromThread( self.handshakePassed, user_data ) #@UndefinedVariable
+
+
+
+    def sendStringAndDisconnect(self, string ):
+        self.sendString( str(string) )
+        self.transport.loseConnection()
+
+
+    def handshakePassed(self, my_user_data):
+        self.handshaked = 1
+        self.player_id = my_user_data[0]
+        self.player_name = my_user_data[2]
+        print "++++++++player_id", self.player_id
+        #if this players was already logged in from another connection, close that connection
+        if self.player_id in self.logged_in_players:
+            print "----tryiong to disc"
+            self.logged_in_players[self.player_id].transport.abortConnection()
+            
+        #remember this connection 
+        self.logged_in_players[self.player_id] = self
+        print "Player %s logged in from %s." % (self.player_name, self.transport.hostname )        
+        
+        #send client success message and his id
+        self.sendString( LOGIN_SUCCESS + ":" + str(self.player_id) )
+        
+
+    def sendString(self, string):
+        #print "sending string:", string        
+        return IntNStringReceiver.sendString(self, string)
+
+
+    def connectionMade(self):
+        pass
+
+        
+    def connectionLost(self, reason):
+        self.connected = 0
+        #if this is exactly this connection in logged_in_players delete it
+        if self.player_id in self.logged_in_players and self.logged_in_players[self.player_id] == self:
+                del self.logged_in_players[self.player_id]
+        print "Connection lost, reason:", reason
+ 
+
+
+class SternerNetwork(Factory):
+    
+            
+    def __init__(self, sterner, notify, db_api):
+        self.sterner = sterner
+        self.notify = notify
+        self.db_api = db_api
+        
+        self.reactor_thread = None
+        
+        self.logged_in_players = {}
+        
+        #used by handshaking threads to put results in
+        self.handshakedConnections = collections.deque()
+    
+        endpoint = TCP4ServerEndpoint(reactor, TCP_PORT)
+        #fact = ChatFactory()
+        #endpoint.listen(fact)
+        endpoint.listen( self )
+    
+        #this will hold messages that need to be sent to clients
+        self.to_network = collections.deque()
+    
+        #this will hold messages that were received from network
+        self.from_network = collections.deque();
+    
+        #l = task.LoopingCall(runEverySecond, fact)
+        #l.start(1) # call every second
+    
+    
+    def startServer( self ):
+        self.reactor_thread = Thread( target=reactor.run, name="TwistedReactorThread",kwargs={'installSignalHandlers':0} )#@UndefinedVariable
+        self.reactor_thread.start()
+ 
+        
+    
+    def stopServer( self ):
+        reactor.stop() #@UndefinedVariable
+    
+        self.handshakedConnections.clear()
+        self.to_network.clear()
+        self.from_network.clear()
+    
+
+    def buildProtocol(self, addr):
+        return Connection(self)
+
+    
              
         
-    
-    
-    def disconnect( self, connection ):
-        self.cListener.removeConnection( connection )
-        self.cReader.removeConnection( connection )
-        self.cManager.closeConnection( connection )
-
-        self.sterner.playerDisconnected( connection )
-        
-        try:        
-            self.activeConnections.remove( connection )
-        except:
-            pass
-      
-    
-    def getData( self, socket, timeout ):
-        t = time.time()        
-        while 1:
-            msg = socket.RecvData(1024)
-            if msg:
-                return msg            
-            if( time.time() - t > timeout ):
-                return None
-            time.sleep(0.01)
-        return None
-    
-    
-    
     def broadcastMsg( self, msg ):
         # broadcast a message to all clients
         for connection in self.activeConnections: 
-            netDatagram = NetDatagram()
-            netDatagram.addString(pickle.dumps(msg, pickle.HIGHEST_PROTOCOL))
-            if self.cWriter.send(netDatagram, connection):
-                self.notify.debug( "Sent client:%s \tmessage:%s" , connection.getAddress(), msg[0] )
+            #netDatagram = NetDatagram()
+            #netDatagram.addString(pickle.dumps(msg, pickle.HIGHEST_PROTOCOL))
+            #if self.cWriter.send(netDatagram, connection):
+            #    self.notify.debug( "Sent client:%s \tmessage:%s" , connection.getAddress(), msg[0] )
+            pass
         
   
     
     
     def readMsg( self ):
         """Returns the (message, player id), if any, or None if there was nothing to read"""
-        if self.cReader.dataAvailable():
-            datagram = NetDatagram() 
-            if self.cReader.getData(datagram):
-                dgi = PyDatagramIterator(datagram)
-                msg = pickle.loads(dgi.getString())
-                self.notify.info("Sterner received a message:%s, from:%s", msg, str(datagram.getConnection().getAddress()))
-                return (msg, datagram.getConnection() )
-
-          
-        return None
-          
-    
-    def _sendMsg( self, msg, source = None ):
-        try:
-            if source:
-                for connection in self.activeConnections:
-                    if connection == source:
-                        netDatagram = NetDatagram()
-                        netDatagram.addString(pickle.dumps(msg, pickle.HIGHEST_PROTOCOL))
-                        if self.cWriter.send(netDatagram, connection):
-                            self.notify.debug( "Sent client: %s \tmessage:%s" , connection.getAddress(), msg[0] )
-            else:
-                self.broadcastMsg(msg)
-        except:
-            print "source:", source, "msg:", msg 
-            self.notify.critical("Could not send message to clients, reason : %s", sys.exc_info()[1])
-            return
+        if self.from_network:
+            return self.from_network.pop()
+        else:
+            return None
         
-        #self.log.info("Sterner posted a message: %s" , msg[0] )
+    
+    def sendMsg( self, msg, source = None ):
+        self.to_network.append( msg )        
+        self.log.info("Sterner posted a message: %s" , msg[0] )
     
       

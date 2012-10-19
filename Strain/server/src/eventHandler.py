@@ -3,7 +3,7 @@ Created on 30 Jun 2012
 
 @author: krav
 '''
-from strain.share import *
+from share import *
 from util import *
 import copy
 from weapon import SPECIAL_SILENCED
@@ -22,7 +22,7 @@ class EventHandler():
         #observer events
         self.observer_events = []
             
-        #units that have been modified while creating this event session
+        #units that have been modified while creating this action session
         self.units_changed = {}
     
     
@@ -91,7 +91,7 @@ class EventHandler():
             for p in self.engine.players:
                 
                 #sendToOwnerAndAllies
-                if p == unit.owner or p.team == unit.owner.team:
+                if p == unit.owner or p.team == owner.owner.team:
                     self.events[p.id].append( (UNIT, compileUnit(unit)) )
                 #sendToEnemyPlayersThatSeeThisUnit
                 elif unit in p.visible_enemies:
@@ -100,83 +100,83 @@ class EventHandler():
         self.units_changed = {}
             
             
-    def addEvent(self, event):
+    def addEvent(self, action):
         
-        if event[0] == ROTATE:
-            unit = event[1]
-            new_heading = event[2]
+        if action[0] == ROTATE:
+            unit = action[1]
+            new_heading = action[2]
             
             self.sendToPlayersThatKnowThisUnit( unit, (ROTATE, unit.id, new_heading))
             self.units_changed[unit] = 1
         
 
         
-        elif event[0] == MOVE:
-            unit = event[1]
-            tile = event[2]
+        elif action[0] == MOVE:
+            unit = action[1]
+            tile = action[2]
 
             self.sendToPlayersThatKnowThisUnit( unit, (MOVE, unit.id, tile) )
             self.units_changed[unit] = 1
 
 
 
-        elif event[0] == USE:
-            unit = event[1]
+        elif action[0] == USE:
+            unit = action[1]
             self.sendToPlayersThatKnowThisUnit(unit, (USE, unit.id) )
 
 
 
-        elif event[0] == TAUNT:
-            unit = event[1]
+        elif action[0] == TAUNT:
+            unit = action[1]
             self.sendToPlayersThatKnowThisUnit(unit, (TAUNT, unit.id) )
 
 
 
 
-        elif event[0] == VANISH:
-            player = event[1]
-            unit = event[2]
+        elif action[0] == VANISH:
+            player = action[1]
+            unit = action[2]
             
             self.events[player.id].append( (VANISH, unit.id) )
 
         
-        elif event[0] == SPOT:
-            player = event[1]
-            compiled_enemy = compileEnemyUnit(event[2])
+        elif action[0] == SPOT:
+            player = action[1]
+            compiled_enemy = compileEnemyUnit(action[2])
 
             self.events[player.id].append( (SPOT, compiled_enemy) )
 
 
 
-        elif event[0] == UNIT:
-            unit = event[1]
+        elif action[0] == UNIT:
+            unit = action[1]
             self.units_changed[unit] = 1
 
             
             
             
-        elif event[0] == OVERWATCH:
-            self.parseShootEvent(event[1:], True)
-        elif event[0] == SHOOT:
-            self.parseShootEvent(event)
+        elif action[0] == OVERWATCH:
+            self.parseShootEvent(action[1:], True)
+        elif action[0] == SHOOT:
+            self.parseShootEvent(action)
 
             
-        elif event[0] == LEVEL:
-            player = event[1]
+        elif action[0] == LEVEL:
+            player = action[1]
             self.events[player.id].append( (LEVEL, compileLevelWithDifferentGrid(self.engine.level, self.engine._grid_player[player.id]) ) )
             self.observer_events.append( (LEVEL, compileLevel(self.engine.level)) )
             
 
-        elif event[0] == DEPLOYMENT:
-            player = event[1]
-            status = event[2]
+        elif action[0] == DEPLOYMENT:
+            player = action[1]
+            status = action[2]
             #send to all players
             self.sendImmediately(self.engine.players, (DEPLOYMENT, player.id, status) )
 
 
 
             
-        elif event[0] == ENGINE_STATE:
+        elif action[0] == ENGINE_STATE:
             self.engine.db_api.addGameEvent( self.engine.game_id, pickle.dumps( (ENGINE_STATE, compileObserverState(self.engine)) ) )
             
             for p in self.engine.players:
@@ -186,7 +186,7 @@ class EventHandler():
                 #send msg to player
                 self.engine.to_network.append( (p.id, self.engine.game_id, msg) )
             
-        elif event[0] == NEW_TURN:
+        elif action[0] == NEW_TURN:
             self.engine.db_api.addGameEvent( self.engine.game_id, pickle.dumps( (NEW_TURN, compileObserverNewTurn(self.engine)) ) )
             
             for p in self.engine.players:
@@ -199,26 +199,26 @@ class EventHandler():
             
 
         
-        elif event[0] == INFO:
-            player = event[1]
-            message = event[2]
+        elif action[0] == INFO:
+            player = action[1]
+            message = action[2]
             self.sendImmediately( [player], (INFO, message) )
             
-        elif event[0] == ERROR:
-            player = event[1]
-            message = event[2]
+        elif action[0] == ERROR:
+            player = action[1]
+            message = action[2]
             self.sendImmediately( [player], (ERROR, message) )
 
-        elif event[0] == PONG:
-            player = event[1]
-            message = event[2]
+        elif action[0] == PONG:
+            player = action[1]
+            message = action[2]
             self.sendImmediately( [player], (PONG, message), False )
 
 
-        elif event[0] == CHAT:
-            sender = event[1]
-            message = event[2]
-            to_allies = event[3]
+        elif action[0] == CHAT:
+            sender = action[1]
+            message = action[2]
+            to_allies = action[3]
             
             tmp_plyr_lst = self.engine.players[:]
             tmp_plyr_lst.remove( sender )
@@ -243,18 +243,18 @@ class EventHandler():
 
 
 
-    def parseShootEvent(self, event, overwatch = False):
-        #example event = (SHOOT/MELEE, Unit, (4, 7), Weapon, [('bounce', Unit)])
+    def parseShootEvent(self, action, overwatch = False):
+        #example action = (SHOOT/MELEE, Unit, (4, 7), Weapon, [('bounce', Unit)])
         
         if overwatch:
-            self.observer_events.append( (OVERWATCH,) + event )
+            self.observer_events.append( (OVERWATCH,) + action )
         else:
-            self.observer_events.append( event )
+            self.observer_events.append( action )
             
         
         for p in self.engine.players:
-            tmp_event = self.parseShootEventForPlayer(event, p)
-            if event:
+            tmp_event = self.parseShootEventForPlayer(action, p)
+            if action:
                 if overwatch:
                     self.events[p.id].append( (OVERWATCH,) + tmp_event )
                 else:
@@ -291,7 +291,7 @@ class EventHandler():
     
     
     def playerKnowsAbout(self, player, unit):
-        if player == unit.owner or player.team == unit.owner.team or unit in player.visible_enemies:
+        if player == unit.owner or player.team == owner.owner.team or unit in player.visible_enemies:
             return True
         return False
     
